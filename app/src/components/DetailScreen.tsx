@@ -20,6 +20,13 @@ type Props = {
    * `ScrollView` aninhado só para ter refresh quebra o do de fora.
    */
   refreshControl?: React.ComponentProps<typeof ScrollView>['refreshControl'];
+  /**
+   * Voltar de SUB-TELA: telas que empilham estados internos (a intermediária
+   * do esporte, o resumo, o detalhe do histórico) passam aqui o "desempilhar"
+   * delas. Sem isso a seta faz `goBack()` da ROTA — e o que parece um passo
+   * atrás joga a pessoa para fora da tela inteira.
+   */
+  onBack?: () => void;
 };
 
 /**
@@ -29,11 +36,12 @@ type Props = {
  * pilha, e o menu lateral sempre. O título flutua no espaço negativo, sem
  * barra de navegação desenhada.
  */
-export function DetailScreen({ title, children, refreshControl }: Props) {
+export function DetailScreen({ title, children, refreshControl, onBack }: Props) {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const openSidebar = useUiStore((s) => s.openSidebar);
+  const voltar = onBack ?? (navigation.canGoBack() ? () => navigation.goBack() : null);
 
   return (
     <YStack flex={1} backgroundColor="$background">
@@ -53,10 +61,10 @@ export function DetailScreen({ title, children, refreshControl }: Props) {
           justifyContent="space-between"
           marginBottom="$xxl"
         >
-          {navigation.canGoBack() ? (
+          {voltar ? (
             <Pressable
               style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
-              onPress={() => navigation.goBack()}
+              onPress={voltar}
               accessibilityRole="button"
               accessibilityLabel="Voltar"
               hitSlop={16}

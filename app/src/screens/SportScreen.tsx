@@ -22,7 +22,9 @@ import {
 import { File, Paths } from 'expo-file-system';
 
 import {
+  aoTocarNaIlha,
   atualizarIlhaDeEsporte,
+  consumirAcoesDaIlha,
   encerrarIlhaDeEsporte,
   iniciarIlhaDeEsporte,
 } from '../../modules/widgetbridge';
@@ -83,6 +85,8 @@ export function SportScreen() {
   const [detalhe, setDetalhe] = useState<{ sessao: api.SportSession; points: GeoPoint[] | null } | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
+  /** Encerramento pedido pelo botão da ilha — o instante do toque. */
+  const [pedidoDeEncerrar, setPedidoDeEncerrar] = useState<number | null>(null);
   const watcher = useRef<Location.LocationSubscription | null>(null);
 
   /*
@@ -213,12 +217,14 @@ export function SportScreen() {
     });
   };
 
-  const encerrar = async () => {
+  const encerrar = async (emMs?: number) => {
     if (!sessao) return;
     watcher.current?.remove();
     watcher.current = null;
 
-    const stamp = Date.now();
+    // Encerrado pelo botão da ilha, o fim é O TOQUE, não a hora em que o app
+    // voltou à frente — entre os dois podem ter passado minutos parados.
+    const stamp = emMs ?? Date.now();
     const elapsed = elapsedOf(sessao, stamp);
     const dist = sessao.sport.gps ? Math.round(trackDistanceM(sessao.points)) : null;
     const kcal = kcalFor(sessao.sport.met, PESO_PADRAO_KG, elapsed);
@@ -277,6 +283,58 @@ export function SportScreen() {
     ]);
   };
 
+  /*
+   Os botões DA ilha não chamam o app: o toque roda no nativo (que ajusta a
+   própria ilha na hora, mesmo com o JS suspenso) e fica gravado numa fila.
+   Aqui a fila é drenada — na campainha do evento e na volta ao primeiro
+   plano — e aplicada com o instante REAL de cada toque. Nada aqui reenvia
+   estado à ilha: o nativo já a atualizou, e reenviar viraria eco.
+
+   Pausas entram todas num fold só; o encerrar sai por um EFEITO de propósito:
+   quando ele rodar, o estado já contém as pausas anteriores da mesma leva, e
+   o tempo parado entre a pausa e o toque de encerrar não conta como treino.
+  */
+  const drenarAcoesDaIlha = useCallback(() => {
+    const acoes = consumirAcoesDaIlha();
+    if (!acoes.length) return;
+    setSessao((s) => {
+      let atual = s;
+      for (const acao of acoes) {
+        if (!atual) break;
+        if (acao.action === 'pause' && atual.pausedSince === null) {
+          atual = { ...atual, pausedSince: acao.atMs };
+        } else if (acao.action === 'resume' && atual.pausedSince !== null) {
+          atual = { ...atual, pausedMs: atual.pausedMs + (acao.atMs - atual.pausedSince), pausedSince: null };
+        }
+      }
+      return atual;
+    });
+    const fim = acoes.find((a) => a.action === 'end');
+    if (fim) setPedidoDeEncerrar(fim.atMs);
+    setNow(Date.now());
+  }, []);
+
+  useEffect(() => {
+    if (pedidoDeEncerrar === null) return;
+    setPedidoDeEncerrar(null);
+    if (sessao) void encerrar(pedidoDeEncerrar);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pedidoDeEncerrar]);
+
+  useEffect(() => {
+    if (!sessao) return;
+    drenarAcoesDaIlha();
+    const campainha = aoTocarNaIlha(drenarAcoesDaIlha);
+    const volta = AppState.addEventListener('change', (st) => {
+      if (st === 'active') drenarAcoesDaIlha();
+    });
+    return () => {
+      campainha();
+      volta.remove();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessao !== null]);
+
   const abrirDetalhe = async (s: api.SportSession) => {
     let points: GeoPoint[] | null = null;
     try {
@@ -290,7 +348,17 @@ export function SportScreen() {
 
   // Desmontar a tela NÃO encerra o watcher se há sessão? Encerra: sessão de
   // esporte é de tela aberta nesta versão — honesto e documentado no aviso.
-  useEffect(() => () => watcher.current?.remove(), []);
+  // A ilha cai junto — órfã, ela contaria um treino que já não existe. O
+  // guard poupa a ilha de OUTRA sessão (foco) quando saímos sem sessão aqui.
+  const haSessao = useRef(false);
+  haSessao.current = sessao !== null;
+  useEffect(
+    () => () => {
+      watcher.current?.remove();
+      if (haSessao.current) encerrarIlhaDeEsporte();
+    },
+    [],
+  );
 
   /*
    A conclusão estilo Strava: o percurso desenhado por inteiro, ajustado ao
@@ -298,7 +366,7 @@ export function SportScreen() {
   */
   if (resumo && compartilhando) {
     return (
-      <DetailScreen title="Compartilhar">
+      <DetailScreen title="Compartilhar" onBack={() => setCompartilhando(false)}>
         <SportShare
           sport={resumo.sport}
           elapsed={resumo.elapsed}
@@ -314,7 +382,7 @@ export function SportScreen() {
 
   if (resumo) {
     return (
-      <DetailScreen title="Sessão concluída">
+      <DetailScreen title="Sessão concluída" onBack={() => setResumo(null)}>
         <MapaDePercurso points={resumo.points} accent={colors.accent} />
         <YStack marginTop="$lg" marginBottom="$md">
           <Label>{resumo.sport.label}</Label>
@@ -349,7 +417,7 @@ export function SportScreen() {
   if (detalhe) {
     const d = detalhe.sessao;
     return (
-      <DetailScreen title={rotulo(d.sport)}>
+      <DetailScreen title={rotulo(d.sport)} onBack={() => setDetalhe(null)}>
         {detalhe.points && detalhe.points.length > 1 ? (
           <MapaDePercurso points={detalhe.points} accent={colors.accent} />
         ) : (
@@ -389,8 +457,10 @@ export function SportScreen() {
     const pausado = sessao.pausedSince !== null;
     const ultimo = sessao.points[sessao.points.length - 1];
 
+    // Com sessão correndo, a seta não NAVEGA: ela pede a mesma confirmação
+    // do X — sair da tela mataria a sessão sem cerimônia.
     return (
-      <DetailScreen title={sessao.sport.label}>
+      <DetailScreen title={sessao.sport.label} onBack={confirmarEncerrar}>
         {/* O percurso desenhado ao vivo — o mapa é o instrumento da modalidade
             com GPS, como o anel é o do foco. */}
         {sessao.sport.gps && (ultimo || posicao) ? (
@@ -494,7 +564,7 @@ export function SportScreen() {
   */
   if (preparando) {
     return (
-      <DetailScreen title={preparando.label}>
+      <DetailScreen title={preparando.label} onBack={() => setPreparando(null)}>
         {preparando.gps ? (
           <YStack height={260} borderRadius={16} overflow="hidden" marginTop="$md">
             {posicao ? (

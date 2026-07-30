@@ -46,9 +46,47 @@ public class WidgetBridgeModule: Module {
   /// Precisa bater exatamente com o `group` do `expo-target.config.js`.
   private let suite = "group.br.com.assumtek.assumfit.widget"
   private let chave = "treinoDeHoje"
+  /// Fila escrita pelos intents dos botões da ilha (`SportControlIntents.swift`).
+  private let chaveDeAcoes = "acoesDaIlha"
+  private var observador: NSObjectProtocol?
 
   public func definition() -> ModuleDefinition {
     Name("WidgetBridge")
+
+    Events("onSportAction")
+
+    // O intent do botão roda NESTE processo e avisa por NotificationCenter;
+    // daqui vira evento de JS. O evento é só a campainha — o dado de verdade
+    // fica na fila do App Group, que sobrevive ao JS suspenso.
+    OnStartObserving {
+      self.observador = NotificationCenter.default.addObserver(
+        forName: Notification.Name("assumfit.ilha.acao"), object: nil, queue: nil
+      ) { [weak self] aviso in
+        guard
+          let acao = aviso.userInfo?["action"] as? String,
+          let atMs = aviso.userInfo?["atMs"] as? Double
+        else { return }
+        self?.sendEvent("onSportAction", ["action": acao, "atMs": atMs])
+      }
+    }
+
+    OnStopObserving {
+      if let observador = self.observador {
+        NotificationCenter.default.removeObserver(observador)
+      }
+      self.observador = nil
+    }
+
+    /**
+     Drena a fila de ações dos botões da ilha — devolve e APAGA, numa chamada
+     só, para a mesma pausa nunca ser aplicada duas vezes.
+     */
+    Function("consumeSportActions") { () -> [[String: Any]] in
+      guard let defaults = UserDefaults(suiteName: self.suite) else { return [] }
+      let fila = defaults.array(forKey: self.chaveDeAcoes) as? [[String: Any]] ?? []
+      defaults.removeObject(forKey: self.chaveDeAcoes)
+      return fila
+    }
 
     /** Se há App Group configurado. Falso em build sem o entitlement. */
     Function("isSupported") { () -> Bool in
@@ -90,6 +128,8 @@ public class WidgetBridgeModule: Module {
     Function("startSportActivity") { (label: String, symbol: String, startedAtMs: Double, endsAtMs: Double?) -> Bool in
       guard #available(iOS 16.2, *) else { return false }
       guard ActivityAuthorizationInfo().areActivitiesEnabled else { return false }
+      // Ação de uma sessão anterior não pode vazar para a nova.
+      UserDefaults(suiteName: self.suite)?.removeObject(forKey: self.chaveDeAcoes)
       let estado = SportActivityAttributes.ContentState(
         startedAt: Date(timeIntervalSince1970: startedAtMs / 1000),
         pausedAt: nil, distanceKm: nil, bpm: nil,

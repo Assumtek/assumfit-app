@@ -51,6 +51,9 @@ struct SportLiveActivity: Widget {
         }
         Spacer()
         Metricas(state: context.state)
+        if #available(iOS 17.0, *) {
+          Botoes(state: context.state)
+        }
       }
       .padding(14)
       .activityBackgroundTint(Color(red: 0x0E / 255, green: 0x0A / 255, blue: 0x22 / 255))
@@ -69,10 +72,15 @@ struct SportLiveActivity: Widget {
           Metricas(state: context.state)
         }
         DynamicIslandExpandedRegion(.bottom) {
-          Cronometro(state: context.state)
-            .font(.system(size: 34, weight: .bold, design: .rounded))
-            .frame(maxWidth: .infinity)
-            .multilineTextAlignment(.center)
+          HStack(spacing: 12) {
+            Cronometro(state: context.state)
+              .font(.system(size: 30, weight: .bold, design: .rounded))
+            Spacer(minLength: 0)
+            if #available(iOS 17.0, *) {
+              Botoes(state: context.state)
+            }
+          }
+          .padding(.top, 4)
         }
       } compactLeading: {
         Image(systemName: context.attributes.symbol).foregroundStyle(acento)
@@ -112,6 +120,39 @@ private struct Cronometro: View {
     return h > 0
       ? String(format: "%d:%02d:%02d", h, m, seg)
       : String(format: "%d:%02d", m, seg)
+  }
+}
+
+/**
+ Pausar/retomar e encerrar sem abrir o app. `Button(intent:)` é o único jeito
+ de uma Live Activity executar algo — o sistema roda o intent no processo do
+ app (ver `SportControlIntents.swift`); por isso os botões só existem no
+ iOS 17+, onde o mecanismo nasceu.
+ */
+@available(iOS 17.0, *)
+private struct Botoes: View {
+  let state: SportActivityAttributes.ContentState
+
+  var body: some View {
+    HStack(spacing: 10) {
+      Button(intent: AlternarPausaEsporteIntent()) {
+        Image(systemName: state.pausedAt == nil ? "pause.fill" : "play.fill")
+          .font(.system(size: 15, weight: .semibold))
+          .foregroundStyle(acento)
+          .frame(width: 40, height: 40)
+          .background(acento.opacity(0.18), in: Circle())
+      }
+      .buttonStyle(.plain)
+
+      Button(intent: EncerrarEsporteIntent()) {
+        Image(systemName: "stop.fill")
+          .font(.system(size: 15, weight: .semibold))
+          .foregroundStyle(.secondary)
+          .frame(width: 40, height: 40)
+          .background(Color.secondary.opacity(0.15), in: Circle())
+      }
+      .buttonStyle(.plain)
+    }
   }
 }
 

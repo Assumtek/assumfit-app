@@ -23,7 +23,9 @@ import {
 import { energyState } from '../domain/energy';
 import { shown } from '../domain/ratings';
 import {
+  aoTocarNaIlha,
   atualizarIlhaDeEsporte,
+  consumirAcoesDaIlha,
   encerrarIlhaDeEsporte,
   iniciarIlhaDeEsporte,
 } from '../../modules/widgetbridge';
@@ -148,6 +150,54 @@ export function FocusScreen() {
   useEffect(() => {
     if (session === null) encerrarIlhaDeEsporte();
   }, [session]);
+
+  /*
+   Os botões DA ilha chegam por fila (ver `SportScreen`): o toque já pausou ou
+   retomou a ilha em nativo, com o JS possivelmente suspenso; aqui a fila é
+   drenada e aplicada à máquina de fases com o instante REAL de cada toque —
+   `pause`/`resume` do domínio guardam o restante certo mesmo minutos depois.
+  */
+  const drenarAcoesDaIlha = useCallback(() => {
+    const acoes = consumirAcoesDaIlha();
+    if (!acoes.length) return;
+    setSession((s) => {
+      let atual: FocusSession | null = s;
+      for (const acao of acoes) {
+        if (!atual) break;
+        if (acao.action === 'end') atual = null;
+        else if (acao.action === 'pause') atual = pause(atual, acao.atMs);
+        else atual = resume(atual, acao.atMs);
+      }
+      return atual;
+    });
+    setNow(Date.now());
+  }, []);
+
+  useEffect(() => {
+    if (!session) return;
+    drenarAcoesDaIlha();
+    const campainha = aoTocarNaIlha(drenarAcoesDaIlha);
+    const volta = AppState.addEventListener('change', (st) => {
+      if (st === 'active') drenarAcoesDaIlha();
+    });
+    return () => {
+      campainha();
+      volta.remove();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session !== null]);
+
+  // A sessão morre com a tela (o estado é dela); a ilha não pode sobreviver
+  // órfã, contando um foco que já não existe. O guard evita derrubar a ilha
+  // de OUTRA sessão (esporte) quando a tela desmonta sem sessão própria.
+  const haSessao = useRef(false);
+  haSessao.current = session !== null;
+  useEffect(
+    () => () => {
+      if (haSessao.current) encerrarIlhaDeEsporte();
+    },
+    [],
+  );
 
   const left = session ? remaining(session, now) : protocol.focusMin * 60_000;
   const fraction = session ? progress(session, now) : 0;

@@ -24,6 +24,8 @@ declare class WidgetBridgeNativeModule {
     phase: string | null,
   ): void;
   endSportActivity?(): void;
+  consumeSportActions?(): { action: string; atMs: number }[];
+  addListener?(evento: 'onSportAction', ouvinte: () => void): { remove(): void };
 }
 
 const nativo = requireOptionalNativeModule<WidgetBridgeNativeModule>('WidgetBridge');
@@ -94,5 +96,44 @@ export function encerrarIlhaDeEsporte() {
     nativo?.endSportActivity?.();
   } catch {
     // idem
+  }
+}
+
+// ============================================================================
+// Botões DA ilha — pausar/retomar/encerrar tocados sem abrir o app.
+// ============================================================================
+
+export type AcaoDaIlha = { action: 'pause' | 'resume' | 'end'; atMs: number };
+
+/**
+ * Drena a fila de toques nos botões da ilha (devolve e apaga numa chamada só).
+ *
+ * O toque roda em NATIVO e já ajustou a própria ilha; o que fica na fila é o
+ * que a TELA ainda precisa aplicar no estado dela — com o instante real do
+ * toque, porque entre ele e o app acordar podem ter passado minutos.
+ */
+export function consumirAcoesDaIlha(): AcaoDaIlha[] {
+  try {
+    return (nativo?.consumeSportActions?.() ?? []).filter(
+      (a): a is AcaoDaIlha =>
+        (a.action === 'pause' || a.action === 'resume' || a.action === 'end') &&
+        Number.isFinite(a.atMs),
+    );
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * A campainha: avisa que a fila tem coisa nova enquanto o JS está vivo. O
+ * payload fica de fora de propósito — quem aplica lê SEMPRE da fila, para o
+ * caminho do evento e o do retorno ao app serem um só.
+ */
+export function aoTocarNaIlha(ouvinte: () => void): () => void {
+  try {
+    const sub = nativo?.addListener?.('onSportAction', ouvinte);
+    return () => sub?.remove();
+  } catch {
+    return () => {};
   }
 }
