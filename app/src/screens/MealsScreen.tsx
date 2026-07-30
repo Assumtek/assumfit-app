@@ -253,11 +253,6 @@ export function MealsScreen() {
     }
   };
 
-  const removerAlimento = async () => {
-    if (!detalhe || !editando || editando.index < 0) return;
-    await removerAlimentoEm(editando.index);
-  };
-
   /*
    Reanalisar usa a foto que mora no aparelho MAIS a observação da pessoa
    ("tem farofa, e é frango") — que o modelo trata com precedência. O registro
@@ -293,6 +288,53 @@ export function MealsScreen() {
   if (detalhe) {
     const fotoUri = fotoDe(detalhe.id);
     const m = macros(detalhe.foods as api.MealFood[]);
+
+    // Variável JSX, NÃO componente aninhado: componente definido aqui dentro
+    // remonta a cada render e o teclado fecharia a cada tecla digitada.
+    const editorDeAlimento = editando ? (
+      <YStack
+        marginVertical="$sm"
+        padding="$md"
+        gap="$sm"
+        borderWidth={1}
+        borderColor="$borderStrong"
+        borderRadius={12}
+      >
+        <Label>{editando.index < 0 ? 'Novo alimento' : 'Corrigir alimento'}</Label>
+        <TextInput
+          value={editando.nome}
+          onChangeText={(t) => setEditando((e) => (e ? { ...e, nome: t } : e))}
+          placeholder="Nome (ex.: Farofa)"
+          placeholderTextColor={colors.textFaint}
+          selectionColor={colors.accent}
+          style={{ fontSize: 15, color: colors.text, paddingVertical: 6 }}
+        />
+        <TextInput
+          value={editando.gramas}
+          onChangeText={(t) => setEditando((e) => (e ? { ...e, gramas: t } : e))}
+          placeholder="Gramas (ex.: 40)"
+          placeholderTextColor={colors.textFaint}
+          selectionColor={colors.accent}
+          keyboardType="number-pad"
+          style={{ fontSize: 15, color: colors.text, paddingVertical: 6 }}
+        />
+        <Data color="$mutedForeground">
+          A caloria recalcula pela tabela TACO a partir do nome e dos gramas.
+        </Data>
+        <XStack gap="$md" marginTop="$xs">
+          <YStack flex={1}>
+            <Button
+              title={salvandoEdicao ? 'Salvando…' : 'Salvar'}
+              onPress={() => void salvarEdicao()}
+              disabled={salvandoEdicao || !editando.nome.trim()}
+            />
+          </YStack>
+          <YStack flex={1}>
+            <Button title="Cancelar" variant="ghost" onPress={() => setEditando(null)} />
+          </YStack>
+        </XStack>
+      </YStack>
+    ) : null;
     return (
       <DetailScreen
         title="Refeição"
@@ -327,25 +369,10 @@ export function MealsScreen() {
           {m ? <MacroColunas m={m} /> : null}
         </YStack>
 
-        <Section label="No prato · toque para corrigir">
+        <Section label="No prato">
           {(detalhe.foods as api.MealFood[]).map((food, i) => (
-            <Row key={`${detalhe.id}-${i}`} last={i === detalhe.foods.length - 1}>
-              <Pressable
-                onPress={() => {
-                  setAvisoDetalhe(null);
-                  setEditando({
-                    index: i,
-                    nome: food.name,
-                    gramas: food.grams ? String(Math.round(food.grams)) : '',
-                  });
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={`Editar ${food.name}`}
-                style={({ pressed }) => [
-                  { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
-                  pressed && { opacity: 0.6 },
-                ]}
-              >
+            <React.Fragment key={`${detalhe.id}-${i}`}>
+              <Row last={i === detalhe.foods.length - 1}>
                 <YStack flex={1} minWidth={0} gap={2}>
                   <Body color="$foreground" numberOfLines={2}>
                     {food.name}
@@ -360,75 +387,45 @@ export function MealsScreen() {
                 <Data color="$foreground" flexShrink={0}>
                   {food.kcal_min}–{food.kcal_max} kcal
                 </Data>
-              </Pressable>
-              {/* O X remove NA LINHA — a edição fica no toque, mas a remoção
-                  não pode depender de descobrir que a linha é tocável. */}
-              <Pressable
-                onPress={() => void removerAlimentoEm(i)}
-                disabled={salvandoEdicao}
-                accessibilityRole="button"
-                accessibilityLabel={`Remover ${food.name}`}
-                hitSlop={10}
-                style={({ pressed }) => [{ marginLeft: 12, padding: 4 }, pressed && { opacity: 0.5 }]}
-              >
-                <Icon name="x" size={14} color={colors.textMuted} />
-              </Pressable>
-            </Row>
+                {/* Lápis e lixeira NA LINHA: a ação mora ao lado do alvo. */}
+                <XStack gap={2} marginLeft={8} flexShrink={0} alignItems="center">
+                  <Pressable
+                    onPress={() => {
+                      setAvisoDetalhe(null);
+                      setEditando({
+                        index: i,
+                        nome: food.name,
+                        gramas: food.grams ? String(Math.round(food.grams)) : '',
+                      });
+                    }}
+                    disabled={salvandoEdicao}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Editar ${food.name}`}
+                    hitSlop={8}
+                    style={({ pressed }) => [{ padding: 6 }, pressed && { opacity: 0.5 }]}
+                  >
+                    <Icon name="pencil" size={15} color={colors.textMuted} strokeWidth={1.5} />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => void removerAlimentoEm(i)}
+                    disabled={salvandoEdicao}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remover ${food.name}`}
+                    hitSlop={8}
+                    style={({ pressed }) => [{ padding: 6 }, pressed && { opacity: 0.5 }]}
+                  >
+                    <Icon name="trash" size={15} color={colors.textMuted} strokeWidth={1.5} />
+                  </Pressable>
+                </XStack>
+              </Row>
+              {/* O editor abre COLADO na linha editada, não no fim da lista. */}
+              {editando?.index === i ? editorDeAlimento : null}
+            </React.Fragment>
           ))}
         </Section>
 
-        {editando ? (
-          <YStack
-            marginTop="$md"
-            padding="$md"
-            gap="$sm"
-            borderWidth={1}
-            borderColor="$borderStrong"
-            borderRadius={12}
-          >
-            <Label>{editando.index < 0 ? 'Novo alimento' : 'Corrigir alimento'}</Label>
-            <TextInput
-              value={editando.nome}
-              onChangeText={(t) => setEditando((e) => (e ? { ...e, nome: t } : e))}
-              placeholder="Nome (ex.: Farofa)"
-              placeholderTextColor={colors.textFaint}
-              selectionColor={colors.accent}
-              style={{ fontSize: 15, color: colors.text, paddingVertical: 6 }}
-            />
-            <TextInput
-              value={editando.gramas}
-              onChangeText={(t) => setEditando((e) => (e ? { ...e, gramas: t } : e))}
-              placeholder="Gramas (ex.: 40)"
-              placeholderTextColor={colors.textFaint}
-              selectionColor={colors.accent}
-              keyboardType="number-pad"
-              style={{ fontSize: 15, color: colors.text, paddingVertical: 6 }}
-            />
-            <Data color="$mutedForeground">
-              A caloria recalcula pela tabela TACO a partir do nome e dos gramas.
-            </Data>
-            <XStack gap="$md" marginTop="$xs">
-              <YStack flex={1}>
-                <Button
-                  title={salvandoEdicao ? 'Salvando…' : 'Salvar'}
-                  onPress={() => void salvarEdicao()}
-                  disabled={salvandoEdicao || !editando.nome.trim()}
-                />
-              </YStack>
-              <YStack flex={1}>
-                <Button title="Cancelar" variant="ghost" onPress={() => setEditando(null)} />
-              </YStack>
-            </XStack>
-            {editando.index >= 0 ? (
-              <Button
-                title="Remover este alimento"
-                variant="ghost"
-                onPress={() => void removerAlimento()}
-                disabled={salvandoEdicao}
-              />
-            ) : null}
-          </YStack>
-        ) : (
+        {editando && editando.index < 0 ? editorDeAlimento : null}
+        {!editando ? (
           <YStack alignSelf="flex-start" marginTop="$md">
             <Button
               title="Adicionar alimento"
@@ -439,7 +436,7 @@ export function MealsScreen() {
               }}
             />
           </YStack>
-        )}
+        ) : null}
 
         <Data marginTop="$md" color="$mutedForeground">
           confiança da análise: {Math.round(detalhe.confidence * 100)}%

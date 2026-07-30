@@ -7,6 +7,8 @@ import {
   Mountain,
   Bike,
   Mic,
+  Pencil,
+  Trash2,
   X,
   Activity,
   ArrowLeft,
@@ -104,7 +106,9 @@ export type IconName =
   | 'down'
   | 'dumbbell'
   | 'check'
-  | 'pause';
+  | 'pause'
+  | 'pencil'
+  | 'trash';
 
 /**
  * Nome semântico → componente do Lucide.
@@ -158,6 +162,8 @@ const GLYPH = {
   dumbbell: Dumbbell,
   check: Check,
   pause: Pause,
+  pencil: Pencil,
+  trash: Trash2,
 } as const;
 
 type Props = {
