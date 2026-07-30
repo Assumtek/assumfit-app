@@ -523,10 +523,22 @@ export function MealsScreen() {
 
   return (
     <DetailScreen title="Refeições" refreshControl={refresh}>
+      {/* A ação principal vem antes do resumo: registrar é o gesto repetido
+          do dia; o resumo é consequência. */}
+      <YStack alignSelf="flex-start" marginTop="$md" marginBottom="$lg">
+        <Button
+          title="Nova refeição"
+          onPress={() => {
+            setAviso(null);
+            setCriando(true);
+          }}
+        />
+      </YStack>
+
       {/* O resumo do dia é a peça de destaque da tela — composição do resumo
           nutricional do MUVX (meta, barra, colunas de macros), na pele do
           AssumFit: halo, sombra e UM acento. */}
-      <YStack marginTop="$md" marginBottom="$xl">
+      <YStack marginBottom="$xl">
         <HeroCard eyebrow="Resumo de hoje">
           <XStack alignItems="baseline" gap="$sm">
             <Display>{deHoje.length ? `${kcalMin}–${kcalMax}` : '—'}</Display>
@@ -549,16 +561,6 @@ export function MealsScreen() {
               : 'nenhuma refeição registrada hoje'}
           </Data>
         </HeroCard>
-      </YStack>
-
-      <YStack alignSelf="flex-start" marginBottom="$xl">
-        <Button
-          title="Nova refeição"
-          onPress={() => {
-            setAviso(null);
-            setCriando(true);
-          }}
-        />
       </YStack>
 
       {meals === null ? (
