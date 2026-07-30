@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
-import { LayoutChangeEvent, Pressable, ScrollView } from 'react-native';
+import { ActivityIndicator, LayoutChangeEvent, Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '../components/Icon';
@@ -29,14 +29,10 @@ const ACTION_ROUTE = {
   play: 'Focus',
   calendar: 'Agenda',
   drop: 'Habits',
+  dumbbell: 'Plan',
+  footprints: 'Sport',
+  flame: 'Meals',
 } as const;
-
-const MOODS = [
-  { key: 'great', label: 'Ótimo' },
-  { key: 'ok', label: 'Neutro' },
-  { key: 'tired', label: 'Cansado' },
-  { key: 'bad', label: 'Mal' },
-] as const;
 
 export function HomeScreen() {
   const { colors } = useTheme();
@@ -46,8 +42,6 @@ export function HomeScreen() {
   const sleep = useBiometricStore((s) => s.sleep);
   const connection = useBiometricStore((s) => s.connection);
   const user = useUserStore((s) => s.user);
-  const mood = useUserStore((s) => s.mood);
-  const setMood = useUserStore((s) => s.setMood);
   const openSidebar = useUiStore((s) => s.openSidebar);
   const hrvHistory = useBiometricStore((s) => s.hrvHistory);
   const [chartWidth, setChartWidth] = useState(0);
@@ -55,6 +49,7 @@ export function HomeScreen() {
   const city = useAmbientStore((s) => s.city);
   const refreshAmbient = useAmbientStore((s) => s.refresh);
   const model = useInsightStore((s) => s.model);
+  const insightStatus = useInsightStore((s) => s.status);
   const refreshInsight = useInsightStore((s) => s.refresh);
   const hour = new Date().getHours();
 
@@ -209,9 +204,31 @@ export function HomeScreen() {
         ) : null}
       </XStack>
 
-      {/* Estado do dia. Alinhado à esquerda, sem caixa, sem ícone decorativo. */}
+      {/* Estado do dia. Alinhado à esquerda, sem caixa, sem ícone decorativo.
+          O Atualizar relê o DIA no servidor — treino, esporte, refeições,
+          passos, água — e rediz a frase; sem ele, o texto só mudaria na virada
+          da hora. */}
       <YStack paddingTop="$xxxl" paddingBottom="$xl">
-        <Label marginBottom="$md">{energy.eyebrow}</Label>
+        <XStack alignItems="center" justifyContent="space-between" marginBottom="$md">
+          <Label>{energy.eyebrow}</Label>
+          <Pressable
+            onPress={() => void refreshInsight(hour, { force: true })}
+            disabled={insightStatus === 'loading'}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Atualizar leitura"
+            style={({ pressed }) => pressed && { opacity: 0.5 }}
+          >
+            <XStack alignItems="center" gap="$xs">
+              {insightStatus === 'loading' ? (
+                <ActivityIndicator size="small" color={colors.textMuted} />
+              ) : (
+                <Icon name="refresh" size={13} color={colors.textMuted} strokeWidth={1.5} />
+              )}
+              <Data>{insightStatus === 'loading' ? 'relendo…' : 'atualizar'}</Data>
+            </XStack>
+          </Pressable>
+        </XStack>
         <Text
           fontSize={26}
           fontWeight="600"
@@ -339,24 +356,6 @@ export function HomeScreen() {
         />
       </XStack>
 
-      <YStack paddingTop="$xxl" borderTopWidth={1} borderTopColor="$border">
-        <Label marginBottom="$lg">Como você está</Label>
-        <XStack gap="$xl">
-          {MOODS.map((m) => (
-            <Pressable
-              key={m.key}
-              onPress={() => setMood(m.key)}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityState={{ selected: mood === m.key }}
-            >
-              <Text fontSize={13} color={mood === m.key ? '$foreground' : '$faint'}>
-                {m.label}
-              </Text>
-            </Pressable>
-          ))}
-        </XStack>
-      </YStack>
     </ScrollView>
   );
 }

@@ -6,6 +6,7 @@ import { env } from '../lib/env';
 import { logError } from '../lib/log';
 import { prisma } from '../lib/prisma';
 import { hrvBaseline, latestReading } from './biometric.service';
+import { activePlan, localDayOfWeek } from './workout/execution';
 
 /**
  * Monta as entradas do modelo a partir do banco, chama o Python e persiste.
@@ -102,15 +103,60 @@ function hourStart(now = new Date()): Date {
 async function habitsToday(
   userId: string,
   tzOffsetMin: number,
-): Promise<{ waterMl: number | null; sleepScore: number | null }> {
+): Promise<{ waterMl: number | null; sleepScore: number | null; focusSessions: number }> {
   const habit = await prisma.dailyHabit.findUnique({
     where: { userId_date: { userId, date: startOfLocalDay(tzOffsetMin) } },
-    select: { waterMl: true, sleepScore: true },
+    select: { waterMl: true, sleepScore: true, focusSessions: true },
   });
-  return { waterMl: habit?.waterMl ?? null, sleepScore: habit?.sleepScore ?? null };
+  return {
+    waterMl: habit?.waterMl ?? null,
+    sleepScore: habit?.sleepScore ?? null,
+    focusSessions: habit?.focusSessions ?? 0,
+  };
 }
 
-export type EnergyOptions = { hour?: number; persist?: boolean };
+/**
+ * O DIA da pessoa até agora — o que tira o insight do genérico.
+ *
+ * A frase da home falava só de fisiologia e agenda porque era só isso que o
+ * modelo enxergava. Aqui entram o treino do plano (feito ou pendente), o
+ * esporte praticado, as refeições registradas e os passos — cada um lido do
+ * banco na hora, para o botão Atualizar da home reler o dia de verdade.
+ */
+async function todayContext(userId: string, tzOffsetMin: number, steps: number | null) {
+  const dayStart = startOfLocalDay(tzOffsetMin);
+  const [sports, meals, plan, workoutsDone] = await Promise.all([
+    prisma.sportSession.findMany({
+      where: { userId, startedAt: { gte: dayStart } },
+      orderBy: { startedAt: 'desc' },
+      select: { sport: true, durationS: true },
+    }),
+    prisma.mealRecord.findMany({
+      where: { userId, at: { gte: dayStart } },
+      select: { kcalMin: true, kcalMax: true },
+    }),
+    activePlan(userId).catch(() => null),
+    prisma.workoutExecution.count({
+      where: { userId, status: 'FINISHED', finishedAt: { gte: dayStart } },
+    }),
+  ]);
+
+  const planDay = plan?.days.find((d) => d.dayOfWeek === localDayOfWeek(tzOffsetMin));
+  return {
+    steps,
+    sport_count: sports.length,
+    last_sport: sports[0]
+      ? { kind: sports[0].sport, minutes: Math.max(1, Math.round(sports[0].durationS / 60)) }
+      : null,
+    meals_count: meals.length,
+    meals_kcal_mid: meals.length
+      ? Math.round(meals.reduce((s, m) => s + (m.kcalMin + m.kcalMax) / 2, 0))
+      : null,
+    workout: planDay?.workout ? { name: planDay.workout.name, done: workoutsDone > 0 } : null,
+  };
+}
+
+export type EnergyOptions = { hour?: number; persist?: boolean; force?: boolean };
 
 /**
  * Calcula a energia da pessoa agora.
@@ -132,6 +178,7 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
 
   if (!reading?.hrvMs || !reading.heartRate) return null;
   const { waterMl: water, sleepScore: sleep } = habits;
+  const today = await todayContext(userId, tz, reading.steps ?? null);
 
   // A hora do app tem precedência: ele sabe o relógio do aparelho AGORA, o que
   // cobre quem acabou de desembarcar antes de o cadastro ser atualizado.
@@ -159,6 +206,13 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
         hour,
         baseline,
         lifestyle?.updatedAt ?? null,
+        // O dia entra GROSSO no hash: passos em baldes de 500 para o cache não
+        // virar uma chamada de modelo por passo dado; o resto muda pouco.
+        today.sport_count,
+        today.meals_count,
+        today.workout?.done ?? null,
+        habits.focusSessions,
+        today.steps === null ? null : Math.floor(today.steps / 500),
       ]),
     )
     .digest('hex');
@@ -167,7 +221,9 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
     where: { userId_hourStart: { userId, hourStart: hourStart() } },
     select: { insight: true, inputsHash: true },
   });
-  if (cached?.inputsHash === inputsHash && cached.insight) {
+  // `force` é o botão Atualizar da home: ignora o cache e rediz a frase com o
+  // dia relido — é o que faz o toque ter efeito visível.
+  if (!options.force && cached?.inputsHash === inputsHash && cached.insight) {
     return cached.insight as unknown as EnergyResponse;
   }
 
@@ -201,6 +257,7 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
         train_period: lifestyle.trainPeriod,
         goal: lifestyle.goal,
       },
+      today: { ...today, focus_sessions: habits.focusSessions },
     },
     { timeout: 8000 },
   );

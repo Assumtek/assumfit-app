@@ -17,7 +17,7 @@ from models import chronotype as chrono
 from models.bio_age import calc_bio_age
 from models.energy_score import CALIBRATION_DAYS, calc_energy
 from models.correlations import sleep_onset_vs_next_hrv, steps_vs_deep_sleep, water_vs_energy
-from models.insight import build as build_insight
+from models.insight import DayContext, build as build_insight, day_notes
 from models.insight_llm import Facts, write as write_insight
 from models.lifestyle import Lifestyle, chronotype_from, circadian_shift
 
@@ -47,6 +47,29 @@ class EnergyInput(BaseModel):
     #: treino não é gerado — o modelo não tem relógio próprio, é sem estado.
     weekday: int | None = Field(default=None, ge=0, le=6)
     lifestyle: LifestyleInput | None = None
+    today: TodayInput | None = None
+
+
+class TodaySportInput(BaseModel):
+    kind: str = Field(max_length=40)
+    minutes: int = Field(ge=1, le=1440)
+
+
+class TodayWorkoutInput(BaseModel):
+    name: str = Field(max_length=120)
+    done: bool = False
+
+
+class TodayInput(BaseModel):
+    """O dia da pessoa até agora, lido do banco pelo backend na hora da chamada."""
+
+    steps: int | None = Field(default=None, ge=0, le=200000)
+    sport_count: int = Field(default=0, ge=0, le=50)
+    last_sport: TodaySportInput | None = None
+    focus_sessions: int = Field(default=0, ge=0, le=100)
+    meals_count: int = Field(default=0, ge=0, le=50)
+    meals_kcal_mid: int | None = Field(default=None, ge=0, le=50000)
+    workout: TodayWorkoutInput | None = None
 
 
 class LifestyleInput(BaseModel):
@@ -91,7 +114,22 @@ def energy_score(data: EnergyInput) -> dict:
     return {**_energy(data).to_dict(), "calibration_days": CALIBRATION_DAYS}
 
 
-def _redigir(energy, hour, *, calibration_days=7, lifestyle=None, weekday=None):
+def _dia(data: EnergyInput) -> DayContext | None:
+    if data.today is None:
+        return None
+    t = data.today
+    return DayContext(
+        steps=t.steps,
+        sport_count=t.sport_count,
+        last_sport=(t.last_sport.kind, t.last_sport.minutes) if t.last_sport else None,
+        focus_sessions=t.focus_sessions,
+        meals_count=t.meals_count,
+        meals_kcal_mid=t.meals_kcal_mid,
+        workout=(t.workout.name, t.workout.done) if t.workout else None,
+    )
+
+
+def _redigir(energy, hour, *, calibration_days=7, lifestyle=None, weekday=None, today=None):
     """Molde primeiro, LLM por cima — nesta ordem, sempre.
 
     O determinístico é calculado ANTES de qualquer chamada de rede, e é o que
@@ -102,7 +140,12 @@ def _redigir(energy, hour, *, calibration_days=7, lifestyle=None, weekday=None):
     sinal dominante com o valor formatado, transição — e apenas os redige.
     """
     molde = build_insight(
-        energy, hour, calibration_days=calibration_days, lifestyle=lifestyle, weekday=weekday
+        energy,
+        hour,
+        calibration_days=calibration_days,
+        lifestyle=lifestyle,
+        weekday=weekday,
+        today=today,
     )
 
     escrito = write_insight(
@@ -115,6 +158,7 @@ def _redigir(energy, hour, *, calibration_days=7, lifestyle=None, weekday=None):
             next_label=molde.next_label,
             hour=hour,
             routine=molde.context,
+            day_notes=day_notes(today, hour),
         ),
         molde,
     )
@@ -148,6 +192,7 @@ def energy_insight(data: EnergyInput) -> dict:
             calibration_days=CALIBRATION_DAYS,
             lifestyle=_lifestyle(data),
             weekday=data.weekday,
+            today=_dia(data),
         ).to_dict(),
     }
 

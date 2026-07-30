@@ -8,6 +8,7 @@ import {
   Bike,
   Mic,
   Pencil,
+  RefreshCw,
   Trash2,
   X,
   Activity,
@@ -108,7 +109,8 @@ export type IconName =
   | 'check'
   | 'pause'
   | 'pencil'
-  | 'trash';
+  | 'trash'
+  | 'refresh';
 
 /**
  * Nome semântico → componente do Lucide.
@@ -164,6 +166,7 @@ const GLYPH = {
   pause: Pause,
   pencil: Pencil,
   trash: Trash2,
+  refresh: RefreshCw,
 } as const;
 
 type Props = {

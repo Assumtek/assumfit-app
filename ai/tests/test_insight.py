@@ -121,3 +121,92 @@ class TestSinalAusente:
         com_sono_ruim = calc_energy(**{**BASE, "sleep_score": 0}, hour=9).score
         sem_sono = calc_energy(**{**BASE, "sleep_score": None}, hour=9).score
         assert sem_sono > com_sono_ruim
+
+
+class TestContextoDoDia:
+    """O dia da pessoa muda a AÇÃO e vira nota para o redator."""
+
+    def _com_dia(self, hour: int, today, **over):
+        energy = calc_energy(**{**BASE, **over}, hour=hour)
+        return build(energy, hour, today=today)
+
+    def test_treino_pendente_vira_a_acao(self):
+        from models.insight import DayContext
+
+        insight = self._com_dia(
+            10, DayContext(workout=("Peito e tríceps", False)), hrv_ms=70, hrv_baseline=62
+        )
+        assert insight.action.key == "dumbbell"
+        assert "treino" in insight.action.label.lower()
+
+    def test_treino_feito_nao_cobra_de_novo(self):
+        from models.insight import DayContext
+
+        insight = self._com_dia(
+            10, DayContext(workout=("Peito e tríceps", True)), hrv_ms=70, hrv_baseline=62
+        )
+        assert insight.action.key != "dumbbell"
+
+    def test_energia_baixa_nao_manda_treinar(self):
+        from models.insight import DayContext
+
+        insight = self._com_dia(
+            23, DayContext(workout=("Pernas", False)), hrv_ms=32, hrv_baseline=65, sleep_score=30
+        )
+        assert insight.action.key != "dumbbell"
+
+    def test_tarde_parada_pede_movimento(self):
+        from models.insight import DayContext
+
+        insight = self._com_dia(
+            16, DayContext(steps=800, meals_count=2, meals_kcal_mid=900), hrv_ms=70, hrv_baseline=62
+        )
+        assert insight.action.key == "footprints"
+
+    def test_sem_refeicao_a_tarde_sugere_registrar(self):
+        from models.insight import DayContext
+
+        insight = self._com_dia(
+            15, DayContext(steps=9000, meals_count=0), hrv_ms=70, hrv_baseline=62
+        )
+        assert insight.action.key == "flame"
+
+    def test_sem_contexto_mantem_a_acao_da_faixa(self):
+        insight = self._com_dia(10, None, hrv_ms=70, hrv_baseline=62)
+        assert insight.action.key in {"play", "calendar", "drop"}
+
+
+class TestNotasDoDia:
+    def test_notas_juntam_o_que_foi_medido(self):
+        from models.insight import DayContext, day_notes
+
+        notas = day_notes(
+            DayContext(
+                steps=4200,
+                last_sport=("corrida", 32),
+                meals_count=2,
+                meals_kcal_mid=1150,
+                focus_sessions=1,
+                workout=("Costas e bíceps", False),
+            ),
+            hour=15,
+        )
+        assert notas is not None
+        assert "Costas e bíceps" in notas
+        assert "corrida por 32 min" in notas
+        assert "4200 passos" in notas
+        assert "~1150 kcal" in notas
+
+    def test_ausencia_so_vira_nota_em_hora_plausivel(self):
+        from models.insight import DayContext, day_notes
+
+        manha = day_notes(DayContext(meals_count=0), hour=9)
+        tarde = day_notes(DayContext(meals_count=0), hour=15)
+        assert manha is None
+        assert tarde is not None and "nenhuma refeição" in tarde
+
+    def test_sem_nada_medido_fica_em_silencio(self):
+        from models.insight import DayContext, day_notes
+
+        assert day_notes(DayContext(), hour=10) is None
+        assert day_notes(None, hour=10) is None

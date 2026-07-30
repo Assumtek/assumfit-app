@@ -304,7 +304,10 @@ export type ModelInsight = {
   detail: string;
   nextLabel: string | null;
   nextHour: number | null;
-  action: { key: 'play' | 'calendar' | 'drop'; label: string };
+  action: {
+    key: 'play' | 'calendar' | 'drop' | 'dumbbell' | 'footprints' | 'flame';
+    label: string;
+  };
   driverKey: string | null;
   driverLabel: string | null;
   /** Frase vinda do perfil de rotina. Ausente sem onboarding respondido. */
@@ -329,8 +332,10 @@ export type EnergyFromModel = {
  * existe em relação ao relógio de quem está lendo, e o servidor roda em UTC.
  * Quem sabe a hora local é o aparelho.
  */
-export async function fetchEnergyInsight(hour: number): Promise<EnergyFromModel> {
-  const { data } = await api.get<EnergyFromModel>('/insights/energy', { params: { hour } });
+export async function fetchEnergyInsight(hour: number, force = false): Promise<EnergyFromModel> {
+  const { data } = await api.get<EnergyFromModel>('/insights/energy', {
+    params: force ? { hour, force: 1 } : { hour },
+  });
   return data;
 }
 

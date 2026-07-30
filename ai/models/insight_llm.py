@@ -114,6 +114,9 @@ class Facts:
     hour: int
     #: Contexto de rotina do onboarding, já resolvido. Ex: "hoje é dia de treino".
     routine: str | None
+    #: Fatos do DIA já apurados (treino, esporte, refeições, passos, foco),
+    #: em frases curtas separadas por "; ". `None` quando não há nada medido.
+    day_notes: str | None = None
 
 
 def _prompt(f: Facts) -> str:
@@ -145,6 +148,12 @@ def _prompt(f: Facts) -> str:
         linhas.append(f"Transição já calculada na curva do dia: {f.next_label}.")
     if f.routine:
         linhas.append(f"Contexto da rotina: {f.routine}.")
+    if f.day_notes:
+        linhas.append(
+            f"Fatos do dia da pessoa: {f.day_notes}. "
+            "Teça NO MÁXIMO um deles no texto — o mais relevante para a orientação "
+            "de agora. Não liste todos; não cobre o que não foi feito, apenas oriente."
+        )
 
     return "\n".join(linhas)
 
@@ -251,6 +260,9 @@ def _plausivel(dados: dict, facts: Facts) -> bool:
     # legítimo por citar um dado que ELE MESMO forneceu ao modelo.
     if facts.routine:
         permitidos.update(_numeros(facts.routine))
+    # Idem para os fatos do dia: passos, kcal e minutos vêm todos daqui.
+    if facts.day_notes:
+        permitidos.update(_numeros(facts.day_notes))
 
     # Todo número no texto tem que ter vindo dos fatos. É a checagem que impede
     # a falha mais grave possível aqui: um valor biométrico inventado com cara

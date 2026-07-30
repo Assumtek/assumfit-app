@@ -33,7 +33,58 @@ from models.energy_score import Component, EnergyResult, level_of
 from models.lifestyle import Context, Lifestyle, personalize
 
 Level = Literal["high", "mid", "low"]
-ActionKey = Literal["play", "calendar", "drop"]
+ActionKey = Literal["play", "calendar", "drop", "dumbbell", "footprints", "flame"]
+
+
+@dataclass(frozen=True)
+class DayContext:
+    """O dia da pessoa até agora — o que tira a home do genérico.
+
+    Tudo aqui veio do banco, lido na hora da chamada. Campo `None` é "não sei",
+    nunca "zero": passos sem leitura não viram sedentarismo, e refeição não
+    registrada não vira jejum.
+    """
+
+    steps: int | None = None
+    sport_count: int = 0
+    #: (modalidade, minutos) do último esporte de hoje.
+    last_sport: tuple[str, int] | None = None
+    focus_sessions: int = 0
+    meals_count: int = 0
+    meals_kcal_mid: int | None = None
+    #: (nome do treino do plano para hoje, já feito?).
+    workout: tuple[str, bool] | None = None
+
+
+def day_notes(today: DayContext | None, hour: int) -> str | None:
+    """Os fatos do dia em frases curtas, para o redator citar o que couber.
+
+    Cada frase só existe se o fato foi MEDIDO — e as ausências só viram nota em
+    hora plausível: "nenhuma refeição registrada" às 9h da manhã seria cobrança,
+    não informação.
+    """
+    if today is None:
+        return None
+    notas: list[str] = []
+    if today.workout is not None:
+        nome, feito = today.workout
+        notas.append(
+            f"treino de hoje ({nome}) já concluído" if feito else f"o treino de hoje ({nome}) ainda não foi feito"
+        )
+    if today.last_sport is not None:
+        kind, minutos = today.last_sport
+        notas.append(f"praticou {kind} por {minutos} min hoje")
+    if today.steps is not None and today.steps > 0:
+        notas.append(f"{today.steps} passos até agora")
+    if today.meals_count > 0 and today.meals_kcal_mid is not None:
+        plural = "refeição registrada" if today.meals_count == 1 else "refeições registradas"
+        notas.append(f"{today.meals_count} {plural} (~{today.meals_kcal_mid} kcal)")
+    elif today.meals_count == 0 and hour >= 13:
+        notas.append("nenhuma refeição registrada hoje")
+    if today.focus_sessions > 0:
+        plural = "sessão de foco concluída" if today.focus_sessions == 1 else "sessões de foco concluídas"
+        notas.append(f"{today.focus_sessions} {plural}")
+    return "; ".join(notas[:4]) if notas else None
 
 
 @dataclass(frozen=True)
@@ -211,6 +262,7 @@ def build(
     calibration_days: int = 7,
     lifestyle: Lifestyle | None = None,
     weekday: int | None = None,
+    today: DayContext | None = None,
 ) -> HomeInsight:
     level: Level = energy.level
     worst, best = _named(energy.components)
@@ -260,9 +312,24 @@ def build(
     # Dia de treino com energia baixa troca a AÇÃO, não só o texto: mandar
     # "iniciar sessão de foco" para quem precisa decidir se treina ou não é
     # responder outra pergunta.
+    #
+    # Com o contexto do DIA, a ação deixa de ser função só da faixa: treino do
+    # plano pendente vale mais que "abrir agenda", e uma tarde parada pede
+    # movimento antes de pedir foco. A ordem é deliberada — descanso (fisiologia)
+    # vence tudo; depois o compromisso assumido (treino); depois o corpo parado;
+    # por fim o registro do dia.
     action = ACTIONS[level]
     if ctx and ctx.action_override == "rest":
         action = Action("drop", "Ver recuperação")
+    elif today is not None:
+        pendente = today.workout is not None and not today.workout[1]
+        parado = today.steps is not None and today.steps < 3000 and hour >= 15
+        if pendente and level != "low":
+            action = Action("dumbbell", "Abrir o treino de hoje")
+        elif parado and level != "low":
+            action = Action("footprints", "Registrar um esporte")
+        elif today.meals_count == 0 and 12 <= hour <= 21:
+            action = Action("flame", "Registrar refeição")
 
     return HomeInsight(
         eyebrow=EYEBROWS[level],

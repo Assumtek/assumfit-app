@@ -28,10 +28,17 @@ insightsRoutes.use(requireAuth);
 insightsRoutes.get(
   '/energy',
   asyncRoute<AuthedRequest>(async (req, res) => {
-    const { hour } = z.object({ hour: z.coerce.number().int().min(0).max(23).optional() }).parse(req.query);
+    const { hour, force } = z
+      .object({
+        hour: z.coerce.number().int().min(0).max(23).optional(),
+        // O botão Atualizar da home: relê o dia no banco e rediz a frase,
+        // ignorando o cache da hora.
+        force: z.coerce.boolean().default(false),
+      })
+      .parse(req.query);
 
     try {
-      const result = await energyNow(req.userId, { hour });
+      const result = await energyNow(req.userId, { hour, force });
       if (!result) return res.status(404).json({ error: 'Sem leitura ainda' });
       return res.json(result);
     } catch {

@@ -10,7 +10,7 @@ type InsightState = {
   status: Status;
   /** Hora local usada na última consulta, para não repetir dentro da mesma hora. */
   fetchedHour: number | null;
-  refresh: (hour: number) => Promise<void>;
+  refresh: (hour: number, opts?: { force?: boolean }) => Promise<void>;
   /** Descarta o cache para a próxima leitura da tela buscar de novo. */
   invalidate: () => void;
 };
@@ -33,19 +33,20 @@ export const useInsightStore = create<InsightState>((set, get) => ({
   status: 'idle',
   fetchedHour: null,
 
-  refresh: async (hour) => {
+  refresh: async (hour, opts) => {
     if (!api.isAuthenticated()) return;
     // O insight só muda de hora em hora — é essa a granularidade do cálculo.
     // Reconsultar a cada foco da tela gastaria bateria e rede para receber
-    // exatamente o mesmo texto.
-    if (get().status === 'ready' && get().fetchedHour === hour) return;
+    // exatamente o mesmo texto. `force` é o botão Atualizar: a pessoa PEDIU a
+    // releitura, e o servidor rediz a frase com o dia relido do banco.
+    if (!opts?.force && get().status === 'ready' && get().fetchedHour === hour) return;
 
     set({ status: 'loading' });
     try {
-      const model = await api.fetchEnergyInsight(hour);
+      const model = await api.fetchEnergyInsight(hour, opts?.force ?? false);
       set({ model, status: 'ready', fetchedHour: hour });
     } catch {
-      set({ status: 'offline' });
+      set({ status: get().model ? 'ready' : 'offline' });
     }
   },
 
