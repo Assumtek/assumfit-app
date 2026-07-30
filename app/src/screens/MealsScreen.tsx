@@ -5,6 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Platform, Pressable, TextInput } from 'react-native';
 
+import { Icon } from '../components/Icon';
 import { VoiceInput } from '../components/VoiceInput';
 
 import { Note, Row, Section } from '../components/Card';
@@ -227,8 +228,9 @@ export function MealsScreen() {
     }
   };
 
-  const removerAlimento = async () => {
-    if (!detalhe || !editando || editando.index < 0) return;
+  /** Remove um alimento direto da linha — sem passar pelo editor. */
+  const removerAlimentoEm = async (index: number) => {
+    if (!detalhe) return;
     const atuais = detalhe.foods as api.MealFood[];
     if (atuais.length <= 1) {
       setAvisoDetalhe('Este é o único alimento — para tirá-lo, remova o registro inteiro.');
@@ -240,7 +242,7 @@ export function MealsScreen() {
       aplicarRegistro(
         await api.updateMealFoods(
           detalhe.id,
-          atuais.filter((_, i) => i !== editando.index),
+          atuais.filter((_, i) => i !== index),
         ),
       );
       setEditando(null);
@@ -249,6 +251,11 @@ export function MealsScreen() {
     } finally {
       setSalvandoEdicao(false);
     }
+  };
+
+  const removerAlimento = async () => {
+    if (!detalhe || !editando || editando.index < 0) return;
+    await removerAlimentoEm(editando.index);
   };
 
   /*
@@ -353,6 +360,18 @@ export function MealsScreen() {
                 <Data color="$foreground" flexShrink={0}>
                   {food.kcal_min}–{food.kcal_max} kcal
                 </Data>
+              </Pressable>
+              {/* O X remove NA LINHA — a edição fica no toque, mas a remoção
+                  não pode depender de descobrir que a linha é tocável. */}
+              <Pressable
+                onPress={() => void removerAlimentoEm(i)}
+                disabled={salvandoEdicao}
+                accessibilityRole="button"
+                accessibilityLabel={`Remover ${food.name}`}
+                hitSlop={10}
+                style={({ pressed }) => [{ marginLeft: 12, padding: 4 }, pressed && { opacity: 0.5 }]}
+              >
+                <Icon name="x" size={14} color={colors.textMuted} />
               </Pressable>
             </Row>
           ))}
