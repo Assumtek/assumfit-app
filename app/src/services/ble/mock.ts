@@ -3,7 +3,7 @@ import type { BleService, ConnectionState, DiscoveredDevice } from './types';
 
 const DEVICE: DiscoveredDevice = {
   id: 'E4:C3:B2:A1:00:1F',
-  name: 'Staranb ANB-X1',
+  name: 'AssumFit Watch',
   rssi: -58,
 };
 

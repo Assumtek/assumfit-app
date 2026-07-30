@@ -231,7 +231,7 @@ export function Sidebar() {
 
           <SectionLabel>Dispositivo</SectionLabel>
           <Entry
-            name="Staranb ANB-X1"
+            name="AssumFit Watch"
             detail={
               connection === 'connected'
                 ? battery != null

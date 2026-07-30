@@ -46,7 +46,7 @@ export function DeviceScreen() {
   }
 
   const rows = [
-    { label: 'Modelo', value: 'Staranb ANB-X1' },
+    { label: 'Modelo', value: 'AssumFit Watch' },
     { label: 'Identificador', value: 'E4:C3:B2:A1:00:1F' },
     { label: 'Estado', value: connection === 'connected' ? 'Conectado' : 'Desconectado' },
     { label: 'Bateria', value: battery != null ? `${battery}%` : '—' },

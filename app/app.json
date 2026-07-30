@@ -17,7 +17,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "br.com.assumtek.assumfit",
       "infoPlist": {
-        "NSBluetoothAlwaysUsageDescription": "O AssumFit usa Bluetooth para ler os dados da sua pulseira Staranb.",
+        "NSBluetoothAlwaysUsageDescription": "O AssumFit usa Bluetooth para ler os dados do seu AssumFit Watch.",
         "NSLocationWhenInUseUsageDescription": "O AssumFit usa sua localização aproximada apenas para saber a temperatura e a umidade do ambiente, que afetam HRV, frequência cardíaca e sono. A posição não é armazenada.",
         "UIBackgroundModes": [
           "bluetooth-central"
@@ -63,7 +63,7 @@
           "modes": [
             "central"
           ],
-          "bluetoothAlwaysPermission": "O AssumFit usa Bluetooth para ler os dados da sua pulseira Staranb."
+          "bluetoothAlwaysPermission": "O AssumFit usa Bluetooth para ler os dados do seu AssumFit Watch."
         }
       ],
       "expo-secure-store",

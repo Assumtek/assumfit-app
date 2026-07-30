@@ -108,7 +108,7 @@ export function SettingsScreen() {
           {/* A fonte vem do SERVIÇO em uso, não da última leitura: um app que
               acabou de trocar para o real ainda tem leitura antiga em memória,
               e a tela diria "simulado" com o relógio no pulso. */}
-          <RowValue>{usingRealDevice ? 'Staranb ANB-X1' : 'Simulado'}</RowValue>
+          <RowValue>{usingRealDevice ? 'AssumFit Watch' : 'Simulado'}</RowValue>
         </Row>
         <Row>
           <RowLabel>Sono</RowLabel>
