@@ -19,7 +19,7 @@ export function HrvScreen() {
   const [range, setRange] = useState<(typeof RANGES)[number]>('1H');
   const [chartWidth, setChartWidth] = useState(0);
 
-  if (!latest) return <DetailScreen title="HRV" children={null} />;
+  if (!latest) return <DetailScreen title="Coração e HRV" children={null} />;
 
   const rating = rateHrv(latest.hrvMs);
   const baseline = hrvHistory.length
@@ -30,7 +30,10 @@ export function HrvScreen() {
   const max = recent.length ? Math.round(Math.max(...recent)) : '—';
 
   return (
-    <DetailScreen title="HRV">
+    // O título assume os DOIS nomes: os cards "HRV" e "Coração" da home
+    // desembocam aqui, e a tela mostra variabilidade E frequência de repouso.
+    // Com só "HRV", o toque em "Coração" parecia rota errada.
+    <DetailScreen title="Coração e HRV">
       <YStack marginBottom="$xxl">
         <Display>{shown(latest.hrvMs)}</Display>
         <Data marginTop="$sm">ms · variabilidade cardíaca</Data>

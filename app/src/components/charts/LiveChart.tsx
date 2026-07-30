@@ -49,10 +49,14 @@ export function LiveChart({ data, width, height = 88, color, label, id = 'live' 
 
   const min = Math.min(...data);
   const max = Math.max(...data);
-  const span = max - min || 1;
+  // Piso de amplitude: sem ele, a auto-escala min–max transforma 2 ms de
+  // variação numa montanha — drama visual que um instrumento sóbrio não conta.
+  // O piso é relativo à grandeza (8% do topo), então vale para HRV e FC igual.
+  const span = Math.max(max - min, max * 0.08, 1);
+  const meio = (min + max) / 2;
   const pad = span * 0.15;
-  const lo = min - pad;
-  const hi = max + pad;
+  const lo = meio - span / 2 - pad;
+  const hi = meio + span / 2 + pad;
 
   // O halo do pulso tem raio 9; sem esta margem ele sai cortado na borda.
   const plotW = Math.max(1, width - 11);
@@ -87,9 +91,11 @@ export function LiveChart({ data, width, height = 88, color, label, id = 'live' 
           <Circle cx={lastX} cy={lastY} r={3} fill={color} />
         </Svg>
       </YStack>
+      {/* Só o texto: o "estou vivo" já é dito pelo halo na ponta da série, e o
+          cabeçalho da home tem o próprio LiveDot — três pulsos simultâneos na
+          mesma tela diziam a mesma coisa duas vezes. */}
       {label ? (
-        <XStack alignItems="center" gap="$sm" marginTop="$sm">
-          <LiveDot color={color} />
+        <XStack alignItems="center" marginTop="$sm">
           <Data>{label}</Data>
         </XStack>
       ) : null}

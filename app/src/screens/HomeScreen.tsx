@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '../components/Icon';
 import { MetricBlock } from '../components/MetricBlock';
-import { Body, Data, Label, Metric, Title } from '../components/ui';
+import { Body, Button, Data, Label, Metric, Title } from '../components/ui';
 import { LiveChart, LiveDot } from '../components/charts/LiveChart';
 import { Meter } from '../components/charts/Meter';
 import { CALIBRATION_DAYS, ENERGY_BANDS, energyState } from '../domain/energy';
@@ -80,7 +80,7 @@ export function HomeScreen() {
     const conectado = connection === 'connected';
     return (
       <YStack flex={1} backgroundColor="$background">
-        <YStack flex={1} paddingHorizontal={24} paddingBottom={120} paddingTop={insets.top + 12}>
+        <YStack flex={1} paddingHorizontal={24} paddingBottom={insets.bottom + 48} paddingTop={insets.top + 12}>
           <Cabecalho conectado={conectado} onMenu={openSidebar} />
 
           {/* Bloco de espera: alinhado à esquerda, como o resto do sistema. */}
@@ -94,33 +94,28 @@ export function HomeScreen() {
                 : 'Nenhuma pulseira conectada. Sem leitura não há score — o resto do app continua acessível pelo menu.'}
             </Body>
 
-            <Pressable
-              style={({ pressed }) => [{ alignSelf: 'flex-start' }, pressed && { opacity: 0.5 }]}
-              /*
-               Conectada e sem leitura, a ação útil é DESCOBRIR o que ela expõe
-               — mas só onde isso é possível. Com o SDK do fabricante não é: ele
-               fala com a pulseira por canal próprio, e o diagnóstico GATT vira
-               um beco sem saída que só informa a própria impotência.
-               */
-              onPress={() =>
-                (navigation as any).push((conectado ? (supportsGattInspection ? 'Gatt' : 'Device') : 'Connect') as never)
-              }
-              accessibilityRole="button"
-            >
-              <XStack
-                alignItems="center"
-                gap="$md"
-                paddingVertical={14}
-                paddingHorizontal="$xl"
-                borderRadius={999}
-                backgroundColor="$primary"
-              >
-                <Text fontSize={15} fontWeight="700" color="$primaryForeground">
-                  {conectado ? (supportsGattInspection ? 'Diagnosticar pulseira' : 'Ver dispositivo') : 'Parear pulseira'}
-                </Text>
-                <Icon name="arrowRight" size={16} color={colors.ink} />
-              </XStack>
-            </Pressable>
+            {/*
+             Conectada e sem leitura, a ação útil é DESCOBRIR o que ela expõe
+             — mas só onde isso é possível. Com o SDK do fabricante não é: ele
+             fala com a pulseira por canal próprio, e o diagnóstico GATT vira
+             um beco sem saída que só informa a própria impotência.
+
+             `Button primary`, não pill à mão: a cópia manual perdia a sombra
+             colorida e pintava a seta com `colors.ink`, que inverte no tema
+             claro e sumia sobre o roxo.
+            */}
+            <YStack alignSelf="flex-start">
+              <Button
+                title={conectado ? (supportsGattInspection ? 'Diagnosticar pulseira' : 'Ver dispositivo') : 'Parear pulseira'}
+                onPress={() =>
+                  (navigation as any).push((conectado ? (supportsGattInspection ? 'Gatt' : 'Device') : 'Connect') as never)
+                }
+                // Fixo nos dois temas, como o `primaryForeground` do config e
+                // pelo mesmo motivo (ver Button.tsx): sobre o roxo, só o ink
+                // escuro da marca alcança contraste.
+                icon={<Icon name="arrowRight" size={16} color="#0E0A22" />}
+              />
+            </YStack>
           </YStack>
         </YStack>
       </YStack>
@@ -151,7 +146,7 @@ export function HomeScreen() {
       style={{ flex: 1, backgroundColor: colors.ink }}
       contentContainerStyle={{
         paddingHorizontal: 24,
-        paddingBottom: 120,
+        paddingBottom: insets.bottom + 48,
         paddingTop: insets.top + 12,
       }}
       showsVerticalScrollIndicator={false}
@@ -257,9 +252,16 @@ export function HomeScreen() {
         <XStack alignItems="flex-end" gap="$lg">
           <Metric lineHeight={46}>{energy.score}</Metric>
           <YStack flex={1} paddingBottom={4}>
+            {/*
+             Sempre no acento. Energia baixa às 22h É a faixa saudável — o
+             corpo funcionando —, e `$destructive` é reservado a valor fora
+             dela (regra 3). Pintar o marcador de alerta toda noite fabricaria
+             achado clínico e contradiria o próprio texto ("reserve o horário
+             para tarefas leves"). A POSIÇÃO na faixa "baixo" já comunica.
+            */}
             <Meter
               value={energy.score}
-              color={energy.level === 'low' ? colors.alert : colors.accent}
+              color={colors.accent}
               zones={[
                 { upTo: ENERGY_BANDS.mid, label: 'baixo' },
                 { upTo: ENERGY_BANDS.high, label: 'médio' },
@@ -281,26 +283,13 @@ export function HomeScreen() {
           </Data>
         ) : null}
 
-        <Pressable
-          style={({ pressed }) => [{ alignSelf: 'flex-start' }, pressed && { opacity: 0.5 }]}
-          onPress={() => (navigation as any).push(ACTION_ROUTE[energy.action.icon] as never)}
-          accessibilityRole="button"
-        >
-          <XStack
-            alignItems="center"
-            gap="$md"
-            marginTop="$xl"
-            paddingVertical={14}
-            paddingHorizontal="$xl"
-            borderRadius={999}
-            backgroundColor="$primary"
-          >
-            <Text fontSize={15} fontWeight="700" color="$primaryForeground">
-              {energy.action.label}
-            </Text>
-            <Icon name="arrowRight" size={16} color={colors.ink} />
-          </XStack>
-        </Pressable>
+        <YStack alignSelf="flex-start" marginTop="$xl">
+          <Button
+            title={energy.action.label}
+            onPress={() => (navigation as any).push(ACTION_ROUTE[energy.action.icon] as never)}
+            icon={<Icon name="arrowRight" size={16} color="#0E0A22" />}
+          />
+        </YStack>
       </YStack>
 
       {/* Série ao vivo: o pulso na ponta é o que diferencia dado corrente de número parado. */}
@@ -349,6 +338,9 @@ export function HomeScreen() {
           rating={rateSpo2(latest.spo2Pct)}
           onPress={() => (navigation as any).push('Oxygen' as never)}
         />
+        {/* Mesmo destino do HRV de propósito: FC de repouso e variabilidade
+            são a mesma tela ("Coração e HRV") — o título de lá assume os dois
+            nomes para o toque não parecer rota errada. */}
         <MetricBlock
           label="Coração"
           rating={rateHeartRate(latest.heartRate)}
