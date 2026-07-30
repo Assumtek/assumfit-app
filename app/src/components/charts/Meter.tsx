@@ -93,8 +93,15 @@ export function Meter({ value, min = 0, max = 100, zones, color }: Props) {
       <XStack justifyContent="space-between" marginTop="$md">
         {zones.map((zone, i) => {
           const active = clamped <= zone.upTo && (i === 0 || clamped > zones[i - 1].upTo);
+          // A faixa ativa se distingue por COR E PESO: só cor some para quem
+          // não a separa, e o peso sobrevive ao modo de alto contraste.
           return (
-            <Data key={zone.label} fontSize={10} color={active ? '$foreground' : '$faint'}>
+            <Data
+              key={zone.label}
+              fontSize={11}
+              fontWeight={active ? '700' : '400'}
+              color={active ? '$foreground' : '$faint'}
+            >
               {zone.label}
             </Data>
           );

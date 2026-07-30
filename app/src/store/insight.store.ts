@@ -46,7 +46,10 @@ export const useInsightStore = create<InsightState>((set, get) => ({
       const model = await api.fetchEnergyInsight(hour, opts?.force ?? false);
       set({ model, status: 'ready', fetchedHour: hour });
     } catch {
-      set({ status: get().model ? 'ready' : 'offline' });
+      // 'offline' MESMO quando há modelo antigo na tela: é o que permite ao
+      // "atualizar" dizer "sem rede — tentar de novo" em vez de falhar mudo.
+      // O modelo anterior continua exibido — status é sobre a ÚLTIMA tentativa.
+      set({ status: 'offline' });
     }
   },
 

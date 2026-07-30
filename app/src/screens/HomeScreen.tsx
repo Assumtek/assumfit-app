@@ -166,7 +166,14 @@ export function HomeScreen() {
         {/* Ambiente em número, ao lado do nome. Fica FORA do grid 2×2 de
             propósito: o grid é o corpo da pessoa, e 25° não é métrica dela. */}
         {ambient ? (
-          <YStack alignItems="flex-end" paddingBottom={2}>
+          // Um nó só no VoiceOver: sem o agrupamento, o leitor recitava
+          // "São Paulo", "25", "°C", "60", "%" como cinco itens soltos.
+          <YStack
+            alignItems="flex-end"
+            paddingBottom={2}
+            accessible
+            accessibilityLabel={`${city ? `${city}, ` : ''}${Math.round(ambient.temperatureC)} graus, ${Math.round(ambient.humidityPct)} por cento de umidade${ambient.heatStress ? ', calor extremo' : ''}`}
+          >
             {city ? (
               <Label marginBottom="$xs" maxWidth={150} textAlign="right" numberOfLines={1}>
                 {city}
@@ -195,6 +202,9 @@ export function HomeScreen() {
               </Text>
               <Data>%</Data>
             </XStack>
+            {/* Em PALAVRA, além da cor: só o número terracota exclui quem não
+                separa as cores — e some no modo de alto contraste. */}
+            {ambient.heatStress ? <Data color="$destructive">calor extremo</Data> : null}
           </YStack>
         ) : null}
       </XStack>
@@ -209,7 +219,8 @@ export function HomeScreen() {
           <Pressable
             onPress={() => void refreshInsight(hour, { force: true })}
             disabled={insightStatus === 'loading'}
-            hitSlop={10}
+            // 44pt de alvo efetivo: o texto tem ~16pt de altura.
+            hitSlop={{ top: 14, bottom: 14, left: 12, right: 12 }}
             accessibilityRole="button"
             accessibilityLabel="Atualizar leitura"
             style={({ pressed }) => pressed && { opacity: 0.5 }}
@@ -220,7 +231,15 @@ export function HomeScreen() {
               ) : (
                 <Icon name="refresh" size={13} color={colors.textMuted} strokeWidth={1.5} />
               )}
-              <Data>{insightStatus === 'loading' ? 'relendo…' : 'atualizar'}</Data>
+              {/* Apertou e falhou não pode terminar em silêncio: o rótulo diz
+                  que a releitura não veio e que dá para tentar de novo. */}
+              <Data>
+                {insightStatus === 'loading'
+                  ? 'relendo…'
+                  : insightStatus === 'offline'
+                    ? 'sem rede — tentar de novo'
+                    : 'atualizar'}
+              </Data>
             </XStack>
           </Pressable>
         </XStack>
@@ -249,7 +268,16 @@ export function HomeScreen() {
           </XStack>
         ) : null}
 
-        <XStack alignItems="flex-end" gap="$lg">
+        <XStack
+          alignItems="flex-end"
+          gap="$lg"
+          // Um nó só: "72" solto e três palavras de faixa não contam a
+          // história; o rótulo junta score, faixa e a transição calculada.
+          accessible
+          accessibilityLabel={`Energia ${energy.score} de 100, nível ${
+            energy.level === 'low' ? 'baixo' : energy.level === 'mid' ? 'médio' : 'alto'
+          }${energy.nextLabel ? `, ${energy.nextLabel}` : ''}`}
+        >
           <Metric lineHeight={46}>{energy.score}</Metric>
           <YStack flex={1} paddingBottom={4}>
             {/*
@@ -377,7 +405,14 @@ function Cabecalho({
 
   return (
     <XStack alignItems="center" justifyContent="space-between" marginBottom="$xxxl">
-      <Pressable onPress={onMenu} hitSlop={16} accessibilityRole="button" accessibilityLabel="Abrir menu">
+      {/* hitSlops calculados para 44×44pt EFETIVOS (piso do iOS): o desenho do
+          hambúrguer tem 18×7; os ícones, 19. O alvo cresce, o traço não. */}
+      <Pressable
+        onPress={onMenu}
+        hitSlop={{ top: 19, bottom: 19, left: 13, right: 13 }}
+        accessibilityRole="button"
+        accessibilityLabel="Abrir menu"
+      >
         <YStack width={18} height={1} backgroundColor="$foreground" marginBottom={5} />
         <YStack width={12} height={1} backgroundColor="$foreground" />
       </Pressable>
@@ -385,7 +420,7 @@ function Cabecalho({
       <XStack alignItems="center" gap="$lg">
         <Pressable
           onPress={() => (navigation as any).push('Help' as never)}
-          hitSlop={12}
+          hitSlop={13}
           accessibilityRole="button"
           accessibilityLabel="Ajuda"
         >
@@ -394,7 +429,7 @@ function Cabecalho({
 
         <Pressable
           onPress={() => (navigation as any).push('Alerts' as never)}
-          hitSlop={12}
+          hitSlop={13}
           accessibilityRole="button"
           accessibilityLabel="Avisos"
         >

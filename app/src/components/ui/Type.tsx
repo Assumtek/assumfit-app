@@ -99,19 +99,26 @@ export const Body = styled(Text, {
   color: '$mutedForeground',
 });
 
-/** O dado técnico. Subordinado à avaliação, sempre. */
+/**
+ * O dado técnico. Subordinado à avaliação, sempre.
+ *
+ * Em `$mutedForeground`, não `$faint`: é texto de LEITURA (frescor, faixa,
+ * porção), e o faint media ~2,9:1 — reprovado no AA nos dois temas. O muted
+ * passa com folga (5,5:1) e a subordinação continua vindo do tamanho.
+ * `$faint` fica para estado inativo e ornamento, nunca para informação.
+ */
 export const Data = styled(Text, {
   ...base,
   fontSize: 12,
   fontWeight: '400',
-  color: '$faint',
+  color: '$mutedForeground',
   fontVariant: ['tabular-nums'],
 });
 
-/** Etiqueta de laboratório: caixa alta, tracking largo. */
+/** Etiqueta de laboratório: caixa alta, tracking largo. 11 é o piso do iOS. */
 export const Label = styled(Text, {
   ...base,
-  fontSize: 10,
+  fontSize: 11,
   fontWeight: '700',
   letterSpacing: 1.6,
   textTransform: 'uppercase',

@@ -1,6 +1,6 @@
 import { XStack, YStack } from '@tamagui/stacks';
-import React, { useEffect, useRef } from 'react';
-import { Animated, Easing } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, Animated, Easing } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import { useTheme } from '../../theme/ThemeProvider';
@@ -8,6 +8,29 @@ import { Data } from '../ui';
 import { GridPaper } from './GridPaper';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+/**
+ * Reduzir Movimento (Ajustes → Acessibilidade) desliga os pulsos daqui.
+ *
+ * Os loops são o "estou vivo" do dado — mas para quem ativou a preferência,
+ * movimento perpétuo é exatamente o que incomoda. Parado, o indicador vira
+ * presença estática: informação mantida, movimento não.
+ */
+function useReduceMotion(): boolean {
+  const [reduzido, setReduzido] = useState(false);
+  useEffect(() => {
+    let vivo = true;
+    void AccessibilityInfo.isReduceMotionEnabled().then((v) => {
+      if (vivo) setReduzido(v);
+    });
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduzido);
+    return () => {
+      vivo = false;
+      sub.remove();
+    };
+  }, []);
+  return reduzido;
+}
 
 type Props = {
   data: number[];
@@ -33,8 +56,13 @@ export function LiveChart({ data, width, height = 88, color, label, id = 'live' 
   const { colors } = useTheme();
   color = color ?? colors.accent;
   const pulse = useRef(new Animated.Value(0)).current;
+  const reduzido = useReduceMotion();
 
   useEffect(() => {
+    if (reduzido) {
+      pulse.setValue(0.5);
+      return;
+    }
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulse, { toValue: 1, duration: 900, easing: Easing.out(Easing.ease), useNativeDriver: true }),
@@ -43,7 +71,7 @@ export function LiveChart({ data, width, height = 88, color, label, id = 'live' 
     );
     loop.start();
     return () => loop.stop();
-  }, [pulse]);
+  }, [pulse, reduzido]);
 
   if (width <= 0 || data.length < 2) return <YStack width={width} height={height} />;
 
@@ -108,8 +136,13 @@ export function LiveDot({ color, size = 5 }: { color?: string; size?: number }) 
   const { colors } = useTheme();
   color = color ?? colors.accent;
   const blink = useRef(new Animated.Value(1)).current;
+  const reduzido = useReduceMotion();
 
   useEffect(() => {
+    if (reduzido) {
+      blink.setValue(1);
+      return;
+    }
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(blink, { toValue: 0.15, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
@@ -118,7 +151,7 @@ export function LiveDot({ color, size = 5 }: { color?: string; size?: number }) 
     );
     loop.start();
     return () => loop.stop();
-  }, [blink]);
+  }, [blink, reduzido]);
 
   return (
     <Animated.View

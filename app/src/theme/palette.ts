@@ -54,7 +54,10 @@ export const darkPalette: Palette = {
   ink2: '#161130',
   text: '#ECE7F4',
   textMuted: 'rgba(236,231,244,0.56)',
-  textFaint: 'rgba(236,231,244,0.36)',
+  // 0.36 media 2,9:1 — invisível até para o papel de "apagado". 0.44 (3,8:1)
+  // continua abaixo do muted na hierarquia, mas deixa de sumir. Texto de
+  // leitura NUNCA usa faint (ver Type.tsx/Data); isto é estado e ornamento.
+  textFaint: 'rgba(236,231,244,0.44)',
   hairline: 'rgba(236,231,244,0.10)',
   hairlineStrong: 'rgba(236,231,244,0.18)',
   track: 'rgba(236,231,244,0.09)',
@@ -78,7 +81,7 @@ export const lightPalette: Palette = {
   // No claro a opacidade precisa ser MAIOR para o mesmo peso percebido: texto
   // escuro sobre fundo claro perde legibilidade mais rápido do que o inverso.
   textMuted: 'rgba(14,10,34,0.64)',
-  textFaint: 'rgba(14,10,34,0.44)',
+  textFaint: 'rgba(14,10,34,0.52)',
   hairline: 'rgba(14,10,34,0.13)',
   hairlineStrong: 'rgba(14,10,34,0.22)',
   track: 'rgba(14,10,34,0.11)',
