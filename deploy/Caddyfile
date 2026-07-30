@@ -12,5 +12,14 @@ api.assumfit.com.br {
 		-Server
 	}
 
-	reverse_proxy 127.0.0.1:3001
+	# Página estática exigida pelas lojas — a URL pública da política.
+	handle /privacidade {
+		rewrite * /privacidade.html
+		root * /site
+		file_server
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:3001
+	}
 }

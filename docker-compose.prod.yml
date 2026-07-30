@@ -126,6 +126,7 @@ services:
     network_mode: host
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./deploy/site:/site:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
