@@ -105,3 +105,36 @@ def match_food(name: str, grams: float | None) -> TacoMatch | None:
         carbs_g=escala("carbohydrate_g"),
         fat_g=escala("lipid_g"),
     )
+
+
+def search_foods(query: str, limit: int = 12) -> list[dict]:
+    """Busca por PREFIXO para o autocompletar do "adicionar alimento".
+
+    "Frang" precisa achar "Frango, …" antes de a palavra terminar — por isso o
+    escore aqui é de prefixo por token, não o Jaccard do casamento da visão. O
+    retorno é por 100 g: quem define a porção é a pessoa, no passo seguinte.
+    """
+    tokens = _normalizar(query)
+    if not tokens:
+        return []
+
+    pontuados: list[tuple[float, dict]] = []
+    for palavras, item in _tabela():
+        acertos = sum(1 for t in tokens if any(p.startswith(t) for p in palavras))
+        if acertos < len(tokens):
+            continue
+        # Empate por especificidade: menos palavras = entrada mais direta
+        # ("Frango, peito, cru" antes de "Estrogonofe de frango").
+        pontuados.append((acertos - len(palavras) * 0.01, item))
+
+    pontuados.sort(key=lambda par: (-par[0], par[1]["description"]))
+    return [
+        {
+            "description": item["description"],
+            "kcal_per_100g": round(_num(item.get("energy_kcal")) or 0),
+            "protein_g_per_100g": _num(item.get("protein_g")),
+            "carbs_g_per_100g": _num(item.get("carbohydrate_g")),
+            "fat_g_per_100g": _num(item.get("lipid_g")),
+        }
+        for _, item in pontuados[:limit]
+    ]

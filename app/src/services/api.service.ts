@@ -877,6 +877,20 @@ export async function updateMealFoods(
   return data.record;
 }
 
+export type TacoFood = {
+  description: string;
+  kcal_per_100g: number;
+  protein_g_per_100g: number | null;
+  carbs_g_per_100g: number | null;
+  fat_g_per_100g: number | null;
+};
+
+/** Autocompletar da TACO — "frang" acha "Frango, …" antes de terminar a palavra. */
+export async function searchFoods(q: string): Promise<TacoFood[]> {
+  const { data } = await api.get<{ foods: TacoFood[] }>('/nutrition/foods', { params: { q } });
+  return data.foods;
+}
+
 /** Reanalisa a MESMA refeição com a foto local e a observação da pessoa. */
 export async function reanalyzeMeal(
   id: string,

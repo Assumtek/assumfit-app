@@ -357,3 +357,11 @@ async def nutrition_analyze(data: AnalyzeMealInput) -> JSONResponse:
 def nutrition_recompute(data: RecomputeInput) -> JSONResponse:
     """Recalcula uma refeição editada pela TACO — determinístico, sem modelo."""
     return JSONResponse(recompute_foods(data).model_dump(mode="json"))
+
+
+@app.get("/nutrition/foods")
+def nutrition_foods(q: str = "") -> JSONResponse:
+    """Autocompletar da TACO para o "adicionar alimento" — kcal por 100 g."""
+    from nutrition.taco import search_foods
+
+    return JSONResponse({"foods": search_foods(q)})

@@ -38,8 +38,26 @@ export function MealsScreen() {
   const [aviso, setAviso] = useState<string | null>(null);
   /** Registro aberto — a sub-tela de detalhe com a foto grande. */
   const [detalhe, setDetalhe] = useState<api.MealRecord | null>(null);
-  /** A sub-tela de captura — foto, galeria e descrição atrás de um botão só. */
-  const [criando, setCriando] = useState(false);
+  /** Foto escolhida, aguardando confirmação — o preview + descrição do MUVX. */
+  const [fotoPendente, setFotoPendente] = useState<{ uri: string; base64: string } | null>(null);
+  /** Multiplicador de porção por índice — o "− 1x +" de cada alimento. */
+  const [passos, setPassos] = useState<
+    Record<number, { base: number; baseKcalMin: number; baseKcalMax: number; mult: number }>
+  >({});
+  /** O "adicionar alimento" em dois passos: busca na TACO → porção. */
+  const [adicionando, setAdicionando] = useState<{
+    q: string;
+    resultados: api.TacoFood[];
+    escolhido: api.TacoFood | null;
+    gramas: string;
+  } | null>(null);
+  const buscaTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Porções e painéis são POR registro: trocar de refeição zera os dois.
+  useEffect(() => {
+    setPassos({});
+    setAdicionando(null);
+  }, [detalhe?.id]);
   /** O que a pessoa diz que tem no prato — entra na análise com precedência. */
   const [descricao, setDescricao] = useState('');
   /** Alimento em edição no detalhe; index -1 = novo. */
@@ -93,7 +111,12 @@ export function MealsScreen() {
 
   const refresh = usePullRefresh(carregar);
 
-  const analisar = async (deCamera: boolean) => {
+  /**
+   * Passo 1 — escolher a foto. Ela já sai daqui redimensionada (lado maior
+   * 1280 px): é o que garante que caiba no corpo da requisição, e o JPEG do
+   * preview é o MESMO que a análise vê e que fica guardado.
+   */
+  const escolherFoto = async (deCamera: boolean) => {
     setAviso(null);
 
     // A câmera exige pedido EXPLÍCITO — `launchCameraAsync` não pergunta
@@ -124,11 +147,7 @@ export function MealsScreen() {
     }
     if (!foto?.uri) return;
 
-    setAnalisando(true);
     try {
-      // Encolher é obrigatório, não otimização: é o que garante que a foto
-      // caiba no corpo da requisição. O JPEG que sai daqui é o MESMO que fica
-      // guardado — o que você vê no histórico é o que a análise viu.
       const contexto = ImageManipulator.manipulate(foto.uri);
       if ((foto.width ?? 0) > 1280) contexto.resize({ width: 1280 });
       const renderizada = await contexto.renderAsync();
@@ -138,16 +157,36 @@ export function MealsScreen() {
         base64: true,
       });
       if (!pronta.base64) throw new Error('sem base64');
+      setFotoPendente({ uri: pronta.uri, base64: pronta.base64 });
+    } catch {
+      setAviso('Não deu para preparar a foto. Tente outra.');
+    }
+  };
 
+  const novaRefeicao = () => {
+    setAviso(null);
+    Alert.alert('Nova refeição', 'De onde vem a foto?', [
+      { text: 'Câmera', onPress: () => void escolherFoto(true) },
+      { text: 'Galeria', onPress: () => void escolherFoto(false) },
+      { text: 'Cancelar', style: 'cancel' },
+    ]);
+  };
+
+  /** Passo 2 — confirmada a foto (e a descrição), analisar. */
+  const analisarPendente = async () => {
+    if (!fotoPendente) return;
+    setAviso(null);
+    setAnalisando(true);
+    try {
       const { record, analysis } = await api.analyzeMeal({
-        imageBase64: pronta.base64,
+        imageBase64: fotoPendente.base64,
         description: descricao.trim() || undefined,
       });
       if (!analysis.is_food) {
         setAviso('Não deu para identificar comida nesta foto. Tente outro ângulo, com mais luz.');
       } else if (record) {
         try {
-          new File(pronta.uri).copy(new File(Paths.document, `refeicao-${record.id}.jpg`));
+          new File(fotoPendente.uri).copy(new File(Paths.document, `refeicao-${record.id}.jpg`));
         } catch {
           // Sem espaço em disco o histórico fica sem foto — nunca sem registro.
         }
@@ -155,7 +194,7 @@ export function MealsScreen() {
         setDescricao('');
         // Da captura direto para o registro criado: é ali que se confere o
         // resultado e se corrige na hora o que a análise errou.
-        setCriando(false);
+        setFotoPendente(null);
         setDetalhe(record);
       }
     } catch {
@@ -248,6 +287,85 @@ export function MealsScreen() {
       setEditando(null);
     } catch {
       setAvisoDetalhe('Não deu para remover. Confira a conexão e tente de novo.');
+    } finally {
+      setSalvandoEdicao(false);
+    }
+  };
+
+  /*
+   O "− 1x +" de cada alimento: o multiplicador age sobre a porção que a
+   análise estimou (a base fica congelada no primeiro toque). Item casado na
+   TACO recalcula lá; item sem casamento escala a própria faixa aqui — a
+   proporção é a única conta honesta possível sem tabela.
+  */
+  const mudarPorcao = async (i: number, delta: number) => {
+    if (!detalhe || salvandoEdicao) return;
+    const atuais = detalhe.foods as api.MealFood[];
+    const food = atuais[i];
+    if (!food?.grams) return;
+    const passo = passos[i] ?? {
+      base: food.grams,
+      baseKcalMin: food.kcal_min,
+      baseKcalMax: food.kcal_max,
+      mult: 1,
+    };
+    const mult = Math.min(5, Math.max(0.5, passo.mult + delta * 0.5));
+    if (mult === passo.mult) return;
+
+    const foods = atuais.map((f, j) =>
+      j === i
+        ? {
+            ...f,
+            grams: Math.round(passo.base * mult),
+            kcal_min: Math.round(passo.baseKcalMin * mult),
+            kcal_max: Math.round(passo.baseKcalMax * mult),
+          }
+        : f,
+    );
+    setAvisoDetalhe(null);
+    setSalvandoEdicao(true);
+    try {
+      aplicarRegistro(await api.updateMealFoods(detalhe.id, foods));
+      setPassos((p) => ({ ...p, [i]: { ...passo, mult } }));
+    } catch {
+      setAvisoDetalhe('Não deu para ajustar a porção. Confira a conexão e tente de novo.');
+    } finally {
+      setSalvandoEdicao(false);
+    }
+  };
+
+  /** Busca na TACO com um respiro de 300 ms — autocompletar, não metralhadora. */
+  const buscarTaco = (texto: string) => {
+    setAdicionando((a) => (a ? { ...a, q: texto } : a));
+    if (buscaTimer.current) clearTimeout(buscaTimer.current);
+    if (texto.trim().length < 2) {
+      setAdicionando((a) => (a ? { ...a, resultados: [] } : a));
+      return;
+    }
+    buscaTimer.current = setTimeout(() => {
+      void api
+        .searchFoods(texto.trim())
+        .then((foods) => setAdicionando((a) => (a && a.q === texto ? { ...a, resultados: foods } : a)))
+        .catch(() => {});
+    }, 300);
+  };
+
+  /** O alimento escolhido entra com o NOME OFICIAL da tabela — casamento certo. */
+  const adicionarDaTaco = async () => {
+    if (!detalhe || !adicionando?.escolhido) return;
+    const g = Number(adicionando.gramas.replace(',', '.'));
+    if (!Number.isFinite(g) || g <= 0) return;
+    const foods = [
+      ...(detalhe.foods as api.MealFood[]),
+      { name: adicionando.escolhido.description, grams: g, kcal_min: 0, kcal_max: 0, uncertain: false },
+    ];
+    setAvisoDetalhe(null);
+    setSalvandoEdicao(true);
+    try {
+      aplicarRegistro(await api.updateMealFoods(detalhe.id, foods));
+      setAdicionando(null);
+    } catch {
+      setAvisoDetalhe('Não deu para adicionar. Confira a conexão e tente de novo.');
     } finally {
       setSalvandoEdicao(false);
     }
@@ -383,6 +501,23 @@ export function MealsScreen() {
                     {food.grams ? ` · ~${Math.round(food.grams)} g` : ''}
                   </Data>
                   {food.matched ? <Data numberOfLines={1}>TACO: {food.matched}</Data> : null}
+                  {food.grams ? (
+                    <XStack alignItems="center" gap="$sm" marginTop={4}>
+                      <BotaoDePasso
+                        rotulo="−"
+                        onPress={() => void mudarPorcao(i, -1)}
+                        desabilitado={salvandoEdicao || (passos[i]?.mult ?? 1) <= 0.5}
+                      />
+                      <Data color="$foreground">
+                        {String(passos[i]?.mult ?? 1).replace('.', ',')}x
+                      </Data>
+                      <BotaoDePasso
+                        rotulo="+"
+                        onPress={() => void mudarPorcao(i, +1)}
+                        desabilitado={salvandoEdicao || (passos[i]?.mult ?? 1) >= 5}
+                      />
+                    </XStack>
+                  ) : null}
                 </YStack>
                 <Data color="$foreground" flexShrink={0}>
                   {food.kcal_min}–{food.kcal_max} kcal
@@ -424,15 +559,100 @@ export function MealsScreen() {
           ))}
         </Section>
 
-        {editando && editando.index < 0 ? editorDeAlimento : null}
-        {!editando ? (
+        {adicionando ? (
+          <YStack
+            marginTop="$md"
+            padding="$md"
+            gap="$sm"
+            borderWidth={1}
+            borderColor="$borderStrong"
+            borderRadius={12}
+          >
+            {!adicionando.escolhido ? (
+              <>
+                <Label>Adicionar alimento</Label>
+                <TextInput
+                  value={adicionando.q}
+                  onChangeText={buscarTaco}
+                  placeholder="Busque na tabela (ex.: frango)"
+                  placeholderTextColor={colors.textFaint}
+                  selectionColor={colors.accent}
+                  autoFocus
+                  style={{ fontSize: 15, color: colors.text, paddingVertical: 6 }}
+                />
+                {adicionando.resultados.map((f) => (
+                  <Pressable
+                    key={f.description}
+                    onPress={() =>
+                      setAdicionando((a) => (a ? { ...a, escolhido: f, gramas: '' } : a))
+                    }
+                    accessibilityRole="button"
+                    style={({ pressed }) => [
+                      { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
+                      pressed && { opacity: 0.6 },
+                    ]}
+                  >
+                    <Body color="$foreground" flex={1} numberOfLines={1}>
+                      {f.description}
+                    </Body>
+                    <Data flexShrink={0}>{f.kcal_per_100g} kcal/100g</Data>
+                  </Pressable>
+                ))}
+                {adicionando.q.trim().length >= 2 && adicionando.resultados.length === 0 ? (
+                  <Data color="$mutedForeground">nada na tabela com esse nome</Data>
+                ) : null}
+                <Button title="Cancelar" variant="ghost" onPress={() => setAdicionando(null)} />
+              </>
+            ) : (
+              <>
+                <Label>Definir a porção</Label>
+                <Body color="$foreground">{adicionando.escolhido.description}</Body>
+                <Data color="$mutedForeground">
+                  {adicionando.escolhido.kcal_per_100g} kcal por 100 g (tabela TACO)
+                </Data>
+                <TextInput
+                  value={adicionando.gramas}
+                  onChangeText={(t) => setAdicionando((a) => (a ? { ...a, gramas: t } : a))}
+                  placeholder="Quantidade (gramas)"
+                  placeholderTextColor={colors.textFaint}
+                  selectionColor={colors.accent}
+                  keyboardType="number-pad"
+                  autoFocus
+                  style={{ fontSize: 15, color: colors.text, paddingVertical: 6 }}
+                />
+                <XStack gap="$md" marginTop="$xs">
+                  <YStack flex={1}>
+                    <Button
+                      title={salvandoEdicao ? 'Adicionando…' : 'Adicionar'}
+                      onPress={() => void adicionarDaTaco()}
+                      disabled={
+                        salvandoEdicao ||
+                        !(Number(adicionando.gramas.replace(',', '.')) > 0)
+                      }
+                    />
+                  </YStack>
+                  <YStack flex={1}>
+                    <Button
+                      title="Trocar alimento"
+                      variant="ghost"
+                      onPress={() =>
+                        setAdicionando((a) => (a ? { ...a, escolhido: null, gramas: '' } : a))
+                      }
+                    />
+                  </YStack>
+                </XStack>
+              </>
+            )}
+          </YStack>
+        ) : !editando ? (
           <YStack alignSelf="flex-start" marginTop="$md">
             <Button
               title="Adicionar alimento"
               variant="ghost"
               onPress={() => {
                 setAvisoDetalhe(null);
-                setEditando({ index: -1, nome: '', gramas: '' });
+                setEditando(null);
+                setAdicionando({ q: '', resultados: [], escolhido: null, gramas: '' });
               }}
             />
           </YStack>
@@ -473,55 +693,58 @@ export function MealsScreen() {
     );
   }
 
-  // ——— Sub-tela: nova refeição — foto, galeria e a descrição num lugar só. ———
-  if (criando) {
+  // ——— Sub-tela: confirmar a foto — preview, descrição e o Analisar. ———
+  if (fotoPendente) {
     return (
       <DetailScreen
-        title="Nova refeição"
+        title="Confirmar foto"
         onBack={() => {
-          setCriando(false);
+          if (analisando) return;
+          setFotoPendente(null);
           setAviso(null);
         }}
       >
-        <Body marginTop="$md" marginBottom="$lg" maxWidth="92%">
-          Fotografe o prato e o AssumFit identifica os alimentos, estima as porções e calcula a
-          faixa de calorias pela tabela nutricional oficial (TACO).
-        </Body>
+        <Image
+          source={{ uri: fotoPendente.uri }}
+          style={{ width: '100%', height: 300, borderRadius: 16, marginTop: 8 }}
+          resizeMode="cover"
+        />
 
-        <YStack marginBottom="$md">
+        <YStack marginTop="$lg" gap="$xs">
+          <Label>Descrição (opcional)</Label>
           <CampoComVoz
             valor={descricao}
             onChange={setDescricao}
-            placeholder="O que tem no prato? (opcional — melhora a análise)"
+            placeholder="ex.: arroz, feijão, farofa e frango grelhado"
           />
+          <Data color="$mutedForeground">
+            Detalhar os alimentos deixa a estimativa mais precisa — o que você citar tem
+            precedência na análise.
+          </Data>
         </YStack>
 
-        <XStack gap="$md" marginBottom="$xl">
-          <YStack flex={1}>
-            <Button
-              title={analisando ? 'Analisando…' : 'Fotografar prato'}
-              onPress={() => void analisar(true)}
-              disabled={analisando}
-            />
-          </YStack>
-          <YStack flex={1}>
-            <Button
-              title="Da galeria"
-              variant="secondary"
-              onPress={() => void analisar(false)}
-              disabled={analisando}
-            />
-          </YStack>
-        </XStack>
-
         {analisando ? (
-          <XStack alignItems="center" gap="$md" marginBottom="$lg">
+          <XStack alignItems="center" gap="$md" marginTop="$lg">
             <ActivityIndicator size="small" color={colors.accent} />
             <Data>identificando os alimentos e consultando a tabela nutricional…</Data>
           </XStack>
         ) : null}
 
         {aviso ? <Note title="Não deu desta vez" body={aviso} /> : null}
+
+        <YStack marginTop="$xl" gap="$md">
+          <Button
+            title={analisando ? 'Analisando…' : 'Analisar refeição'}
+            onPress={() => void analisarPendente()}
+            disabled={analisando}
+          />
+          <Button
+            title="Trocar foto"
+            variant="ghost"
+            onPress={novaRefeicao}
+            disabled={analisando}
+          />
+        </YStack>
 
         <Note
           title="A foto fica com você"
@@ -542,14 +765,10 @@ export function MealsScreen() {
       {/* A ação principal vem antes do resumo: registrar é o gesto repetido
           do dia; o resumo é consequência. À direita, a pedido — polegar. */}
       <YStack alignSelf="flex-end" marginTop="$md" marginBottom="$lg">
-        <Button
-          title="Nova refeição"
-          onPress={() => {
-            setAviso(null);
-            setCriando(true);
-          }}
-        />
+        <Button title="Nova refeição" onPress={novaRefeicao} />
       </YStack>
+
+      {aviso ? <Note title="Não deu desta vez" body={aviso} /> : null}
 
       {/* O resumo do dia é a peça de destaque da tela — composição do resumo
           nutricional do MUVX (meta, barra, colunas de macros), na pele do
@@ -685,6 +904,40 @@ function MacroColunas({ m }: { m: { p: number; c: number; g: number } }) {
         </YStack>
       ))}
     </XStack>
+  );
+}
+
+/** O − e o + do stepper de porção: quadradinho de borda, sem acento — controle. */
+function BotaoDePasso({
+  rotulo,
+  onPress,
+  desabilitado,
+}: {
+  rotulo: string;
+  onPress: () => void;
+  desabilitado?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={desabilitado}
+      accessibilityRole="button"
+      accessibilityLabel={rotulo === '−' ? 'Diminuir porção' : 'Aumentar porção'}
+      hitSlop={6}
+      style={({ pressed }) => [pressed && { opacity: 0.5 }, desabilitado ? { opacity: 0.3 } : null]}
+    >
+      <YStack
+        width={30}
+        height={30}
+        borderRadius={8}
+        borderWidth={1}
+        borderColor="$borderStrong"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Body color="$foreground">{rotulo}</Body>
+      </YStack>
+    </Pressable>
   );
 }
 

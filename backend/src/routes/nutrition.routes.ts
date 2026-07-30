@@ -74,6 +74,16 @@ nutritionRoutes.get(
   }),
 );
 
+/** Autocompletar da TACO — a pessoa busca "frang" e escolhe a entrada oficial. */
+nutritionRoutes.get(
+  '/foods',
+  asyncRoute<AuthedRequest>(async (req, res) => {
+    const { q } = z.object({ q: z.string().max(80).default('') }).parse(req.query);
+    const { data } = await client.get('/nutrition/foods', { params: { q } });
+    res.json(data);
+  }),
+);
+
 const foodSchema = z.object({
   name: z.string().min(1).max(120),
   portion: z.string().max(120).optional().default(''),
