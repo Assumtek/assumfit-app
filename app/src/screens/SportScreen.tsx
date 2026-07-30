@@ -4,6 +4,7 @@ import { XStack, YStack } from '@tamagui/stacks';
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, Pressable } from 'react-native';
+import MapView, { Polyline } from 'react-native-maps';
 
 import { Note, Row, Section } from '../components/Card';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
@@ -54,11 +55,35 @@ export function SportScreen() {
   const latest = useBiometricStore((s) => s.latest);
 
   const [sessao, setSessao] = useState<Sessao | null>(null);
+  /** Modalidade escolhida, ainda não iniciada — a tela intermediária. */
+  const [preparando, setPreparando] = useState<Sport | null>(null);
+  const [posicao, setPosicao] = useState<{ lat: number; lon: number } | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [historico, setHistorico] = useState<api.SportSession[] | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
   const watcher = useRef<Location.LocationSubscription | null>(null);
+
+  /*
+   Preparação: pede a localização JÁ na tela intermediária — o mapa centrado
+   em você é a confirmação visual de que o GPS pegou, antes de o cronômetro
+   existir. Negada, a tela diz o que se perde e o iniciar continua valendo.
+  */
+  const preparar = async (sport: Sport) => {
+    setAviso(null);
+    setPosicao(null);
+    setPreparando(sport);
+    if (!sport.gps) return;
+    const perm = await Location.requestForegroundPermissionsAsync();
+    if (perm.status !== 'granted') {
+      setAviso('Sem acesso à localização, a distância e o mapa ficam de fora — o resto funciona.');
+      return;
+    }
+    const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }).catch(
+      () => null,
+    );
+    if (pos) setPosicao({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+  };
 
   const carregar = useCallback(async () => {
     try {
@@ -120,6 +145,7 @@ export function SportScreen() {
     }
     const stamp = Date.now();
     setNow(stamp);
+    setPreparando(null);
     setSessao({ sport, startedAt: stamp, pausedMs: 0, pausedSince: null, points: [], hrSamples: [] });
   };
 
@@ -176,12 +202,39 @@ export function SportScreen() {
     const kcal = kcalFor(sessao.sport.met, PESO_PADRAO_KG, elapsed);
     const pace = paceMinPerKm(dist, elapsed);
     const pausado = sessao.pausedSince !== null;
+    const ultimo = sessao.points[sessao.points.length - 1];
 
     return (
       <DetailScreen title={sessao.sport.label}>
-        <YStack alignItems="center" paddingVertical="$xxl">
+        {/* O percurso desenhado ao vivo — o mapa é o instrumento da modalidade
+            com GPS, como o anel é o do foco. */}
+        {sessao.sport.gps && (ultimo || posicao) ? (
+          <YStack height={210} borderRadius={16} overflow="hidden" marginTop="$md">
+            <MapView
+              style={{ flex: 1 }}
+              showsUserLocation
+              followsUserLocation={!pausado}
+              region={{
+                latitude: ultimo?.lat ?? posicao!.lat,
+                longitude: ultimo?.lon ?? posicao!.lon,
+                latitudeDelta: 0.004,
+                longitudeDelta: 0.004,
+              }}
+            >
+              {sessao.points.length > 1 ? (
+                <Polyline
+                  coordinates={sessao.points.map((p) => ({ latitude: p.lat, longitude: p.lon }))}
+                  strokeColor={colors.accent}
+                  strokeWidth={4}
+                />
+              ) : null}
+            </MapView>
+          </YStack>
+        ) : null}
+
+        <YStack alignItems="center" paddingVertical={sessao.sport.gps ? '$lg' : '$xxl'}>
           <Label>{pausado ? 'PAUSADO' : 'EM ANDAMENTO'}</Label>
-          <Display fontSize={72} lineHeight={80} letterSpacing={-3} marginTop="$sm">
+          <Display fontSize={sessao.sport.gps ? 56 : 72} lineHeight={sessao.sport.gps ? 62 : 80} letterSpacing={-3} marginTop="$sm">
             {sportClock(elapsed)}
           </Display>
         </YStack>
@@ -249,6 +302,70 @@ export function SportScreen() {
     );
   }
 
+  /*
+   A tela intermediária: o que vai ser medido, o mapa confirmando o GPS, e o
+   iniciar como decisão consciente — tocar na modalidade por engano não pode
+   disparar cronômetro.
+  */
+  if (preparando) {
+    return (
+      <DetailScreen title={preparando.label}>
+        {preparando.gps ? (
+          <YStack height={260} borderRadius={16} overflow="hidden" marginTop="$md">
+            {posicao ? (
+              <MapView
+                style={{ flex: 1 }}
+                showsUserLocation
+                region={{
+                  latitude: posicao.lat,
+                  longitude: posicao.lon,
+                  latitudeDelta: 0.005,
+                  longitudeDelta: 0.005,
+                }}
+              />
+            ) : (
+              <YStack flex={1} alignItems="center" justifyContent="center" backgroundColor="$card">
+                <Data>{aviso ?? 'procurando o sinal de GPS…'}</Data>
+              </YStack>
+            )}
+          </YStack>
+        ) : null}
+
+        <Section label="O que será medido">
+          <Row>
+            <Body flex={1} color="$foreground">Tempo</Body>
+            <Data flexShrink={0}>cronômetro com pausa</Data>
+          </Row>
+          <Row>
+            <Body flex={1} color="$foreground">Batimento</Body>
+            <Data flexShrink={0}>ao vivo, da pulseira</Data>
+          </Row>
+          {preparando.gps ? (
+            <Row>
+              <Body flex={1} color="$foreground">Distância e ritmo</Body>
+              <Data flexShrink={0}>GPS do celular</Data>
+            </Row>
+          ) : null}
+          <Row last>
+            <Body flex={1} color="$foreground">Calorias</Body>
+            <Data flexShrink={0}>estimadas pela intensidade</Data>
+          </Row>
+        </Section>
+
+        {aviso && posicao === null && !preparando.gps ? <Data marginTop="$md">{aviso}</Data> : null}
+
+        <YStack marginTop="$xl" gap="$md">
+          <Button
+            title="Iniciar"
+            onPress={() => void iniciar(preparando)}
+            icon={<Icon name="play" size={16} color={colors.ink} />}
+          />
+          <Button title="Voltar" variant="ghost" onPress={() => setPreparando(null)} />
+        </YStack>
+      </DetailScreen>
+    );
+  }
+
   return (
     <DetailScreen title="Esporte" refreshControl={refresh}>
       <Body marginTop="$md" marginBottom="$lg" maxWidth="92%">
@@ -293,9 +410,9 @@ export function SportScreen() {
         {SPORTS.map((sport) => (
           <Pressable
             key={sport.kind}
-            onPress={() => void iniciar(sport)}
+            onPress={() => void preparar(sport)}
             accessibilityRole="button"
-            accessibilityLabel={`Iniciar ${sport.label}`}
+            accessibilityLabel={`Preparar ${sport.label}`}
             style={({ pressed }) => [{ width: '30.5%' }, pressed && { opacity: 0.6 }]}
           >
             <YStack

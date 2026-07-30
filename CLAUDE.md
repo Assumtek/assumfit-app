@@ -144,6 +144,17 @@ entram no escopo e colidem com a genérica do Swift. Só o Xcode 26.3 acusa; o d
 EAS não, e por isso o bug ficou anos registrado aqui como "não funciona". O
 `postinstall` roda `patch-package` — sem ele, o próximo `npm install` desfaz.
 
+**Depois de qualquer `npm install` que recrie o `node_modules`, confira o
+embed do JSI antes de buildar.** O `pod install` decide o que embarcar olhando
+o xcframework NO MOMENTO em que roda; se o binário ainda era o stub, o
+`Pods-AssumFit-frameworks.sh` sai sem `ExpoModulesJSI`, o build "SUCCEEDED"
+e o app morre na abertura com `dyld: Library not loaded`. A conferência é:
+
+```bash
+grep -c ExpoModulesJSI "ios/Pods/Target Support Files/Pods-AssumFit/Pods-AssumFit-frameworks.sh"
+# 0 → rode pod install de novo (com o binário já construído) antes de buildar
+```
+
 **Um build "concluído" do EAS pode entregar um `.ipa` quebrado.** O script que
 constrói o xcframework do `expo-modules-jsi` falha em SILÊNCIO: o alvo não
 produz nada, o framework não é embarcado, e o build é marcado como concluído. O
