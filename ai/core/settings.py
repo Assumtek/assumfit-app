@@ -53,6 +53,12 @@ class Settings(BaseModel):
     #: custo por mensagem pela metade, e as operações que ele propõe não são
     #: aplicadas automaticamente: o servidor ainda é quem decide.
     llm_chat_model: str = "claude-haiku-4-5"
+    #: A análise de foto de prato tem modelo PRÓPRIO, um degrau acima do chat:
+    #: identificar alimento e estimar porção é visão fina, onde o Haiku erra o
+    #: que o Sonnet acerta — e a chamada é rara (uma por refeição fotografada),
+    #: então o custo extra não pesa. Separado do chat para um ajuste não
+    #: arrastar o outro.
+    nutrition_model: str = "claude-sonnet-5"
     #: Profundidade do raciocínio. Substitui o antigo orçamento de tokens de
     #: pensamento, que os modelos 5 rejeitam. `high` é o piso para trabalho
     #: sensível a acerto; abaixo disso a prescrição fica rasa.
@@ -110,6 +116,7 @@ def get_settings() -> Settings:
         llm_main_model=os.getenv("LLM_MAIN_MODEL", "claude-sonnet-5"),
         llm_grader_model=os.getenv("LLM_GRADER_MODEL", "claude-haiku-4-5"),
         llm_chat_model=os.getenv("LLM_CHAT_MODEL", "claude-haiku-4-5"),
+        nutrition_model=os.getenv("NUTRITION_MODEL", "claude-sonnet-5"),
         llm_effort=os.getenv("LLM_EFFORT", "high"),
         llm_max_tokens=_env_int("LLM_MAX_TOKENS", 16384),
         grader_enabled=_env_bool("GRADER_ENABLED", True),

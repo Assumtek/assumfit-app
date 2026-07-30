@@ -161,7 +161,7 @@ async def analyze_meal(inp: AnalyzeMealInput) -> MealAnalysis:
     raw = await complete(
         system=_SYSTEM,
         user=_user_content(inp),
-        model=settings.llm_chat_model,
+        model=settings.nutrition_model,
         max_tokens=1500,
         effort="low",
     )
@@ -188,7 +188,7 @@ async def analyze_meal(inp: AnalyzeMealInput) -> MealAnalysis:
         kcal_total_max=sum(f.kcal_max for f in foods),
         confidence=min(1.0, max(0.0, _opt(data.get("confianca")) or 0.0)),
         notes=str(data.get("observacoes") or ""),
-        model_id=settings.llm_chat_model,
+        model_id=settings.nutrition_model,
     )
     log.info(
         "nutrition.analyzed",
