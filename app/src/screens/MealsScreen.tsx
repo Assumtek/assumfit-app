@@ -524,8 +524,8 @@ export function MealsScreen() {
   return (
     <DetailScreen title="Refeições" refreshControl={refresh}>
       {/* A ação principal vem antes do resumo: registrar é o gesto repetido
-          do dia; o resumo é consequência. */}
-      <YStack alignSelf="flex-start" marginTop="$md" marginBottom="$lg">
+          do dia; o resumo é consequência. À direita, a pedido — polegar. */}
+      <YStack alignSelf="flex-end" marginTop="$md" marginBottom="$lg">
         <Button
           title="Nova refeição"
           onPress={() => {
