@@ -19,6 +19,13 @@ import {
   type GeoPoint,
   type Sport,
 } from '../domain/sport';
+import { File, Paths } from 'expo-file-system';
+
+import {
+  atualizarIlhaDeEsporte,
+  encerrarIlhaDeEsporte,
+  iniciarIlhaDeEsporte,
+} from '../../modules/widgetbridge';
 import * as api from '../services/api.service';
 import { useBiometricStore } from '../store/biometric.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -60,6 +67,18 @@ export function SportScreen() {
   const [posicao, setPosicao] = useState<{ lat: number; lon: number } | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [historico, setHistorico] = useState<api.SportSession[] | null>(null);
+  /** A sessão recém-terminada — a tela de conclusão estilo Strava. */
+  const [resumo, setResumo] = useState<{
+    sport: Sport;
+    elapsed: number;
+    dist: number | null;
+    kcal: number;
+    avgHr: number | null;
+    maxHr: number | null;
+    points: GeoPoint[];
+  } | null>(null);
+  /** Sessão antiga aberta do histórico, com o percurso local se existir. */
+  const [detalhe, setDetalhe] = useState<{ sessao: api.SportSession; points: GeoPoint[] | null } | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
   const watcher = useRef<Location.LocationSubscription | null>(null);
@@ -100,9 +119,28 @@ export function SportScreen() {
 
   useEffect(() => {
     if (!sessao || sessao.pausedSince !== null) return;
-    const id = setInterval(() => setNow(Date.now()), 1000);
+    let tique = 0;
+    const id = setInterval(() => {
+      setNow(Date.now());
+      // A cada ~10 s a ilha recebe distância e batimento novos; o tempo ela
+      // conta sozinha. Mais frequente só gastaria o orçamento de updates.
+      tique += 1;
+      if (tique % 10 === 0) {
+        setSessao((s) => {
+          if (s && s.pausedSince === null) {
+            atualizarIlhaDeEsporte({
+              startedAtMs: s.startedAt + s.pausedMs,
+              distanceKm: s.sport.gps ? trackDistanceM(s.points) / 1000 : null,
+              bpm: latest?.heartRate ? Math.round(latest.heartRate) : null,
+            });
+          }
+          return s;
+        });
+      }
+    }, 1000);
     return () => clearInterval(id);
-  }, [sessao]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessao?.pausedSince === null && sessao !== null]);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (st) => {
@@ -147,6 +185,9 @@ export function SportScreen() {
     setNow(stamp);
     setPreparando(null);
     setSessao({ sport, startedAt: stamp, pausedMs: 0, pausedSince: null, points: [], hrSamples: [] });
+    // A Dynamic Island conta o tempo sozinha a partir do início — o app só
+    // manda distância/batimento de vez em quando.
+    iniciarIlhaDeEsporte(sport.label, stamp);
   };
 
   const alternarPausa = () => {
@@ -154,8 +195,19 @@ export function SportScreen() {
     setNow(stamp);
     setSessao((s) => {
       if (!s) return s;
-      if (s.pausedSince === null) return { ...s, pausedSince: stamp };
-      return { ...s, pausedMs: s.pausedMs + (stamp - s.pausedSince), pausedSince: null };
+      const proximo =
+        s.pausedSince === null
+          ? { ...s, pausedSince: stamp }
+          : { ...s, pausedMs: s.pausedMs + (stamp - s.pausedSince), pausedSince: null };
+      // O `startedAt` que a ilha recebe já desconta as pausas: o timer nativo
+      // não conhece pausa, então o início "anda" junto com elas.
+      atualizarIlhaDeEsporte({
+        startedAtMs: proximo.startedAt + proximo.pausedMs,
+        pausedAtMs: proximo.pausedSince,
+        distanceKm: proximo.sport.gps ? trackDistanceM(proximo.points) / 1000 : null,
+        bpm: latest?.heartRate ? Math.round(latest.heartRate) : null,
+      });
+      return proximo;
     });
   };
 
@@ -171,7 +223,12 @@ export function SportScreen() {
     const hr = sessao.hrSamples;
 
     setSessao(null);
+    encerrarIlhaDeEsporte();
     if (elapsed < 60_000) return; // sessão de segundos foi engano, não treino
+
+    const avgHr = hr.length ? Math.round(hr.reduce((a, b) => a + b, 0) / hr.length) : null;
+    const maxHr = hr.length ? Math.max(...hr) : null;
+    setResumo({ sport: sessao.sport, elapsed, dist, kcal, avgHr, maxHr, points: sessao.points });
 
     setSalvando(true);
     try {
@@ -181,10 +238,19 @@ export function SportScreen() {
         durationS: Math.round(elapsed / 1000),
         distanceM: dist && dist > 0 ? dist : null,
         kcal,
-        avgHr: hr.length ? Math.round(hr.reduce((a, b) => a + b, 0) / hr.length) : null,
-        maxHr: hr.length ? Math.max(...hr) : null,
+        avgHr,
+        maxHr,
       });
       setHistorico((atual) => [registro, ...(atual ?? [])]);
+      // O percurso fica NO APARELHO, chaveado pelo id do registro — é o que
+      // permite reabrir o mapinha do histórico sem a rota nunca ter subido.
+      if (sessao.points.length > 1) {
+        try {
+          new File(Paths.document, `percurso-${registro.id}.json`).write(JSON.stringify(sessao.points));
+        } catch {
+          // Sem espaço em disco o histórico fica sem mapa — nunca sem registro.
+        }
+      }
     } catch {
       setAviso('A sessão terminou mas não subiu para o servidor. Ela reaparece ao sincronizar.');
     } finally {
@@ -192,9 +258,90 @@ export function SportScreen() {
     }
   };
 
+  const abrirDetalhe = async (s: api.SportSession) => {
+    let points: GeoPoint[] | null = null;
+    try {
+      const f = new File(Paths.document, `percurso-${s.id}.json`);
+      if (f.exists) points = JSON.parse(await f.text()) as GeoPoint[];
+    } catch {
+      points = null;
+    }
+    setDetalhe({ sessao: s, points });
+  };
+
   // Desmontar a tela NÃO encerra o watcher se há sessão? Encerra: sessão de
   // esporte é de tela aberta nesta versão — honesto e documentado no aviso.
   useEffect(() => () => watcher.current?.remove(), []);
+
+  /*
+   A conclusão estilo Strava: o percurso desenhado por inteiro, ajustado ao
+   quadro, e os números da sessão embaixo — os que MEDIMOS de verdade.
+  */
+  if (resumo) {
+    return (
+      <DetailScreen title="Sessão concluída">
+        <MapaDePercurso points={resumo.points} accent={colors.accent} />
+        <YStack marginTop="$lg" marginBottom="$md">
+          <Label>{resumo.sport.label}</Label>
+          <Display fontSize={56} lineHeight={62} letterSpacing={-2}>
+            {sportClock(resumo.elapsed)}
+          </Display>
+        </YStack>
+        <XStack justifyContent="space-between" paddingHorizontal="$sm" marginBottom="$xl">
+          <Medida
+            valor={resumo.dist ? (resumo.dist / 1000).toFixed(2).replace('.', ',') : '—'}
+            unidade="km"
+            rotulo={resumo.dist ? paceMinPerKm(resumo.dist, resumo.elapsed) ?? 'distância' : 'sem GPS'}
+          />
+          <Medida valor={`~${resumo.kcal}`} unidade="kcal" rotulo="estimadas" />
+          <Medida
+            valor={resumo.avgHr ? String(resumo.avgHr) : '—'}
+            unidade="bpm"
+            rotulo={resumo.maxHr ? `máx ${resumo.maxHr}` : 'médio'}
+          />
+        </XStack>
+        {salvando ? <Data marginBottom="$md">salvando no histórico…</Data> : null}
+        {aviso ? <Data color="$destructive" marginBottom="$md">{aviso}</Data> : null}
+        <Button title="Concluir" onPress={() => setResumo(null)} />
+      </DetailScreen>
+    );
+  }
+
+  /* Uma sessão antiga, reaberta do histórico — com o percurso se este aparelho o guardou. */
+  if (detalhe) {
+    const d = detalhe.sessao;
+    return (
+      <DetailScreen title={rotulo(d.sport)}>
+        {detalhe.points && detalhe.points.length > 1 ? (
+          <MapaDePercurso points={detalhe.points} accent={colors.accent} />
+        ) : (
+          <Data marginTop="$md">
+            Sem mapa para esta sessão — o percurso fica só no aparelho em que foi gravado.
+          </Data>
+        )}
+        <YStack marginTop="$lg" marginBottom="$md">
+          <Label>{quando(d.startedAt)}</Label>
+          <Display fontSize={56} lineHeight={62} letterSpacing={-2}>
+            {sportClock(d.durationS * 1000)}
+          </Display>
+        </YStack>
+        <XStack justifyContent="space-between" paddingHorizontal="$sm" marginBottom="$xl">
+          <Medida
+            valor={d.distanceM ? (d.distanceM / 1000).toFixed(2).replace('.', ',') : '—'}
+            unidade="km"
+            rotulo={d.distanceM ? paceMinPerKm(d.distanceM, d.durationS * 1000) ?? 'distância' : 'sem GPS'}
+          />
+          <Medida valor={`~${d.kcal}`} unidade="kcal" rotulo="estimadas" />
+          <Medida
+            valor={d.avgHr ? String(d.avgHr) : '—'}
+            unidade="bpm"
+            rotulo={d.maxHr ? `máx ${d.maxHr}` : 'médio'}
+          />
+        </XStack>
+        <Button title="Voltar" variant="secondary" onPress={() => setDetalhe(null)} />
+      </DetailScreen>
+    );
+  }
 
   if (sessao) {
     const elapsed = elapsedOf(sessao, now);
@@ -437,7 +584,8 @@ export function SportScreen() {
       {historico && historico.length > 0 ? (
         <Section label="Últimas sessões">
           {historico.slice(0, 10).map((s, i) => (
-            <Row key={s.id} last={i === Math.min(historico.length, 10) - 1}>
+            <Pressable key={s.id} onPress={() => void abrirDetalhe(s)} accessibilityRole="button">
+            <Row last={i === Math.min(historico.length, 10) - 1}>
               <YStack flex={1} gap={2}>
                 <Body color="$foreground">{rotulo(s.sport)}</Body>
                 <Data>
@@ -450,6 +598,7 @@ export function SportScreen() {
                 {s.avgHr ? <Data>{s.avgHr} bpm médio</Data> : null}
               </YStack>
             </Row>
+            </Pressable>
           ))}
         </Section>
       ) : historico !== null && !salvando ? (
@@ -459,6 +608,40 @@ export function SportScreen() {
         />
       ) : null}
     </DetailScreen>
+  );
+}
+
+/**
+ * O percurso inteiro, enquadrado — o mapinha do Strava. A região sai do
+ * bounding box dos pontos com folga de 30%, para a linha nunca encostar na
+ * borda do cartão.
+ */
+function MapaDePercurso({ points, accent }: { points: GeoPoint[]; accent: string }) {
+  if (points.length < 2) return null;
+  const lats = points.map((p) => p.lat);
+  const lons = points.map((p) => p.lon);
+  const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+  const minLon = Math.min(...lons), maxLon = Math.max(...lons);
+  return (
+    <YStack height={260} borderRadius={16} overflow="hidden" marginTop="$md">
+      <MapView
+        style={{ flex: 1 }}
+        scrollEnabled={false}
+        zoomEnabled={false}
+        region={{
+          latitude: (minLat + maxLat) / 2,
+          longitude: (minLon + maxLon) / 2,
+          latitudeDelta: Math.max(0.003, (maxLat - minLat) * 1.3),
+          longitudeDelta: Math.max(0.003, (maxLon - minLon) * 1.3),
+        }}
+      >
+        <Polyline
+          coordinates={points.map((p) => ({ latitude: p.lat, longitude: p.lon }))}
+          strokeColor={accent}
+          strokeWidth={4}
+        />
+      </MapView>
+    </YStack>
   );
 }
 

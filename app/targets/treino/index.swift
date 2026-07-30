@@ -194,7 +194,20 @@ struct TreinoWidgetView: View {
     }
 }
 
+/*
+ O bundle abriga o widget de treino E o Live Activity do esporte — um alvo só,
+ dois produtos. O @main mudou de lugar: um target de widget tem UM entry point.
+*/
 @main
+struct AssumFitWidgets: WidgetBundle {
+  var body: some Widget {
+    TreinoWidget()
+    if #available(iOS 16.2, *) {
+      SportLiveActivity()
+    }
+  }
+}
+
 struct TreinoWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "TreinoWidget", provider: Provedor()) { entry in

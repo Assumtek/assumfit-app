@@ -18,7 +18,8 @@
         "UIBackgroundModes": [
           "bluetooth-central"
         ],
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSSupportsLiveActivities": true
       },
       "entitlements": {
         "com.apple.security.application-groups": [

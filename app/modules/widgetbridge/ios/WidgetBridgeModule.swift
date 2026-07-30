@@ -1,5 +1,30 @@
+import ActivityKit
 import ExpoModulesCore
 import WidgetKit
+
+/**
+ CÓPIA FIEL da struct do target do widget (targets/treino/SportActivity.swift).
+
+ O ActivityKit casa o app e a ilha pelo NOME do tipo e pela codificação JSON.
+ Divergiu um campo entre as duas cópias, a ilha não aparece — sem erro em
+ lugar nenhum. Mexeu numa, mexa na outra.
+ */
+struct SportActivityAttributes: ActivityAttributes {
+  public struct ContentState: Codable, Hashable {
+    var startedAt: Date
+    var pausedAt: Date?
+    var distanceKm: Double?
+    var bpm: Int?
+  }
+
+  var sportLabel: String
+}
+
+/// A atividade corrente. Uma por vez: sessão de esporte não se sobrepõe.
+@available(iOS 16.2, *)
+private enum AtividadeCorrente {
+  static var ativa: Activity<SportActivityAttributes>?
+}
 
 /**
  Escreve o que o widget lê.
@@ -50,6 +75,48 @@ public class WidgetBridgeModule: Module {
       if #available(iOS 14.0, *) {
         WidgetCenter.shared.reloadAllTimelines()
       }
+    }
+
+    /**
+     A sessão de esporte na Dynamic Island.
+
+     `startedAtMs` em epoch: o timer da ilha conta SOZINHO a partir dele — o
+     app não precisa mandar tique nenhum, só distância/batimento quando mudam.
+     Devolve `false` quando a pessoa desligou Live Activities nos Ajustes.
+     */
+    Function("startSportActivity") { (label: String, startedAtMs: Double) -> Bool in
+      guard #available(iOS 16.2, *) else { return false }
+      guard ActivityAuthorizationInfo().areActivitiesEnabled else { return false }
+      let estado = SportActivityAttributes.ContentState(
+        startedAt: Date(timeIntervalSince1970: startedAtMs / 1000),
+        pausedAt: nil, distanceKm: nil, bpm: nil
+      )
+      do {
+        AtividadeCorrente.ativa = try Activity.request(
+          attributes: SportActivityAttributes(sportLabel: label),
+          content: .init(state: estado, staleDate: nil)
+        )
+        return true
+      } catch {
+        return false
+      }
+    }
+
+    Function("updateSportActivity") { (startedAtMs: Double, pausedAtMs: Double?, distanceKm: Double?, bpm: Int?) -> Void in
+      guard #available(iOS 16.2, *), let ativa = AtividadeCorrente.ativa else { return }
+      let estado = SportActivityAttributes.ContentState(
+        startedAt: Date(timeIntervalSince1970: startedAtMs / 1000),
+        pausedAt: pausedAtMs.map { Date(timeIntervalSince1970: $0 / 1000) },
+        distanceKm: distanceKm,
+        bpm: bpm
+      )
+      Task { await ativa.update(.init(state: estado, staleDate: nil)) }
+    }
+
+    Function("endSportActivity") { () -> Void in
+      guard #available(iOS 16.2, *), let ativa = AtividadeCorrente.ativa else { return }
+      AtividadeCorrente.ativa = nil
+      Task { await ativa.end(nil, dismissalPolicy: .immediate) }
     }
   }
 }

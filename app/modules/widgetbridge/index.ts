@@ -14,6 +14,14 @@ declare class WidgetBridgeNativeModule {
   isSupported(): boolean;
   setTodayWorkout(json: string): void;
   clear(): void;
+  startSportActivity?(label: string, startedAtMs: number): boolean;
+  updateSportActivity?(
+    startedAtMs: number,
+    pausedAtMs: number | null,
+    distanceKm: number | null,
+    bpm: number | null,
+  ): void;
+  endSportActivity?(): void;
 }
 
 const nativo = requireOptionalNativeModule<WidgetBridgeNativeModule>('WidgetBridge');
@@ -36,4 +44,42 @@ export function publicarTreinoDeHoje(treino: TreinoDoWidget | null) {
 
 export function limparWidget() {
   if (nativo?.isSupported()) nativo.clear();
+}
+
+// ============================================================================
+// Live Activity da sessão de esporte — a Dynamic Island conta o tempo sozinha.
+// ============================================================================
+
+export function iniciarIlhaDeEsporte(label: string, startedAtMs: number): boolean {
+  try {
+    return nativo?.startSportActivity?.(label, startedAtMs) ?? false;
+  } catch {
+    return false;
+  }
+}
+
+export function atualizarIlhaDeEsporte(input: {
+  startedAtMs: number;
+  pausedAtMs?: number | null;
+  distanceKm?: number | null;
+  bpm?: number | null;
+}) {
+  try {
+    nativo?.updateSportActivity?.(
+      input.startedAtMs,
+      input.pausedAtMs ?? null,
+      input.distanceKm ?? null,
+      input.bpm ?? null,
+    );
+  } catch {
+    // Ilha é enfeite de luxo: falhar aqui não pode tocar na sessão.
+  }
+}
+
+export function encerrarIlhaDeEsporte() {
+  try {
+    nativo?.endSportActivity?.();
+  } catch {
+    // idem
+  }
 }
