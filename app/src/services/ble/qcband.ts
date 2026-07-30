@@ -477,6 +477,11 @@ export class QCBandService implements BleService {
     return historico;
   }
 
+  async findDevice(): Promise<boolean> {
+    if (!QCBand) return false;
+    return QCBand.findBand().catch(() => false);
+  }
+
   async fetchSleep(): Promise<SleepNight | null> {
     if (!QCBand) return null;
 

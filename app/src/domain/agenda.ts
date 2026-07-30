@@ -29,7 +29,29 @@ export type Block = {
   peak: number;
   title: string;
   detail: string;
+  /** Para que este bloco serve melhor: "treinar", "estudar"… vira chips na tela. */
+  activities: string[];
 };
+
+/**
+ * O que cabe melhor em cada janela — nível de energia CRUZADO com a hora.
+ *
+ * A hora entra porque o mesmo nível serve a coisas diferentes: alerta alto de
+ * manhã é decisão e treino pesado; alto no fim da tarde é o pico de força do
+ * dia (temperatura corporal no topo). Estudar rende no médio — revisão fixa
+ * melhor fora do pico de excitação — e o vale não finge servir para nada além
+ * de recuperação.
+ */
+export function activitiesFor(level: EnergyLevel, startHour: number): string[] {
+  if (level === 'high') {
+    return startHour < 12 ? ['trabalhar a fundo', 'treinar'] : ['treinar pesado', 'apresentar'];
+  }
+  if (level === 'mid') {
+    if (startHour >= 17) return ['estudar', 'treino leve'];
+    return startHour < 12 ? ['estudar', 'reuniões'] : ['reuniões', 'revisar'];
+  }
+  return ['pausar', 'tarefas mecânicas'];
+}
 
 const COPY: Record<EnergyLevel, { title: string; detail: string }> = {
   high: {
@@ -79,6 +101,7 @@ export function blocksFrom(slots: Slot[]): Block[] {
       level: slot.level,
       peak: slot.score,
       ...COPY[slot.level],
+      activities: activitiesFor(slot.level, slot.hour),
     });
   }
 

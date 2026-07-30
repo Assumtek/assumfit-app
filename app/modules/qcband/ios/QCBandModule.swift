@@ -1236,6 +1236,21 @@ public class QCBandModule: Module {
         promise.reject("falha", "Sem resposta de bateria")
       })
     }
+
+    /**
+     Faz a pulseira vibrar — o "localizar" de quem não lembra onde a deixou.
+
+     O comando é o mesmo que o firmware usa para confirmar vínculo
+     (`alertBindingSuccess`): não existe um "find my band" dedicado no SDK, mas
+     a vibração de vínculo serve exatamente ao propósito.
+     */
+    AsyncFunction("findBand") { (promise: Promise) in
+      QCSDKCmdCreator.alertBindingSuccess({
+        promise.resolve(true)
+      }, fail: {
+        promise.reject("indisponivel", "pulseira não respondeu")
+      })
+    }
   }
 }
 
@@ -1319,6 +1334,9 @@ public class QCBandModule: Module {
     }
     AsyncFunction("setMonitoring") { (_: String, _: Bool, promise: Promise) in
       promise.resolve(nil)
+    }
+    AsyncFunction("findBand") { (promise: Promise) in
+      promise.reject("indisponivel", "sem radio no simulador")
     }
     AsyncFunction("getSleep") { (_: Int, promise: Promise) in
       promise.resolve([[String: Any]]())

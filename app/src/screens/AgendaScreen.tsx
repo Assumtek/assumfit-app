@@ -249,10 +249,28 @@ function BlockCard({ block, onPress }: { block: Block; onPress: () => void }) {
         <Data marginTop={1}>
           {formatHour(block.startHour)} – {formatHour(block.endHour)} · pico {block.peak}
         </Data>
+        {/* Para que a janela serve — chips curtos, que se leem de relance. */}
+        <XStack gap="$xs" marginTop={3} flexWrap="wrap">
+          {block.activities.map((a) => (
+            <YStack
+              key={a}
+              paddingHorizontal={8}
+              paddingVertical={2}
+              borderRadius={999}
+              borderWidth={1}
+              borderColor={block.level === 'high' ? '$primary' : '$borderStrong'}
+              backgroundColor={block.level === 'high' ? '$primarySoft' : 'transparent'}
+            >
+              <Data fontSize={10} color={block.level === 'high' ? '$primary' : '$mutedForeground'}>
+                {a}
+              </Data>
+            </YStack>
+          ))}
+        </XStack>
         {/* A justificativa só cabe em bloco de duas horas ou mais. Espremer
             três linhas num bloco de uma hora produz reticências, não leitura. */}
         {hours >= 2 ? (
-          <Body marginTop="$xs" fontSize={12} lineHeight={17} numberOfLines={hours >= 3 ? 3 : 2}>
+          <Body marginTop="$xs" fontSize={12} lineHeight={17} numberOfLines={hours >= 3 ? 2 : 1}>
             {block.detail}
           </Body>
         ) : null}

@@ -6,6 +6,7 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollVie
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '../../components/Icon';
+import { VoiceInput } from '../../components/VoiceInput';
 import { Body, Data, Label } from '../../components/ui';
 import { chatWithAgent, type ChatTurn } from '../../services/api.service';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -147,6 +148,12 @@ export function PersonalScreen() {
               style={{ fontSize: 15, color: colors.text, maxHeight: 120 }}
             />
           </YStack>
+
+          {/* Ditado: o texto transcrito ENTRA NO CAMPO, não é enviado direto —
+              a pessoa revisa antes, como no MUVX. */}
+          <VoiceInput
+            onTranscript={(t) => setTexto((atual) => (atual ? `${atual} ${t}` : t))}
+          />
 
           <Pressable
             onPress={() => void enviar()}

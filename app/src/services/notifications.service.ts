@@ -163,6 +163,35 @@ export async function cancelWaterNotifications() {
 }
 
 
+const CICLO_PROXIMO = 'ciclo-proximo';
+
+/**
+ * Aviso de que um novo ciclo se aproxima — dois dias antes da data prevista.
+ *
+ * Rearmado a cada previsão nova (registro novo move a data). O texto é
+ * discreto de propósito: a tela de bloqueio é vista por quem passa perto, e
+ * "ciclo" sem número nem data já diz o suficiente para quem pediu o aviso.
+ */
+export async function scheduleCycleHeadsUp(nextStartIso: string) {
+  if (!(await ensurePermission())) return;
+  await Notifications.cancelScheduledNotificationAsync(CICLO_PROXIMO).catch(() => undefined);
+
+  const alvo = new Date(`${nextStartIso}T09:00:00`);
+  alvo.setDate(alvo.getDate() - 2);
+  if (alvo.getTime() <= Date.now()) return;
+
+  await Notifications.scheduleNotificationAsync({
+    identifier: CICLO_PROXIMO,
+    content: {
+      title: 'Previsão do mês',
+      body: 'Pela sua previsão, um novo ciclo começa em poucos dias. Abra para ver os detalhes.',
+      sound: false,
+      data: { route: 'Cycle' },
+    },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: alvo },
+  });
+}
+
 /** O interruptor da tela lê daqui a verdade do CELULAR — a pulseira é espelho. */
 export async function waterNotificationsScheduled(): Promise<boolean> {
   const agendadas = await Notifications.getAllScheduledNotificationsAsync().catch(() => []);

@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '../../components/Icon';
+import { VoiceInput } from '../../components/VoiceInput';
 import { Body, Button, Card, Data, Label, SectionTitle } from '../../components/ui';
 import {
   answerInterview,
@@ -41,7 +42,8 @@ import { useTheme } from '../../theme/ThemeProvider';
  *    indicador segura ~900 ms, revela a fala com efeito de digitação, e só
  *    então as opções entram.
  *
- * O ditado continua sendo o do TECLADO do sistema — sem gravação nossa.
+ * O ditado tem botão próprio (VoiceInput): grava, transcreve na AWS e o texto
+ * entra no campo para revisão — nunca é enviado sem a pessoa ver.
  */
 export function AnamnesisConversationScreen() {
   const { colors } = useTheme();
@@ -322,6 +324,11 @@ export function AnamnesisConversationScreen() {
                   style={{ fontSize: 15, color: colors.text, maxHeight: 110 }}
                 />
               </YStack>
+              {/* Ditado por voz — o transcrito entra no campo para revisão,
+                  nunca é enviado direto. Mesmo desenho do MUVX. */}
+              <VoiceInput
+                onTranscript={(t) => setTexto((atual) => (atual ? `${atual} ${t}` : t))}
+              />
               <Pressable
                 onPress={() => void responder(texto)}
                 disabled={!texto.trim() || enviando}

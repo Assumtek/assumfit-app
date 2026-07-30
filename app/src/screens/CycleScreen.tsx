@@ -11,12 +11,14 @@ import {
   DEFAULT_LENGTH,
   PHASE_COPY,
   averageLength,
+  monthAhead,
   nextPeriod,
   phaseOn,
   type CyclePhase,
   type LoggedCycle,
 } from '../domain/cycle';
 import * as api from '../services/api.service';
+import { scheduleCycleHeadsUp } from '../services/notifications.service';
 import { useTheme } from '../theme/ThemeProvider';
 
 /** Chave `YYYY-MM-DD` no fuso LOCAL — `toISOString` viraria o dia à noite. */
@@ -65,6 +67,13 @@ export function CycleScreen() {
   const estado = useMemo(() => (cycles ? phaseOn(hoje_, cycles) : null), [cycles, hoje_]);
   const proxima = useMemo(() => (cycles ? nextPeriod(cycles) : null), [cycles]);
   const media = useMemo(() => (cycles ? averageLength(cycles) : null), [cycles]);
+  const mes = useMemo(() => (cycles ? monthAhead(cycles, hoje_) : null), [cycles, hoje_]);
+
+  // O aviso de ciclo chegando é rearmado a cada previsão nova — registro novo
+  // move a data, e um aviso na data velha seria pior que nenhum.
+  useEffect(() => {
+    if (mes?.nextStart) void scheduleCycleHeadsUp(mes.nextStart);
+  }, [mes?.nextStart]);
 
   /**
    * Marca ou desmarca um dia como início de menstruação.
@@ -167,6 +176,42 @@ export function CycleScreen() {
               <Data flexShrink={0}>{Math.abs(estado.daysToNext)} dias</Data>
             </Row>
           </Section>
+
+          {mes ? (
+            <YStack marginTop="$xl">
+              <Section label={`Seu mês, a partir de ${porExtenso(mes.windows[0].from)}`}>
+                {mes.windows.map((j) => (
+                  <Row key={j.label}>
+                    <Body flex={1} color="$foreground">{j.label}</Body>
+                    <Data flexShrink={0}>
+                      {porExtenso(j.from)} – {porExtenso(j.to)}
+                    </Data>
+                  </Row>
+                ))}
+                {/* A linha que mais importa leva o acento — e o aviso ao lado
+                    do dado, porque previsão de fertilidade sem ele é perigosa. */}
+                <Row last>
+                  <YStack flex={1} gap={2}>
+                    <Body color="$primary">Janela fértil</Body>
+                    <Data fontSize={11}>
+                      previsão para autoconhecimento — não serve como contraceptivo
+                    </Data>
+                  </YStack>
+                  <YStack alignItems="flex-end" flexShrink={0} gap={2}>
+                    <Data color="$foreground">
+                      {porExtenso(mes.fertile.from)} – {porExtenso(mes.fertile.to)}
+                    </Data>
+                    <Data fontSize={11}>ovulação ~{porExtenso(mes.fertile.peak)}</Data>
+                  </YStack>
+                </Row>
+              </Section>
+              <Data marginTop="$md">
+                Novo ciclo previsto para {porExtenso(mes.nextStart)}
+                {mes.estimating ? ' (estimativa pela referência populacional)' : ''} — o app avisa
+                dois dias antes.
+              </Data>
+            </YStack>
+          ) : null}
         </>
       ) : (
         <Note

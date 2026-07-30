@@ -1,4 +1,4 @@
-import { DEFAULT_LENGTH, averageLength, nextPeriod, phaseOn, type LoggedCycle } from '../cycle';
+import { DEFAULT_LENGTH, averageLength, monthAhead, nextPeriod, phaseOn, type LoggedCycle } from '../cycle';
 
 /**
  * O que estes testes travam é a PROPRIEDADE, não o número.
@@ -95,5 +95,40 @@ describe('nextPeriod', () => {
 
   it('com um registro só usa a referência populacional', () => {
     expect(nextPeriod([ciclo('2026-07-01')])).toBe('2026-07-29');
+  });
+});
+
+describe('monthAhead', () => {
+  const ciclos = [
+    { startedAt: '2026-06-03', durationDays: 5 },
+    { startedAt: '2026-07-01', durationDays: 5 },
+  ];
+
+  it('sem registro não desenha o mês', () => {
+    expect(monthAhead([], '2026-07-10')).toBeNull();
+  });
+
+  it('as janelas cobrem o ciclo inteiro, sem buraco e na ordem', () => {
+    const mes = monthAhead(ciclos, '2026-07-10')!;
+    expect(mes.windows[0]).toEqual({ label: 'Menstruação', from: '2026-07-01', to: '2026-07-05' });
+    // Fim de uma janela é véspera do início da seguinte.
+    for (let i = 1; i < mes.windows.length; i++) {
+      const fimAnterior = new Date(`${mes.windows[i - 1].to}T12:00:00`).getTime();
+      const inicioAtual = new Date(`${mes.windows[i].from}T12:00:00`).getTime();
+      expect(inicioAtual - fimAnterior).toBe(86_400_000);
+    }
+    expect(mes.windows[3].to).toBe('2026-07-28'); // ciclo de 28 dias
+  });
+
+  it('janela fértil: 5 dias antes da ovulação até 1 depois, com o pico marcado', () => {
+    // Ciclo de 28: ovulação no dia 14 → 14/jul; fértil 09–15/jul.
+    const mes = monthAhead(ciclos, '2026-07-10')!;
+    expect(mes.fertile.peak).toBe('2026-07-14');
+    expect(mes.fertile.from).toBe('2026-07-09');
+    expect(mes.fertile.to).toBe('2026-07-15');
+  });
+
+  it('prevê o início do próximo ciclo', () => {
+    expect(monthAhead(ciclos, '2026-07-10')!.nextStart).toBe('2026-07-29');
   });
 });

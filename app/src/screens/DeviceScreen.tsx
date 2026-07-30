@@ -5,6 +5,7 @@ import { Pressable } from 'react-native';
 import { YStack } from '@tamagui/stacks';
 
 import { Note, Row, Section } from '../components/Card';
+import { ble } from '../services/ble';
 import { DetailScreen } from '../components/DetailScreen';
 import { SedentaryReminder } from '../components/SedentaryReminder';
 import { Body, Button, Data } from '../components/ui';
@@ -21,6 +22,18 @@ export function DeviceScreen() {
   const onDisconnect = async () => {
     await disconnect();
     navigation.reset({ index: 0, routes: [{ name: 'Connect' as never }] });
+  };
+
+  const [localizando, setLocalizando] = React.useState(false);
+  const localizar = async () => {
+    setLocalizando(true);
+    try {
+      await ble.findDevice?.();
+    } finally {
+      // Segura o rótulo "Vibrando…" o tempo da vibração — o retorno do SDK
+      // chega antes de o motor parar, e o botão voltando na hora parece falha.
+      setTimeout(() => setLocalizando(false), 2500);
+    }
   };
 
   /*
@@ -65,6 +78,22 @@ export function DeviceScreen() {
           </Row>
         ))}
       </Section>
+
+      {/*
+        Localizar: a pulseira vibra até a pessoa achá-la. Só aparece conectada —
+        fora de alcance o rádio não entrega o comando, e um botão que não faz
+        nada ensina a desconfiar dos outros.
+      */}
+      {connection === 'connected' ? (
+        <YStack marginTop="$xl">
+          <Button
+            title={localizando ? 'Vibrando…' : 'Localizar pulseira'}
+            variant="secondary"
+            onPress={() => void localizar()}
+            disabled={localizando}
+          />
+        </YStack>
+      ) : null}
 
       {/* O mesmo componente que Hábitos usa — ver SedentaryReminder.tsx. */}
       <SedentaryReminder />

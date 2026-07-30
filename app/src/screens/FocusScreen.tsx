@@ -128,12 +128,27 @@ export function FocusScreen() {
       ) : (
         <>
           <YStack alignItems="center" paddingVertical="$xl">
-            <ProgressRing fraction={fraction} color={phaseColor} size={232} strokeWidth={2}>
+            {/*
+              A cara de pomodoro: anel GROSSO como mostrador, a fase num selo
+              em caixa alta, e o tempo dominando o centro. A cor continua sendo
+              a do sistema — o acento no foco, o neutro na pausa — porque o
+              vermelho do tomate clássico aqui é a cor de "fora da faixa".
+            */}
+            <ProgressRing fraction={fraction} color={phaseColor} size={264} strokeWidth={12}>
               <YStack alignItems="center" gap="$sm">
-                <Label marginBottom="$xs">
-                  {session.phase === 'focus' ? 'foco' : session.phase === 'break' ? 'pausa' : 'concluído'}
-                </Label>
-                <Display fontSize={62} lineHeight={66} letterSpacing={-3}>
+                <YStack
+                  paddingHorizontal={14}
+                  paddingVertical={5}
+                  borderRadius={999}
+                  backgroundColor={session.phase === 'break' ? '$card' : '$primarySoft'}
+                  borderWidth={1}
+                  borderColor={session.phase === 'break' ? '$borderStrong' : '$primary'}
+                >
+                  <Label color={session.phase === 'break' ? '$mutedForeground' : '$primary'}>
+                    {session.phase === 'focus' ? 'FOCO' : session.phase === 'break' ? 'PAUSA' : 'FIM'}
+                  </Label>
+                </YStack>
+                <Display fontSize={64} lineHeight={70} letterSpacing={-3}>
                   {clock(left)}
                 </Display>
                 <Data>
@@ -141,6 +156,25 @@ export function FocusScreen() {
                 </Data>
               </YStack>
             </ProgressRing>
+
+            {/* Um ponto por bloco — o "quantos tomates faltam" do método. */}
+            <XStack gap="$md" marginTop="$xl">
+              {Array.from({ length: protocol.cycles }, (_, i) => {
+                const feito = i < session.completed;
+                const atual = i === Math.min(session.cycle, protocol.cycles) - 1 && session.phase !== 'done';
+                return (
+                  <YStack
+                    key={i}
+                    width={12}
+                    height={12}
+                    borderRadius={6}
+                    backgroundColor={feito ? '$primary' : 'transparent'}
+                    borderWidth={atual ? 2 : 1}
+                    borderColor={feito || atual ? '$primary' : '$borderStrong'}
+                  />
+                );
+              })}
+            </XStack>
           </YStack>
 
           {/* O dado do corpo continua correndo durante a sessão — é ele que
@@ -169,9 +203,19 @@ export function FocusScreen() {
               <Control label="Voltar" onPress={() => navigation.goBack()} />
             </Controls>
           ) : (
-            <Controls>
-              <Control
-                label={session.running ? 'Pausar' : 'Retomar'}
+            /*
+             Controles de TIMER, não links de texto: o do meio é o grande —
+             pausa/retoma, que é o gesto repetido — e os dois dos lados são os
+             raros. É a gramática de botões que todo pomodoro ensina.
+            */
+            <XStack justifyContent="center" alignItems="center" gap="$xxl" marginTop="$xxl">
+              <BotaoRedondo
+                icone="x"
+                rotulo="Encerrar"
+                onPress={() => setSession(null)}
+                cor={colors.textMuted}
+              />
+              <Pressable
                 onPress={() =>
                   setSession((s) => {
                     const stamp = Date.now();
@@ -179,9 +223,24 @@ export function FocusScreen() {
                     return s ? (s.running ? pause(s, stamp) : resume(s, stamp)) : s;
                   })
                 }
-              />
-              <Control
-                label={session.phase === 'break' ? 'Pular pausa' : 'Pular bloco'}
+                accessibilityRole="button"
+                accessibilityLabel={session.running ? 'Pausar' : 'Retomar'}
+                style={({ pressed }) => pressed && { opacity: 0.75 }}
+              >
+                <YStack
+                  width={72}
+                  height={72}
+                  borderRadius={36}
+                  backgroundColor="$primary"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Icon name={session.running ? 'pause' : 'play'} size={26} color={colors.ink} />
+                </YStack>
+              </Pressable>
+              <BotaoRedondo
+                icone="skip"
+                rotulo={session.phase === 'break' ? 'Pular pausa' : 'Pular bloco'}
                 onPress={() =>
                   setSession((s) => {
                     const stamp = Date.now();
@@ -189,9 +248,9 @@ export function FocusScreen() {
                     return s ? skip(s, stamp) : s;
                   })
                 }
+                cor={colors.text}
               />
-              <Control label="Encerrar" onPress={() => setSession(null)} />
-            </Controls>
+            </XStack>
           )}
         </>
       )}
@@ -219,6 +278,39 @@ function Vital({ value, unit, label }: { value: number | null; unit: string; lab
         <Data>{unit}</Data>
       </XStack>
     </YStack>
+  );
+}
+
+function BotaoRedondo({
+  icone,
+  rotulo,
+  onPress,
+  cor,
+}: {
+  icone: 'x' | 'skip';
+  rotulo: string;
+  onPress: () => void;
+  cor: string;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={rotulo}
+      style={({ pressed }) => pressed && { opacity: 0.6 }}
+    >
+      <YStack
+        width={52}
+        height={52}
+        borderRadius={26}
+        borderWidth={1}
+        borderColor="$borderStrong"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Icon name={icone} size={20} color={cor} />
+      </YStack>
+    </Pressable>
   );
 }
 

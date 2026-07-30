@@ -143,6 +143,61 @@ export function nextPeriod(cycles: LoggedCycle[]): string | null {
   return new Date(paraData(ultimo.startedAt) + length * DIA_MS).toISOString().slice(0, 10);
 }
 
+/** Uma janela do mês, com datas de calendário — o que a tabelinha renderiza. */
+export type CycleWindow = {
+  label: string;
+  /** `YYYY-MM-DD` inclusivos. */
+  from: string;
+  to: string;
+};
+
+export type MonthAhead = {
+  windows: CycleWindow[];
+  /** Janela fértil separada: é a linha que mais importa e carrega o aviso. */
+  fertile: CycleWindow & { peak: string };
+  /** Data prevista do próximo ciclo. */
+  nextStart: string;
+  estimating: boolean;
+};
+
+const somaDias = (iso: string, dias: number): string =>
+  new Date(paraData(iso) + dias * DIA_MS).toISOString().slice(0, 10);
+
+/**
+ * O mês inteiro a partir do 1º dia da menstruação, em janelas datadas.
+ *
+ * A janela fértil vai de 5 dias antes da ovulação a 1 depois — o que a
+ * fisiologia dá de sobrevida aos gametas — e por isso ATRAVESSA a folicular e
+ * a ovulatória: ela é um recorte próprio, não uma quinta fase. Previsão para
+ * autoconhecimento; como método contraceptivo isso não serve, e a tela repete
+ * esse aviso ao lado do dado, não em rodapé.
+ */
+export function monthAhead(cycles: LoggedCycle[], today: string): MonthAhead | null {
+  const estado = phaseOn(today, cycles, today);
+  const proxima = nextPeriod(cycles);
+  if (!estado || !proxima) return null;
+
+  const ordenados = [...cycles].sort((a, b) => a.startedAt.localeCompare(b.startedAt));
+  const ultimo = [...ordenados].reverse().find((c) => diasEntre(c.startedAt, today) >= 0)!;
+  const inicio = ultimo.startedAt;
+  const fluxo = ultimo.durationDays ?? DEFAULT_FLOW_DAYS;
+  const ovulacao = estado.length - LUTEAL_DAYS; // dia do ciclo, 1-based
+
+  const dia = (n: number) => somaDias(inicio, n - 1);
+
+  return {
+    windows: [
+      { label: 'Menstruação', from: dia(1), to: dia(fluxo) },
+      { label: 'Fase folicular', from: dia(fluxo + 1), to: dia(ovulacao - OVULATORY_WINDOW - 1) },
+      { label: 'Ovulação', from: dia(ovulacao - OVULATORY_WINDOW), to: dia(ovulacao + OVULATORY_WINDOW) },
+      { label: 'Fase lútea', from: dia(ovulacao + OVULATORY_WINDOW + 1), to: dia(estado.length) },
+    ],
+    fertile: { label: 'Janela fértil', from: dia(ovulacao - 5), to: dia(ovulacao + 1), peak: dia(ovulacao) },
+    nextStart: proxima,
+    estimating: estado.estimating,
+  };
+}
+
 /**
  * O que cada fase significa para o DIA da pessoa.
  *

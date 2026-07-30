@@ -77,6 +77,8 @@ export interface BleService {
   fetchSleep?(): Promise<SleepNight | null>;
   /** As noites que a pulseira ainda guarda na memória, da mais antiga à mais nova. */
   fetchSleepHistory?(): Promise<SleepNight[]>;
+  /** Vibra a pulseira para a pessoa achá-la. Resolve `false` se não alcançou. */
+  findDevice?(): Promise<boolean>;
   /**
    * As séries que a PULSEIRA guardou hoje, não as que o app acumulou.
    *

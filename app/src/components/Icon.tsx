@@ -1,4 +1,6 @@
 import {
+  Mic,
+  X,
   Activity,
   ArrowLeft,
   ArrowLeftRight,
@@ -62,6 +64,8 @@ export type IconName =
   | 'pulse'
   | 'moon'
   | 'drop'
+  | 'x'
+  | 'mic'
   | 'thermometer'
   | 'heart'
   | 'gauge'
@@ -106,6 +110,8 @@ const GLYPH = {
   pulse: Activity,
   moon: Moon,
   drop: Droplet,
+  x: X,
+  mic: Mic,
   thermometer: Thermometer,
   heart: Heart,
   gauge: Gauge,

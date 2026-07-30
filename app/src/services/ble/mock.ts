@@ -47,6 +47,11 @@ export class MockBleService implements BleService {
     this.start();
   }
 
+  async findDevice(): Promise<boolean> {
+    // O simulado "vibra" com sucesso — é o que deixa testar a tela sem hardware.
+    return true;
+  }
+
   async disconnect(): Promise<void> {
     this.stop();
     this.setState('idle');

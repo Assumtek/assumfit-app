@@ -161,6 +161,8 @@ declare class QCBandNativeModule extends NativeModule<QCBandEvents> {
    */
   getSleep(dayIndex: number): Promise<{ type: number; minutes: number; start: string; end: string }[]>;
   getBattery(): Promise<{ level: number; charging: boolean }>;
+  /** Vibra a pulseira — o "localizar" de quem não lembra onde a deixou. */
+  findBand(): Promise<boolean>;
 }
 
 export const QCBand = requireOptionalNativeModule<QCBandNativeModule>('QCBand');

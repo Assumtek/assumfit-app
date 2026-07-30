@@ -12,6 +12,8 @@ import { DeviceScreen } from '../screens/DeviceScreen';
 import { FocusScreen } from '../screens/FocusScreen';
 import { GattScreen } from '../screens/GattScreen';
 import { HabitsScreen } from '../screens/HabitsScreen';
+import { MealsScreen } from '../screens/MealsScreen';
+import { SportScreen } from '../screens/SportScreen';
 import { WaterReminderScreen } from '../screens/WaterReminderScreen';
 import { CycleScreen } from '../screens/CycleScreen';
 import { AlertsScreen } from '../screens/AlertsScreen';
@@ -96,6 +98,8 @@ const linking = {
       Activity: 'passos',
       Habits: 'habitos',
       WaterReminder: 'lembrete-agua',
+      Meals: 'refeicoes',
+      Sport: 'esporte',
       Focus: 'foco',
       Agenda: 'agenda',
       Onboarding: 'perfil-rotina',
@@ -214,6 +218,8 @@ export function Navigation() {
         <Stack.Screen name="Activity" component={ActivityScreen} />
         <Stack.Screen name="Habits" component={HabitsScreen} />
         <Stack.Screen name="WaterReminder" component={WaterReminderScreen} />
+        <Stack.Screen name="Meals" component={MealsScreen} />
+        <Stack.Screen name="Sport" component={SportScreen} />
         <Stack.Screen name="Focus" component={FocusScreen} />
         <Stack.Screen name="Agenda" component={AgendaScreen} />
         <Stack.Screen name="BioAge" component={BioAgeScreen} />

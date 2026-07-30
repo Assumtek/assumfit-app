@@ -98,6 +98,12 @@
         {
           "backgroundColor": "#0E0A22"
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "O AssumFit usa o microfone apenas quando você toca no botão de gravar, para ditar mensagens ao personal e à anamnese. O áudio vira texto e é descartado."
+        }
       ]
     ],
     "extra": {

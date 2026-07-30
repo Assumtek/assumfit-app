@@ -812,3 +812,112 @@ export async function fetchExecutionHistory(days = 30): Promise<ExecutionHistory
   });
   return data;
 }
+
+// ============================================================================
+// Refeições — análise por foto. A imagem NÃO é armazenada; o resultado sim.
+// ============================================================================
+
+export type MealFood = {
+  name: string;
+  portion: string;
+  grams: number | null;
+  kcal_min: number;
+  kcal_max: number;
+  protein_g: number | null;
+  carbs_g: number | null;
+  fat_g: number | null;
+  uncertain: boolean;
+  /** Nome oficial da tabela TACO quando a caloria veio dela. */
+  matched: string | null;
+};
+
+export type MealRecord = {
+  id: string;
+  at: string;
+  foods: MealFood[];
+  kcalMin: number;
+  kcalMax: number;
+  confidence: number;
+  notes: string | null;
+};
+
+export type MealAnalysis = {
+  is_food: boolean;
+  foods: MealFood[];
+  kcal_total_min: number;
+  kcal_total_max: number;
+  confidence: number;
+  notes: string;
+};
+
+export async function analyzeMeal(input: {
+  imageBase64: string;
+  mediaType?: string;
+  description?: string;
+}): Promise<{ record: MealRecord | null; analysis: MealAnalysis }> {
+  const { data } = await api.post('/nutrition/meal', input, { timeout: 90_000 });
+  return data;
+}
+
+export async function fetchMeals(days = 7): Promise<MealRecord[]> {
+  const { data } = await api.get<MealRecord[]>('/nutrition/meals', { params: { days } });
+  return data;
+}
+
+export async function deleteMeal(id: string): Promise<void> {
+  await api.delete(`/nutrition/meal/${id}`);
+}
+
+// ============================================================================
+// Ditado por voz — presign → upload direto ao S3 → job do Transcribe → texto.
+// ============================================================================
+
+export async function presignAudio(format = 'm4a'): Promise<{ uploadUrl: string; key: string }> {
+  const { data } = await api.post('/transcribe/presign', { format });
+  return data;
+}
+
+export async function startTranscription(key: string, format = 'm4a'): Promise<{ jobName: string }> {
+  const { data } = await api.post('/transcribe/start', { key, format });
+  return data;
+}
+
+export async function getTranscription(
+  jobName: string,
+): Promise<{ status: 'TRANSCRIBING' | 'DONE' | 'FAILED'; transcript?: string }> {
+  const { data } = await api.get(`/transcribe/${jobName}`);
+  return data;
+}
+
+// ============================================================================
+// Esporte — só os agregados sobem; a trilha de GPS morre no aparelho.
+// ============================================================================
+
+export type SportSession = {
+  id: string;
+  sport: string;
+  startedAt: string;
+  durationS: number;
+  distanceM: number | null;
+  kcal: number;
+  avgHr: number | null;
+  maxHr: number | null;
+};
+
+export async function saveSportSession(input: {
+  sport: string;
+  startedAt: string;
+  durationS: number;
+  distanceM: number | null;
+  kcal: number;
+  avgHr: number | null;
+  maxHr: number | null;
+}): Promise<SportSession> {
+  const { data } = await api.post<SportSession>('/sport/session', input);
+  return data;
+}
+
+export async function fetchSportSessions(days = 30): Promise<SportSession[]> {
+  const { data } = await api.get<SportSession[]>('/sport/sessions', { params: { days } });
+  return data;
+}

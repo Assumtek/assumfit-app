@@ -323,3 +323,25 @@ async def agent_adjust(data: WorkoutAdjustInput) -> JSONResponse:
 
     _log.info("agent.http.adjust", trace_id=result.trace_id, blocked=result.blocked)
     return JSONResponse(result.model_dump(mode="json"))
+
+
+# ============================================================================
+# Nutrição — análise de refeição por foto (desenho do MUVX, tabela TACO local).
+# ============================================================================
+
+from nutrition.service import AnalyzeMealInput, MealAnalysisError, analyze_meal  # noqa: E402
+
+
+@app.post("/nutrition/analyze")
+async def nutrition_analyze(data: AnalyzeMealInput) -> JSONResponse:
+    """Analisa a foto de um prato. NÃO é fail-soft: o backend precisa distinguir
+    sucesso de falha para oferecer retry — foto sem comida é sucesso, não erro."""
+    try:
+        result = await analyze_meal(data)
+    except MealAnalysisError as exc:
+        _log.error("nutrition.http.analyze.failed", error=str(exc))
+        return JSONResponse({"error": "análise falhou", "retryable": True}, status_code=502)
+    except Exception as exc:  # noqa: BLE001
+        _log.error("nutrition.http.analyze.error", error_type=type(exc).__name__, error=str(exc))
+        return JSONResponse({"error": "análise falhou", "retryable": True}, status_code=502)
+    return JSONResponse(result.model_dump(mode="json"))

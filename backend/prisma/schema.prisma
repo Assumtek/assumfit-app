@@ -154,6 +154,8 @@ model User {
   menstrualCycles MenstrualCycle[]
   bioAgeScores    BioAgeScore[]
   dailyHabits     DailyHabit[]
+  mealRecords     MealRecord[]
+  sportSessions   SportSession[]
   sessions        ProductivitySession[]
   calendars       CalendarAccount[]
   lifestyle       LifestyleProfile?
@@ -402,6 +404,43 @@ model DailyHabit {
 
   @@unique([userId, date])
   @@map("daily_habits")
+}
+
+model MealRecord {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  at         DateTime @default(now()) @db.Timestamptz(3)
+  /// A FOTO não é armazenada — analisada e descartada, como os eventos de
+  /// agenda. O que fica é o resultado: alimentos, porções e faixa de calorias.
+  foods      Json
+  kcalMin    Int      @map("kcal_min")
+  kcalMax    Int      @map("kcal_max")
+  confidence Float
+  notes      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, at])
+  @@map("meal_records")
+}
+
+model SportSession {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  sport      String
+  startedAt  DateTime @map("started_at") @db.Timestamptz(3)
+  durationS  Int      @map("duration_s")
+  /// Nula quando a modalidade não usa GPS (funcional, yoga) ou o sinal faltou.
+  distanceM  Int?     @map("distance_m")
+  /// Estimativa por MET — declarada como estimativa em toda tela.
+  kcal       Int
+  avgHr      Int?     @map("avg_hr")
+  maxHr      Int?     @map("max_hr")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startedAt(sort: Desc)])
+  @@map("sport_sessions")
 }
 
 // ==========================================================================

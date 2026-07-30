@@ -223,6 +223,18 @@ export function Sidebar() {
             onPress={() => go('Focus')}
           />
           <Entry
+            name="Esporte"
+            detail="corrida, ciclismo e mais"
+            active={current === 'Sport'}
+            onPress={() => go('Sport')}
+          />
+          <Entry
+            name="Refeições"
+            detail="calorias por foto"
+            active={current === 'Meals'}
+            onPress={() => go('Meals')}
+          />
+          <Entry
             name="Água"
             detail={`${(water / 1000).toFixed(1).replace('.', ',')} L de ${(waterGoal / 1000).toFixed(1).replace('.', ',')} L`}
             active={current === 'Habits'}
