@@ -7,7 +7,7 @@ import { ActivityIndicator, Alert, Image, Pressable } from 'react-native';
 
 import { Note, Row, Section } from '../components/Card';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
-import { Body, Button, Data, Display, Label } from '../components/ui';
+import { Body, Button, Data, Display, HeroCard, Label } from '../components/ui';
 import { ageFromBirthDate, calorieGoal, toMeasure, type CalorieGoal } from '../domain/nutritionGoal';
 import * as api from '../services/api.service';
 import { useTheme } from '../theme/ThemeProvider';
@@ -192,11 +192,7 @@ export function MealsScreen() {
             </Display>
             <Data>kcal</Data>
           </XStack>
-          {m ? (
-            <Data marginTop="$xs" color="$mutedForeground">
-              proteína {m.p} g · carboidrato {m.c} g · gordura {m.g} g
-            </Data>
-          ) : null}
+          {m ? <MacroColunas m={m} /> : null}
         </YStack>
 
         <Section label="No prato">
@@ -244,22 +240,32 @@ export function MealsScreen() {
 
   return (
     <DetailScreen title="Refeições" refreshControl={refresh}>
-      <YStack marginTop="$md" marginBottom="$lg">
-        <Label>hoje</Label>
-        <XStack alignItems="baseline" gap="$sm">
-          <Display>{deHoje.length ? `${kcalMin}–${kcalMax}` : '—'}</Display>
-          <Data>kcal</Data>
-        </XStack>
-        <Data marginTop="$xs" color="$mutedForeground">
-          {deHoje.length
-            ? `${deHoje.length} ${deHoje.length === 1 ? 'refeição' : 'refeições'}${
-                mHoje ? ` · P ${mHoje.p} g · C ${mHoje.c} g · G ${mHoje.g} g` : ''
-              }`
-            : 'nenhuma refeição registrada hoje'}
-        </Data>
-        <Data marginTop="$xs" color="$mutedForeground">
-          {meta ? metaLinha(meta, (kcalMin + kcalMax) / 2) : 'Responda peso, altura e objetivo na anamnese para ganhar uma meta diária.'}
-        </Data>
+      {/* O resumo do dia é a peça de destaque da tela — composição do resumo
+          nutricional do MUVX (meta, barra, colunas de macros), na pele do
+          AssumFit: halo, sombra e UM acento. */}
+      <YStack marginTop="$md" marginBottom="$xl">
+        <HeroCard eyebrow="Resumo de hoje">
+          <XStack alignItems="baseline" gap="$sm">
+            <Display>{deHoje.length ? `${kcalMin}–${kcalMax}` : '—'}</Display>
+            <Data>kcal</Data>
+          </XStack>
+          {meta ? (
+            <YStack gap="$xs">
+              <BarraDaMeta consumido={(kcalMin + kcalMax) / 2} meta={meta.goal} />
+              <Data color="$mutedForeground">{metaLinha(meta, (kcalMin + kcalMax) / 2)}</Data>
+            </YStack>
+          ) : (
+            <Data color="$mutedForeground">
+              Responda peso, altura e objetivo na anamnese para ganhar uma meta diária.
+            </Data>
+          )}
+          {mHoje ? <MacroColunas m={mHoje} /> : null}
+          <Data color="$mutedForeground">
+            {deHoje.length
+              ? `${deHoje.length} ${deHoje.length === 1 ? 'refeição registrada' : 'refeições registradas'}`
+              : 'nenhuma refeição registrada hoje'}
+          </Data>
+        </HeroCard>
       </YStack>
 
       <XStack gap="$md" marginBottom="$xl">
@@ -303,6 +309,7 @@ export function MealsScreen() {
           {meals.map((meal, i) => {
             const fotoUri = fotoDe(meal.id);
             const alimentos = (meal.foods as api.MealFood[]).map((f) => f.name).join(' · ');
+            const mm = macros(meal.foods as api.MealFood[]);
             return (
               <Row key={meal.id} last={i === meals.length - 1}>
                 <Pressable
@@ -334,7 +341,10 @@ export function MealsScreen() {
                     <Body color="$foreground" numberOfLines={1}>
                       {alimentos || 'Refeição'}
                     </Body>
-                    <Data numberOfLines={1}>{quando(meal.at)}</Data>
+                    <Data numberOfLines={1}>
+                      {quando(meal.at)}
+                      {mm ? ` · P ${mm.p} · C ${mm.c} · G ${mm.g}` : ''}
+                    </Data>
                   </YStack>
                   <Data color="$foreground" flexShrink={0}>
                     {meal.kcalMin}–{meal.kcalMax} kcal
@@ -346,6 +356,51 @@ export function MealsScreen() {
         </Section>
       ) : null}
     </DetailScreen>
+  );
+}
+
+/**
+ * A barra da meta — o quanto do dia já foi consumido, no acento. Passou da
+ * meta, ela para cheia e o TEXTO diz o quanto passou: meta de caloria não é
+ * faixa clínica, e pintar de alerta viraria bronca.
+ */
+function BarraDaMeta({ consumido, meta }: { consumido: number; meta: number }) {
+  const fracao = meta > 0 ? Math.min(1, consumido / meta) : 0;
+  return (
+    <YStack height={6} borderRadius={999} backgroundColor="$border" overflow="hidden">
+      <YStack
+        height={6}
+        borderRadius={999}
+        backgroundColor="$primary"
+        width={`${Math.round(fracao * 100)}%`}
+      />
+    </YStack>
+  );
+}
+
+/**
+ * As três colunas de macros do resumo do MUVX — gramas em cima, participação
+ * calórica embaixo (P e C valem 4 kcal/g; G vale 9). Sem cor por macro: aqui
+ * o acento é um só, e a hierarquia é de peso e escala.
+ */
+function MacroColunas({ m }: { m: { p: number; c: number; g: number } }) {
+  const cal = m.p * 4 + m.c * 4 + m.g * 9;
+  const pct = (kcal: number) => (cal > 0 ? `${Math.round((kcal / cal) * 100)}%` : '—');
+  const colunas = [
+    { rotulo: 'Proteínas', gramas: m.p, kcal: m.p * 4 },
+    { rotulo: 'Carboidratos', gramas: m.c, kcal: m.c * 4 },
+    { rotulo: 'Gorduras', gramas: m.g, kcal: m.g * 9 },
+  ];
+  return (
+    <XStack justifyContent="space-between" paddingTop="$sm">
+      {colunas.map((c) => (
+        <YStack key={c.rotulo} alignItems="flex-start" gap={2}>
+          <Label>{c.rotulo}</Label>
+          <Body color="$foreground">{c.gramas} g</Body>
+          <Data color="$mutedForeground">{pct(c.kcal)}</Data>
+        </YStack>
+      ))}
+    </XStack>
   );
 }
 
