@@ -42,6 +42,18 @@ export function MealsScreen() {
 
   const analisar = async (deCamera: boolean) => {
     setAviso(null);
+
+    // A câmera exige pedido EXPLÍCITO — `launchCameraAsync` não pergunta
+    // sozinho e estoura MissingCameraPermissionException. A galeria não passa
+    // por aqui: o seletor do iOS 14+ roda fora do app e dispensa permissão.
+    if (deCamera) {
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (!perm.granted) {
+        setAviso('Sem acesso à câmera. Conceda em Ajustes → AssumFit, ou use uma foto da galeria.');
+        return;
+      }
+    }
+
     const opcoes: ImagePicker.ImagePickerOptions = {
       mediaTypes: ['images'],
       base64: true,
@@ -50,10 +62,16 @@ export function MealsScreen() {
       quality: 0.35,
       allowsEditing: false,
     };
-    const resultado = deCamera
-      ? await ImagePicker.launchCameraAsync(opcoes)
-      : await ImagePicker.launchImageLibraryAsync(opcoes);
-    const foto = resultado.assets?.[0];
+    let foto: ImagePicker.ImagePickerAsset | undefined;
+    try {
+      const resultado = deCamera
+        ? await ImagePicker.launchCameraAsync(opcoes)
+        : await ImagePicker.launchImageLibraryAsync(opcoes);
+      foto = resultado.assets?.[0];
+    } catch {
+      setAviso('Não deu para abrir a câmera. Tente pela galeria.');
+      return;
+    }
     if (!foto?.base64) return;
 
     setAnalisando(true);
