@@ -70,6 +70,10 @@ function corsOptions(): cors.CorsOptions {
 
 app.use(helmet());
 app.use(cors(corsOptions()));
+// A foto do prato é a única exceção ao teto global: o app redimensiona antes
+// de subir, mas o teto real precisa caber uma câmera desconhecida — parser
+// próprio, ANTES do global (o segundo vê o corpo já lido e não mexe).
+app.use('/nutrition/meal', express.json({ limit: '8mb' }));
 // Lote de biometria é o maior corpo que a API recebe; 2 MB cobre ~1000
 // leituras com folga e ainda barra corpo abusivo.
 app.use(express.json({ limit: '2mb' }));

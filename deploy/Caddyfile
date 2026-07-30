@@ -29,8 +29,17 @@ api.assumfit.com.br {
 		-Server
 	}
 
-	# O endereço antigo da política continua vivo, apontando para o canônico.
-	redir /privacidade https://assumfit.com.br/privacidade permanent
-
-	reverse_proxy 127.0.0.1:3001
+	# A política é servida AQUI, não redirecionada: o DNS do domínio raiz ainda
+	# aponta para a Hostinger, que segura uma cópia velha do site — este é o
+	# único endereço que responde do nosso servidor hoje. Quando o A de
+	# assumfit.com.br vier para cá, o raiz vira o canônico de novo.
+	root * /site
+	@politica path /privacidade
+	handle @politica {
+		rewrite * /privacidade.html
+		file_server
+	}
+	handle {
+		reverse_proxy 127.0.0.1:3001
+	}
 }

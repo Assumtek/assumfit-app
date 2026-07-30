@@ -38,6 +38,11 @@ que o app inteiro fala com você.</p>
   guardada para você poder ver o que declarou e quando.</li>
   <li><strong>Hábitos:</strong> água, sessões de foco e ciclo menstrual (este
   último com consentimento próprio, separado, e apagado se você revogar).</li>
+  <li><strong>Refeições (opcional):</strong> se você fotografar um prato, a
+  foto é enviada, analisada e descartada — no servidor fica só o resultado:
+  alimentos, porções estimadas e a faixa de calorias. A foto em si fica
+  guardada apenas no seu aparelho, junto do histórico, e é apagada quando
+  você remove o registro.</li>
   <li><strong>Localização aproximada:</strong> usada no momento, apenas para
   temperatura e umidade do ambiente. A posição não é armazenada.</li>
   <li><strong>Agenda (opcional):</strong> se você conectar Google ou Outlook,
@@ -55,8 +60,10 @@ ninguém.</p>
 <ul>
   <li><strong>Anthropic</strong> (operadora): a geração do treino envia à API
   da Anthropic o seu perfil de treino — idade, sexo, objetivo, condições
-  declaradas e resumo de atividade — sem nome, e-mail ou identificador de
-  conta. Nenhuma notificação ou tela de bloqueio carrega valor biométrico.</li>
+  declaradas e resumo de atividade — e a análise de refeições envia a foto do
+  prato. Nos dois casos, sem nome, e-mail ou identificador de conta, e a foto
+  não é retida. Nenhuma notificação ou tela de bloqueio carrega valor
+  biométrico.</li>
   <li><strong>Google/Microsoft</strong> (se você conectar a agenda): as
   credenciais ficam cifradas com AES-256-GCM, com chave fora do banco, e
   revogar o consentimento apaga as conexões.</li>
