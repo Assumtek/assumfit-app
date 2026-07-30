@@ -28,3 +28,23 @@ export async function recordFocusSession(record: FocusRecord): Promise<void> {
     })
     .catch(() => undefined);
 }
+
+export type FocusHistoryItem = {
+  type: string;
+  startedAt: string;
+  endedAt: string;
+  durationMin: number;
+  energyScoreAtStart: number | null;
+};
+
+/** Sessões recentes, para o histórico da tela. Vazio em erro — lista é enfeite. */
+export async function fetchFocusSessions(): Promise<FocusHistoryItem[]> {
+  if (!isAuthenticated()) return [];
+  try {
+    const { data } = await api.get<FocusHistoryItem[]>('/sessions', { params: { days: 14 } });
+    // O servidor devolve do mais antigo ao mais novo; a tela lê ao contrário.
+    return [...data].reverse();
+  } catch {
+    return [];
+  }
+}

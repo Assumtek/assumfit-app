@@ -121,7 +121,7 @@ export function AlertsScreen() {
           {avisos.map((aviso) => (
             <Card
               key={aviso.titulo}
-              onPress={() => navigation.navigate(aviso.rota as never)}
+              onPress={() => (navigation as any).push(aviso.rota as never)}
               accessibilityLabel={aviso.titulo}
             >
               <XStack alignItems="center" gap="$xs">
@@ -142,7 +142,7 @@ export function AlertsScreen() {
               <Pressable
                 key={n.id}
                 disabled={!n.rota}
-                onPress={() => n.rota && navigation.navigate(n.rota as never)}
+                onPress={() => n.rota && (navigation as any).push(n.rota as never)}
                 accessibilityRole={n.rota ? 'button' : undefined}
                 accessibilityLabel={n.titulo}
               >

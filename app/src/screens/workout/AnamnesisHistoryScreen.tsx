@@ -49,7 +49,7 @@ export function AnamnesisHistoryScreen() {
           body="Cada vez que você responde a anamnese, aquela versão fica guardada aqui — para você poder comparar o que mudou."
         />
         <YStack marginTop="$xl">
-          <Button title="Responder anamnese" onPress={() => navigation.navigate('Anamnesis')} />
+          <Button title="Responder anamnese" onPress={() => (navigation as any).push('Anamnesis')} />
         </YStack>
       </DetailScreen>
     );
@@ -72,7 +72,7 @@ export function AnamnesisHistoryScreen() {
             <Card
               key={versao.id}
               selected={atual}
-              onPress={() => navigation.navigate('AnamnesisVersion', { id: versao.id })}
+              onPress={() => (navigation as any).push('AnamnesisVersion', { id: versao.id })}
               accessibilityLabel={`Versão de ${formatarData(versao.createdAt)}`}
             >
               <XStack alignItems="center" gap="$md">
@@ -107,7 +107,7 @@ export function AnamnesisHistoryScreen() {
         <Button
           title="Responder de novo"
           variant="secondary"
-          onPress={() => navigation.navigate('Anamnesis')}
+          onPress={() => (navigation as any).push('Anamnesis')}
         />
       </YStack>
 

@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, Pressable } from 'react-native';
+import { Alert, AppState, Pressable } from 'react-native';
 import MapView, { Polyline } from 'react-native-maps';
 
 import { Note, Row, Section } from '../components/Card';
@@ -27,6 +27,7 @@ import {
   iniciarIlhaDeEsporte,
 } from '../../modules/widgetbridge';
 import * as api from '../services/api.service';
+import { SportShare } from '../components/SportShare';
 import { useBiometricStore } from '../store/biometric.store';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -77,6 +78,7 @@ export function SportScreen() {
     maxHr: number | null;
     points: GeoPoint[];
   } | null>(null);
+  const [compartilhando, setCompartilhando] = useState(false);
   /** Sessão antiga aberta do histórico, com o percurso local se existir. */
   const [detalhe, setDetalhe] = useState<{ sessao: api.SportSession; points: GeoPoint[] | null } | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -103,31 +105,6 @@ export function SportScreen() {
     );
     if (pos) setPosicao({ lat: pos.coords.latitude, lon: pos.coords.longitude });
   };
-
-  // EXEMPLO-STRAVA: bloco temporário para visualizar a tela de conclusão.
-  // Uma volta de ~2,5 km no Ibirapuera, 16 min — removido depois da olhada.
-  const exemploAberto = useRef(false);
-  useEffect(() => {
-    if (!__DEV__ || exemploAberto.current) return;
-    exemploAberto.current = true;
-    const pontos: GeoPoint[] = Array.from({ length: 120 }, (_, i) => {
-      const t = (i / 120) * Math.PI * 2;
-      return {
-        lat: -23.5875 + Math.sin(t) * 0.0038 + Math.sin(t * 5) * 0.0003,
-        lon: -46.6573 + Math.cos(t) * 0.0046 + Math.cos(t * 3) * 0.0004,
-        at: i * 8000,
-      };
-    });
-    setResumo({
-      sport: SPORTS[0],
-      elapsed: 16 * 60_000 + 42_000,
-      dist: 2540,
-      kcal: 187,
-      avgHr: 152,
-      maxHr: 174,
-      points: pontos,
-    });
-  }, []);
 
   const carregar = useCallback(async () => {
     try {
@@ -283,6 +260,23 @@ export function SportScreen() {
     }
   };
 
+  /*
+   Encerrar de propósito é raro; encerrar por toque acidental no X, comum —
+   e derruba um treino inteiro. O modal cobra a confirmação que o gesto
+   irreversível merece; sessões com menos de um minuto morrem sem cerimônia.
+  */
+  const confirmarEncerrar = () => {
+    if (!sessao) return;
+    if (elapsedOf(sessao, Date.now()) < 60_000) {
+      void encerrar();
+      return;
+    }
+    Alert.alert('Encerrar a sessão?', 'Ela vai para o histórico com o que foi medido até aqui.', [
+      { text: 'Continuar', style: 'cancel' },
+      { text: 'Encerrar', style: 'destructive', onPress: () => void encerrar() },
+    ]);
+  };
+
   const abrirDetalhe = async (s: api.SportSession) => {
     let points: GeoPoint[] | null = null;
     try {
@@ -302,6 +296,22 @@ export function SportScreen() {
    A conclusão estilo Strava: o percurso desenhado por inteiro, ajustado ao
    quadro, e os números da sessão embaixo — os que MEDIMOS de verdade.
   */
+  if (resumo && compartilhando) {
+    return (
+      <DetailScreen title="Compartilhar">
+        <SportShare
+          sport={resumo.sport}
+          elapsed={resumo.elapsed}
+          dist={resumo.dist}
+          kcal={resumo.kcal}
+          avgHr={resumo.avgHr}
+          points={resumo.points}
+          onClose={() => setCompartilhando(false)}
+        />
+      </DetailScreen>
+    );
+  }
+
   if (resumo) {
     return (
       <DetailScreen title="Sessão concluída">
@@ -327,7 +337,10 @@ export function SportScreen() {
         </XStack>
         {salvando ? <Data marginBottom="$md">salvando no histórico…</Data> : null}
         {aviso ? <Data color="$destructive" marginBottom="$md">{aviso}</Data> : null}
-        <Button title="Concluir" onPress={() => setResumo(null)} />
+        <YStack gap="$md">
+          <Button title="Compartilhar" onPress={() => setCompartilhando(true)} />
+          <Button title="Concluir" variant="secondary" onPress={() => { setResumo(null); setCompartilhando(false); }} />
+        </YStack>
       </DetailScreen>
     );
   }
@@ -427,7 +440,7 @@ export function SportScreen() {
 
         <XStack justifyContent="center" alignItems="center" gap="$xxl">
           <Pressable
-            onPress={() => void encerrar()}
+            onPress={confirmarEncerrar}
             accessibilityRole="button"
             accessibilityLabel="Encerrar sessão"
             style={({ pressed }) => pressed && { opacity: 0.6 }}
@@ -552,7 +565,7 @@ export function SportScreen() {
         decoração.
       */}
       <Pressable
-        onPress={() => navigation.navigate('Plan' as never)}
+        onPress={() => (navigation as any).push('Plan' as never)}
         accessibilityRole="button"
         accessibilityLabel="Abrir treino de musculação"
         style={({ pressed }) => [{ marginBottom: 12 }, pressed && { opacity: 0.7 }]}
@@ -593,8 +606,9 @@ export function SportScreen() {
               borderColor="$borderStrong"
               paddingVertical="$lg"
               alignItems="center"
-              gap="$xs"
+              gap="$sm"
             >
+              <Icon name={sport.icon as never} size={22} color={colors.textMuted} />
               <Text fontSize={14} color="$foreground">
                 {sport.label}
               </Text>

@@ -56,7 +56,7 @@ export function WaterReminder() {
       <Row last>
         <Pressable
           style={{ flex: 1 }}
-          onPress={() => navigation.navigate('WaterReminder' as never)}
+          onPress={() => (navigation as any).push('WaterReminder' as never)}
           accessibilityRole="button"
           accessibilityLabel="Escolher horários do lembrete de água"
         >

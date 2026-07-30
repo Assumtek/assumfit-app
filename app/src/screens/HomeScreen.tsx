@@ -108,7 +108,7 @@ export function HomeScreen() {
                um beco sem saída que só informa a própria impotência.
                */
               onPress={() =>
-                navigation.navigate((conectado ? (supportsGattInspection ? 'Gatt' : 'Device') : 'Connect') as never)
+                (navigation as any).push((conectado ? (supportsGattInspection ? 'Gatt' : 'Device') : 'Connect') as never)
               }
               accessibilityRole="button"
             >
@@ -266,7 +266,7 @@ export function HomeScreen() {
 
         <Pressable
           style={({ pressed }) => [{ alignSelf: 'flex-start' }, pressed && { opacity: 0.5 }]}
-          onPress={() => navigation.navigate(ACTION_ROUTE[energy.action.icon] as never)}
+          onPress={() => (navigation as any).push(ACTION_ROUTE[energy.action.icon] as never)}
           accessibilityRole="button"
         >
           <XStack
@@ -318,24 +318,24 @@ export function HomeScreen() {
         <MetricBlock
           label="HRV"
           rating={rateHrv(latest.hrvMs)}
-          onPress={() => navigation.navigate('Hrv' as never)}
+          onPress={() => (navigation as any).push('Hrv' as never)}
         />
         <MetricBlock
           label="Sono"
           rating={rateSleep(sleep?.score ?? null, sleep?.totalMin ?? null)}
-          onPress={() => navigation.navigate('Sleep' as never)}
+          onPress={() => (navigation as any).push('Sleep' as never)}
         />
       </XStack>
       <XStack gap="$sm" marginBottom="$sm">
         <MetricBlock
           label="Oxigênio"
           rating={rateSpo2(latest.spo2Pct)}
-          onPress={() => navigation.navigate('Oxygen' as never)}
+          onPress={() => (navigation as any).push('Oxygen' as never)}
         />
         <MetricBlock
           label="Coração"
           rating={rateHeartRate(latest.heartRate)}
-          onPress={() => navigation.navigate('Hrv' as never)}
+          onPress={() => (navigation as any).push('Hrv' as never)}
         />
       </XStack>
 
@@ -393,7 +393,7 @@ function Cabecalho({
 
       <XStack alignItems="center" gap="$lg">
         <Pressable
-          onPress={() => navigation.navigate('Help' as never)}
+          onPress={() => (navigation as any).push('Help' as never)}
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel="Ajuda"
@@ -402,7 +402,7 @@ function Cabecalho({
         </Pressable>
 
         <Pressable
-          onPress={() => navigation.navigate('Alerts' as never)}
+          onPress={() => (navigation as any).push('Alerts' as never)}
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel="Avisos"

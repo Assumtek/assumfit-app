@@ -221,7 +221,7 @@ export function ProfileScreen() {
 
       <Pressable
         style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
-        onPress={() => navigation.navigate('Settings' as never)}
+        onPress={() => (navigation as any).push('Settings' as never)}
         accessibilityRole="button"
       >
         <XStack

@@ -14,12 +14,14 @@ declare class WidgetBridgeNativeModule {
   isSupported(): boolean;
   setTodayWorkout(json: string): void;
   clear(): void;
-  startSportActivity?(label: string, startedAtMs: number): boolean;
+  startSportActivity?(label: string, symbol: string, startedAtMs: number, endsAtMs: number | null): boolean;
   updateSportActivity?(
     startedAtMs: number,
     pausedAtMs: number | null,
     distanceKm: number | null,
     bpm: number | null,
+    endsAtMs: number | null,
+    phase: string | null,
   ): void;
   endSportActivity?(): void;
 }
@@ -50,9 +52,16 @@ export function limparWidget() {
 // Live Activity da sessão de esporte — a Dynamic Island conta o tempo sozinha.
 // ============================================================================
 
-export function iniciarIlhaDeEsporte(label: string, startedAtMs: number): boolean {
+export function iniciarIlhaDeEsporte(
+  label: string,
+  startedAtMs: number,
+  opcoes?: { symbol?: string; endsAtMs?: number },
+): boolean {
   try {
-    return nativo?.startSportActivity?.(label, startedAtMs) ?? false;
+    return (
+      nativo?.startSportActivity?.(label, opcoes?.symbol ?? 'figure.run', startedAtMs, opcoes?.endsAtMs ?? null) ??
+      false
+    );
   } catch {
     return false;
   }
@@ -63,6 +72,8 @@ export function atualizarIlhaDeEsporte(input: {
   pausedAtMs?: number | null;
   distanceKm?: number | null;
   bpm?: number | null;
+  endsAtMs?: number | null;
+  phase?: string | null;
 }) {
   try {
     nativo?.updateSportActivity?.(
@@ -70,6 +81,8 @@ export function atualizarIlhaDeEsporte(input: {
       input.pausedAtMs ?? null,
       input.distanceKm ?? null,
       input.bpm ?? null,
+      input.endsAtMs ?? null,
+      input.phase ?? null,
     );
   } catch {
     // Ilha é enfeite de luxo: falhar aqui não pode tocar na sessão.

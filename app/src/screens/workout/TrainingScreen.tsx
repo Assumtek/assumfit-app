@@ -246,7 +246,7 @@ export function TrainingScreen() {
         <XStack alignItems="center" gap="$md">
           <ControlButton
             label="Checklist do treino"
-            onPress={() => navigation.navigate('Checklist')}
+            onPress={() => (navigation as any).push('Checklist')}
           >
             <Icon name="checklist" size={20} color={colors.text} />
           </ControlButton>

@@ -158,7 +158,7 @@ export function HealthScreen() {
             tendência de meses. Um card grande para o número que não muda seria
             bonito e inútil.
           */}
-          <HeroCard onPress={() => navigation.navigate('Sleep' as never)} accessibilityLabel="Sono">
+          <HeroCard onPress={() => (navigation as any).push('Sleep' as never)} accessibilityLabel="Sono">
             <Label>sono</Label>
             <RatingText style={{ color: ratingTextColor(avaliacaoSono(sleep).state, colors) }}>
               {avaliacaoSono(sleep).label}
@@ -197,7 +197,7 @@ export function HealthScreen() {
           {bateria ? (
             <YStack marginTop="$xxl">
               <Card
-                onPress={() => navigation.navigate('Battery' as never)}
+                onPress={() => (navigation as any).push('Battery' as never)}
                 accessibilityLabel="Bateria do corpo"
               >
                 <Label>bateria do corpo</Label>
@@ -247,42 +247,42 @@ export function HealthScreen() {
               icone="pulse"
               serie={hrvHistory}
               rating={latest ? rateHrv(latest.hrvMs) : null}
-              onPress={() => navigation.navigate('Hrv' as never)}
+              onPress={() => (navigation as any).push('Hrv' as never)}
             />
             <Celula
               label="coração"
               icone="heart"
               serie={hrHistory}
               rating={latest ? rateHeartRate(latest.heartRate) : null}
-              onPress={() => navigation.navigate('Hrv' as never)}
+              onPress={() => (navigation as any).push('Hrv' as never)}
             />
             <Celula
               label="oxigênio"
               icone="drop"
               serie={spo2History.map((p) => p.value)}
               rating={latest ? rateSpo2(latest.spo2Pct) : null}
-              onPress={() => navigation.navigate('Oxygen' as never)}
+              onPress={() => (navigation as any).push('Oxygen' as never)}
             />
             <Celula
               label="estresse"
               icone="gauge"
               serie={stressHistory.map((p) => p.value)}
               rating={latest ? rateStress(latest.stressScore) : null}
-              onPress={() => navigation.navigate('Stress' as never)}
+              onPress={() => (navigation as any).push('Stress' as never)}
             />
             <Celula
               label="pressão"
               icone="wave"
               serie={pressureHistory.map((p) => p.systolic)}
               rating={pressao}
-              onPress={() => navigation.navigate('Pressure' as never)}
+              onPress={() => (navigation as any).push('Pressure' as never)}
             />
             <Celula
               label="atividade"
               icone="steps"
               serie={stepsByHour}
               rating={rateActivity(activity)}
-              onPress={() => navigation.navigate('Activity' as never)}
+              onPress={() => (navigation as any).push('Activity' as never)}
             />
           </Grade>
 
@@ -294,7 +294,7 @@ export function HealthScreen() {
               label="idade biológica"
               icone="age"
               rating={bio ? rateBioAge(bio.delta) : null}
-              onPress={() => navigation.navigate('BioAge' as never)}
+              onPress={() => (navigation as any).push('BioAge' as never)}
             />
             <Celula
               label="histórico"
@@ -311,7 +311,7 @@ export function HealthScreen() {
                   : null
               }
               vazio="30 dias"
-              onPress={() => navigation.navigate('History' as never)}
+              onPress={() => (navigation as any).push('History' as never)}
             />
           </Grade>
         </>

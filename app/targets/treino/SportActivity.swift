@@ -21,9 +21,15 @@ struct SportActivityAttributes: ActivityAttributes {
     var pausedAt: Date?
     var distanceKm: Double?
     var bpm: Int?
+    /// Presente = contagem REGRESSIVA até aqui (sessão de foco); ausente = progressiva.
+    var endsAt: Date?
+    /// Fase corrente ("FOCO"/"PAUSA") — só o foco usa.
+    var phase: String?
   }
 
   var sportLabel: String
+  /// SF Symbol da atividade — "figure.run" no esporte, "brain.head.profile" no foco.
+  var symbol: String
 }
 
 private let acento = Color(red: 0x87 / 255, green: 0x7B / 255, blue: 0xF0 / 255)
@@ -34,7 +40,7 @@ struct SportLiveActivity: Widget {
     ActivityConfiguration(for: SportActivityAttributes.self) { context in
       // Tela de bloqueio / banner.
       HStack(spacing: 12) {
-        Image(systemName: "figure.run")
+        Image(systemName: context.attributes.symbol)
           .font(.system(size: 22))
           .foregroundStyle(acento)
         VStack(alignment: .leading, spacing: 2) {
@@ -54,8 +60,9 @@ struct SportLiveActivity: Widget {
       DynamicIsland {
         DynamicIslandExpandedRegion(.leading) {
           HStack(spacing: 6) {
-            Image(systemName: "figure.run").foregroundStyle(acento)
-            Text(context.attributes.sportLabel).font(.system(size: 13, weight: .semibold))
+            Image(systemName: context.attributes.symbol).foregroundStyle(acento)
+            Text(context.state.phase ?? context.attributes.sportLabel)
+              .font(.system(size: 13, weight: .semibold))
           }
         }
         DynamicIslandExpandedRegion(.trailing) {
@@ -68,13 +75,13 @@ struct SportLiveActivity: Widget {
             .multilineTextAlignment(.center)
         }
       } compactLeading: {
-        Image(systemName: "figure.run").foregroundStyle(acento)
+        Image(systemName: context.attributes.symbol).foregroundStyle(acento)
       } compactTrailing: {
         Cronometro(state: context.state)
           .font(.system(size: 13, weight: .semibold, design: .rounded))
           .frame(maxWidth: 52)
       } minimal: {
-        Image(systemName: "figure.run").foregroundStyle(acento)
+        Image(systemName: context.attributes.symbol).foregroundStyle(acento)
       }
     }
   }
@@ -89,6 +96,10 @@ private struct Cronometro: View {
     if let pausa = state.pausedAt {
       Text(formatado(desde: state.startedAt, ate: pausa))
         .foregroundStyle(.secondary)
+    } else if let fim = state.endsAt {
+      // Foco: regressiva até o fim da fase — o sistema conta sozinho.
+      Text(timerInterval: Date()...max(Date(), fim), countsDown: true)
+        .monospacedDigit()
     } else {
       Text(state.startedAt, style: .timer)
         .monospacedDigit()

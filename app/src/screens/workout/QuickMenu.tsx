@@ -51,7 +51,7 @@ export function QuickMenu() {
       style={{ marginHorizontal: -24, paddingHorizontal: 24 }}
     >
       {ITENS.map((item) => (
-        <Botao key={item.rota} item={item} onPress={() => navigation.navigate(item.rota)} />
+        <Botao key={item.rota} item={item} onPress={() => (navigation as any).push(item.rota)} />
       ))}
     </ScrollView>
   );

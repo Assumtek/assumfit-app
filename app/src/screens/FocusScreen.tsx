@@ -22,7 +22,17 @@ import {
 } from '../domain/focus';
 import { energyState } from '../domain/energy';
 import { shown } from '../domain/ratings';
-import { recordFocusSession } from '../services/focus.service';
+import {
+  atualizarIlhaDeEsporte,
+  encerrarIlhaDeEsporte,
+  iniciarIlhaDeEsporte,
+} from '../../modules/widgetbridge';
+import { Row, Section } from '../components/Card';
+import {
+  fetchFocusSessions,
+  recordFocusSession,
+  type FocusHistoryItem,
+} from '../services/focus.service';
 import { useBiometricStore } from '../store/biometric.store';
 import { useHabitsStore } from '../store/habits.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -47,6 +57,11 @@ export function FocusScreen() {
   const addFocusSession = useHabitsStore((s) => s.addFocusSession);
 
   const [session, setSession] = useState<FocusSession | null>(null);
+  const [historico, setHistorico] = useState<FocusHistoryItem[]>([]);
+
+  useEffect(() => {
+    void fetchFocusSessions().then(setHistorico);
+  }, []);
   const [now, setNow] = useState(() => Date.now());
   // Quantos blocos já foram contabilizados, para não registrar o mesmo duas
   // vezes quando o efeito roda de novo por outro motivo.
@@ -94,8 +109,45 @@ export function FocusScreen() {
     counted.current = 0;
     const stamp = Date.now();
     setNow(stamp);
-    setSession(startSession(level, stamp));
+    const nova = startSession(level, stamp);
+    setSession(nova);
+    // O foco na ilha conta REGRESSIVO até o fim da fase — símbolo de cérebro,
+    // não o corredor do esporte.
+    iniciarIlhaDeEsporte(nova.protocol.label, stamp, {
+      symbol: 'brain.head.profile',
+      endsAtMs: stamp + remaining(nova, stamp),
+    });
   }, [level]);
+
+  /*
+   A ilha acompanha a FASE, não o segundo: virou de foco para pausa (ou
+   pausou/retomou), ela recebe o novo fim e o novo rótulo. Fora isso, o
+   sistema conta sozinho.
+  */
+  useEffect(() => {
+    if (!session) return;
+    if (session.phase === 'done') {
+      encerrarIlhaDeEsporte();
+      void fetchFocusSessions().then(setHistorico);
+      return;
+    }
+    const stamp = Date.now();
+    const resta = remaining(session, stamp);
+    atualizarIlhaDeEsporte({
+      // Pausado, o congelado da ilha é o RESTANTE: início recuado por `resta`
+      // faz o formatado (início→pausa) mostrar exatamente o que falta.
+      startedAtMs: session.running ? stamp : stamp - resta,
+      endsAtMs: session.running ? stamp + resta : null,
+      pausedAtMs: session.running ? null : stamp,
+      phase: session.phase === 'focus' ? 'FOCO' : 'PAUSA',
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.phase, session?.running, session?.cycle]);
+
+  // Encerrar a sessão (botão X) derruba a ilha junto.
+  useEffect(() => {
+    if (session === null) encerrarIlhaDeEsporte();
+  }, [session]);
 
   const left = session ? remaining(session, now) : protocol.focusMin * 60_000;
   const fraction = session ? progress(session, now) : 0;
@@ -124,6 +176,24 @@ export function FocusScreen() {
             />
           </YStack>
 
+          {historico.length > 0 ? (
+            <Section label="Últimas sessões">
+              {historico.slice(0, 8).map((h, i) => (
+                <Row key={`${h.endedAt}-${i}`} last={i === Math.min(historico.length, 8) - 1}>
+                  <YStack flex={1} gap={2}>
+                    <Body color="$foreground">{h.type}</Body>
+                    <Data>{quandoFoco(h.endedAt)}</Data>
+                  </YStack>
+                  <YStack alignItems="flex-end" gap={2} flexShrink={0}>
+                    <Data color="$foreground">{h.durationMin} min</Data>
+                    {h.energyScoreAtStart != null ? (
+                      <Data>energia {Math.round(h.energyScoreAtStart)} no início</Data>
+                    ) : null}
+                  </YStack>
+                </Row>
+              ))}
+            </Section>
+          ) : null}
         </>
       ) : (
         <>
@@ -334,4 +404,12 @@ function Control({ label, onPress }: { label: string; onPress: () => void }) {
       </Text>
     </Pressable>
   );
+}
+
+/** "hoje 14:20" ou "seg 09:10" — o suficiente para o histórico de foco. */
+function quandoFoco(iso: string): string {
+  const d = new Date(iso);
+  const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  if (d.toDateString() === new Date().toDateString()) return `hoje ${hora}`;
+  return `${d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')} ${hora}`;
 }

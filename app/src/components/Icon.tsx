@@ -1,4 +1,11 @@
 import {
+  Zap,
+  Flower2,
+  Volleyball,
+  PersonStanding,
+  Footprints,
+  Mountain,
+  Bike,
   Mic,
   X,
   Activity,
@@ -66,6 +73,13 @@ export type IconName =
   | 'drop'
   | 'x'
   | 'mic'
+  | 'bike'
+  | 'mountain'
+  | 'footprints'
+  | 'standing'
+  | 'ball'
+  | 'flower'
+  | 'zap'
   | 'thermometer'
   | 'heart'
   | 'gauge'
@@ -112,6 +126,13 @@ const GLYPH = {
   drop: Droplet,
   x: X,
   mic: Mic,
+  bike: Bike,
+  mountain: Mountain,
+  footprints: Footprints,
+  standing: PersonStanding,
+  ball: Volleyball,
+  flower: Flower2,
+  zap: Zap,
   thermometer: Thermometer,
   heart: Heart,
   gauge: Gauge,

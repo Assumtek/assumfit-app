@@ -15,9 +15,12 @@ struct SportActivityAttributes: ActivityAttributes {
     var pausedAt: Date?
     var distanceKm: Double?
     var bpm: Int?
+    var endsAt: Date?
+    var phase: String?
   }
 
   var sportLabel: String
+  var symbol: String
 }
 
 /// A atividade corrente. Uma por vez: sessão de esporte não se sobrepõe.
@@ -84,16 +87,18 @@ public class WidgetBridgeModule: Module {
      app não precisa mandar tique nenhum, só distância/batimento quando mudam.
      Devolve `false` quando a pessoa desligou Live Activities nos Ajustes.
      */
-    Function("startSportActivity") { (label: String, startedAtMs: Double) -> Bool in
+    Function("startSportActivity") { (label: String, symbol: String, startedAtMs: Double, endsAtMs: Double?) -> Bool in
       guard #available(iOS 16.2, *) else { return false }
       guard ActivityAuthorizationInfo().areActivitiesEnabled else { return false }
       let estado = SportActivityAttributes.ContentState(
         startedAt: Date(timeIntervalSince1970: startedAtMs / 1000),
-        pausedAt: nil, distanceKm: nil, bpm: nil
+        pausedAt: nil, distanceKm: nil, bpm: nil,
+        endsAt: endsAtMs.map { Date(timeIntervalSince1970: $0 / 1000) },
+        phase: nil
       )
       do {
         AtividadeCorrente.ativa = try Activity.request(
-          attributes: SportActivityAttributes(sportLabel: label),
+          attributes: SportActivityAttributes(sportLabel: label, symbol: symbol),
           content: .init(state: estado, staleDate: nil)
         )
         return true
@@ -102,13 +107,15 @@ public class WidgetBridgeModule: Module {
       }
     }
 
-    Function("updateSportActivity") { (startedAtMs: Double, pausedAtMs: Double?, distanceKm: Double?, bpm: Int?) -> Void in
+    Function("updateSportActivity") { (startedAtMs: Double, pausedAtMs: Double?, distanceKm: Double?, bpm: Int?, endsAtMs: Double?, phase: String?) -> Void in
       guard #available(iOS 16.2, *), let ativa = AtividadeCorrente.ativa else { return }
       let estado = SportActivityAttributes.ContentState(
         startedAt: Date(timeIntervalSince1970: startedAtMs / 1000),
         pausedAt: pausedAtMs.map { Date(timeIntervalSince1970: $0 / 1000) },
         distanceKm: distanceKm,
-        bpm: bpm
+        bpm: bpm,
+        endsAt: endsAtMs.map { Date(timeIntervalSince1970: $0 / 1000) },
+        phase: phase
       )
       Task { await ativa.update(.init(state: estado, staleDate: nil)) }
     }

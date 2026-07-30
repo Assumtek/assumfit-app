@@ -79,7 +79,7 @@ export function WorkoutHistoryScreen() {
           return (
             <Card
               key={item.id}
-              onPress={() => navigation.navigate('ExecutionDetail', { id: item.id })}
+              onPress={() => (navigation as any).push('ExecutionDetail', { id: item.id })}
               accessibilityLabel={item.workoutName}
             >
               <XStack alignItems="center" gap="$md">

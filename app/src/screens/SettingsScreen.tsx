@@ -120,7 +120,7 @@ export function SettingsScreen() {
           <RowLabel>Efeito de vidro</RowLabel>
           <RowValue>{supportsLiquidGlass ? 'Nativo' : 'Alternativo'}</RowValue>
         </Row>
-        <LinkRow label="Gerenciar dispositivo" onPress={() => navigation.navigate('Device' as never)} />
+        <LinkRow label="Gerenciar dispositivo" onPress={() => (navigation as any).push('Device' as never)} />
         {/* Só no iOS: HealthKit não existe no Android, que usa Health Connect —
             outra API, outras permissões, outros tipos de registro. */}
         {isHealthAvailable() ? (
@@ -133,7 +133,7 @@ export function SettingsScreen() {
             UUID, não tem o que fazer na mão de quem assina — e com o SDK do
             fabricante não há o que mapear, ele já fala o protocolo. */}
         {supportsGattInspection ? (
-          <LinkRow label="Diagnóstico GATT" onPress={() => navigation.navigate('Gatt' as never)} />
+          <LinkRow label="Diagnóstico GATT" onPress={() => (navigation as any).push('Gatt' as never)} />
         ) : null}
       </Section>
 
@@ -153,7 +153,7 @@ export function SettingsScreen() {
           <RowValue>{usingSecureStorage ? 'Keychain do sistema' : 'Memória (dev)'}</RowValue>
         </Row>
 
-        <LinkRow label="Ver consentimentos" onPress={() => navigation.navigate('Profile' as never)} />
+        <LinkRow label="Ver consentimentos" onPress={() => (navigation as any).push('Profile' as never)} />
         <LinkRow label="Permissões do sistema" onPress={() => void Linking.openSettings()} />
       </Section>
 

@@ -175,7 +175,7 @@ export function CheckinScreen() {
           <Button
             title="Montar meu treino"
             icon={<Icon name="dumbbell" size={16} color={colors.ink} />}
-            onPress={() => navigation.navigate('Anamnesis')}
+            onPress={() => (navigation as any).push('Anamnesis')}
           />
         </YStack>
       </DetailScreen>

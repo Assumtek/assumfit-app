@@ -59,7 +59,7 @@ export function PlanScreen() {
           <Button
             title="Montar meu treino"
             icon={<Icon name="dumbbell" size={16} color={colors.ink} />}
-            onPress={() => navigation.navigate('Anamnesis')}
+            onPress={() => (navigation as any).push('Anamnesis')}
           />
         </YStack>
       </DetailScreen>
@@ -106,7 +106,7 @@ export function PlanScreen() {
                 execution ? 'Continuar treino' : todayWorkout ? 'Começar treino' : 'Treinar mesmo assim'
               }
               icon={<Icon name="play" size={16} color={colors.ink} />}
-              onPress={() => navigation.navigate(execution ? 'Training' : 'Checkin')}
+              onPress={() => (navigation as any).push(execution ? 'Training' : 'Checkin')}
             />
           </YStack>
         </HeroCard>

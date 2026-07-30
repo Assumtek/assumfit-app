@@ -155,7 +155,7 @@ export function AgendaScreen() {
             events.length > 0 ? (
               <EnergyRail key={block.startHour} block={block} />
             ) : (
-              <BlockCard key={block.startHour} block={block} onPress={() => navigation.navigate('Focus' as never)} />
+              <BlockCard key={block.startHour} block={block} onPress={() => (navigation as any).push('Focus' as never)} />
             ),
           )}
 
@@ -206,7 +206,7 @@ export function AgendaScreen() {
       >
         <Button
           title="Iniciar sessão de foco"
-          onPress={() => navigation.navigate('Focus' as never)}
+          onPress={() => (navigation as any).push('Focus' as never)}
           icon={<Icon name="play" size={16} color={colors.ink} />}
         />
       </YStack>
@@ -244,36 +244,24 @@ function BlockCard({ block, onPress }: { block: Block; onPress: () => void }) {
       accessibilityLabel={`${block.title}, das ${formatHour(block.startHour)} às ${formatHour(block.endHour)}`}
     >
       <YStack width={3} opacity={block.level === 'mid' ? 0.5 : 1} style={{ backgroundColor: railColor }} />
-      <YStack flex={1} paddingVertical="$sm" paddingHorizontal="$md" gap={2}>
+      {/*
+       Três linhas, nada mais: título, horas e para-que-serve. O parágrafo de
+       justificativa saiu — em grade de dia, texto corrido é o primeiro ruído
+       que o olho aprende a pular, e a informação dele já está no título.
+      */}
+      <YStack flex={1} paddingVertical="$sm" paddingHorizontal="$md" gap={2} justifyContent="center">
         <SectionTitle numberOfLines={1}>{block.title}</SectionTitle>
         <Data marginTop={1}>
-          {formatHour(block.startHour)} – {formatHour(block.endHour)} · pico {block.peak}
+          {formatHour(block.startHour)} – {formatHour(block.endHour)}
         </Data>
-        {/* Para que a janela serve — chips curtos, que se leem de relance. */}
-        <XStack gap="$xs" marginTop={3} flexWrap="wrap">
-          {block.activities.map((a) => (
-            <YStack
-              key={a}
-              paddingHorizontal={8}
-              paddingVertical={2}
-              borderRadius={999}
-              borderWidth={1}
-              borderColor={block.level === 'high' ? '$primary' : '$borderStrong'}
-              backgroundColor={block.level === 'high' ? '$primarySoft' : 'transparent'}
-            >
-              <Data fontSize={10} color={block.level === 'high' ? '$primary' : '$mutedForeground'}>
-                {a}
-              </Data>
-            </YStack>
-          ))}
-        </XStack>
-        {/* A justificativa só cabe em bloco de duas horas ou mais. Espremer
-            três linhas num bloco de uma hora produz reticências, não leitura. */}
-        {hours >= 2 ? (
-          <Body marginTop="$xs" fontSize={12} lineHeight={17} numberOfLines={hours >= 3 ? 2 : 1}>
-            {block.detail}
-          </Body>
-        ) : null}
+        <Data
+          fontSize={11}
+          marginTop={1}
+          numberOfLines={1}
+          color={block.level === 'high' ? '$primary' : '$mutedForeground'}
+        >
+          {block.activities.join(' · ')}
+        </Data>
       </YStack>
     </Pressable>
   );

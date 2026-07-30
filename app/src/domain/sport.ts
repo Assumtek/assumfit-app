@@ -24,17 +24,19 @@ export type Sport = {
   met: number;
   /** Faz sentido medir distância? Funcional e yoga, não. */
   gps: boolean;
+  /** Glifo do conjunto do app (outline monolinear) — a pessoa praticando. */
+  icon: string;
 };
 
 export const SPORTS: Sport[] = [
-  { kind: 'corrida', label: 'Corrida', met: 9.8, gps: true },
-  { kind: 'caminhada', label: 'Caminhada', met: 3.5, gps: true },
-  { kind: 'ciclismo', label: 'Ciclismo', met: 7.5, gps: true },
-  { kind: 'trilha', label: 'Trilha', met: 6.0, gps: true },
-  { kind: 'funcional', label: 'Funcional', met: 8.0, gps: false },
-  { kind: 'futebol', label: 'Futebol', met: 7.0, gps: true },
-  { kind: 'yoga', label: 'Yoga', met: 2.5, gps: false },
-  { kind: 'corda', label: 'Pular corda', met: 11.0, gps: false },
+  { kind: 'corrida', label: 'Corrida', met: 9.8, gps: true, icon: 'footprints' },
+  { kind: 'caminhada', label: 'Caminhada', met: 3.5, gps: true, icon: 'standing' },
+  { kind: 'ciclismo', label: 'Ciclismo', met: 7.5, gps: true, icon: 'bike' },
+  { kind: 'trilha', label: 'Trilha', met: 6.0, gps: true, icon: 'mountain' },
+  { kind: 'funcional', label: 'Funcional', met: 8.0, gps: false, icon: 'dumbbell' },
+  { kind: 'futebol', label: 'Futebol', met: 7.0, gps: true, icon: 'ball' },
+  { kind: 'yoga', label: 'Yoga', met: 2.5, gps: false, icon: 'flower' },
+  { kind: 'corda', label: 'Pular corda', met: 11.0, gps: false, icon: 'zap' },
 ];
 
 export type GeoPoint = { lat: number; lon: number; at: number };

@@ -154,7 +154,7 @@ export function TrainingFinishedScreen() {
             title="Compartilhar treino"
             variant="secondary"
             onPress={() =>
-              navigation.navigate('WorkoutShare', {
+              (navigation as any).push('WorkoutShare', {
                 workoutName: result.workoutName,
                 durationSec: result.durationSec,
                 // Contagem e volume ainda não vêm do `finish` do servidor. O
