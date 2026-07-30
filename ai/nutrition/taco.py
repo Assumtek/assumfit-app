@@ -71,6 +71,11 @@ def match_food(name: str, grams: float | None) -> TacoMatch | None:
     consulta = _normalizar(name)
     if not consulta:
         return None
+    # "Farofa" chega da visão com adjetivos que a tabela não tem ("pronta",
+    # "de bacon"), e um token só não alcança o escore mínimo. O apelido ancora
+    # na entrada real da TACO ("Mandioca, farofa, temperada").
+    if "farofa" in consulta:
+        consulta |= {"mandioca", "temperada"}
 
     melhor: tuple[float, dict] | None = None
     for tokens, item in _tabela():

@@ -329,7 +329,13 @@ async def agent_adjust(data: WorkoutAdjustInput) -> JSONResponse:
 # Nutrição — análise de refeição por foto (desenho do MUVX, tabela TACO local).
 # ============================================================================
 
-from nutrition.service import AnalyzeMealInput, MealAnalysisError, analyze_meal  # noqa: E402
+from nutrition.service import (  # noqa: E402
+    AnalyzeMealInput,
+    MealAnalysisError,
+    RecomputeInput,
+    analyze_meal,
+    recompute_foods,
+)
 
 
 @app.post("/nutrition/analyze")
@@ -345,3 +351,9 @@ async def nutrition_analyze(data: AnalyzeMealInput) -> JSONResponse:
         _log.error("nutrition.http.analyze.error", error_type=type(exc).__name__, error=str(exc))
         return JSONResponse({"error": "análise falhou", "retryable": True}, status_code=502)
     return JSONResponse(result.model_dump(mode="json"))
+
+
+@app.post("/nutrition/recompute")
+def nutrition_recompute(data: RecomputeInput) -> JSONResponse:
+    """Recalcula uma refeição editada pela TACO — determinístico, sem modelo."""
+    return JSONResponse(recompute_foods(data).model_dump(mode="json"))

@@ -868,6 +868,24 @@ export async function deleteMeal(id: string): Promise<void> {
   await api.delete(`/nutrition/meal/${id}`);
 }
 
+/** Edição calibrada: nome e gramas novos repassam pela TACO no servidor. */
+export async function updateMealFoods(
+  id: string,
+  foods: Partial<MealFood>[],
+): Promise<MealRecord> {
+  const { data } = await api.patch(`/nutrition/meal/${id}`, { foods });
+  return data.record;
+}
+
+/** Reanalisa a MESMA refeição com a foto local e a observação da pessoa. */
+export async function reanalyzeMeal(
+  id: string,
+  input: { imageBase64: string; mediaType?: string; description?: string },
+): Promise<{ record: MealRecord | null; analysis: MealAnalysis }> {
+  const { data } = await api.post(`/nutrition/meal/${id}/reanalyze`, input, { timeout: 90_000 });
+  return data;
+}
+
 // ============================================================================
 // Ditado por voz — presign → upload direto ao S3 → job do Transcribe → texto.
 // ============================================================================

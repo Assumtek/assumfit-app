@@ -74,6 +74,97 @@ nutritionRoutes.get(
   }),
 );
 
+const foodSchema = z.object({
+  name: z.string().min(1).max(120),
+  portion: z.string().max(120).optional().default(''),
+  grams: z.number().positive().max(5000).nullable().optional().default(null),
+  kcal_min: z.number().int().min(0).max(20000).optional().default(0),
+  kcal_max: z.number().int().min(0).max(20000).optional().default(0),
+  protein_g: z.number().min(0).nullable().optional().default(null),
+  carbs_g: z.number().min(0).nullable().optional().default(null),
+  fat_g: z.number().min(0).nullable().optional().default(null),
+  uncertain: z.boolean().optional().default(false),
+});
+
+/**
+ * Edição da refeição — a calibração que nenhum modelo dispensa: renomear,
+ * ajustar gramas, remover e acrescentar alimento. O recálculo é da TACO, no
+ * serviço de IA, sem chamada de modelo — nome e gramas novos passam de novo
+ * pela tabela, e item sem casamento fica com o que o cliente mandou.
+ */
+nutritionRoutes.patch(
+  '/meal/:id',
+  asyncRoute<AuthedRequest>(async (req, res) => {
+    const body = z.object({ foods: z.array(foodSchema).min(1).max(30) }).parse(req.body);
+
+    const existente = await prisma.mealRecord.findFirst({
+      where: { id: req.params.id, userId: req.userId },
+    });
+    if (!existente) {
+      res.status(404).json({ error: 'Refeição não encontrada' });
+      return;
+    }
+
+    const { data } = await client.post('/nutrition/recompute', { foods: body.foods });
+    const record = await prisma.mealRecord.update({
+      where: { id: existente.id },
+      data: {
+        foods: data.foods,
+        kcalMin: data.kcal_total_min,
+        kcalMax: data.kcal_total_max,
+      },
+    });
+    res.json({ record });
+  }),
+);
+
+/**
+ * Reanálise da MESMA refeição: a foto mora no aparelho, então ela sobe de
+ * novo — junto da observação da pessoa ("tem farofa, e é frango"), que o
+ * modelo trata com precedência. O registro é atualizado no lugar, preservando
+ * id (a foto local é chaveada por ele) e horário.
+ */
+nutritionRoutes.post(
+  '/meal/:id/reanalyze',
+  asyncRoute<AuthedRequest>(async (req, res) => {
+    const body = analyzeSchema.parse(req.body);
+
+    const existente = await prisma.mealRecord.findFirst({
+      where: { id: req.params.id, userId: req.userId },
+    });
+    if (!existente) {
+      res.status(404).json({ error: 'Refeição não encontrada' });
+      return;
+    }
+
+    const { data } = await client.post('/nutrition/analyze', {
+      image_b64: body.imageBase64,
+      media_type: body.mediaType,
+      description: body.description,
+      request_id: req.userId,
+    });
+
+    // Reanálise que não vê comida não apaga o registro: devolve sem tocar
+    // nele, e a tela explica — o erro pode ser da foto, não do prato.
+    if (!data.is_food) {
+      res.json({ record: null, analysis: data });
+      return;
+    }
+
+    const record = await prisma.mealRecord.update({
+      where: { id: existente.id },
+      data: {
+        foods: data.foods,
+        kcalMin: data.kcal_total_min,
+        kcalMax: data.kcal_total_max,
+        confidence: data.confidence,
+        notes: data.notes || null,
+      },
+    });
+    res.json({ record, analysis: data });
+  }),
+);
+
 // Registro errado sai na hora — análise de foto erra, e o total do dia não
 // pode ficar refém do erro.
 nutritionRoutes.delete(

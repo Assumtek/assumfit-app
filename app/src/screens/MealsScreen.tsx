@@ -3,7 +3,9 @@ import { File, Paths } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Pressable } from 'react-native';
+import { ActivityIndicator, Alert, Image, Platform, Pressable, TextInput } from 'react-native';
+
+import { VoiceInput } from '../components/VoiceInput';
 
 import { Note, Row, Section } from '../components/Card';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
@@ -35,6 +37,14 @@ export function MealsScreen() {
   const [aviso, setAviso] = useState<string | null>(null);
   /** Registro aberto — a sub-tela de detalhe com a foto grande. */
   const [detalhe, setDetalhe] = useState<api.MealRecord | null>(null);
+  /** O que a pessoa diz que tem no prato — entra na análise com precedência. */
+  const [descricao, setDescricao] = useState('');
+  /** Alimento em edição no detalhe; index -1 = novo. */
+  const [editando, setEditando] = useState<{ index: number; nome: string; gramas: string } | null>(null);
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false);
+  const [obsReanalise, setObsReanalise] = useState('');
+  const [reanalisando, setReanalisando] = useState(false);
+  const [avisoDetalhe, setAvisoDetalhe] = useState<string | null>(null);
   /** Meta diária — peso/altura/objetivo da anamnese; null = falta preencher. */
   const [meta, setMeta] = useState<CalorieGoal | null>(null);
 
@@ -126,7 +136,10 @@ export function MealsScreen() {
       });
       if (!pronta.base64) throw new Error('sem base64');
 
-      const { record, analysis } = await api.analyzeMeal({ imageBase64: pronta.base64 });
+      const { record, analysis } = await api.analyzeMeal({
+        imageBase64: pronta.base64,
+        description: descricao.trim() || undefined,
+      });
       if (!analysis.is_food) {
         setAviso('Não deu para identificar comida nesta foto. Tente outro ângulo, com mais luz.');
       } else if (record) {
@@ -136,6 +149,7 @@ export function MealsScreen() {
           // Sem espaço em disco o histórico fica sem foto — nunca sem registro.
         }
         setMeals((atual) => [record, ...(atual ?? [])]);
+        setDescricao('');
       }
     } catch {
       setAviso('A análise falhou. Confira a conexão e tente de novo.');
@@ -165,12 +179,117 @@ export function MealsScreen() {
     ]);
   };
 
+  /** Registro atualizado volta para a lista E para o detalhe aberto. */
+  const aplicarRegistro = (record: api.MealRecord) => {
+    setMeals((atual) => (atual ?? []).map((m) => (m.id === record.id ? record : m)));
+    setDetalhe(record);
+  };
+
+  /*
+   A calibração que nenhum modelo dispensa: renomear, ajustar gramas, remover
+   e acrescentar. O recálculo é da TACO, no servidor — item editado sobe com
+   kcal zerada de propósito, para a tabela decidir; item intocado carrega os
+   números que já tinha.
+  */
+  const salvarEdicao = async () => {
+    if (!detalhe || !editando) return;
+    const nome = editando.nome.trim();
+    if (!nome) return;
+    const g = Number(editando.gramas.replace(',', '.'));
+    const editado = {
+      name: nome,
+      grams: Number.isFinite(g) && g > 0 ? g : null,
+      kcal_min: 0,
+      kcal_max: 0,
+      uncertain: false,
+    };
+    const atuais = detalhe.foods as api.MealFood[];
+    const foods =
+      editando.index < 0
+        ? [...atuais, editado]
+        : atuais.map((f, i) => (i === editando.index ? { ...editado, portion: f.portion } : f));
+
+    setAvisoDetalhe(null);
+    setSalvandoEdicao(true);
+    try {
+      aplicarRegistro(await api.updateMealFoods(detalhe.id, foods));
+      setEditando(null);
+    } catch {
+      setAvisoDetalhe('Não deu para salvar a edição. Confira a conexão e tente de novo.');
+    } finally {
+      setSalvandoEdicao(false);
+    }
+  };
+
+  const removerAlimento = async () => {
+    if (!detalhe || !editando || editando.index < 0) return;
+    const atuais = detalhe.foods as api.MealFood[];
+    if (atuais.length <= 1) {
+      setAvisoDetalhe('Este é o único alimento — para tirá-lo, remova o registro inteiro.');
+      return;
+    }
+    setAvisoDetalhe(null);
+    setSalvandoEdicao(true);
+    try {
+      aplicarRegistro(
+        await api.updateMealFoods(
+          detalhe.id,
+          atuais.filter((_, i) => i !== editando.index),
+        ),
+      );
+      setEditando(null);
+    } catch {
+      setAvisoDetalhe('Não deu para remover. Confira a conexão e tente de novo.');
+    } finally {
+      setSalvandoEdicao(false);
+    }
+  };
+
+  /*
+   Reanalisar usa a foto que mora no aparelho MAIS a observação da pessoa
+   ("tem farofa, e é frango") — que o modelo trata com precedência. O registro
+   é atualizado no lugar; id e horário ficam, e a foto continua valendo.
+  */
+  const reanalisar = async () => {
+    if (!detalhe) return;
+    const uri = fotoDe(detalhe.id);
+    if (!uri) return;
+    setAvisoDetalhe(null);
+    setReanalisando(true);
+    try {
+      const b64 = await new File(uri).base64();
+      const { record, analysis } = await api.reanalyzeMeal(detalhe.id, {
+        imageBase64: b64,
+        description: obsReanalise.trim() || undefined,
+      });
+      if (record) {
+        aplicarRegistro(record);
+        setObsReanalise('');
+        setEditando(null);
+      } else if (!analysis.is_food) {
+        setAvisoDetalhe('A reanálise não identificou comida — o registro ficou como estava.');
+      }
+    } catch {
+      setAvisoDetalhe('A reanálise falhou. Confira a conexão e tente de novo.');
+    } finally {
+      setReanalisando(false);
+    }
+  };
+
   // ——— Sub-tela: o registro aberto, com a foto grande e a conta inteira. ———
   if (detalhe) {
     const fotoUri = fotoDe(detalhe.id);
     const m = macros(detalhe.foods as api.MealFood[]);
     return (
-      <DetailScreen title="Refeição" onBack={() => setDetalhe(null)}>
+      <DetailScreen
+        title="Refeição"
+        onBack={() => {
+          setDetalhe(null);
+          setEditando(null);
+          setAvisoDetalhe(null);
+          setObsReanalise('');
+        }}
+      >
         {fotoUri ? (
           <Image
             source={{ uri: fotoUri }}
@@ -195,26 +314,107 @@ export function MealsScreen() {
           {m ? <MacroColunas m={m} /> : null}
         </YStack>
 
-        <Section label="No prato">
+        <Section label="No prato · toque para corrigir">
           {(detalhe.foods as api.MealFood[]).map((food, i) => (
             <Row key={`${detalhe.id}-${i}`} last={i === detalhe.foods.length - 1}>
-              <YStack flex={1} minWidth={0} gap={2}>
-                <Body color="$foreground" numberOfLines={2}>
-                  {food.name}
-                  {food.uncertain ? ' (?)' : ''}
-                </Body>
-                <Data numberOfLines={1}>
-                  {food.portion || ''}
-                  {food.grams ? ` · ~${Math.round(food.grams)} g` : ''}
+              <Pressable
+                onPress={() => {
+                  setAvisoDetalhe(null);
+                  setEditando({
+                    index: i,
+                    nome: food.name,
+                    gramas: food.grams ? String(Math.round(food.grams)) : '',
+                  });
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={`Editar ${food.name}`}
+                style={({ pressed }) => [
+                  { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
+                  pressed && { opacity: 0.6 },
+                ]}
+              >
+                <YStack flex={1} minWidth={0} gap={2}>
+                  <Body color="$foreground" numberOfLines={2}>
+                    {food.name}
+                    {food.uncertain ? ' (?)' : ''}
+                  </Body>
+                  <Data numberOfLines={1}>
+                    {food.portion || ''}
+                    {food.grams ? ` · ~${Math.round(food.grams)} g` : ''}
+                  </Data>
+                  {food.matched ? <Data numberOfLines={1}>TACO: {food.matched}</Data> : null}
+                </YStack>
+                <Data color="$foreground" flexShrink={0}>
+                  {food.kcal_min}–{food.kcal_max} kcal
                 </Data>
-                {food.matched ? <Data numberOfLines={1}>TACO: {food.matched}</Data> : null}
-              </YStack>
-              <Data color="$foreground" flexShrink={0}>
-                {food.kcal_min}–{food.kcal_max} kcal
-              </Data>
+              </Pressable>
             </Row>
           ))}
         </Section>
+
+        {editando ? (
+          <YStack
+            marginTop="$md"
+            padding="$md"
+            gap="$sm"
+            borderWidth={1}
+            borderColor="$borderStrong"
+            borderRadius={12}
+          >
+            <Label>{editando.index < 0 ? 'Novo alimento' : 'Corrigir alimento'}</Label>
+            <TextInput
+              value={editando.nome}
+              onChangeText={(t) => setEditando((e) => (e ? { ...e, nome: t } : e))}
+              placeholder="Nome (ex.: Farofa)"
+              placeholderTextColor={colors.textFaint}
+              selectionColor={colors.accent}
+              style={{ fontSize: 15, color: colors.text, paddingVertical: 6 }}
+            />
+            <TextInput
+              value={editando.gramas}
+              onChangeText={(t) => setEditando((e) => (e ? { ...e, gramas: t } : e))}
+              placeholder="Gramas (ex.: 40)"
+              placeholderTextColor={colors.textFaint}
+              selectionColor={colors.accent}
+              keyboardType="number-pad"
+              style={{ fontSize: 15, color: colors.text, paddingVertical: 6 }}
+            />
+            <Data color="$mutedForeground">
+              A caloria recalcula pela tabela TACO a partir do nome e dos gramas.
+            </Data>
+            <XStack gap="$md" marginTop="$xs">
+              <YStack flex={1}>
+                <Button
+                  title={salvandoEdicao ? 'Salvando…' : 'Salvar'}
+                  onPress={() => void salvarEdicao()}
+                  disabled={salvandoEdicao || !editando.nome.trim()}
+                />
+              </YStack>
+              <YStack flex={1}>
+                <Button title="Cancelar" variant="ghost" onPress={() => setEditando(null)} />
+              </YStack>
+            </XStack>
+            {editando.index >= 0 ? (
+              <Button
+                title="Remover este alimento"
+                variant="ghost"
+                onPress={() => void removerAlimento()}
+                disabled={salvandoEdicao}
+              />
+            ) : null}
+          </YStack>
+        ) : (
+          <YStack alignSelf="flex-start" marginTop="$md">
+            <Button
+              title="Adicionar alimento"
+              variant="ghost"
+              onPress={() => {
+                setAvisoDetalhe(null);
+                setEditando({ index: -1, nome: '', gramas: '' });
+              }}
+            />
+          </YStack>
+        )}
 
         <Data marginTop="$md" color="$mutedForeground">
           confiança da análise: {Math.round(detalhe.confidence * 100)}%
@@ -224,6 +424,25 @@ export function MealsScreen() {
           (?) marca porção estimada com menos certeza. A caloria com "TACO" vem da tabela
           nutricional oficial sobre os gramas estimados; as demais são estimativa do modelo.
         </Data>
+
+        {avisoDetalhe ? <Note title="Não deu desta vez" body={avisoDetalhe} /> : null}
+
+        {fotoUri ? (
+          <YStack marginTop="$xl" gap="$sm">
+            <Label>A análise errou?</Label>
+            <CampoComVoz
+              valor={obsReanalise}
+              onChange={setObsReanalise}
+              placeholder="Diga o que está errado (ex.: tem farofa, e é frango) — opcional"
+            />
+            <Button
+              title={reanalisando ? 'Reanalisando…' : 'Reanalisar com a foto'}
+              variant="secondary"
+              onPress={() => void reanalisar()}
+              disabled={reanalisando}
+            />
+          </YStack>
+        ) : null}
 
         <YStack marginTop="$xl">
           <Button title="Remover registro" variant="secondary" onPress={() => remover(detalhe)} />
@@ -266,6 +485,17 @@ export function MealsScreen() {
               : 'nenhuma refeição registrada hoje'}
           </Data>
         </HeroCard>
+      </YStack>
+
+      {/* As palavras da pessoa entram na análise com PRECEDÊNCIA — é a
+          calibração mais barata que existe: "arroz, feijão, farofa e frango"
+          resolve a farofa esquecida e a carne trocada antes de acontecerem. */}
+      <YStack marginBottom="$md">
+        <CampoComVoz
+          valor={descricao}
+          onChange={setDescricao}
+          placeholder="O que tem no prato? (opcional — melhora a análise)"
+        />
       </YStack>
 
       <XStack gap="$md" marginBottom="$xl">
@@ -400,6 +630,44 @@ function MacroColunas({ m }: { m: { p: number; c: number; g: number } }) {
           <Data color="$mutedForeground">{pct(c.kcal)}</Data>
         </YStack>
       ))}
+    </XStack>
+  );
+}
+
+/** Campo de texto com ditado — o transcrito entra para revisão, nunca direto. */
+function CampoComVoz({
+  valor,
+  onChange,
+  placeholder,
+}: {
+  valor: string;
+  onChange: (t: string) => void;
+  placeholder: string;
+}) {
+  const { colors } = useTheme();
+  return (
+    <XStack
+      alignItems="center"
+      gap="$sm"
+      borderWidth={1}
+      borderColor="$borderStrong"
+      borderRadius={12}
+      paddingHorizontal={12}
+      paddingVertical={Platform.OS === 'ios' ? 8 : 2}
+    >
+      <YStack flex={1}>
+        <TextInput
+          value={valor}
+          onChangeText={onChange}
+          placeholder={placeholder}
+          placeholderTextColor={colors.textFaint}
+          selectionColor={colors.accent}
+          multiline
+          maxLength={300}
+          style={{ fontSize: 14, color: colors.text, maxHeight: 80 }}
+        />
+      </YStack>
+      <VoiceInput onTranscript={(t) => onChange(valor ? `${valor} ${t}` : t)} />
     </XStack>
   );
 }

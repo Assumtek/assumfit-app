@@ -59,6 +59,80 @@ class MealAnalysisError(Exception):
     """Falha de modelo ou de parse — o chamador decide o retry."""
 
 
+class RecomputeFoodInput(BaseModel):
+    """Um alimento como a pessoa o deixou ao editar — nome e gramas mandam."""
+
+    name: str = Field(min_length=1)
+    portion: str = ""
+    grams: float | None = None
+    #: Reserva para item sem casamento na TACO: o que o cliente mandar fica.
+    kcal_min: int = 0
+    kcal_max: int = 0
+    protein_g: float | None = None
+    carbs_g: float | None = None
+    fat_g: float | None = None
+    uncertain: bool = False
+
+
+class RecomputeInput(BaseModel):
+    foods: list[RecomputeFoodInput]
+
+
+class RecomputeResult(BaseModel):
+    foods: list[MealFood]
+    kcal_total_min: int
+    kcal_total_max: int
+
+
+def recompute_foods(inp: RecomputeInput) -> RecomputeResult:
+    """Recalcula uma refeição EDITADA — determinístico, sem modelo.
+
+    Editar nome ou gramas passa o item de novo pela TACO; casou, a caloria e os
+    macros vêm da tabela sobre os gramas novos. Não casou, fica o que o cliente
+    mandou — que para item recém-criado é zero, e a tela mostra o traço em vez
+    de um número inventado.
+    """
+    foods: list[MealFood] = []
+    for item in inp.foods:
+        match = match_food(item.name.strip(), item.grams)
+        if match is not None:
+            foods.append(
+                MealFood(
+                    name=item.name.strip(),
+                    portion=item.portion.strip(),
+                    grams=match.grams,
+                    kcal_min=max(0, round(match.kcal * (1 - PORTION_MARGIN))),
+                    kcal_max=round(match.kcal * (1 + PORTION_MARGIN)),
+                    protein_g=match.protein_g,
+                    carbs_g=match.carbs_g,
+                    fat_g=match.fat_g,
+                    uncertain=item.uncertain,
+                    matched=match.description,
+                )
+            )
+        else:
+            kcal_min, kcal_max = sorted((max(0, item.kcal_min), max(0, item.kcal_max)))
+            foods.append(
+                MealFood(
+                    name=item.name.strip(),
+                    portion=item.portion.strip(),
+                    grams=item.grams,
+                    kcal_min=kcal_min,
+                    kcal_max=kcal_max,
+                    protein_g=_opt(item.protein_g),
+                    carbs_g=_opt(item.carbs_g),
+                    fat_g=_opt(item.fat_g),
+                    uncertain=item.uncertain,
+                    matched=None,
+                )
+            )
+    return RecomputeResult(
+        foods=foods,
+        kcal_total_min=sum(f.kcal_min for f in foods),
+        kcal_total_max=sum(f.kcal_max for f in foods),
+    )
+
+
 _SYSTEM = (
     "Voce e um assistente de nutricao de um app brasileiro de bem-estar (AssumFit). "
     "Analise a FOTO de uma refeicao, identifique os alimentos visiveis e estime a "
@@ -69,6 +143,14 @@ _SYSTEM = (
     "REGRAS:\n"
     "1. Liste TODOS os alimentos visiveis, um por um — nao agrupe nem omita. Olhe o "
     "prato inteiro, inclusive o que esta parcialmente coberto ou nas bordas.\n"
+    "1a. PRATO BRASILEIRO: procure ATIVAMENTE os acompanhamentos discretos — farofa "
+    "(granulada, amarelada, por cima do arroz ou num canto; nao e arroz), couve "
+    "refogada, vinagrete, pure, mandioca/aipim, torresmo. Farofa passa despercebida "
+    "com frequencia: so conclua que nao ha depois de procurar.\n"
+    "1b. PROTEINA: distinga frango, carne bovina, porco e peixe pela fibra, cor e "
+    "formato — frango desfia em fibras claras; carne bovina e mais escura e densa. "
+    "Sem certeza, use nome generico (\"Carne grelhada\") com incerto=true; NUNCA "
+    "escolha a especie por palpite.\n"
     "2. name: portugues CORRETO E ACENTUADO, primeira letra maiuscula, nome comum e "
     "especifico (ex.: \"Feijão carioca cozido\", \"Filé de frango grelhado\"). Nunca "
     "invente alimento que nao da para ver nem inferir da descricao.\n"
@@ -93,7 +175,12 @@ _FENCE = re.compile(r"```(?:json)?\s*(.*?)```", re.DOTALL)
 def _user_content(inp: AnalyzeMealInput) -> list[dict]:
     texto = "Analise esta refeicao: liste os alimentos e estime a porcao de cada um em gramas."
     if inp.description and inp.description.strip():
-        texto += f'\n\nDescricao da pessoa (use para melhorar a estimativa): "{inp.description.strip()}"'
+        texto += (
+            f'\n\nDescricao da pessoa: "{inp.description.strip()}"\n'
+            "Os itens que ela cita tem PRECEDENCIA: procure cada um na foto e "
+            "inclua-o (a menos que claramente nao esteja la). A descricao tambem "
+            "desempata especie de carne e revela o que a foto esconde."
+        )
     texto += "\n\nRetorne apenas o JSON no formato especificado."
     return [
         {"type": "image", "source": {"type": "base64", "media_type": inp.media_type, "data": inp.image_b64}},
