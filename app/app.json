@@ -9,10 +9,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#0E0A22",
-    "splash": {
-      "backgroundColor": "#0E0A22",
-      "resizeMode": "contain"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "br.com.assumtek.assumfit",
@@ -96,7 +92,13 @@
           "isAccessMediaLocationEnabled": false
         }
       ],
-      "@bacons/apple-targets"
+      "@bacons/apple-targets",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0E0A22"
+        }
+      ]
     ],
     "extra": {
       "eas": {
