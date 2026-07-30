@@ -1,0 +1,35 @@
+{
+  "_fonte": "Prior de cronobiologia usado no dia 1, antes de haver histórico pessoal. Formato do vale de alerta da tarde e do segundo pico segue o padrão descrito na SPEC. Substituído progressivamente pelo padrão individual conforme o histórico cresce.",
+  "curva_base": [
+    0.22,
+    0.18,
+    0.15,
+    0.14,
+    0.16,
+    0.22,
+    0.38,
+    0.58,
+    0.78,
+    0.92,
+    0.98,
+    0.95,
+    0.82,
+    0.62,
+    0.55,
+    0.62,
+    0.82,
+    0.88,
+    0.8,
+    0.68,
+    0.55,
+    0.44,
+    0.34,
+    0.27
+  ],
+  "deslocamento_cronotipo": {
+    "_comentario": "Horas a deslocar a curva. Matutino antecipa, vespertino atrasa.",
+    "matutino": -2,
+    "intermediario": 0,
+    "vespertino": 2
+  }
+}

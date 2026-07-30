@@ -1,0 +1,247 @@
+import { Text } from '@tamagui/core';
+import { XStack, YStack } from '@tamagui/stacks';
+import React from 'react';
+import { TextInput, TouchableOpacity } from 'react-native';
+
+import { Icon } from '../../components/Icon';
+import { useTheme } from '../../theme/ThemeProvider';
+
+/**
+ * Série, em stepper — portado do MUVX.
+ *
+ * As três formas não são variação decorativa; são o que faz a tela funcionar
+ * com o celular apoiado no banco:
+ *
+ * - **concluída** colapsa numa linha com o que foi feito ("60kg · 12 reps");
+ * - **pendente** é uma linha apagada, só para dar noção de quanto falta;
+ * - **ativa** expande com os campos.
+ *
+ * Uma lista onde todas as séries estão expandidas ao mesmo tempo obriga a
+ * procurar em qual delas se está. Aqui só existe uma resposta possível.
+ */
+
+export type SeriesState = { load: string; reps: string; completed: boolean };
+
+type Props = {
+  number: number;
+  prescribedReps: string;
+  state: SeriesState;
+  isActive: boolean;
+  /** Alongamento e cardio: só duração e confirmação, sem carga nem repetição. */
+  simple?: boolean;
+  isCardio?: boolean;
+  onChange: (patch: Partial<SeriesState>) => void;
+  onToggle: () => void;
+  onSkip?: () => void;
+};
+
+export function SeriesCard({
+  number,
+  prescribedReps,
+  state,
+  isActive,
+  simple,
+  isCardio,
+  onChange,
+  onToggle,
+  onSkip,
+}: Props) {
+  const { colors } = useTheme();
+  const pending = !state.completed && !isActive;
+
+  // ---- Concluída: uma linha ---------------------------------------------
+  if (state.completed) {
+    return (
+      <XStack
+        alignItems="center"
+        gap="$md"
+        paddingVertical="$lg"
+        borderBottomWidth={1}
+        borderBottomColor="$border"
+        opacity={0.7}
+      >
+        <Text fontSize={13} color="$mutedForeground" width={28}>
+          {number}ª
+        </Text>
+        <Text fontSize={13} color="$mutedForeground" flex={1}>
+          {simple ? `${prescribedReps} concluído` : `${state.load || '0'}kg · ${state.reps || '0'} reps`}
+        </Text>
+        <TouchableOpacity onPress={onToggle} activeOpacity={0.7} accessibilityRole="checkbox">
+          <YStack
+            width={28}
+            height={28}
+            borderRadius={999}
+            alignItems="center"
+            justifyContent="center"
+            backgroundColor="$primary"
+          >
+            <Icon name="check" size={14} color={colors.ink} />
+          </YStack>
+        </TouchableOpacity>
+      </XStack>
+    );
+  }
+
+  // ---- Pendente: linha apagada ------------------------------------------
+  if (pending) {
+    return (
+      <XStack
+        alignItems="center"
+        gap="$md"
+        paddingVertical="$lg"
+        borderBottomWidth={1}
+        borderBottomColor="$border"
+        opacity={0.35}
+      >
+        <Text fontSize={13} color="$mutedForeground" width={28}>
+          {number}ª
+        </Text>
+        <Text fontSize={13} color="$mutedForeground" flex={1}>
+          Pendente
+        </Text>
+        <YStack width={28} height={28} borderRadius={999} borderWidth={1} borderColor="$border" />
+      </XStack>
+    );
+  }
+
+  // ---- Ativa, alongamento ou cardio: só confirmar ------------------------
+  if (simple) {
+    return (
+      <YStack paddingVertical="$lg" borderBottomWidth={1} borderBottomColor="$border">
+        <XStack alignItems="center" gap="$md">
+          <Text fontSize={15} fontWeight="700" color="$foreground" width={28}>
+            {number}ª
+          </Text>
+          <YStack flex={1}>
+            <Text fontSize={15} fontWeight="500" color="$foreground">
+              {isCardio ? `Faça por ${prescribedReps}` : `Mantenha por ${prescribedReps}`}
+            </Text>
+            <Text fontSize={13} color="$mutedForeground">
+              {isCardio ? 'Mantenha o ritmo constante' : 'Respire calmamente e segure a posição'}
+            </Text>
+          </YStack>
+          <TouchableOpacity onPress={onToggle} activeOpacity={0.7} accessibilityRole="checkbox">
+            <YStack
+              width={48}
+              height={48}
+              borderRadius={12}
+              alignItems="center"
+              justifyContent="center"
+              borderWidth={2}
+              borderColor="$primary"
+            >
+              <Icon name="check" size={22} color={colors.accent} />
+            </YStack>
+          </TouchableOpacity>
+        </XStack>
+        {onSkip ? (
+          <TouchableOpacity onPress={onSkip} activeOpacity={0.7}>
+            <XStack alignItems="center" justifyContent="center" gap="$xs" marginTop="$sm">
+              <Text fontSize={13} color="$mutedForeground">
+                Pular
+              </Text>
+              <Icon name="arrowRight" size={12} color={colors.textMuted} />
+            </XStack>
+          </TouchableOpacity>
+        ) : null}
+      </YStack>
+    );
+  }
+
+  // ---- Ativa, força: campos de carga e repetição -------------------------
+  return (
+    <YStack paddingVertical="$lg" borderBottomWidth={1} borderBottomColor="$border">
+      <XStack alignItems="center" gap="$md">
+        <Text fontSize={15} fontWeight="700" color="$foreground" width={28}>
+          {number}ª
+        </Text>
+        <Text fontSize={13} fontWeight="500" color="$primary" flex={1}>
+          Série atual
+        </Text>
+        {onSkip ? (
+          <TouchableOpacity onPress={onSkip} activeOpacity={0.7}>
+            <XStack alignItems="center" gap="$xs">
+              <Text fontSize={13} color="$mutedForeground">
+                Pular
+              </Text>
+              <Icon name="arrowRight" size={12} color={colors.textMuted} />
+            </XStack>
+          </TouchableOpacity>
+        ) : null}
+      </XStack>
+
+      <XStack gap="$md" marginTop="$md" alignItems="flex-end">
+        <NumberField
+          label="Peso (kg)"
+          value={state.load}
+          onChangeText={(v) => onChange({ load: v.replace(',', '.') })}
+          keyboardType="decimal-pad"
+        />
+        <NumberField
+          label={`Reps (${prescribedReps})`}
+          value={state.reps}
+          onChangeText={(v) => onChange({ reps: v.replace(/\D/g, '') })}
+          keyboardType="number-pad"
+        />
+        <TouchableOpacity onPress={onToggle} activeOpacity={0.7} accessibilityRole="checkbox">
+          <YStack
+            width={48}
+            height={48}
+            borderRadius={12}
+            alignItems="center"
+            justifyContent="center"
+            borderWidth={2}
+            borderColor="$primary"
+          >
+            <Icon name="check" size={22} color={colors.accent} />
+          </YStack>
+        </TouchableOpacity>
+      </XStack>
+    </YStack>
+  );
+}
+
+function NumberField({
+  label,
+  value,
+  onChangeText,
+  keyboardType,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (v: string) => void;
+  keyboardType: 'decimal-pad' | 'number-pad';
+}) {
+  const { colors } = useTheme();
+  return (
+    <YStack flex={1} gap="$xs">
+      <Text fontSize={12} color="$mutedForeground">
+        {label}
+      </Text>
+      <YStack
+        backgroundColor="$card"
+        borderRadius={10}
+        borderWidth={1}
+        borderColor="$border"
+        minHeight={48}
+        justifyContent="center"
+      >
+        <TextInput
+          style={{
+            color: colors.text,
+            fontSize: 18,
+            fontWeight: '600',
+            textAlign: 'center',
+            paddingVertical: 12,
+          }}
+          value={value}
+          onChangeText={onChangeText}
+          keyboardType={keyboardType}
+          placeholder="0"
+          placeholderTextColor={colors.textFaint}
+          accessibilityLabel={label}
+        />
+      </YStack>
+    </YStack>
+  );
+}

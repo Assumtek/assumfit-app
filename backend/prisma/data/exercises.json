@@ -1,0 +1,3332 @@
+[
+  {
+    "id": "c923ccde-bf84-4fe5-af6d-7fdffa0486e2",
+    "name": "Cross Over (Polia Alta)",
+    "description": "Em pé no centro do crossover, puxe as polias altas cruzando as mãos na frente do corpo na altura do quadril. Retorne controladamente.",
+    "muscleGroup": "PEITO",
+    "equipment": "Máquina de polia (crossover)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "5d63bdc7-0107-4540-b351-af911441b6c7",
+    "name": "Cross Over (Polia Baixa)",
+    "description": "Em pé no centro do crossover, puxe as polias baixas cruzando as mãos na frente do corpo na altura do peito. Foca na porção superior.",
+    "muscleGroup": "PEITO",
+    "equipment": "Máquina de polia (crossover)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "e9e81cf7-3b44-41ba-b0b5-315c93fcc0e2",
+    "name": "Crucifixo Diagonal",
+    "description": "Realize o crucifixo partindo de baixo para cima na diagonal, cruzando o corpo.",
+    "muscleGroup": "PEITO",
+    "equipment": "Polia ou halter",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "e3731176-723a-42e2-a5da-80e62a82fbce",
+    "name": "Crucifixo em Pé",
+    "description": "Em pé, com leve inclinação à frente, abra e feche os braços no nível do peito.",
+    "muscleGroup": "PEITO",
+    "equipment": "Polia (crossover) ou halteres",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "7116a1b2-4f53-480e-ae99-d07bc822acec",
+    "name": "Crucifixo Inclinado",
+    "description": "No banco inclinado (30-45°), realize o crucifixo abrindo e fechando os braços com halteres. Foca na porção superior do peito.",
+    "muscleGroup": "PEITO",
+    "equipment": "Halteres + banco inclinado",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "be5f87d9-cd52-4fc6-9461-32ef77ae1b0e",
+    "name": "Crucifixo no Chão",
+    "description": "Deite-se no chão com halteres e realize o crucifixo. O chão limita a amplitude, protegendo o ombro.",
+    "muscleGroup": "PEITO",
+    "equipment": "Halteres + colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "13620472-8c3f-471e-9c4c-516df3588d1a",
+    "name": "Crucifixo Reto com Halteres",
+    "description": "Deite-se no banco com halteres acima do peito e braços levemente flexionados. Abra os braços lateralmente até sentir alongamento no peito. Feche de volta.",
+    "muscleGroup": "PEITO",
+    "equipment": "Halteres + banco reto",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "614f9506-7f6a-4d04-b255-821c555d2e9c",
+    "name": "Crucifixo Triangular em Pé",
+    "description": "Em pé no crossover, cruze os cabos em formato triangular à frente do corpo partindo de alturas diferentes.",
+    "muscleGroup": "PEITO",
+    "equipment": "Polia (crossover)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "4ee836ed-101e-4cff-9bdd-657678f60a49",
+    "name": "Cruzamento com Peito Aberto",
+    "description": "No crossover, cruze os braços ampliando bem a abertura do peito na fase excêntrica.",
+    "muscleGroup": "PEITO",
+    "equipment": "Polia (crossover)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "f6196bfd-b5a7-4983-960a-d1c57dd4c69f",
+    "name": "Cruzamento Duplo",
+    "description": "Realize cruzamento de cabos com ambas as mãos ao mesmo tempo, cruzando na frente do corpo.",
+    "muscleGroup": "PEITO",
+    "equipment": "Polia (crossover)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "dd22b5f5-1dfe-4811-a9b9-8468e7df6fdf",
+    "name": "Elevação Cruzada Unilateral",
+    "description": "Com um braço, puxe o cabo da polia baixa cruzando na diagonal à frente do corpo até a altura oposta do ombro.",
+    "muscleGroup": "PEITO",
+    "equipment": "Polia baixa",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "c3d4d4fe-2681-491e-9fbe-f300c08085ed",
+    "name": "Empurrar e Cruzar",
+    "description": "Empurre o cabo à frente e cruze o braço além da linha central do corpo na fase final do movimento.",
+    "muscleGroup": "PEITO",
+    "equipment": "Polia (crossover)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "dc6cfbf1-0745-4706-9808-4ca553cf3f5c",
+    "name": "Empurrar e Girar",
+    "description": "Empurre o peso à frente e gire o tronco durante a extensão do braço, adicionando componente rotacional.",
+    "muscleGroup": "PEITO",
+    "equipment": "Polia ou halter",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "ca2b30ab-ca43-403e-ba04-bec5ffabd04b",
+    "name": "Flexão com Rotação",
+    "description": "Realize a flexão e, ao subir, gire o tronco abrindo o braço para cima. Alterne os lados a cada repetição.",
+    "muscleGroup": "PEITO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "1a58f62e-c501-47d9-8b6b-fd2b816f730a",
+    "name": "Flexão de Braços (Push Up)",
+    "description": "Em posição de prancha alta com mãos na largura dos ombros, desça o peito em direção ao chão flexionando os cotovelos. Empurre de volta.",
+    "muscleGroup": "PEITO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "7abf6768-873d-4d21-8e10-77460a38d2bb",
+    "name": "Flexão Diamante Declinada",
+    "description": "Com as mãos juntas formando um diamante e os pés elevados no banco, realize flexões. Trabalha tríceps e peito superior.",
+    "muscleGroup": "PEITO",
+    "equipment": "Banco ou step",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "deef0f58-8a04-434f-8d14-f3758c0401a3",
+    "name": "Flexão Postura de Criança",
+    "description": "Da posição de criança (joelhos no chão, braços estendidos à frente), empurre para frente até a posição de prancha e retorne.",
+    "muscleGroup": "PEITO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "0ffef1ca-e512-469f-ae36-7d17b7acb94a",
+    "name": "Flexão Rotacional",
+    "description": "Realize a flexão e, ao subir, gire todo o corpo abrindo para prancha lateral com braço estendido ao alto.",
+    "muscleGroup": "PEITO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "1b4a3922-1972-4ff7-95e7-b291b2036f30",
+    "name": "Fly Vertical",
+    "description": "Deite-se no banco com halteres acima do peito. Desça os halteres lateralmente com braços levemente flexionados e suba de volta. Variação do crucifixo.",
+    "muscleGroup": "PEITO",
+    "equipment": "Halteres + banco reto ou inclinado",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "e8c2a9a6-7c72-46cc-9d69-0dcceb309e37",
+    "name": "Handstand Push-up",
+    "description": "Em posição de parada de mão com os pés na parede, flexione os braços descendo a cabeça em direção ao chão e empurre de volta.",
+    "muscleGroup": "PEITO",
+    "equipment": "Parede para apoio",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "832a547f-19f0-4d49-bce2-e406ac84ed1e",
+    "name": "Handstand Push-up Kipping",
+    "description": "Igual ao handstand push-up, mas use um impulso com os quadris e pernas (kipping) para auxiliar a subida.",
+    "muscleGroup": "PEITO",
+    "equipment": "Parede para apoio",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "83b5e415-d1e8-4d45-8c67-f958e46164e3",
+    "name": "Joelho ao Cotovelo",
+    "description": "Em posição de prancha alta, traga o joelho ao cotovelo do mesmo lado combinando com flexão. Foca em core e peito.",
+    "muscleGroup": "PEITO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "6308b67e-547e-45c9-8841-4ef6afbcc2d9",
+    "name": "Mergulho em Bancos (Dips)",
+    "description": "Apoie as mãos no banco atrás, pernas estendidas à frente. Flexione os cotovelos descendo o corpo e empurre de volta. Em paralelas, desça com tronco inclinado à frente.",
+    "muscleGroup": "PEITO",
+    "equipment": "Dois bancos ou barras paralelas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "dc110ab5-a1b2-4916-984b-605530b11f74",
+    "name": "Peck Deck (Voador)",
+    "description": "Sentado na máquina com antebraços nos apoios, feche os braços à frente contraindo o peito. Retorne controladamente.",
+    "muscleGroup": "PEITO",
+    "equipment": "Máquina peck deck",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "ef37ce79-8568-4f39-9083-04af16fa9162",
+    "name": "Press em Pé com Anilhas",
+    "description": "Em pé, segure anilhas com as palmas pressionando uma contra a outra. Empurre à frente estendendo os braços e retorne ao peito.",
+    "muscleGroup": "PEITO",
+    "equipment": "Anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "8a72ac30-6588-419c-b521-2a3c23c94620",
+    "name": "Pullover com Halter",
+    "description": "Deite-se no banco segurando um halter com ambas as mãos acima do peito. Leve o halter para trás da cabeça com braços levemente flexionados e retorne.",
+    "muscleGroup": "PEITO",
+    "equipment": "Halter + banco reto",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "38ccfe17-c677-4d18-9819-5d27d61e5ad6",
+    "name": "Supino com Pegada Fechada",
+    "description": "Deite-se no banco e segure a barra com mãos na largura dos ombros ou mais próximas. Desça ao peito e empurre. Foco em tríceps e peito interno.",
+    "muscleGroup": "PEITO",
+    "equipment": "Barra + banco reto + suporte + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "ba38e99e-4288-47c4-b213-fd42518d2488",
+    "name": "Supino Declinado",
+    "description": "Deite-se no banco declinado com os pés presos. Desça a barra até a parte inferior do peito e empurre de volta. Foca na porção inferior do peitoral.",
+    "muscleGroup": "PEITO",
+    "equipment": "Barra + banco declinado + suporte + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "9a00e9f1-a589-44ef-ad60-ea813c8fba8c",
+    "name": "Supino Inclinado com Halteres",
+    "description": "Deite-se no banco inclinado (30-45°) com halteres ao lado do peito. Empurre os halteres para cima até estender os braços e desça controladamente.",
+    "muscleGroup": "PEITO",
+    "equipment": "Halteres + banco inclinado",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "d2f0bfc8-b292-48bb-a0b5-f75c97b38142",
+    "name": "Supino Inclinado Máquina Convergente",
+    "description": "Sentado na máquina com costas apoiadas, empurre as alças para frente e para cima. As alças convergem no topo, simulando o supino inclinado.",
+    "muscleGroup": "PEITO",
+    "equipment": "Máquina convergente de supino inclinado",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "d719614c-3834-4d4a-80e4-8a9ba2dd5424",
+    "name": "Supino Inclinado no Smith",
+    "description": "Posicione o banco inclinado (30-45 graus) sob a barra do Smith. Desça a barra até a parte superior do peito e empurre de volta com controle.",
+    "muscleGroup": "PEITO",
+    "equipment": "Maquina Smith + banco inclinado",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "52685fc8-3225-4d25-8976-003cee735384",
+    "name": "Supino Máquina",
+    "description": "Sentado na máquina com as costas apoiadas, empurre as alças à frente estendendo os braços. Retorne controladamente.",
+    "muscleGroup": "PEITO",
+    "equipment": "Máquina de supino",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "68a50d1d-0ebb-4c54-9cf3-875046cfbc43",
+    "name": "Supino no Smith",
+    "description": "Deite-se no banco reto posicionado sob a barra do Smith. Desça a barra até o peito e empurre de volta, mantendo os cotovelos levemente flexionados no topo.",
+    "muscleGroup": "PEITO",
+    "equipment": "Maquina Smith",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "b47282ea-7294-48bf-a746-3f8b1b0ba8c3",
+    "name": "Supino Reto com Barra",
+    "description": "Deite-se no banco com os pés no chão. Retire a barra do suporte, desça até o peito e empurre de volta até estender os braços. Mantenha escápulas retraídas.",
+    "muscleGroup": "PEITO",
+    "equipment": "Barra + banco reto + suporte + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "d16f6ae4-5520-4b32-8ec5-3c4447406879",
+    "name": "Balanço para Trás",
+    "description": "Em pé, balance os braços para trás contraindo as escápulas e os músculos das costas. Movimento de mobilidade e ativação.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Nenhum ou halter leve",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "b84a19a1-5839-4a3a-b76c-ff2d1de905ce",
+    "name": "Barra Fixa (Pull Up)",
+    "description": "Pendure-se com pegada pronada mais larga que os ombros. Puxe o corpo até o queixo passar a barra e desça controladamente.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Barra fixa",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "4d2b2940-5252-43dd-b70f-a4fb130ba2e3",
+    "name": "Barra Fixa Supinada (Chin-up)",
+    "description": "Segure a barra com pegada supinada (palmas viradas para você) e puxe o corpo até o queixo passar a barra. Desça controladamente.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Barra fixa",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "23985484-1f32-4dc0-a6d0-b12b11298059",
+    "name": "Deslizamento Escapular na Parede",
+    "description": "De costas para a parede com braços em posição de W, deslize os braços para cima até Y e retorne, mantendo as costas na parede.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Parede",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "2b8c891b-4ff7-4f85-84ae-4c94fe1d1b9d",
+    "name": "Encolhimento com Halteres (Trapézio)",
+    "description": "Em pé com halteres ao lado do corpo, eleve os ombros em direção às orelhas contraindo o trapézio. Desça controladamente sem girar os ombros.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Halteres",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "90636006-2ef1-4034-852d-c7280fe1d808",
+    "name": "Extensão Lombar na Máquina",
+    "description": "Posicione-se na máquina com o apoio no quadril, incline o tronco para baixo e retorne estendendo a lombar. Não hiperextenda.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Máquina de extensão lombar",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "d1dcda27-5b1e-49af-b706-b7385617e9dd",
+    "name": "Levantamento Terra (Foco Costas)",
+    "description": "Realize o levantamento terra focando na contração das costas durante todo o movimento. Mantenha costas retas e escápulas retraídas.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Barra + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "34a46d13-8ba2-4806-a108-3420341e63c8",
+    "name": "Pull Down com Corda",
+    "description": "Segure a corda na polia alta e puxe para baixo separando as pontas no final do movimento. Foca na contração do latíssimo.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Máquina de polia alta + corda",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "c6cbfe01-73e7-48f6-ae15-e4d2eea69fec",
+    "name": "Puxada Alta Pronada (Lat Pulldown)",
+    "description": "Sentado na máquina, segure a barra com pegada pronada (palmas para frente) mais larga que os ombros. Puxe a barra até o peito e retorne controladamente.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Máquina de puxada (pulley)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "1cbafa7c-5cda-4214-b287-ba16f7b6022c",
+    "name": "Puxada Alta Supinada",
+    "description": "Sentado na máquina, segure a barra com pegada supinada (palmas para você). Puxe até o peito focando na contração das costas e bíceps.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Máquina de puxada (pulley)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "e214d2dc-b019-4279-8352-4d7252516770",
+    "name": "Puxada com Triângulo",
+    "description": "Sentado na máquina, segure o triângulo com pegada neutra (palmas uma para outra). Puxe até o peito e retorne controladamente.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Máquina de puxada + triângulo",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "f8791f66-8969-459b-93a1-4b0bb64707d9",
+    "name": "Remada Aberta no Cabo",
+    "description": "Sentado, puxe a barra com pegada aberta (pronada) em direção ao abdômen, abrindo os cotovelos. Foca no trapézio médio e romboides.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Máquina de polia baixa + barra reta",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "539f7fa3-a3b1-4b4e-afc4-0ccd9a13c99c",
+    "name": "Remada Alta com Barra",
+    "description": "Em pé, segure a barra com pegada fechada. Puxe a barra verticalmente até a altura do queixo, elevando os cotovelos. Desça controladamente.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Barra + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "5e218354-b7c4-40e3-913e-c1ac5513708b",
+    "name": "Remada Articulada",
+    "description": "Sentado na máquina com peito apoiado, puxe as alças em direção ao tronco contraindo as costas. Retorne controladamente.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Máquina de remada articulada",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "e4235520-6678-464a-b7c5-97f6f84e96cb",
+    "name": "Remada Baixa com Triângulo",
+    "description": "Sentado na máquina com pés nos apoios, puxe o triângulo em direção ao abdômen contraindo as escápulas. Retorne controladamente.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Máquina de polia baixa + triângulo",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "4cf0f2e7-241d-4387-99fe-cea02dba1a1d",
+    "name": "Remada Baixa Unilateral",
+    "description": "Sente-se na polia baixa e puxe o cabo com uma mão de cada vez, mantendo o tronco estável. Concentre-se na contração das costas.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Maquina de polia baixa",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "3cf41856-c7c1-4dc7-8633-e6f7c6d8dd99",
+    "name": "Remada Cavalinho",
+    "description": "Incline o tronco e segure as alças da máquina. Puxe o peso em direção ao peito e desça controladamente.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Máquina remada cavalinho (T-bar row)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "4e2ea4f2-c090-4054-9e42-4af7e1010d4d",
+    "name": "Remada Cavalinho Pronada",
+    "description": "Posicione-se na máquina de remada cavalinho com pegada pronada (palmas para baixo). Puxe a barra em direção ao peito e retorne com controle.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Maquina remada cavalinho (T-bar row)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "cb18341d-fb95-4672-9913-68ac7ec86524",
+    "name": "Remada Curvada com Barra",
+    "description": "Incline o tronco a 45° com joelhos levemente flexionados. Puxe a barra em direção ao abdômen e desça controladamente. Mantenha costas retas.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Barra + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "a8a84aa1-3bcd-4b71-ad0a-7568129082ce",
+    "name": "Remada Máquina Unilateral",
+    "description": "Na máquina, puxe com um braço de cada vez em direção ao tronco, focando na contração unilateral das costas.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Máquina de remada",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "a84f4244-4959-4465-b4c9-1a9cbf71b574",
+    "name": "Remada Unilateral (Serrote)",
+    "description": "Apoie um joelho e mão no banco. Com a outra mão, puxe o halter do chão até a lateral do tronco. Desça controladamente.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Halter + banco",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "2f00415f-9f4b-484e-82e5-3b9ff5a0837a",
+    "name": "Superman em Prancha",
+    "description": "Em posição de prancha, estenda simultaneamente um braço à frente e a perna oposta, segure brevemente e alterne.",
+    "muscleGroup": "COSTAS",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "41e1c7d1-942c-4406-b239-e7babe6490f6",
+    "name": "Elevação de Perna no Dip",
+    "description": "Apoie-se nas barras paralelas e eleve as pernas estendidas à frente. Trabalha abdômen com bíceps e tríceps isometricamente.",
+    "muscleGroup": "BICEPS",
+    "equipment": "Barras paralelas (estação de dip)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "7111468c-3743-4fbe-baff-c555a84e69ef",
+    "name": "Flexão Alternada Ajoelhado",
+    "description": "Ajoelhado, realize roscas alternadas com halteres mantendo o core estabilizado e sem usar impulso do tronco.",
+    "muscleGroup": "BICEPS",
+    "equipment": "Halteres",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "aab96482-8618-4a74-968d-c202e52b7ace",
+    "name": "Flexão Diamante",
+    "description": "Realize flexões com as mãos juntas em formato de diamante sob o peito. Foca em tríceps com ativação secundária de bíceps na estabilização.",
+    "muscleGroup": "BICEPS",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "b48061c2-d6f3-4e22-abcb-82cf5ffe11e8",
+    "name": "Flexão Lateral",
+    "description": "Em posição de flexão, desloque o corpo lateralmente para um braço e realize a flexão. Alterne os lados.",
+    "muscleGroup": "BICEPS",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "8efe3874-0f1e-4c09-a977-fa292ecd7ece",
+    "name": "Muscle-up",
+    "description": "Pendure-se na barra, puxe explosivamente e faça a transição para cima da barra finalizando com extensão de braços. Movimento avançado de calistenia.",
+    "muscleGroup": "BICEPS",
+    "equipment": "Barra fixa ou argolas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "cc9ae338-4fc6-4e0b-8942-542ae515fa3b",
+    "name": "Rosca 21",
+    "description": "Faça 7 repetições na metade inferior, 7 na metade superior e 7 com amplitude completa, sem descanso. Total de 21 repetições por série.",
+    "muscleGroup": "BICEPS",
+    "equipment": "Barra ou halteres",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "ec5b3ace-ab20-48a9-b58f-6354f8eacf75",
+    "name": "Rosca Alternada com Halteres",
+    "description": "Em pé com halteres ao lado do corpo, flexione um braço de cada vez levando o halter ao ombro com rotação do punho. Alterne os lados.",
+    "muscleGroup": "BICEPS",
+    "equipment": "Halteres",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "bda39575-0555-4d9a-932d-95b82ed67729",
+    "name": "Rosca Concentrada",
+    "description": "Sentado, apoie o cotovelo na parte interna da coxa. Flexione o braço levando o halter ao ombro isolando completamente o bíceps. Desça controladamente.",
+    "muscleGroup": "BICEPS",
+    "equipment": "Halter + banco",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "af20c6aa-fade-4ec6-8f7c-6a04b2ae9042",
+    "name": "Rosca Direta com Barra W",
+    "description": "Em pé, segure a barra W com pegada supinada. Flexione os cotovelos levando a barra até os ombros sem mover os braços. Desça controladamente.",
+    "muscleGroup": "BICEPS",
+    "equipment": "Barra W + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "51d0410a-e4c7-4e39-91b3-264e58260014",
+    "name": "Rosca Direta no Cabo",
+    "description": "Em pé de frente para a polia, segure a barra e flexione os cotovelos. A tensão constante do cabo trabalha o bíceps em toda a amplitude.",
+    "muscleGroup": "BICEPS",
+    "equipment": "Máquina de polia baixa + barra",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "ab7fe128-fcc5-4818-81b6-b22f94bcddc7",
+    "name": "Rosca inclinada (Banco 45°)",
+    "description": "Deite-se no banco inclinado com halteres pendurados. Flexione os cotovelos levando os halteres aos ombros. A inclinação aumenta o alongamento do bíceps.",
+    "muscleGroup": "BICEPS",
+    "equipment": "Halteres + banco inclinado a 45°",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "b27d1e78-6950-424d-88c8-f2cfa0c6343e",
+    "name": "Rosca Inversa (Foco Antebraço)",
+    "description": "Em pé, segure a barra com pegada pronada (palmas para baixo). Flexione os cotovelos levando a barra aos ombros. Foca em braquiorradial e antebraço.",
+    "muscleGroup": "BICEPS",
+    "equipment": "Barra reta + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "946b29dc-e0d3-4eb9-b568-10cbbe2cd475",
+    "name": "Rosca Martelo",
+    "description": "Em pé com halteres ao lado do corpo em pegada neutra (palmas uma para outra), flexione os cotovelos sem girar os punhos. Trabalha braquial e braquiorradial.",
+    "muscleGroup": "BICEPS",
+    "equipment": "Halteres",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "edb90715-b6c1-4d13-8ff8-7d7d3681654c",
+    "name": "Rosca Martelo com Corda no Cabo",
+    "description": "Segure a corda na polia baixa em pegada neutra e flexione os cotovelos trazendo as mãos aos ombros. Desça controladamente.",
+    "muscleGroup": "BICEPS",
+    "equipment": "Máquina de polia baixa + corda",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "3723363d-7329-421b-b079-3e53ccc0a50d",
+    "name": "Rosca Scott com Barra",
+    "description": "Apoie os braços no banco Scott. Flexione os cotovelos levando a barra aos ombros e desça controladamente até quase estender os braços.",
+    "muscleGroup": "BICEPS",
+    "equipment": "Barra (W ou reta) + banco Scott",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "daff3888-609c-41d9-a7d9-b5a3849382c0",
+    "name": "Svend Press",
+    "description": "Em pé, pressione uma anilha entre as palmas na altura do peito. Empurre à frente estendendo os braços e retorne. Trabalha bíceps e peito isometricamente.",
+    "muscleGroup": "BICEPS",
+    "equipment": "Anilha",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "72797659-7734-4fa3-9253-5a471cb22906",
+    "name": "Extensão de Tríceps sobre a Cabeça (Cabo)",
+    "description": "De costas para a polia baixa, segure a corda atrás da cabeça e estenda os braços acima, separando as pontas da corda no topo.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Máquina de polia baixa + corda",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "8ca16c5e-bb3e-48bf-bddc-6ddea028ae19",
+    "name": "Flexão com Abertura de Pernas",
+    "description": "Realize flexões com as pernas abertas para base mais ampla e maior estabilidade durante o movimento.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "6adcd7c0-c4a0-45e8-b436-9ffffbdf4af4",
+    "name": "Flexão Declinada Ajoelhado",
+    "description": "Ajoelhe-se com as mãos no chão e os joelhos elevados no banco. Realize flexões focando no tríceps com pegada mais fechada.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Banco ou step",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "c1a920e6-bb99-49b3-b901-78e9f9655865",
+    "name": "Paralelas (Foco Tríceps)",
+    "description": "Nas paralelas, mantenha o corpo ereto e cotovelos junto ao tronco. Desça até os braços ficarem a 90° e empurre de volta.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Barras paralelas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "bef7c9fa-34f5-4045-84c8-979ecbc12ecc",
+    "name": "Supino Fechado",
+    "description": "Deite-se no banco com pegada na largura dos ombros ou mais fechada. Desça a barra ao peito mantendo cotovelos junto ao corpo e empurre. Foco no tríceps.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Barra + banco reto + suporte + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "aee9c6b4-84a1-4127-a997-8dac29980741",
+    "name": "Tríceps Barra Paralela Fechada",
+    "description": "Realize mergulhos nas paralelas com pegada fechada e cotovelos junto ao corpo para maior foco no tríceps. Mantenha tronco ereto.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Barras paralelas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "27822d15-a054-44c6-a47f-42d081840400",
+    "name": "Tríceps Coice com Halter",
+    "description": "Incline o tronco com o braço ao lado do corpo, cotovelo flexionado. Estenda o antebraço para trás até alinhar com o tronco. Retorne controladamente.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Halter + banco (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "f488a0ce-a969-4c2f-a8c1-b28e45cf624e",
+    "name": "Tríceps Corda Acima da Cabeça",
+    "description": "De costas para a polia, segure a corda atrás da cabeça e estenda os braços acima, separando as pontas da corda no topo.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Máquina de polia baixa + corda",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "a1aad492-f1bd-46d7-b982-d8d90c01b79c",
+    "name": "Tríceps Corda no Cabo",
+    "description": "Em pé, segure a corda e empurre para baixo estendendo os braços, separando as pontas da corda no final. Retorne controladamente.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Máquina de polia alta + corda",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "d0eb7494-1f0b-4cb7-8eea-db01c8246d0f",
+    "name": "Tríceps Extensão Unilateral com Halter",
+    "description": "Em pé ou sentado, estenda um halter acima da cabeça com um braço. Flexione o cotovelo descendo o halter atrás da cabeça e estenda de volta.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Halter",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "986e2d3d-11f3-483e-99b7-7c1807096613",
+    "name": "Tríceps Francês com Barra",
+    "description": "Em pé ou sentado, segure a barra atrás da cabeça e estenda os braços acima. Mantenha os cotovelos apontados para frente e próximos da cabeça.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Barra (W ou reta)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "bcbd0998-ee85-4513-989b-383e2e94054e",
+    "name": "Tríceps Francês Unilateral",
+    "description": "Sentado ou em pé, segure um halter acima da cabeça com um braço. Flexione o cotovelo descendo o halter atrás da cabeça e estenda de volta.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Halter",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "cf123433-5192-4633-9aa0-c0dcdf7a2339",
+    "name": "Tríceps Inverso no Cabo",
+    "description": "Em pé, segure a barra com pegada supinada (palmas para cima) e empurre para baixo estendendo os cotovelos. Retorne controladamente.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Máquina de polia alta + barra reta",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "a51461b3-d95c-4e7b-9d10-67516b7783b3",
+    "name": "Tríceps Kickback no Cabo",
+    "description": "Incline o tronco, mantenha o cotovelo fixo ao lado do corpo e estenda o antebraço para trás puxando o cabo.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Máquina de polia baixa",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "df39b77f-9396-48a4-b181-6a495822db8b",
+    "name": "Tríceps Mergulho entre Bancos",
+    "description": "Apoie as mãos em um banco atrás de você e os pés em outro à frente. Flexione os cotovelos descendo o corpo e empurre de volta.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Dois bancos",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "980a03a0-dc1b-4cbd-a939-9ad75fc178f9",
+    "name": "Tríceps na Máquina",
+    "description": "Sente-se na máquina com os cotovelos no apoio e empurre as alças para baixo estendendo completamente os braços. Retorne controladamente.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Máquina de tríceps",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "730b91d5-7529-49e8-abd5-3714b819d9c2",
+    "name": "Tríceps na Polia com Corda",
+    "description": "Puxe a corda para baixo estendendo os braços e separe as pontas no final do movimento. Mantenha cotovelos fixos ao lado do corpo.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Máquina de polia alta + corda",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "08d744ee-4ca7-40b8-9842-9df088a7bad9",
+    "name": "Tríceps Press Fechado no Smith",
+    "description": "Realize o supino na máquina Smith com pegada fechada, cotovelos junto ao corpo. Desça a barra ao peito e empurre.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Máquina Smith + banco reto",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "9c772502-4ac8-4fdc-a872-99fb8e83f46e",
+    "name": "Tríceps Pulley (Barra Reta)",
+    "description": "Em pé de frente para a polia, segure a barra e empurre para baixo estendendo os cotovelos. Mantenha os braços fixos ao lado do corpo. Retorne controladamente.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Máquina de polia alta + barra reta",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "b1cc9d10-ead3-4e06-926b-dea2a2381efc",
+    "name": "Tríceps Testa com Barra",
+    "description": "Deite-se no banco com a barra acima do peito. Flexione os cotovelos levando a barra em direção à testa e estenda de volta. Mantenha braços na vertical.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Barra (W ou reta) + banco reto",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "6e3e407b-02ee-4f94-9980-64bf16058917",
+    "name": "Tríceps Testa com Halteres",
+    "description": "Deite-se no banco com halteres acima do peito. Flexione os cotovelos levando os pesos em direção às têmporas e estenda de volta.",
+    "muscleGroup": "TRICEPS",
+    "equipment": "Halteres + banco reto",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "637239a8-1e48-4e5b-b080-cc128febce49",
+    "name": "Abertura com Rotação de Peito",
+    "description": "Deite-se de lado, abra o braço de cima girando o tronco e abrindo o peito. Trabalha mobilidade torácica e ombros.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Nenhum ou halter leve",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "bbf23fa0-c359-4a49-9a21-96836207d952",
+    "name": "Bird Dog com Deslizamento",
+    "description": "Em quatro apoios com sliders nas mãos e pés, deslize simultaneamente um braço à frente e a perna oposta para trás.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Sliders + colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "bb4da61e-71ef-4298-802c-0eefcad46668",
+    "name": "Colher Frontal",
+    "description": "Em pé, segure o peso com braços estendidos à frente e realize pequenas elevações como se estivesse tirando sopa com uma colher.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Halter leve ou anilha",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "dad3e7ce-75ee-4198-9c1a-dd606def67c0",
+    "name": "Crucifixo Inverso com Halteres",
+    "description": "Incline o tronco à frente ou deite de bruços no banco inclinado. Abra os braços lateralmente com halteres até a altura dos ombros. Foca no deltoide posterior.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Halteres + banco inclinado (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "8ccbc121-adb2-423e-864e-38713f760060",
+    "name": "Crucifixo Inverso na Máquina",
+    "description": "Sentado de frente para a máquina, segure as alças e abra os braços para trás até alinhar com os ombros. Retorne controladamente.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Máquina peck deck (invertida)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "de21d413-2f92-4ae8-9819-e4561adfffc1",
+    "name": "Desenvolvimento Arnold",
+    "description": "Sentado, comece com halteres ao nível do queixo e palmas para você. Gire os pulsos para fora enquanto empurra acima da cabeça. Retorne invertendo o giro.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Halteres + banco com encosto",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "8683b985-9156-479a-96c5-be9da41a71a0",
+    "name": "Desenvolvimento com Halteres",
+    "description": "Sentado com halteres ao nível dos ombros, empurre acima da cabeça até estender os braços. Desça controladamente.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Halteres + banco com encosto",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "cbb1fa15-72c0-4acd-9f72-476a41aa3bf1",
+    "name": "Desenvolvimento com Trap Bar",
+    "description": "Segure a trap bar pelas alças e empurre acima da cabeça. Permite posição mais natural dos pulsos.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Trap bar (barra hexagonal)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "1724d826-a88b-4e43-88d8-9f19c0518c5b",
+    "name": "Desenvolvimento Máquina",
+    "description": "Sentado na máquina com costas apoiadas, empurre as alças acima da cabeça e retorne controladamente.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Máquina de desenvolvimento",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "38062ca0-34ad-48ab-b73c-e1a2e9e2c56a",
+    "name": "Desenvolvimento Militar (Barra em Pé)",
+    "description": "Em pé com barra ao nível dos ombros, empurre acima da cabeça até estender os braços. Desça controladamente até os ombros. Mantenha o core contraído.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Barra + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "3c92c796-f378-4af4-a95a-7193dd3cf0d0",
+    "name": "Desenvolvimento no Landmine",
+    "description": "Com a extremidade da barra no suporte de chão, segure a outra ponta ao ombro e empurre para cima e à frente em arco.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Barra landmine",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "f63af207-b0fa-41ff-8cc4-4e0e2e15bf88",
+    "name": "Desenvolvimento no Smith",
+    "description": "Sentado sob a barra do Smith, empurre a barra acima da cabeça guiado pela máquina. Retorne controladamente.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Máquina Smith + banco",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "3cbc07f4-a1e2-40f5-a8fe-1a1cd0bc68ac",
+    "name": "Desenvolvimento Unilateral no Landmine",
+    "description": "Igual ao anterior, mas execute com um braço de cada vez para trabalhar força e estabilidade unilateral.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Barra landmine",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "58f5a31c-1980-4dad-ab6a-8aea8b4ff95f",
+    "name": "Elevação Frontal com Anilha",
+    "description": "Em pé, segure uma anilha com ambas as mãos e eleve à frente até a altura dos ombros. Desça controladamente.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Anilha",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "e1d85444-d9e7-440e-ae98-096d7e09805d",
+    "name": "Elevação Frontal com Barra",
+    "description": "Em pé, segure a barra na frente das coxas com pegada na largura dos ombros. Eleve à frente até a altura dos ombros e desça controladamente.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Barra",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "3a597967-744c-475c-8c67-997f512bab80",
+    "name": "Elevação Frontal com Halteres (Alternada)",
+    "description": "Em pé, eleve um halter à frente até a altura do ombro com braço quase estendido. Desça e alterne o braço.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Halteres",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "d52ad452-ecb6-4967-90d4-2131ed08cee2",
+    "name": "Elevação Lateral com Halteres",
+    "description": "Em pé com halteres ao lado do corpo, eleve os braços lateralmente até a altura dos ombros com cotovelos levemente flexionados. Desça controladamente.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Halteres",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "d1ac32de-ab2d-42de-acf0-967bb38deb76",
+    "name": "Elevação Lateral Inclinada (Banco 45°)",
+    "description": "Deite-se de lado no banco inclinado e realize elevações laterais com o braço livre. A inclinação aumenta a amplitude do movimento.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Halter + banco inclinado a 45°",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "01240cea-6c96-46f9-a35e-54c5d04f480e",
+    "name": "Elevação Lateral no Cabo",
+    "description": "Em pé ao lado da polia, puxe o cabo lateralmente até a altura do ombro. Desça controladamente. Trabalhe um lado por vez.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Máquina de polia baixa",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "4bce3ea4-655e-427b-815f-7334f67e9827",
+    "name": "Face Pull (Foco Trapézio/Deltoide)",
+    "description": "Puxe a corda em direção ao rosto separando as pontas, com cotovelos altos. Foque em retrair as escápulas e rotacionar externamente os ombros.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Máquina de polia alta + corda",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "fb68aa55-d29c-4b36-a8a4-232b73e85da8",
+    "name": "Face Pull no Cabo",
+    "description": "Puxe a corda em direção ao rosto com cotovelos altos, separando as pontas. Contraia escápulas e deltoides posteriores no final.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Máquina de polia alta + corda",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "f81e5187-d72c-4540-8d72-543ded152caa",
+    "name": "Flexão de Ombro Completa",
+    "description": "Em pé, eleve o peso à frente e continue até acima da cabeça em amplitude completa de flexão do ombro.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Halter leve, bastão ou elástico",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "fce9a5ce-eae7-4b0f-be87-4f961506aa6b",
+    "name": "Powell Raise Inclinado",
+    "description": "Deite-se de lado no banco inclinado e realize elevações laterais com o braço de cima partindo da frente do corpo.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Halter + banco inclinado",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "f556ce6d-0abc-44d6-b4d4-65909ab3489c",
+    "name": "Pull-up Kipping",
+    "description": "Pendure-se na barra e use impulso do quadril (kipping) para auxiliar na subida. Movimento de CrossFit que exige técnica e ritmo.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Barra fixa",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "051c457c-3fab-4c16-a888-3bbcf6b746f9",
+    "name": "Retração Escapular em Pé",
+    "description": "Em pé, puxe os cabos ou elástico focando apenas na retração das escápulas sem flexionar os cotovelos.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Elástico ou polia",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "3776fda1-2da7-41ec-9eb2-d8ddea70c6b1",
+    "name": "Retração Escapular Sentado",
+    "description": "Sentado, puxe o cabo apenas retraindo as escápulas sem flexionar os braços.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Máquina de polia baixa",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "cf4bcb55-943e-4030-8065-4bbe1d5b05d6",
+    "name": "Retração Escapular Sentado com Pulso",
+    "description": "Sentado na polia, puxe as escápulas para trás com um breve pulso no final do movimento. Foco na retração escapular.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Máquina de polia baixa",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "da4fb339-6fc9-45f2-9f81-953cd950038d",
+    "name": "Rotador de Manguito",
+    "description": "Com o cotovelo apoiado ao lado do corpo flexionado a 90°, gire o antebraço para fora (rotação externa). Pode ser feito deitado ou em pé com cabo.",
+    "muscleGroup": "OMBROS",
+    "equipment": "Halter leve ou elástico",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "fb020480-04a8-47b1-9e65-11f7e23adbe5",
+    "name": "Abdominal Bicicleta",
+    "description": "Deite-se com as mãos atrás da cabeça e pernas elevadas. Pedale no ar levando o cotovelo ao joelho oposto, alternando os lados com movimento contínuo.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "a43b8776-3de7-4c6d-9d2e-e5cf6f12a185",
+    "name": "Abdominal com Círculos de Pernas Sentado",
+    "description": "Sentado com tronco inclinado para trás e pernas elevadas, desenhe círculos com as pernas mantendo o abdômen contraído.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "ebd73261-817e-40d9-bfe6-1fdc50e3c784",
+    "name": "Abdominal com Desenvolvimento (Kettlebell)",
+    "description": "Deite-se com o kettlebell no peito. Ao subir no crunch, estenda os braços pressionando o kettlebell para cima. Retorne controladamente.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Kettlebell + Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "fa8c7bf5-4704-411c-a0b1-67b9fa632f61",
+    "name": "Abdominal com Joelhos ao Peito Deitado",
+    "description": "Deite-se com pernas estendidas. Traga ambos os joelhos ao peito contraindo o abdômen e retorne sem encostar os pés no chão.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "e60440c5-a138-4b8b-ba7c-e215824364d3",
+    "name": "Abdominal com Pernas Abertas",
+    "description": "Deite-se com pernas abertas e estendidas. Realize um crunch estendendo as mãos entre as pernas em direção ao chão.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "d2bf909f-b5f6-49ef-ad68-7a47399be493",
+    "name": "Abdominal com Torção e Pernas Elevadas",
+    "description": "Deite-se com pernas elevadas a 90°. Realize um crunch direcionando o cotovelo ao joelho oposto, alternando os lados.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "dd365028-7fea-4437-aab3-b9d49c03c076",
+    "name": "Abdominal com Torção Sentado no Ar",
+    "description": "Sente-se com os pés fora do chão e tronco inclinado para trás. Gire o tronco de um lado ao outro tocando as mãos no chão ao lado do quadril.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "4aaad935-0345-481b-9623-268d3771eb77",
+    "name": "Abdominal (Crunch)",
+    "description": "Deite-se com joelhos flexionados e pés no chão. Eleve os ombros do chão contraindo o abdômen, sem puxar o pescoço. Retorne controladamente.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "eec84d28-f26b-418a-b835-b12bb96bbaf7",
+    "name": "Abdominal de Quadril",
+    "description": "Deite-se e eleve o quadril do chão contraindo o abdômen inferior, mantendo as pernas retas apontadas para o teto.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "34ced828-63d3-4afe-80b0-06535043173a",
+    "name": "Abdominal em V",
+    "description": "Deite-se e eleve simultaneamente pernas e tronco formando um V, tentando tocar os pés com as mãos. Retorne controladamente.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "5c175d6f-7713-49b7-b4d6-8bef1e9595a9",
+    "name": "Abdominal Estrela do Mar (Halter)",
+    "description": "Deite-se com braços e pernas abertos em X segurando um halter em uma mão. Eleve o braço com halter até o pé oposto cruzando o corpo.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Halter + Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "a4dba5c1-9cc7-4263-91ad-58303005004f",
+    "name": "Abdominal Estrela do Mar Unilateral (Halter)",
+    "description": "Igual ao Estrela do Mar, porém trabalhe todas as repetições de um lado antes de trocar.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Halter + Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "326ea625-6540-49a3-8270-9c4a5c613569",
+    "name": "Abdominal Infra (Elevação de Pernas)",
+    "description": "Deite-se com mãos sob o quadril. Eleve as pernas retas até 90° focando a contração na parte inferior do abdômen. Desça sem tocar o chão.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "84f8152e-cf04-4f3c-be22-5bc0964f7842",
+    "name": "Abdominal Invertido",
+    "description": "Deite-se e traga os joelhos em direção ao peito elevando o quadril do chão. Retorne controladamente sem deixar os pés tocarem o chão.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete ou banco reto",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "831696a8-792e-402f-a5c1-7710b8c10f61",
+    "name": "Abdominal Isométrico com Halter",
+    "description": "Segure a posição de crunch com o halter estendido acima do peito por tempo determinado, mantendo abdômen contraído.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Halter + Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "079cfa5a-fc09-475f-8968-ab98f86278ad",
+    "name": "Abdominal Lateral Deitado",
+    "description": "Deite-se de lado com pernas estendidas. Eleve simultaneamente tronco e pernas lateralmente, contraindo o oblíquo.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "4404e007-fe7c-4b9b-84e7-e34e14097e76",
+    "name": "Abdominal Lateral em Pé",
+    "description": "Em pé com halter em uma mão, incline o tronco lateralmente descendo o peso e retorne contraindo o oblíquo do lado oposto.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Halter",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "376fa4bd-4e50-4afd-a8c5-f17b6680926f",
+    "name": "Abdominal Lateral Sentado",
+    "description": "Sentado no chão com pernas estendidas, incline o tronco lateralmente tentando tocar o pé com a mão do mesmo lado.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "c95e5fb4-81c9-4af0-a5af-4379516e70bf",
+    "name": "Abdominal na Polia",
+    "description": "Ajoelhe-se de frente para a polia alta segurando a corda atrás da cabeça. Flexione o tronco para baixo contraindo o abdômen. Retorne controladamente.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Máquina de polia com corda",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "f471f84d-895b-4367-bdd4-14cecf49aa46",
+    "name": "Abdominal no GHD",
+    "description": "Sente-se no GHD com os pés presos. Incline o tronco para trás até ficar paralelo ao chão e suba contraindo o abdômen.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "GHD (Glute-Ham Developer)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "77aaa94e-d348-4ebb-9731-9eabdf70a27b",
+    "name": "Abdominal Oblíquo em Pé",
+    "description": "Em pé, segure um halter em uma mão. Incline lateralmente o tronco descendo o halter pela lateral da coxa e retorne contraindo o oblíquo oposto.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Halter",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "e14fd7ca-4d3e-4312-8363-0c3e30780d08",
+    "name": "Abdominal Roda (Ab Wheel)",
+    "description": "Ajoelhe-se segurando a roda no chão. Role para frente estendendo o corpo e retorne à posição inicial usando a força do abdômen. Não deixe o quadril cair.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Roda abdominal (ab wheel)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "1b187b34-d999-4601-b988-57df0d653834",
+    "name": "Abdominal Sapo",
+    "description": "Deite-se com plantas dos pés unidas e joelhos abertos (posição de sapo). Realize crunches mantendo essa posição de pernas.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "f5030abd-75d2-4632-bab9-28b7ed1178f7",
+    "name": "Abdominal Supra (Crunch)",
+    "description": "Deite-se com joelhos flexionados. Eleve o tronco superior do chão contraindo a parte alta do abdômen. Desça controladamente.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "8bce9f60-18de-4998-98de-fec0add4e593",
+    "name": "Abre e Fecha Sentado",
+    "description": "Sentado com tronco ligeiramente inclinado para trás, traga os joelhos ao peito e depois estenda as pernas à frente sem tocar o chão.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "c1ab0836-e107-45f7-a013-52571655f135",
+    "name": "Burpees",
+    "description": "Em pé, agache e coloque as mãos no chão. Salte os pés para trás em posição de prancha, faça uma flexão, salte os pés de volta e salte verticalmente com braços acima.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "f6ea8396-35eb-4064-85e9-a6d00d55e0c4",
+    "name": "Deslizamento Corporal",
+    "description": "Em posição de prancha com os pés nos sliders, deslize o corpo para frente e para trás mantendo o core ativado.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Sliders ou toalhas em piso liso",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "79bbc03a-45fe-4247-9fc8-7495669721e3",
+    "name": "Deslizamento Lateral",
+    "description": "Em posição de prancha, deslize lateralmente mantendo o corpo alinhado e o abdômen contraído.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Sliders ou toalhas em piso liso",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "dd342aaa-2ae2-44b1-bd08-69c7859ce204",
+    "name": "Dragon Flag",
+    "description": "Deite-se no banco segurando a borda atrás da cabeça. Eleve o corpo inteiro mantendo-o reto como uma prancha e desça controladamente.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Banco reto",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "32d98972-160e-4b80-8192-a51a1b3ac348",
+    "name": "Elevação de Pernas Deitado",
+    "description": "Deite-se com as mãos sob o quadril. Eleve as pernas estendidas até 90° e desça controladamente sem encostar no chão.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "5578e480-fe3a-426b-a75c-ba17ad81699a",
+    "name": "Elevação de Pernas na Cadeira",
+    "description": "Apoie os antebraços nos suportes e eleve as pernas estendidas à frente até a altura do quadril. Desça controladamente.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Cadeira capitão (captain's chair)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "b8df9db5-a396-47d6-91ba-83871aa497a9",
+    "name": "Elevação de Pernas Progressiva",
+    "description": "Deite-se e eleve as pernas em ângulos progressivamente maiores (30°, 60°, 90°), segurando brevemente em cada posição.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "f8fcc9c6-f706-4875-a836-5b279ec11e5c",
+    "name": "Elevação Lateral de Perna",
+    "description": "Deite-se de lado e eleve a perna de cima mantendo-a reta. Desça controladamente sem encostar na outra perna.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "0a1f0cb4-4cab-4c9d-9aa4-4c88ed3960ef",
+    "name": "Front Lever Suspenso",
+    "description": "Pendure-se e eleve o corpo até ficar paralelo ao chão mantendo a posição isométrica. Exercício avançado de calistenia.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Barra fixa",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "21ef063d-9e95-4ace-b8d3-a72953ef37f1",
+    "name": "Inchworm",
+    "description": "Em pé, incline-se e caminhe com as mãos no chão até a posição de prancha. Depois caminhe com os pés de volta às mãos e levante-se.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "0663032c-2b0d-4f9d-829d-462fb22b2f74",
+    "name": "Joelho ao Peito Suspenso",
+    "description": "Pendure-se na barra e traga os joelhos em direção ao peito flexionando o quadril. Retorne controladamente sem balançar.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Barra fixa",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "52afbd4c-cb90-463d-8a1b-57cba3a6dfd8",
+    "name": "Kettlebell Swing",
+    "description": "Em pé com pés afastados, segure o kettlebell com ambas as mãos. Balanceie-o entre as pernas e projete-o à frente até a altura dos ombros usando a força do quadril.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Kettlebell",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "74ed0860-9849-400e-a74b-2ac6601793b4",
+    "name": "Mountain Climber",
+    "description": "Em posição de prancha alta, traga alternadamente cada joelho ao peito em ritmo acelerado, como se estivesse correndo no lugar.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "c553c816-2d88-42b8-a5c9-832350b5a313",
+    "name": "Oblíquo Alternado",
+    "description": "Deite-se com joelhos flexionados. Realize crunches direcionando cada cotovelo ao joelho oposto, alternando os lados.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "5d425625-0a5d-477c-b0d0-8b2a3d4ae6fb",
+    "name": "Oblíquo com Joelho ao Peito",
+    "description": "Deite-se e traga um joelho ao peito enquanto gira o tronco levando o cotovelo oposto em direção ao joelho.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "348c9a56-0c3b-44d0-b9bc-1d3bc8b11172",
+    "name": "Prancha Abdominal (Plank)",
+    "description": "Apoie-se nos antebraços e pontas dos pés, mantenha o corpo reto como uma tábua. Contraia abdômen e glúteos. Segure a posição pelo tempo determinado.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "d4438773-4ef2-4ce1-a48d-c0a8e01435ec",
+    "name": "Prancha com Elevação de Perna",
+    "description": "Em posição de prancha, eleve uma perna de cada vez mantendo o corpo alinhado e o core contraído.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "80f46c06-9cc4-4306-bc06-3d069522c155",
+    "name": "Prancha com Joelho ao Cotovelo",
+    "description": "Em posição de prancha alta, traga o joelho ao cotovelo do mesmo lado ou oposto, alternando.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "1a7fb804-c8ab-4dbc-8cf4-04e981d066e0",
+    "name": "Prancha com Toque no Ombro",
+    "description": "Em posição de prancha alta, toque o ombro oposto com a mão alternando os lados, mantendo o quadril estável sem girar.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "24d8ac39-5e62-455b-adf5-6877d74cdb31",
+    "name": "Prancha Homem-Aranha",
+    "description": "Em posição de prancha, traga o joelho lateralmente em direção ao cotovelo do mesmo lado, simulando uma escalada.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "07811ba2-e9ae-41ae-bd28-c85e4bbf1c2b",
+    "name": "Prancha Lateral",
+    "description": "Apoie-se em um antebraço e lateral do pé, mantenha o corpo reto com quadril elevado. Segure a posição e repita do outro lado.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "abbb56b3-74ff-41d0-a642-8f2c2c387e19",
+    "name": "Prancha Lateral com Elevação",
+    "description": "Em prancha lateral apoiado em um antebraço, eleve a perna de cima e segure brevemente. Mantenha o quadril elevado.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "2fd336bc-00af-45e9-8dac-38476d7b8d31",
+    "name": "Prancha Reversa com Elevação de Perna",
+    "description": "Em prancha reversa (barriga para cima, mãos e calcanhares no chão), eleve uma perna de cada vez mantendo o quadril elevado.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "b866ef89-e23c-4b38-8f84-84a2cb443aa6",
+    "name": "Serrátil em Pé no Cabo",
+    "description": "Em pé, de costas para a polia alta, segure a corda e empurre para baixo e à frente estendendo os braços, focando na contração do serrátil.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Máquina de polia",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "3d5e7a34-d810-464d-bc1a-47c6311e14d6",
+    "name": "Serrátil Unilateral no Cabo",
+    "description": "Igual ao serrátil no cabo, mas execute com um braço de cada vez para isolar cada lado.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Máquina de polia",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "4cd55de8-ef98-4e1c-9e86-7af51c7e318d",
+    "name": "Tesoura",
+    "description": "Deite-se com as pernas levemente elevadas. Cruze as pernas alternando por cima e por baixo em movimento de tesoura mantendo abdômen contraído.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "41bd29db-dfe1-49ee-8b27-75d53d7ef403",
+    "name": "Torção Russa",
+    "description": "Sente-se com joelhos flexionados e pés no chão, tronco inclinado para trás. Gire o tronco de um lado ao outro segurando o peso.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete (opcional: halter ou anilha)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "332a8faf-c561-440a-a5ea-43f12f6484d6",
+    "name": "Torção Russa com Pernas Elevadas",
+    "description": "Igual à Torção Russa, porém com os pés elevados do chão, aumentando a exigência do core.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Colchonete (opcional: halter ou anilha)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "c270e17b-4f7d-4cc5-a14c-2f204aa3d8fa",
+    "name": "Wall Ball",
+    "description": "Em pé de frente para a parede, agache segurando a medicine ball ao peito. Ao subir, arremesse a bola acima em um alvo na parede. Receba e repita.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Medicine ball + parede",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "2c2eab85-2712-4bf2-8c5f-50678799b24a",
+    "name": "Windmill",
+    "description": "Em pé com o peso erguido acima da cabeça com um braço, incline o tronco lateralmente deslizando a mão livre pela perna oposta, olhando sempre para o peso.",
+    "muscleGroup": "ABDOMEN",
+    "equipment": "Kettlebell ou halter",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "20644544-5c3f-42fb-9f17-7bb78e4c6aff",
+    "name": "Abdução de Quadril com Caneleira",
+    "description": "Em pé ou deitado de lado, eleve a perna lateralmente contra a resistência da caneleira. Mantenha o tronco estável e desça controladamente.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Caneleira",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "fd2e9ad0-9c73-4f5c-b6b5-cc59dde1788c",
+    "name": "Abdução e Adução no Chão",
+    "description": "Deite-se de lado. Na abdução, eleve a perna de cima. Na adução, eleve a perna de baixo. Realize ambos os movimentos com controle.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Colchonete + caneleira (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "407c8e80-5fe3-4eb0-a12c-7336a4951c73",
+    "name": "Afundo Reverso com Ênfase no Glúteo",
+    "description": "Dê um passo largo para trás, desça o joelho de trás em direção ao chão. Incline levemente o tronco à frente para maior ativação do glúteo.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Halteres (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "288451f2-234f-41ba-982d-a967eada4886",
+    "name": "Agachamento com Elástico",
+    "description": "Coloque o elástico acima dos joelhos e realize agachamento normal mantendo tensão lateral no elástico.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Mini band + halter (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "b8b568d6-f075-4ab3-a15b-1e28f4dafe55",
+    "name": "Agachamento Sumô com Ênfase no Glúteo",
+    "description": "Pés bem afastados e apontando para fora. Agache profundamente segurando o peso entre as pernas, focando em empurrar o quadril para trás e contrair os glúteos ao subir.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Halter ou kettlebell",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "46352467-2e13-4b82-bef4-9bf30f1cc3df",
+    "name": "Cadeira Abdutora",
+    "description": "Sentado na máquina com joelhos no apoio, empurre as pernas para fora abrindo contra a resistência. Retorne controladamente.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Máquina cadeira abdutora",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "2d0229ef-8ab8-43b3-9070-fcd778542d65",
+    "name": "Cadeira Abdutora com Quadril Elevado",
+    "description": "Na cadeira abdutora, eleve levemente o quadril do banco antes de executar a abertura. Aumenta o recrutamento do glúteo médio.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Máquina",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "5c39d8b7-5cc3-47a2-ba3e-12652785e07e",
+    "name": "Cadeira Adutora",
+    "description": "Sentado na máquina com joelhos no apoio externo, feche as pernas para dentro contra a resistência. Retorne controladamente.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Máquina cadeira adutora",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "883171a5-4efd-4a01-8305-6f495f66a507",
+    "name": "Clamshell (Concha)",
+    "description": "Deite-se de lado com joelhos flexionados e pés juntos. Abra o joelho de cima como uma concha, mantendo os pés unidos. Retorne controladamente.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Mini band (opcional) + colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "8328a0e9-bac9-462c-a997-32b56aef9689",
+    "name": "Elevação de Quadril com Elástico",
+    "description": "Coloque o elástico acima dos joelhos e realize a ponte de glúteo mantendo tensão no elástico durante todo o movimento.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Mini band (elástico) + colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "299a0ec0-6de2-4442-b2a6-05b3fef14755",
+    "name": "Elevação Pélvica com Barra",
+    "description": "Deite-se com a barra sobre o quadril, joelhos flexionados e pés no chão. Eleve o quadril contraindo os glúteos no topo. Desça controladamente.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Barra + anilhas + colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "a51afa1a-47ff-4392-9efd-e95dd0429558",
+    "name": "Elevação Pélvica Máquina",
+    "description": "Posicione-se na máquina de elevação pélvica com as costas apoiadas. Eleve o quadril contraindo glúteos no topo e desça com controle.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Maquina de elevação pélvica",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "cc24a443-e0a2-4b8b-9767-8d841fa17fe5",
+    "name": "Extensão de Quadril na Máquina",
+    "description": "Posicione-se na máquina e empurre a plataforma para trás estendendo o quadril. Retorne controladamente.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Máquina de extensão de quadril",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "607fb9b3-a411-440f-9bc4-68cb4d4afb0e",
+    "name": "Fire Hydrant",
+    "description": "Em quatro apoios, eleve o joelho lateralmente mantendo-o flexionado a 90°. Retorne controladamente.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Colchonete + caneleira (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "fe1fcc9f-0dec-4b0e-bd8a-2370fd886f51",
+    "name": "Glúteo Cabo (Coice)",
+    "description": "Em pé de frente para a polia, prenda a caneleira no tornozelo e empurre a perna para trás estendendo o quadril. Retorne controladamente.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Máquina de polia baixa + caneleira de cabo",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "6c061d71-9f30-422e-a3d2-e95b989b1b55",
+    "name": "Glúteo Máquina",
+    "description": "Posicione-se na máquina conforme indicado, empurre a plataforma para trás estendendo o quadril e contraindo o glúteo. Retorne controladamente.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Máquina de glúteo",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "a9a0848a-5f18-4b79-9f77-910d4bd7759c",
+    "name": "Good Morning (Bom Dia)",
+    "description": "Com a barra apoiada na parte superior das costas, incline o tronco à frente flexionando o quadril. Mantenha joelhos levemente flexionados e costas retas. Retorne à posição ereta.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Barra",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "af840b55-3388-403e-97d1-e9797dc267a7",
+    "name": "Hiperextensão Lombar (Foco Glúteo)",
+    "description": "Posicione-se no banco com o quadril na borda. Desça o tronco e suba focando a contração nos glúteos ao invés da lombar. Mantenha leve arredondamento torácico.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Banco de hiperextensão (romano 45°)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "ccecdf49-15f4-43a0-8456-24bfe5b44fb7",
+    "name": "Hip Thrust com Barra",
+    "description": "Sente-se no chão com as costas apoiadas no banco e a barra sobre o quadril. Empurre o quadril para cima até o tronco ficar paralelo ao chão. Desça controladamente.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Barra + banco reto + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "0d5fbe3c-a0d1-49a5-9b77-bac1ca1e7dc7",
+    "name": "Hip Thrust Unilateral",
+    "description": "Posicione-se como no hip thrust, mas com apenas um pé no chão e a outra perna estendida ou elevada. Empurre o quadril para cima.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Banco reto + halter (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "5e684826-672e-482e-9e9b-3b072f1a9da1",
+    "name": "Ponte de Glúteo no Chão",
+    "description": "Deite-se com joelhos flexionados e pés no chão. Eleve o quadril contraindo os glúteos no topo e desça controladamente.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "d4d2f255-2a67-468e-af01-f66c53caeca2",
+    "name": "Ponte de Glúteo Unilateral",
+    "description": "Deite-se com um joelho flexionado e a outra perna estendida. Eleve o quadril usando apenas a perna apoiada no chão. Troque de lado.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "bd70c181-b019-4f73-8862-10f2b523f236",
+    "name": "Romanian Deadlift Unilateral",
+    "description": "Em pé sobre uma perna, incline o tronco à frente estendendo a perna livre para trás. Desça o peso ao longo da perna de apoio e retorne.",
+    "muscleGroup": "GLUTEOS",
+    "equipment": "Halter ou kettlebell",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "a07cb4cd-748e-4ebf-87a3-992959784530",
+    "name": "Abertura de Quadril Borboleta Sentado",
+    "description": "Sente-se com as plantas dos pés juntas e joelhos abertos para os lados. Segure os pés com as mãos e pressione levemente os joelhos em direção ao chão. Segure de 30 a 60 segundos.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "7105287f-79f3-4342-930c-48a4eff6cd69",
+    "name": "Agachamento com Salto",
+    "description": "Realize um agachamento e, ao subir, salte explosivamente. Aterrisse suavemente com joelhos flexionados e repita.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "e84161e1-2e98-4013-ad9d-b6f4d7d373cb",
+    "name": "Agachamento + Press",
+    "description": "Agache segurando os pesos aos ombros e, ao subir, empurre-os acima da cabeça em um movimento fluido.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Halteres ou kettlebells",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "18cd9e03-be73-436f-89e7-5830afb9bd36",
+    "name": "Alongamento de Adutores Sentado (Borboleta Avançada)",
+    "description": "Sentado com as plantas dos pés unidas, segure os pés e incline o tronco para frente mantendo as costas retas. Aumente o alcance progressivamente. Segure de 30 a 60 segundos.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "79d1c11a-2351-46f6-bc02-36e9456ad920",
+    "name": "Alongamento de Bíceps na Parede",
+    "description": "Apoie a palma da mão na parede com os dedos apontados para baixo e o braço estendido. Gire o corpo para o lado oposto até sentir o alongamento no bíceps e ombro. Segure de 20 a 30 segundos.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Parede",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "c329f98c-38e8-487f-8f44-db2cb507642b",
+    "name": "Alongamento de Coluna em Gato e Vaca",
+    "description": "Em quatro apoios, alterne entre arqueamento e arredondamento da coluna no ritmo da respiração. Inspire ao arquear as costas (vaca) e expire ao arredondar (gato). Realize de 8 a 10 repetições lentas.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "87c5051a-bb92-4cfc-ab84-9d67474a4608",
+    "name": "Alongamento de Flexores do Quadril em Pé",
+    "description": "Em pé, dê um passo longo à frente. Abaixe o quadril em direção ao chão e contraia o glúteo da perna de trás para aprofundar o alongamento. Segure de 20 a 30 segundos e troque o lado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "404a44e3-3622-4672-8ad6-68ba986a7c55",
+    "name": "Alongamento de Glúteos Deitado (Figura 4)",
+    "description": "Deite-se com os joelhos dobrados. Cruze um tornozelo sobre o joelho oposto formando um número 4. Traga ambas as pernas ao peito até sentir o alongamento no glúteo. Segure de 20 a 30 segundos.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "1522633c-b046-4c1a-8b5a-df0d5dc05499",
+    "name": "Alongamento de Iliopsoas (Fundo com Joelho no Chão)",
+    "description": "Apoie um joelho no chão e o outro pé à frente em 90°. Empurre o quadril para frente e para baixo sentindo o alongamento na frente do quadril da perna de trás. Segure de 30 a 60 segundos por lado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "800bd83e-8fde-401e-b1c2-fd35d5596edf",
+    "name": "Alongamento de Isquiotibiais em Pé",
+    "description": "Em pé, estenda uma perna à frente com o calcanhar no chão e incline levemente o tronco para frente mantendo as costas retas. Segure de 20 a 30 segundos e troque o lado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "060c7ddf-cecc-4833-95ba-a5dc815d1a45",
+    "name": "Alongamento de Lombar Deitado (Joelhos ao Peito)",
+    "description": "Deite-se de costas e abrace ambos os joelhos ao peito. Pressione suavemente as pernas contra o tronco para sentir o alongamento na lombar. Segure de 30 a 60 segundos respirando profundamente.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "10c6cba8-9b01-4527-879d-52531b036e06",
+    "name": "Alongamento de Ombro Cruzado",
+    "description": "Leve um braço estendido horizontalmente na frente do peito. Com o braço oposto, pressione levemente o cotovelo em direção ao tronco. Segure de 20 a 30 segundos e troque o lado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "ed6823d5-87ab-4a56-8fd2-4515f1582cf5",
+    "name": "Alongamento de Panturrilha na Parede",
+    "description": "Apoie as mãos na parede e estenda uma perna para trás com o calcanhar no chão. Incline o corpo levemente à frente sentindo o alongamento na panturrilha. Segure de 20 a 30 segundos e troque.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Parede",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "252a1d01-ae42-4926-8641-fdb73a68493c",
+    "name": "Alongamento de Peitoral na Parede",
+    "description": "Apoie o antebraço na parede com o cotovelo a 90°. Gire o tronco para o lado oposto até sentir o alongamento no peitoral e ombro. Segure de 20 a 30 segundos e troque o lado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Parede",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "59632b5a-58cf-4a8e-b84f-4ef718a76cf0",
+    "name": "Alongamento de Quadríceps em Pé",
+    "description": "Em pé, dobre um joelho levando o calcanhar ao glúteo e segure o pé com a mão do mesmo lado. Mantenha o joelho apontado para baixo e o tronco ereto. Segure de 20 a 30 segundos.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "36e1b840-7f43-47f7-a3e6-a7589331ce96",
+    "name": "Alongamento de Trapézio com Auxílio da Mão",
+    "description": "Sentado ou em pé, incline a cabeça para o lado e coloque a mão do mesmo lado sobre a cabeça aplicando leve pressão. Segure de 20 a 30 segundos sentindo o alongamento no trapézio e pescoço. Troque o lado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "dc38864d-82e9-4d7f-a85b-cdf47bf19843",
+    "name": "Alongamento de Tríceps Acima da Cabeça",
+    "description": "Eleve um braço acima da cabeça e dobre o cotovelo levando a mão às costas. Com a mão oposta, pressione levemente o cotovelo para baixo. Segure de 20 a 30 segundos e troque o lado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "80d21422-7a01-4562-a0ea-c8384a146ab5",
+    "name": "Alongamento do Nervo Ciático Deitado",
+    "description": "Deite-se de costas e eleve uma perna estendida segurando a parte posterior da coxa. Estenda e flexione o joelho lentamente até sentir o alongamento ao longo da parte posterior da perna. Realize de 10 a 12 repetições por lado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "35ec1189-5cff-4638-b484-75cd12f4ffb6",
+    "name": "Alongamento do Pescoço com Rotação",
+    "description": "Em pé ou sentado, gire lentamente a cabeça de um lado ao outro, parando no ponto de maior tensão. Segure de 10 a 15 segundos de cada lado sem forçar o movimento.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "4bbf47a8-2975-4cd5-babf-fe2ce45c5d25",
+    "name": "Alongamento do Pescoço Lateral",
+    "description": "Em pé ou sentado, incline a cabeça lateralmente levando a orelha em direção ao ombro. Mantenha o ombro do lado oposto abaixado. Segure de 20 a 30 segundos e repita para o outro lado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "e4c35915-8eb2-45fa-991e-4344321c089b",
+    "name": "Alongamento do Piriforme (Pombo no Chão)",
+    "description": "Deite-se de costas, cruze uma perna com o joelho dobrado sobre a coxa da outra perna. Traga as pernas ao peito até sentir o alongamento profundo no glúteo e piriforme. Segure de 30 a 60 segundos por lado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "9542bd5b-e23d-4327-a239-2185ace73985",
+    "name": "Alongamento Lateral de Tronco",
+    "description": "Em pé com os pés na largura dos ombros, eleve um braço acima da cabeça e incline o tronco para o lado oposto. Segure de 20 a 30 segundos e repita para o outro lado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "ALONGAMENTO"
+  },
+  {
+    "id": "2ad9ff70-7253-461c-b8fa-58d2649ca78f",
+    "name": "Battle Rope",
+    "description": "Segure uma ponta da corda em cada mão e realize ondulações alternadas ou simultâneas com intensidade. Mantenha joelhos levemente flexionados.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Cordas de batalha (battle ropes)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "88af24ba-ab14-44dc-9e09-f119a2570795",
+    "name": "Bear Crawl",
+    "description": "Em quatro apoios com joelhos fora do chão, caminhe para frente movendo mão e pé opostos simultaneamente. Mantenha o quadril baixo.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "10c3b43a-e6e0-4a3f-b646-8c43671c522b",
+    "name": "Bicicleta Ergométrica",
+    "description": "Ajuste o banco para que o joelho fique levemente flexionado na posição mais baixa do pedal. Pedale mantendo ritmo constante.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Bicicleta ergométrica",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "7a04b55e-a63c-414d-b4fb-68ffc39b7969",
+    "name": "Bird Dog",
+    "description": "Em quatro apoios, estenda simultaneamente o braço direito à frente e a perna esquerda para trás. Segure 2 segundos. Alterne mantendo o core estável.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "19189729-ef8f-4059-9dbb-fee6fef8b4c4",
+    "name": "Box Jump",
+    "description": "Em frente ao caixote, salte com ambos os pés aterrissando em cima da plataforma com joelhos flexionados. Desça e repita.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Caixote (plyo box)",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "726d363d-f88f-49f5-a9ff-e0d9da5efcf1",
+    "name": "Burpee com Chute",
+    "description": "Realize o burpee e adicione um chute frontal ao levantar antes de saltar. Trabalha coordenação e potência.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "bd5327cc-3b41-4769-8f28-2d92b19767fd",
+    "name": "Burpee com Pull-up",
+    "description": "Realize um burpee sob a barra fixa e, ao saltar, agarre a barra e execute uma barra fixa (pull-up).",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Barra fixa",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "0c5fd1e6-fc74-4da6-bcec-4c5df5c4333f",
+    "name": "Clean and Jerk",
+    "description": "Puxe a barra do chão ao ombro (clean) recebendo em agachamento, depois empurre acima da cabeça (jerk) com impulso das pernas. Movimento olímpico complexo.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Barra + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "ade3f504-4e3d-4d63-836d-67fbfd791ea3",
+    "name": "Cluster",
+    "description": "Combinação de clean (arremesso ao ombro) + thruster (agachamento frontal + press) em sequência fluida. Movimento potente de corpo todo.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Barra + anilhas",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "dd7106dd-6782-4091-b971-529eb38c386d",
+    "name": "Corrida Estacionária",
+    "description": "Corra no lugar elevando os joelhos, mantendo ritmo constante e braços acompanhando o movimento.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "ab6d4172-5837-4edd-9e0f-e99d4a2a83fc",
+    "name": "Corrida na Esteira",
+    "description": "Ajuste velocidade e inclinação conforme seu nível. Mantenha postura ereta, olhar à frente e passadas naturais. Comece devagar para aquecer.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Esteira",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "b882bf56-9dee-4582-a979-ea106d8e40a0",
+    "name": "Corrida tocando o calcanhar na palma da mão",
+    "description": "Corrida no lugar trazendo o calcanhar até a palma da mão estendida atrás do corpo. Ativa isquiotibiais e melhora coordenação.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Sem Equipamento",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "fce5b8d4-aeb8-48ab-a13e-d03253881b65",
+    "name": "Deadlift + Row",
+    "description": "Realize um levantamento terra e, na posição inclinada com barra nos joelhos, execute uma remada antes de completar o levantamento.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Barra + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "edbc6d75-19dc-4cc6-9721-7e4c12da28d1",
+    "name": "Elíptico",
+    "description": "Posicione os pés nas plataformas e segure as alças. Realize movimento elíptico contínuo coordenando braços e pernas. Ajuste resistência conforme necessário.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Elíptico (transport)",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "87707d71-b042-4921-bba1-f67e0f4046ea",
+    "name": "Escada",
+    "description": "Suba os degraus em ritmo constante sem se apoiar excessivamente nos corrimãos. Mantenha postura ereta.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Máquina de escada (stepper)",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "5c437c2e-8a05-40f1-b470-ba63570f9302",
+    "name": "Farmer's Walk",
+    "description": "Segure pesos pesados em cada mão e caminhe mantendo postura ereta, ombros para trás e core ativado por distância ou tempo.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Halteres pesados ou farmer's walk handles",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "cfbda2b2-2205-4477-b9a0-9f1529ed02ee",
+    "name": "Farmer's Walk Unilateral",
+    "description": "Segure peso em apenas uma mão e caminhe mantendo o tronco reto sem inclinar para o lado. Trabalha core e estabilidade.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Halter ou kettlebell pesado",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "353c32d6-1cf6-49f2-9603-c5f0df66449f",
+    "name": "High Knees (Joelho Alto)",
+    "description": "Corra no lugar elevando os joelhos acima da linha do quadril em ritmo acelerado. Braços acompanham o movimento.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "f93aae4d-7394-416e-bdbc-85bc9bd4ebc6",
+    "name": "Jab Cruzado",
+    "description": "Em posição de guarda, execute jabs retos e cruzados alternados com velocidade. Trabalha ombros, core e cardio.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Luvas (opcional)",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "c6cc5390-e605-4501-8bf6-bc769f80efac",
+    "name": "Jumping Jack",
+    "description": "Em pé, salte abrindo pernas e braços simultaneamente e retorne à posição inicial. Mantenha ritmo constante.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "4f6a3a4b-73d7-4435-aa03-809cacddd2cf",
+    "name": "Kettlebell Complex",
+    "description": "Sequência de movimentos com kettlebell sem soltar (ex: swing + clean + press + squat). Defina a sequência antes de iniciar e mantenha o ritmo.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Kettlebell",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "ef96b25a-da81-4a0c-b6f4-59725288b832",
+    "name": "Levantamento Terra",
+    "description": "Com pés na largura dos ombros, segure a barra com costas retas. Empurre o chão com os pés, estenda quadris e joelhos até ficar ereto. Desça controladamente.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Barra + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "f757938d-4e33-4141-8657-f3f92344d000",
+    "name": "Mobilidade de Coluna com Rolo de Espuma",
+    "description": "Posicione o rolo de espuma na coluna torácica e apoie as mãos atrás da cabeça. Role lentamente da lombar até os ombros pausando nos pontos de maior tensão. Realize por 1 a 2 minutos.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Rolo de espuma (foam roller)",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "8667393e-6e2b-4f7f-bead-989755198e6c",
+    "name": "Mobilidade de Coluna Sentado com Rotação",
+    "description": "Sentado com os pés no chão, gire o tronco lentamente para um lado levando as mãos junto ao corpo. Segure por 2 a 3 segundos no ponto máximo e retorne. Realize de 10 repetições para cada lado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Cadeira ou colchonete",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "86f1e525-b035-4c2b-8a6e-cd80bb060fd7",
+    "name": "Mobilidade de Joelho com Agachamento Profundo",
+    "description": "Agache fundo mantendo os calcanhares no chão e segure a posição por 30 a 60 segundos. Use as mãos para pressionar os joelhos para fora suavemente. Trabalha mobilidade de quadril, joelho e tornozelo simultaneamente.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "5c2e7e9d-434f-495d-b3d5-02432937b870",
+    "name": "Mobilidade de Ombro com Bastão",
+    "description": "Segure o bastão com as duas mãos atrás das costas e eleve-o lentamente afastando os braços do tronco. Realize movimentos circulares suaves para trabalhar a mobilidade do ombro. Execute de 10 a 15 repetições.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Bastão ou cabo de vassoura",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "213c35f6-ebbc-4bc1-a448-26020e3813f1",
+    "name": "Mobilidade de Quadril com Abertura em Pé (Fire Hydrant)",
+    "description": "Em quatro apoios, eleve um joelho dobrado para o lado como se fosse um cachorro numa hidrante. Leve o joelho o mais alto possível mantendo o quadril estável. Realize de 12 a 15 repetições por lado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "dfecf82a-6bc6-42c1-94da-b63aed4fc6b2",
+    "name": "Mobilidade de Quadril com Chute Frontal",
+    "description": "Em pé apoiado em uma parede com uma mão, balance a perna oposta para frente e para trás em movimentos controlados e progressivamente mais amplos. Realize de 10 a 15 balanços por perna.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "e4b3a149-68e0-4e73-b5ee-ed6172b84a32",
+    "name": "Mobilidade de Quadril com Chute Lateral",
+    "description": "Em pé apoiado em uma parede com uma mão, balance a perna oposta para o lado em movimentos controlados e progressivamente mais amplos. Realize de 10 a 15 balanços por perna.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "406d8b08-15b5-438f-a1fe-ee3ea4d94d75",
+    "name": "Mobilidade de Quadril em 90/90",
+    "description": "Sente-se no chão com ambas as pernas dobradas a 90°, uma à frente e uma ao lado. Alterne lentamente a posição das pernas passando de um lado ao outro. Realize de 8 a 10 repetições por lado mantendo o tronco ereto.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "d023fd4a-403d-43d0-b4f3-bae020182646",
+    "name": "Mobilidade de Quadril (World Greatest Stretch)",
+    "description": "Dê um passo largo à frente em posição de avanço. Apoie a mão do mesmo lado no chão e gire o tronco abrindo o cotovelo para o teto. Mantenha por 2 a 3 segundos e alterne os lados.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "88f7a998-26f1-41c1-901c-07f08a428fa7",
+    "name": "Mobilidade de Tornozelo com Apoio",
+    "description": "Em pé de frente para uma parede, posicione um pé próximo a ela e projete o joelho em direção à parede sem tirar o calcanhar do chão. Realize movimentos lentos e controlados de 10 a 15 repetições por lado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Parede ou cadeira",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "ac549d6b-90a3-4c8f-aa31-65d80680eda7",
+    "name": "Mobilidade de Tornozelo com Círculos",
+    "description": "Sentado ou deitado, eleve uma perna e gire o pé em círculos amplos no sentido horário e depois anti-horário. Realize de 10 a 15 círculos em cada direção por pé.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "29305749-d481-4dce-b8fe-b012d8176f34",
+    "name": "Mobilidade Torácica com Foam Roller",
+    "description": "Posicione o foam roller sob a região torácica e apoie as mãos atrás da cabeça. Estenda suavemente a coluna sobre o rolo, segmentando pelas diferentes vértebras. Realize de 5 a 8 extensões por segmento.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Foam Roller",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "82d96768-e860-406b-a94b-f88958dbca42",
+    "name": "Monster Walk",
+    "description": "Coloque o elástico nos tornozelos ou acima dos joelhos e caminhe para frente com passos largos mantendo tensão constante no elástico.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Mini band (elástico)",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "0276e651-3e8e-4db6-9b04-44598209615e",
+    "name": "Muscle Clean",
+    "description": "Puxe o peso do chão aos ombros usando apenas força muscular dos braços e ombros, sem agachar para receber a barra.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Barra ou halteres",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "b398cd6a-ef8c-481d-b5bd-bde40e789193",
+    "name": "Polichinelo",
+    "description": "Salte abrindo braços e pernas simultaneamente acima da cabeça e retorne à posição inicial. Mantenha ritmo constante.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "d1f0382f-a3cd-418b-b4a1-91b1aa01341a",
+    "name": "Power Clean",
+    "description": "Puxe a barra do chão e receba-a nos ombros em posição de meio agachamento. Movimento explosivo que exige técnica de puxada e recepção.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Barra + anilhas",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "11fa4a4f-fba0-449d-a3b2-d9e150e98ed7",
+    "name": "Power Clean e Jerk Unilateral",
+    "description": "Realize o power clean com um braço e, em seguida, execute o jerk empurrando o peso acima da cabeça com impulso das pernas.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Halter ou kettlebell",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "1334612d-7c81-43e3-a6e3-7665ebd49059",
+    "name": "Power Clean Thruster",
+    "description": "Realize o power clean e, sem pausa, execute um thruster (agachamento + press) em sequência fluida e contínua.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Barra + anilhas",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "0497aafe-aa7e-42f1-8cdb-54475c1d9906",
+    "name": "Power Clean Unilateral",
+    "description": "Realize o power clean com um braço de cada vez, puxando o peso do chão ao ombro de forma explosiva.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Halter ou kettlebell",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "049ffc4b-80cb-4d06-bdb2-5671949264a3",
+    "name": "Prancha de Equilíbrio",
+    "description": "Fique em pé na prancha de equilíbrio mantendo estabilidade. Pode ser combinado com agachamentos ou outros exercícios para aumentar o desafio.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Balance board (prancha de equilíbrio)",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "eae2e78f-2492-49d6-8668-7ea9aa7401a5",
+    "name": "Pular Corda",
+    "description": "Gire a corda pelos punhos, salte com ambos os pés apenas o suficiente para a corda passar. Mantenha cotovelos próximos ao corpo.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Corda de pular",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "61189a13-b5ba-4743-95b7-f2a1f8e74153",
+    "name": "Rolamento de Fáscia na Panturrilha",
+    "description": "Sente-se no chão com o rolo sob as panturrilhas. Eleve o quadril e role lentamente da parte inferior ao superior da panturrilha pausando nos pontos de tensão. Execute por 30 a 60 segundos por perna.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Rolo de espuma (foam roller)",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "63eb7641-55f9-4f6a-8cc4-f69c0a771047",
+    "name": "Rolamento de Fáscia no Quadríceps",
+    "description": "Deite-se de bruços com o rolo sob a coxa. Apoie os antebraços no chão e role lentamente da parte superior ao inferior do quadríceps. Pause nos pontos de tensão. Execute por 30 a 60 segundos por perna.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Rolo de espuma (foam roller)",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "968b3b18-9d56-4f57-abbc-51dcb53fc70b",
+    "name": "Rolamento de Fáscia nos Glúteos",
+    "description": "Sente-se sobre o rolo posicionado sob um glúteo com a perna cruzada. Role lentamente pela região glútea pausando nos pontos de tensão. Execute por 30 a 60 segundos por lado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Rolo de espuma (foam roller)",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "ac3a9ffb-179c-4cd5-ad23-fb77964c824b",
+    "name": "Rotação de Quadril",
+    "description": "Em pé ou no chão, gire o quadril em círculos completos para melhorar mobilidade articular. Faça em ambas as direções.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "e9a4bc5e-94bd-4310-9bd2-d0e21e9e1ae2",
+    "name": "Rotação de Quadril Frente Ajoelhado",
+    "description": "Ajoelhado, gire o quadril para frente em movimentos circulares amplos trabalhando mobilidade da articulação do quadril.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "a5ca9244-e175-44f7-b295-9401e84de3b1",
+    "name": "Rotação de Quadril Trás Ajoelhado",
+    "description": "Ajoelhado, gire o quadril para trás em movimentos circulares. Complementa a rotação frontal para mobilidade completa.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "79d23bfa-9ea2-4b04-832e-970fc4bb359b",
+    "name": "Rotação Torácica em Quatro Apoios",
+    "description": "Em quatro apoios, coloque uma mão atrás da cabeça. Gire o cotovelo em direção ao teto abrindo ao máximo o tronco. Segure 2 segundos no ponto máximo e retorne. Realize de 10 a 12 repetições por lado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "835220f5-ce06-4958-97d0-e2309924b4af",
+    "name": "Rowing (Remador)",
+    "description": "Sente-se na máquina, segure a alça. Empurre com as pernas primeiro, incline o tronco para trás e puxe a alça ao abdômen. Retorne na ordem inversa.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Máquina de remo (rower)",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "9de8f302-ccff-4f9c-836d-c3466757c584",
+    "name": "Ski Erg",
+    "description": "Em pé, puxe as alças para baixo realizando movimento similar ao ski nórdico. Flexione levemente os joelhos e use o core.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Máquina Ski Erg",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "fbb87d42-d55b-4189-8934-10c01a9c662c",
+    "name": "Sled Pull",
+    "description": "Puxe o trenó em sua direção usando corda mão sobre mão, ou caminhe para trás puxando pelo arnês.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Trenó (sled) + corda ou arnês",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "8818dfe6-bfd3-46d2-a1f2-e3d6a240d2c2",
+    "name": "Sled Push",
+    "description": "Posicione-se atrás do trenó com braços estendidos e empurre caminhando ou correndo. Mantenha o corpo inclinado para frente.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Trenó (sled) + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "f503cd5d-bffb-4a33-99ad-fe09d043407f",
+    "name": "Snatch",
+    "description": "Puxe a barra do chão até acima da cabeça em um movimento contínuo, recebendo em agachamento com braços estendidos. Exige mobilidade e técnica avançada.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Barra + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "8828da07-c9e5-4568-a46c-a138e72d7eea",
+    "name": "Snatch e Jerk",
+    "description": "Realize o snatch (arranque) seguido de um jerk (arremesso) em sequência. Combina ambos os levantamentos olímpicos.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Barra + anilhas",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "0faf8bb2-acd3-44b2-a9ef-b5d64eae2515",
+    "name": "Snatch e Press Unilateral",
+    "description": "Realize o snatch com um braço e, na posição acima da cabeça, execute um press adicional antes de descer o peso.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Kettlebell ou halter",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "524fd170-1698-423e-aa09-a8e3c215e47a",
+    "name": "Snatch no Smith",
+    "description": "Realize o movimento de snatch guiado pela barra da máquina Smith. Boa opção para aprender a mecânica do movimento com segurança.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Máquina Smith",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "6b6261f5-f869-4c4f-bfdd-4bf09f181d7a",
+    "name": "Split Snatch",
+    "description": "Puxe o peso do chão e, ao recebê-lo acima da cabeça, caia em posição de avanço (split) em vez de agachamento. Estabilize antes de juntar os pés.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Barra ou halteres",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "1b06b174-1bc2-4d17-9ca4-dce978344f2a",
+    "name": "Sprints",
+    "description": "Corra na velocidade máxima por distâncias curtas (20-100m) com intervalos de descanso entre cada sprint.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Espaço aberto ou esteira",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "54392e22-58d9-4a03-87a8-288e691b1666",
+    "name": "Step",
+    "description": "Suba e desça do step alternando as pernas em ritmo constante. Pode adicionar movimentos de braços para intensificar.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Step (plataforma)",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "4506f444-26d7-4c79-8700-bca7d4594de1",
+    "name": "Swing Completo com Halter",
+    "description": "Segure o halter com ambas as mãos e realize o swing completo do chão até acima da cabeça (American swing) usando impulso do quadril.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Halter",
+    "level": "INICIANTE",
+    "type": "FUNCIONAL"
+  },
+  {
+    "id": "ed709aa5-0092-4616-8f4f-414bf42119ce",
+    "name": "Thruster com Barra",
+    "description": "Realize um agachamento frontal e, ao subir, use o impulso para empurrar a barra acima da cabeça em um desenvolvimento contínuo.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Barra + rack + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "487ad72d-37ef-47f3-ab0c-b1b52ad85ded",
+    "name": "Thruster com Halteres",
+    "description": "Segure halteres aos ombros, agache e, ao subir, empurre os pesos acima da cabeça em movimento contínuo.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Halteres",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "1ac6c4cd-d7c0-41ad-a532-1fe9e9406263",
+    "name": "Torção de Coluna Deitado",
+    "description": "Deite-se de costas com os braços abertos. Dobre um joelho e gire-o para o lado oposto ao chão enquanto mantém os ombros no chão. Segure de 20 a 30 segundos e repita para o outro lado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "MOBILIDADE"
+  },
+  {
+    "id": "f1b0815f-95c3-4b61-b7ed-f1adc2d6865f",
+    "name": "Turkish Get-up",
+    "description": "Deite-se segurando o peso com braço estendido. Levante-se passo a passo mantendo o peso acima da cabeça durante toda a transição. Retorne ao chão.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Kettlebell ou halter",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "6fd6a2b7-96df-4618-876a-08137d0b8397",
+    "name": "Extensão de Punho com Halter",
+    "description": "Com o antebraço apoiado na coxa e palma para baixo, estenda o punho levantando o halter e desça controladamente.",
+    "muscleGroup": "ANTEBRACO",
+    "equipment": "Halter",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "5160281d-71c4-4c37-a5e9-ada668e4e211",
+    "name": "Farmer's Walk (Pegada)",
+    "description": "Segure pesos pesados em cada mão e caminhe focando em manter a pegada firme pelo máximo de tempo ou distância possível.",
+    "muscleGroup": "ANTEBRACO",
+    "equipment": "Halteres pesados ou farmer's walk handles",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "6fbd166a-e691-4f2d-a854-88782c0c948c",
+    "name": "Flexão de Dedos com Barra",
+    "description": "Segure a barra com as pontas dos dedos e role-a até as palmas fecharem completamente. Depois retorne controladamente.",
+    "muscleGroup": "ANTEBRACO",
+    "equipment": "Barra",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "2448baad-1925-4820-b937-b8de84693786",
+    "name": "Hang na Barra",
+    "description": "Pendure-se na barra com pegada firme e segure pelo máximo de tempo possível. Trabalha força de pegada e descompressão da coluna.",
+    "muscleGroup": "ANTEBRACO",
+    "equipment": "Barra fixa",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "94944c37-5ba2-47f4-a0bb-0a0545478b06",
+    "name": "Placa de Peso (Pinça)",
+    "description": "Segure anilhas entre os dedos (polegar de um lado e os outros dedos do outro) e sustente por tempo ou caminhe com elas.",
+    "muscleGroup": "ANTEBRACO",
+    "equipment": "Anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "bfca29ec-9af1-4d50-a317-8760a1190f87",
+    "name": "Pronação com Cabo",
+    "description": "Em pé, segure a alça do cabo e gire o antebraço para dentro (pronação) contra a resistência. Cotovelo fixo ao lado do corpo.",
+    "muscleGroup": "ANTEBRACO",
+    "equipment": "Máquina de polia + alça",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "115fe2c1-570b-41c5-b12c-022893d9c486",
+    "name": "Rolo de Pulso (Wrist Roller)",
+    "description": "Segure o rolo com braços estendidos à frente e enrole a corda levantando o peso girando os punhos. Desenrole controladamente.",
+    "muscleGroup": "ANTEBRACO",
+    "equipment": "Wrist roller (rolo com corda e peso)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "b749288e-99c6-4d5b-9649-df2a2ba522e1",
+    "name": "Rosca de Punho com Barra (Wrist Curl)",
+    "description": "Sente-se com antebraços apoiados nas coxas e palmas para cima. Flexione os punhos levantando a barra e desça controladamente.",
+    "muscleGroup": "ANTEBRACO",
+    "equipment": "Barra + banco",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "5d71a99c-8e59-4c6f-a2eb-5e3a400e0626",
+    "name": "Rosca de Punho com Halter",
+    "description": "Sentado com o antebraço apoiado na coxa e palma para cima, flexione o punho levantando o halter controladamente.",
+    "muscleGroup": "ANTEBRACO",
+    "equipment": "Halter + banco",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "f8b36e19-0e6b-4777-b87b-5b6d6027ff6c",
+    "name": "Rosca de Punho Reversa",
+    "description": "Igual à rosca de punho, mas com palmas para baixo. Estenda os punhos levantando a barra e desça controladamente.",
+    "muscleGroup": "ANTEBRACO",
+    "equipment": "Barra + banco",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "776ae01a-8a15-495f-afc1-b8d4f775ad3b",
+    "name": "Rosca de Punho Unilateral",
+    "description": "Igual à rosca de punho com halter, mas trabalhe um braço de cada vez para corrigir desequilíbrios.",
+    "muscleGroup": "ANTEBRACO",
+    "equipment": "Halter + banco",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "14a8dc3b-e0f5-47c9-9c00-66a7756bfd63",
+    "name": "Supinação com Cabo",
+    "description": "Em pé, segure a alça do cabo e gire o antebraço para fora (supinação) contra a resistência. Cotovelo fixo ao lado do corpo.",
+    "muscleGroup": "ANTEBRACO",
+    "equipment": "Máquina de polia + alça",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "8a0c5606-622c-42bc-a45b-637c51d2742e",
+    "name": "Agachamento de Panturrilha (Hack Calf)",
+    "description": "Na máquina hack, posicione apenas a ponta dos pés na plataforma e realize elevações de panturrilha.",
+    "muscleGroup": "PANTURRILHA",
+    "equipment": "Máquina hack squat",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "519cc472-764e-418b-8737-3ecac2c28b57",
+    "name": "Panturrilha com Degrau",
+    "description": "Com a ponta dos pés no degrau, desça os calcanhares abaixo da linha e suba o máximo possível para amplitude completa.",
+    "muscleGroup": "PANTURRILHA",
+    "equipment": "Degrau ou step",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "4fed477c-9e61-482b-96a1-7fef0204689d",
+    "name": "Panturrilha com Elástico",
+    "description": "Sente-se no chão com pernas estendidas, passe o elástico na ponta do pé e empurre o pé para frente (flexão plantar) contra a resistência.",
+    "muscleGroup": "PANTURRILHA",
+    "equipment": "Elástico (banda de resistência)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "53b9ed94-361e-4a4c-ad78-1477b29d1dc6",
+    "name": "Panturrilha em Pé com Barra",
+    "description": "Com a barra nas costas e pontas dos pés em um degrau, eleve os calcanhares o máximo possível e desça abaixo da linha do degrau.",
+    "muscleGroup": "PANTURRILHA",
+    "equipment": "Barra + anilhas + step (degrau)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "e504be2f-0c91-411c-b1ce-7a2895608674",
+    "name": "Panturrilha em Pé com Halter",
+    "description": "Segure halteres ao lado do corpo e realize elevações de panturrilha em pé.",
+    "muscleGroup": "PANTURRILHA",
+    "equipment": "Halteres + degrau (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "e173fb4b-1715-4140-9658-9d97d6bc435f",
+    "name": "Panturrilha em Pé (Peso Corporal)",
+    "description": "Na ponta dos pés, eleve e desça os calcanhares controladamente. Use um degrau para maior amplitude.",
+    "muscleGroup": "PANTURRILHA",
+    "equipment": "Degrau ou step (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "b1811fde-7a83-45ca-aa32-14da020cac94",
+    "name": "Panturrilha em Pé Unilateral",
+    "description": "Apoie-se em uma perna só com a ponta do pé no degrau e realize a elevação de panturrilha unilateral.",
+    "muscleGroup": "PANTURRILHA",
+    "equipment": "Degrau ou step + parede para apoio",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "9755d766-07a5-4f27-ab2b-b27dd6b45b3d",
+    "name": "Panturrilha na Parede",
+    "description": "Apoie as mãos na parede e fique na ponta dos pés. Suba o máximo e desça controladamente.",
+    "muscleGroup": "PANTURRILHA",
+    "equipment": "Parede para apoio",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "61d8aaf3-0e22-4262-9efe-c8f23c0f963e",
+    "name": "Panturrilha no Leg Press",
+    "description": "Com a ponta dos pés na borda inferior da plataforma, empurre realizando a flexão plantar. Não trave os joelhos.",
+    "muscleGroup": "PANTURRILHA",
+    "equipment": "Máquina leg press",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "1fda34f2-7d0c-4f95-9598-c3b7f925929f",
+    "name": "Panturrilha no Smith",
+    "description": "Com a barra nas costas e ponta dos pés em um step, realize elevações de panturrilha.",
+    "muscleGroup": "PANTURRILHA",
+    "equipment": "Máquina Smith + step",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "84e13d82-29b4-49cd-b437-6323a508c56c",
+    "name": "Panturrilha Sentado",
+    "description": "Sentado com peso sobre os joelhos e ponta dos pés em um degrau, eleve os calcanhares e desça controladamente. Foca no sóleo.",
+    "muscleGroup": "PANTURRILHA",
+    "equipment": "Máquina de panturrilha sentado ou halteres sobre os joelhos",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "e45f8427-a698-4842-801e-49c3e994df67",
+    "name": "Panturrilha Sentado na Máquina",
+    "description": "Sente-se na máquina com os joelhos sob o apoio e ponta dos pés na plataforma. Eleve e desça os calcanhares controladamente.",
+    "muscleGroup": "PANTURRILHA",
+    "equipment": "Máquina de panturrilha sentado",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "f761771c-8397-4f8f-bbbb-6afa1a06f19f",
+    "name": "Panturrilha Unilateral com Degrau",
+    "description": "Igual à panturrilha com degrau, porém executada com uma perna de cada vez.",
+    "muscleGroup": "PANTURRILHA",
+    "equipment": "Degrau ou step + parede para apoio",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "0cf9ee47-74db-4afb-a9cb-92e1e0a1df91",
+    "name": "Salto de Panturrilha",
+    "description": "Realize pequenos saltos usando apenas a panturrilha, mantendo os joelhos quase estendidos. Aterrisse suavemente.",
+    "muscleGroup": "PANTURRILHA",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "3fbef509-317c-4c7b-88c8-48a73931766e",
+    "name": "Cadeira Flexora",
+    "description": "Deite-se de bruços na máquina com os calcanhares sob o rolo. Flexione os joelhos trazendo o rolo em direção aos glúteos. Retorne controladamente.",
+    "muscleGroup": "POSTERIOR_COXA",
+    "equipment": "Máquina cadeira flexora",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "5a88e021-cb53-4ead-99fe-b1bba94992ee",
+    "name": "Deadlift com Pausa",
+    "description": "Realize o levantamento terra e pause 2-3 segundos com a barra na altura do joelho antes de completar o movimento.",
+    "muscleGroup": "POSTERIOR_COXA",
+    "equipment": "Barra + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "314f4de8-dda3-4fd2-a150-fdfcd7829534",
+    "name": "Extensão Lombar no Chão",
+    "description": "Deite-se de bruços e eleve simultaneamente tronco e pernas do chão, contraindo a lombar e os posteriores. Retorne controladamente.",
+    "muscleGroup": "POSTERIOR_COXA",
+    "equipment": "Colchonete",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "da78eeb3-af90-4fa6-98e8-896e3585ad39",
+    "name": "Flexora Vertical (Unilateral)",
+    "description": "Em pé na máquina, apoie o joelho e flexione a perna trazendo o calcanhar ao glúteo contra a resistência.",
+    "muscleGroup": "POSTERIOR_COXA",
+    "equipment": "Máquina flexora vertical",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "382e8b09-6493-4f9c-9602-54ebf8c2931f",
+    "name": "Hiperextensão Reversa Sapo",
+    "description": "Deite de bruços no banco com quadril na borda e joelhos abertos (posição sapo). Eleve as pernas contraindo glúteos e posteriores.",
+    "muscleGroup": "POSTERIOR_COXA",
+    "equipment": "Banco de hiperextensão ou banco reto",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "dbe52e8f-77ed-4488-97e5-50605358df56",
+    "name": "Levantamento Terra (Deadlift)",
+    "description": "Com os pés na largura dos ombros, segure a barra, mantenha costas retas e empurre o chão com os pés. Estenda quadris e joelhos até ficar ereto. Desça controladamente.",
+    "muscleGroup": "POSTERIOR_COXA",
+    "equipment": "Barra + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "9c6267c2-abe1-439a-8166-984a830b78e9",
+    "name": "Levantamento Terra Sumô",
+    "description": "Pés bem afastados e apontando para fora, segure a barra entre as pernas com braços por dentro dos joelhos. Levante estendendo quadris e joelhos.",
+    "muscleGroup": "POSTERIOR_COXA",
+    "equipment": "Barra + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "c96298fe-1237-4a87-8f90-2655d709aba2",
+    "name": "Mesa Flexora",
+    "description": "Deite-se de bruços na máquina com os calcanhares sob o rolo. Flexione os joelhos trazendo os pés em direção aos glúteos. Retorne controladamente.",
+    "muscleGroup": "POSTERIOR_COXA",
+    "equipment": "Máquina mesa flexora",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "cb398934-d639-432c-a0e4-e8cb413169ac",
+    "name": "Mesa Flexora em Pé Unilateral",
+    "description": "Em pé na máquina, flexione uma perna de cada vez trazendo o calcanhar em direção ao glúteo. Retorne controladamente.",
+    "muscleGroup": "POSTERIOR_COXA",
+    "equipment": "Máquina mesa flexora em pé",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "461eb32a-d7a0-4175-ada8-d6d0c69dbd0b",
+    "name": "Stiff com Barra",
+    "description": "Com pernas quase estendidas, incline o tronco à frente deslizando a barra pelas pernas até sentir alongamento nos posteriores. Retorne à posição ereta.",
+    "muscleGroup": "POSTERIOR_COXA",
+    "equipment": "Barra + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "cb94cfef-a814-477c-ac07-494df0f159ff",
+    "name": "Stiff Romeno",
+    "description": "Segure a barra na frente das coxas, incline o tronco flexionando o quadril deslizando a barra pelas pernas. Joelhos levemente flexionados. Retorne contraindo posteriores.",
+    "muscleGroup": "POSTERIOR_COXA",
+    "equipment": "Barra + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "63dfc690-3e57-4950-bfbc-e4441c5bc96a",
+    "name": "Stiff Unilateral no Landmine",
+    "description": "Segure a extremidade da barra com uma mão e realize o stiff com uma perna, estendendo a perna livre para trás.",
+    "muscleGroup": "POSTERIOR_COXA",
+    "equipment": "Barra landmine",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "8c3fdbeb-1ae0-4e49-90aa-a6325f1aaca3",
+    "name": "Afundo com Halteres",
+    "description": "Segure halteres ao lado do corpo. Dê um passo à frente e desça até o joelho de trás quase tocar o chão. Retorne à posição inicial.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Halteres",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "aa3f4a78-bb52-4794-9cd0-c4714dcecb48",
+    "name": "Afundo no Smith",
+    "description": "Posicione-se sob a barra do Smith com um pé à frente. Desça flexionando ambos os joelhos até 90 graus e retorne à posição inicial.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Maquina Smith",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "edb998ba-750a-4278-a5d7-27edd5393ba9",
+    "name": "Agachamento Búlgaro",
+    "description": "Com um pé apoiado no banco atrás de você e halteres nas mãos, agache com a perna da frente até a coxa ficar paralela ao chão. Suba empurrando pelo calcanhar.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Banco + halteres",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "8c372f1d-c436-4c86-9e19-658885c7b313",
+    "name": "Agachamento com Desenvolvimento",
+    "description": "Realize um agachamento e, ao subir, empurre os pesos acima da cabeça em um desenvolvimento. Retorne à posição inicial.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Halteres ou kettlebells",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "c77785c9-65a0-4494-8561-1f41c8e22dab",
+    "name": "Agachamento com Passo Lateral",
+    "description": "Em posição de meio agachamento, dê passos laterais mantendo a tensão nas pernas. Avance em uma direção e depois retorne.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Mini band ou halteres (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "650e5a7e-cb4e-4005-b448-2863283b2d76",
+    "name": "Agachamento com Pausa",
+    "description": "Realize o agachamento e pause por 2-3 segundos na posição mais baixa antes de subir. Mantenha a postura correta durante a pausa.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Barra + rack + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "f3f573ed-6d96-44e8-a91d-718e91bf8fc7",
+    "name": "Agachamento com Pausa com Halter",
+    "description": "Segure os halteres ao lado do corpo, agache e pause por 2-3 segundos na posição mais baixa antes de subir.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Halteres",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "5579c477-ab99-4f57-a4db-4f73811c03c7",
+    "name": "Agachamento com Pulso",
+    "description": "Agache até a posição mais baixa, suba parcialmente, desça novamente e então suba completamente. Esse pulso conta como uma repetição.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Barra ou halteres",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "222c392a-d7f8-4d78-af9d-5ea580301634",
+    "name": "Agachamento Cossaco",
+    "description": "Afaste bem os pés e agache para um lado mantendo a outra perna estendida. Alterne os lados.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Nenhum ou halter/kettlebell",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "1d138bf1-b535-4773-9c45-c19114dc933b",
+    "name": "Agachamento Dividido",
+    "description": "Em posição de avanço com os pés fixos, desça o joelho de trás em direção ao chão e suba. Troque de perna após completar as repetições.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Halteres (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "be2c0852-2d01-4988-b60b-17d09f0adb01",
+    "name": "Agachamento Frontal",
+    "description": "Com a barra na frente dos ombros, cotovelos elevados, agache mantendo o tronco ereto. Suba empurrando pelo calcanhar.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Barra + rack + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "1d417548-1adc-4c74-8278-4adc03170f38",
+    "name": "Agachamento Frontal com Barra",
+    "description": "Com a barra apoiada na frente dos ombros e cotovelos elevados, agache mantendo o tronco o mais ereto possível. Suba empurrando pelo calcanhar.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Barra + rack + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "1ebcf0bf-d193-44de-b10f-4083599eb8e8",
+    "name": "Agachamento Frontal com Pausa",
+    "description": "Igual ao agachamento frontal, mas pause 2-3 segundos na posição mais baixa antes de subir.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Barra + rack + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "d90cf456-fe49-4c39-a449-0c7e0b7a42bb",
+    "name": "Agachamento Goblet",
+    "description": "Segure o peso junto ao peito com ambas as mãos. Agache mantendo o tronco ereto e os cotovelos entre os joelhos. Suba empurrando pelo calcanhar.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Halter ou kettlebell",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "b2711608-cb89-4612-8a01-93e2ef4f76ec",
+    "name": "Agachamento Hack",
+    "description": "Posicione-se na máquina com costas apoiadas no encosto e ombros sob os apoios. Desça controladamente e suba empurrando a plataforma.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Máquina hack squat",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "8b253075-6a5a-4e19-8867-26cebc00f331",
+    "name": "Agachamento Isometria na Parede",
+    "description": "Encoste a costas na parede e desça até 90° de joelho. Mantenha a posição estática pelo tempo determinado.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Peso Corporal",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "cb5fbaa8-0111-42c5-ba77-e771d98dd256",
+    "name": "Agachamento Lateral",
+    "description": "Dê um passo largo para o lado e agache nessa perna, mantendo a outra estendida. Retorne à posição inicial.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Halteres (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "32701e6c-29b1-4d38-86ac-7c1a7541befe",
+    "name": "Agachamento Livre com Barra",
+    "description": "Posicione a barra na parte superior das costas no rack. Desça flexionando quadris e joelhos até as coxas ficarem paralelas ao chão. Suba empurrando pelo calcanhar.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Barra + suporte (rack) + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "60ec326c-ca1e-4dfe-bd43-08651b1ef2cf",
+    "name": "Agachamento no Smith",
+    "description": "Posicione-se sob a barra da máquina Smith com os pés ligeiramente à frente. Agache e suba guiado pela barra fixa.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Máquina Smith",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "6c2d628b-f638-47a6-ad2f-9c930c612cc6",
+    "name": "Agachamento Reverência",
+    "description": "Cruze uma perna por trás da outra como em uma reverência e agache. A perna da frente é a que trabalha. Alterne os lados.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Halteres (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "79e5ab54-1cf4-4bac-a0c4-26ba45cdccc2",
+    "name": "Agachamento Sumô com Halter",
+    "description": "Pés bem afastados e apontando para fora, segure o peso com ambas as mãos pendurado entre as pernas. Agache profundamente e suba.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Halter ou kettlebell",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "9eda95e2-fe4f-4a6d-ad1d-b46f64981a14",
+    "name": "Agachamento Sumô com Kettlebell",
+    "description": "Pés bem afastados e apontando para fora, segure o kettlebell com ambas as mãos pendurado entre as pernas. Agache profundamente e suba.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Kettlebell",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "0d2ea7f1-b480-4541-83ef-82386c712be0",
+    "name": "Agachamento Trap Bar",
+    "description": "Posicione-se dentro da trap bar, segure as alças laterais e agache mantendo o tronco mais ereto que no agachamento convencional.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Trap bar (barra hexagonal) + anilhas",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "5cb92df7-5ca4-4664-a48d-945159986994",
+    "name": "Avanço (Passada)",
+    "description": "Dê um passo à frente, desça o joelho de trás em direção ao chão formando 90° em ambas as pernas. Empurre de volta à posição inicial.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Halteres ou barra",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "4441c898-8b73-4a60-8d6b-cf30d2b0e9c3",
+    "name": "Cadeira Extensora",
+    "description": "Sentado na máquina com os pés sob o rolo, estenda os joelhos levantando o peso. Desça controladamente sem deixar o peso encostar.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Máquina cadeira extensora",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "2ae2de1e-2922-4d9e-b7f4-c502d767c0b8",
+    "name": "Extensão de Joelho Unilateral",
+    "description": "Na cadeira extensora, estenda apenas uma perna por vez para trabalhar cada quadríceps isoladamente.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Máquina extensora",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "99902453-4c0f-4d92-ac77-defa03b11f45",
+    "name": "Extensora Unilateral Sentado (Cabo)",
+    "description": "Sentado, prenda a caneleira do cabo em um tornozelo e estenda o joelho contra a resistência. Trabalhe um lado por vez.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Máquina de polia baixa",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "f52df49e-b559-427a-8ea5-cc82d54fcfde",
+    "name": "Kneeling to Stand Clean",
+    "description": "Comece ajoelhado segurando o peso, levante-se explosivamente realizando um clean (arremesso ao ombro) durante a transição.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Barra ou halteres",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "c14159d8-7f8b-4bc5-a135-7078ac5486f9",
+    "name": "Leg Press 45°",
+    "description": "Sentado na máquina com os pés na plataforma na largura dos ombros, destrave e desça controladamente até 90° nos joelhos. Empurre de volta sem travar os joelhos.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Máquina leg press 45°",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "072d157f-5b74-4bac-bc76-615f8651a1f6",
+    "name": "Leg Press Horizontal",
+    "description": "Sentado na máquina horizontal, empurre a plataforma à frente estendendo as pernas. Retorne controladamente sem travar os joelhos.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Máquina leg press horizontal",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "3921cc18-fb2e-40eb-8f10-0af44dc43616",
+    "name": "Limpador de Para-brisa Sentado",
+    "description": "Sentado com pernas estendidas à frente, gire as pernas de um lado ao outro como um limpador de para-brisa. Trabalha core e mobilidade.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Colchonete ou banco",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "d386fef8-a9f7-4db9-a2c3-f3beaa43d76a",
+    "name": "Passada Caminhando",
+    "description": "Realize avanços contínuos caminhando para frente, alternando as pernas a cada passo. Mantenha o tronco ereto.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Halteres",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "433815ae-ff27-4d63-89a7-29586dccb2b9",
+    "name": "Passada com Halter Acima da Cabeça",
+    "description": "Segure os halteres acima da cabeça com braços estendidos e realize passadas. Exige grande estabilidade de core e ombro.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Halteres",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "2b93f5c3-dcef-43e7-bdcf-340413e2016f",
+    "name": "Passada com Kettlebell Acima",
+    "description": "Segure o kettlebell com o braço estendido acima da cabeça e realize passadas. Exige estabilidade de ombro.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Kettlebell",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "25e38223-255c-4d8e-97ec-df463fc2bde3",
+    "name": "Passada com Pausa",
+    "description": "Realize o avanço e pause 2-3 segundos na posição mais baixa antes de retornar à posição inicial.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Halteres ou barra",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "3a9a5369-0a1a-431c-b07c-a6c9bcf679a2",
+    "name": "Passada com Pulso à Frente",
+    "description": "Na posição de avanço, realize pulsos subindo e descendo parcialmente antes de retornar à posição inicial.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Halteres (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "c7cb69e5-e072-4df4-92d2-86198fd7b2da",
+    "name": "Passada com Torção",
+    "description": "Realize o avanço e, na posição baixa, gire o tronco para o lado da perna da frente. Retorne e alterne.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Medicine ball ou halter",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "912b1f27-a835-4454-b8dc-2b8c2b8385f0",
+    "name": "Passada Deslizante",
+    "description": "Com um pé no slider, deslize-o para trás enquanto agacha com a perna da frente. Puxe de volta usando a perna da frente.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Sliders ou toalha em piso liso + halteres (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "a210e9a8-4f50-41b0-b52b-04ddec2b5138",
+    "name": "Passada Dividida com Pulso",
+    "description": "Em posição de avanço estático, realize pulsos descendo e subindo parcialmente.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Halteres (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "43ad459d-f849-427f-a1ae-c7b885a91ed7",
+    "name": "Passada Lateral com Rotação",
+    "description": "Dê um passo lateral e agache. Na posição baixa, gire o tronco para o lado da perna que avançou.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Medicine ball ou halter",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "64817a38-1c1c-4a55-9c6c-4f8b849aefff",
+    "name": "Passada Reversa",
+    "description": "Dê um passo para trás e desça o joelho em direção ao chão. Retorne à posição inicial empurrando com a perna da frente.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Halteres (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "d3da8f66-7e50-4ab9-9603-8d226eeb0151",
+    "name": "Passada Reversa com Kettlebell",
+    "description": "Segure o kettlebell na posição de rack (ao ombro) e realize passadas reversas alternando as pernas.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Kettlebell",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "1dd14a33-cc83-4a46-876f-9914b0de7f12",
+    "name": "Pistol Squat",
+    "description": "Agache com uma perna só até a posição mais baixa, com a outra perna estendida à frente. Exercício avançado que exige força e equilíbrio.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Nenhum (peso corporal)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "11db9b4f-1010-4ebb-8e35-5b5b25c7ad07",
+    "name": "Sissy Squat",
+    "description": "Em pé, incline o tronco para trás enquanto flexiona os joelhos, mantendo quadris estendidos. Desça até sentir tensão no quadríceps e retorne.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Suporte de sissy squat (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  },
+  {
+    "id": "e7111a9d-ec4b-4841-9593-cb94e18788f0",
+    "name": "Subida no Caixote (Step Up)",
+    "description": "Suba no caixote com um pé, estenda a perna completamente no topo e desça controladamente. Alterne as pernas.",
+    "muscleGroup": "QUADRICEPS",
+    "equipment": "Caixote ou banco + halteres (opcional)",
+    "level": "INICIANTE",
+    "type": "FORCA"
+  }
+]

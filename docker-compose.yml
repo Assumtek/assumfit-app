@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: assumfit-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: assumfit
+      POSTGRES_USER: assumfit
+      POSTGRES_PASSWORD: assumfit_dev
+    ports:
+      - '5432:5432'
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U assumfit -d assumfit']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: assumfit-api
+    restart: unless-stopped
+    ports:
+      - '3001:3001'
+    environment:
+      DATABASE_URL: postgresql://assumfit:assumfit_dev@postgres:5432/assumfit
+      JWT_SECRET: dev_secret_change_in_prod
+      JWT_REFRESH_SECRET: dev_refresh_secret_change_in_prod
+      AI_SERVICE_URL: http://ai:8000
+      NODE_ENV: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  ai:
+    build: ./ai
+    container_name: assumfit-ai
+    restart: unless-stopped
+    ports:
+      - '8000:8000'
+    environment:
+      PYTHONUNBUFFERED: '1'
+
+volumes:
+  pg_data:

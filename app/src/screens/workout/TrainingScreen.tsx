@@ -1,0 +1,564 @@
+import { useNavigation } from '@react-navigation/native';
+import { Text } from '@tamagui/core';
+import { XStack, YStack } from '@tamagui/stacks';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Pressable, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { Icon } from '../../components/Icon';
+import { Button } from '../../components/ui';
+import { formatSessionClock } from '../../domain/workout';
+import type { WorkoutExercise } from '../../services/api.service';
+import { elapsedSeconds, useWorkoutStore } from '../../store/workout.store';
+import { useTheme } from '../../theme/ThemeProvider';
+import { ConfirmDialog } from '../../components/ui/Dialog';
+import { ExerciseProblemSheet } from './ExerciseProblemSheet';
+import { ExerciseSwapSheet } from './ExerciseSwapSheet';
+import { PhaseBar, type PhaseProgress, type PhaseType } from './PhaseBar';
+import { RestOverlay } from './RestOverlay';
+import { SeriesCard } from './SeriesCard';
+import { TimedExercise } from './TimedExercise';
+
+const DEFAULT_REST_SECONDS = 60;
+
+/**
+ * Execução do treino — um exercício por vez.
+ *
+ * Estrutura portada do MUVX, e a decisão central dela é essa: a tela mostra UM
+ * exercício, não a lista inteira. Quem está com o celular apoiado no banco não
+ * quer rolar procurando onde parou; quer ver o que fazer agora, registrar, e
+ * avançar. A lista completa vive no check-in, antes de começar.
+ *
+ * Dois relógios, e nenhum dos dois é contado — os dois derivam de instantes
+ * guardados na store:
+ *
+ * - o da sessão, de `timerBase` mais o trecho corrente, o que permite pausar
+ *   de verdade sem perder o tempo já cumprido;
+ * - o do descanso, do alvo em epoch.
+ *
+ * Um contador incrementado a cada segundo para quando o app vai para segundo
+ * plano — e uma sessão de 50 minutos apareceria como 12.
+ *
+ * **Não há mídia do exercício.** O MUVX mostra vídeo ou imagem aqui; o nosso
+ * catálogo veio sem essas URLs de propósito — apontavam para o S3 deles. Quando
+ * houver mídia própria, é neste ponto que ela entra, entre o nome e as séries.
+ */
+export function TrainingScreen() {
+  const { colors } = useTheme();
+  const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
+
+  const execution = useWorkoutStore((s) => s.execution);
+  const workout = useWorkoutStore((s) => s.workout);
+  const progress = useWorkoutStore((s) => s.progress);
+  const restEndsAt = useWorkoutStore((s) => s.restEndsAt);
+  const setProgress = useWorkoutStore((s) => s.setProgress);
+  const completeSet = useWorkoutStore((s) => s.completeSet);
+  const startRest = useWorkoutStore((s) => s.startRest);
+  const clearRest = useWorkoutStore((s) => s.clearRest);
+  const refresh = useWorkoutStore((s) => s.refresh);
+  const timerBase = useWorkoutStore((s) => s.timerBase);
+  const timerRunSince = useWorkoutStore((s) => s.timerRunSince);
+  const toggleTimer = useWorkoutStore((s) => s.toggleTimer);
+  const syncTimer = useWorkoutStore((s) => s.syncTimer);
+  const cancel = useWorkoutStore((s) => s.cancel);
+
+  const [index, setIndex] = useState(0);
+  const [swapOpen, setSwapOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [problemOpen, setProblemOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+  /*
+   Altura real do rodapé de ações, medida.
+
+   O MUVX usa a constante 132 aqui. Copiar o número foi o erro: o rodapé de lá
+   tem 132 px, o nosso tinha 162, e a barra de descanso caía em cima do botão
+   "Concluir exercício". Medir vale mais que copiar — sobrevive a mudar o texto
+   de um botão ou a altura de uma variante.
+  */
+  /*
+   Zero, e não 132.
+
+   132 era o número do MUVX copiado como valor inicial, e o CLAUDE.md já registra
+   que o rodapé de lá tem 132 enquanto o nosso tem 162. Enquanto o `onLayout` não
+   dispara, esse palpite colocava a barra de descanso 30 px baixo demais — em
+   cima do "Concluir exercício". Zero é honesto: significa "ainda não medi", e a
+   barra usa o piso da área segura até a medição chegar.
+  */
+  const [footerHeight, setFooterHeight] = useState(0);
+
+  useEffect(() => {
+    if (!execution || !workout) void refresh();
+  }, [execution, workout, refresh]);
+
+  // Alinha o cronômetro com o início real da sessão ao montar sobre uma que já
+  // existia — voltar do check-in, ou reabrir o app no meio do treino.
+  useEffect(() => {
+    if (execution) syncTimer(execution.startedAt);
+  }, [execution, syncTimer]);
+
+  /*
+   O tique só existe para redesenhar. O tempo em si é derivado de instantes
+   guardados na store, então perder um tique — em segundo plano, sob carga — não
+   perde tempo nenhum: o próximo redesenho já traz o valor certo.
+  */
+  useEffect(() => {
+    if (timerRunSince === null) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [timerRunSince]);
+
+  /** A lista achatada, guardando a fase de cada exercício. */
+  const flat = useMemo(
+    () =>
+      (workout?.phases ?? []).flatMap((phase) =>
+        phase.exercises.map((exercise) => ({ exercise, phase: phase.type as PhaseType })),
+      ),
+    [workout],
+  );
+
+  const current = flat[index];
+
+  const phases: PhaseProgress[] = useMemo(() => {
+    const byType = new Map<PhaseType, PhaseProgress>();
+    for (const item of flat) {
+      const entry = byType.get(item.phase) ?? { type: item.phase, total: 0, completed: 0 };
+      entry.total += 1;
+      const sets = progress[item.exercise.id] ?? [];
+      if (sets.length > 0 && sets.every((s) => s.completed)) entry.completed += 1;
+      byType.set(item.phase, entry);
+    }
+    return [...byType.values()];
+  }, [flat, progress]);
+
+  if (!execution || !workout || !current) {
+    return (
+      <YStack flex={1} backgroundColor="$background" alignItems="center" justifyContent="center">
+        <Text fontSize={15} color="$mutedForeground">
+          Carregando treino…
+        </Text>
+      </YStack>
+    );
+  }
+
+  const { exercise, phase } = current;
+  const sets = progress[exercise.id] ?? [];
+  const doneCount = sets.filter((s) => s.completed).length;
+  const isSimple = exercise.subtype !== 'STRENGTH';
+
+  /*
+   Quantos segundos este exercício pede, quando ele é por tempo.
+
+   `holdTime` é do alongamento e `duration` do cardio — campos diferentes
+   porque significam coisas diferentes: um é quanto SUSTENTAR a posição, o
+   outro é quanto DURAR a atividade. Força nunca tem nenhum dos dois.
+  */
+  const tempoAlvo =
+    exercise.subtype === 'MOBILITY'
+      ? (exercise.holdTime ?? null)
+      : exercise.subtype === 'CARDIO'
+        ? (exercise.duration ?? null)
+        : null;
+  const isLast = index === flat.length - 1;
+
+  const inPhase = flat.filter((f) => f.phase === phase);
+  const positionInPhase = inPhase.findIndex((f) => f.exercise.id === exercise.id) + 1;
+
+  const running = timerRunSince !== null;
+  const elapsedSec = elapsedSeconds(timerBase, timerRunSince, now);
+
+  /** A primeira série não concluída. É ela que aparece expandida. */
+  const activeIndex = sets.findIndex((s) => !s.completed);
+
+  /*
+   O que vem depois do descanso.
+
+   A barra diz isso porque descansar sem saber o que vem é o que faz a pessoa
+   sair do app para conferir. Se ainda há série neste exercício, é a próxima
+   série; se acabou, é o próximo exercício.
+  */
+  const pendingSets = sets.filter((s) => !s.completed).length;
+  const nextUp =
+    pendingSets > 0
+      ? { nextLabel: 'Próxima série', nextName: exercise.name }
+      : flat[index + 1]
+        ? { nextLabel: 'A seguir', nextName: flat[index + 1].exercise.name }
+        : { nextLabel: null, nextName: null };
+
+  const handleToggle = async (setIndex: number) => {
+    const wasCompleted = sets[setIndex]?.completed ?? false;
+    await completeSet(exercise.id, setIndex);
+    // Descanso só ao CONCLUIR, e não na última série do exercício — descansar
+    // para depois trocar de aparelho é descanso que ninguém cumpre.
+    if (!wasCompleted && setIndex < sets.length - 1) {
+      const rest = exercise.sets[setIndex]?.restTime ?? DEFAULT_REST_SECONDS;
+      if (rest > 0) startRest(rest);
+    }
+  };
+
+  /*
+   Voltar significa coisas diferentes no primeiro exercício e nos demais.
+
+   Do segundo em diante há para onde voltar DENTRO do treino, e sair da tela
+   seria perder o lugar. No primeiro não há passo anterior, e o único
+   significado possível de "voltar" é desistir do check-in — que é destrutivo e
+   por isso pergunta antes.
+  */
+  const goBack = () => {
+    clearRest();
+    if (index > 0) return setIndex((i) => i - 1);
+    setCancelOpen(true);
+  };
+
+  const confirmCancel = async () => {
+    setCancelling(true);
+    try {
+      await cancel();
+      navigation.navigate('Plan');
+    } finally {
+      setCancelling(false);
+      setCancelOpen(false);
+    }
+  };
+
+  const goNext = () => {
+    clearRest();
+    if (isLast) return navigation.navigate('TrainingFinished');
+    setIndex((i) => Math.min(flat.length - 1, i + 1));
+  };
+
+  return (
+    <YStack flex={1} backgroundColor="$background">
+      {/* Cabeçalho próprio: os controles são pílulas circulares, não ícones
+          soltos — é o que os separa do conteúdo como alvos de toque. */}
+      <XStack
+        alignItems="center"
+        justifyContent="space-between"
+        paddingHorizontal="$xl"
+        paddingTop={insets.top + 8}
+        paddingBottom="$sm"
+      >
+        <ControlButton label="Voltar" onPress={goBack}>
+          <Icon name="back" size={20} color={colors.text} />
+        </ControlButton>
+
+        <XStack alignItems="center" gap="$md">
+          <ControlButton
+            label="Checklist do treino"
+            onPress={() => navigation.navigate('Checklist')}
+          >
+            <Icon name="checklist" size={20} color={colors.text} />
+          </ControlButton>
+
+          <ControlButton
+            label={running ? 'Pausar cronômetro' : 'Retomar cronômetro'}
+            onPress={toggleTimer}
+          >
+            <Icon name={running ? 'pause' : 'play'} size={20} color={colors.text} />
+          </ControlButton>
+
+          <XStack
+            alignItems="center"
+            gap="$xs"
+            backgroundColor="$control"
+            borderRadius={14}
+            paddingHorizontal="$lg"
+            paddingVertical="$md"
+          >
+            <Icon name="clock" size={16} color={colors.text} />
+            <Text
+              fontSize={15}
+              fontWeight="500"
+              color="$foreground"
+              // Dígitos tabulares: sem eles a largura muda a cada segundo e o
+              // cronômetro treme dentro da pílula.
+              fontVariant={['tabular-nums']}
+            >
+              {formatSessionClock(elapsedSec)}
+            </Text>
+          </XStack>
+        </XStack>
+      </XStack>
+
+      <PhaseBar
+        current={phase}
+        positionInPhase={positionInPhase}
+        phaseTotal={inPhase.length}
+        phases={phases}
+      />
+
+      <YStack height={1} backgroundColor="$border" marginTop="$md" />
+
+      <ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: 8,
+          // Espaço para o rodapé fixo e para a barra de descanso não cobrirem
+          // a última série. Segue a medição, não um número escolhido a olho.
+          paddingBottom: footerHeight + 96,
+        }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/*
+          Exercício por TEMPO desenha outra coisa inteira.
+
+          Alongamento e mobilidade não têm carga nem repetição para registrar —
+          têm uma duração a cumprir. Mostrá-los com o cartão de séries obriga a
+          inventar "peso 0, reps 0", que é o que fazia o alongamento parecer um
+          exercício de força mal preenchido.
+
+          Cardio entra aqui quando vem com duração prescrita; sem ela, cai no
+          cartão de séries, que é onde distância e intensidade são registradas.
+        */}
+        {tempoAlvo !== null ? (
+          <TimedExercise
+            name={exercise.name}
+            seconds={tempoAlvo}
+            description={exercise.description ?? exercise.notes}
+            phase={phase}
+            onComplete={goNext}
+            onSkip={goNext}
+          />
+        ) : (
+        <>
+        {/* O exercício é centralizado — é a única coisa na tela, e centralizar
+            é o que o marca como foco em vez de item de lista. */}
+        <Text
+          fontSize={20}
+          fontWeight="500"
+          color="$foreground"
+          textAlign="center"
+          marginTop="$xl"
+        >
+          {exercise.name}
+        </Text>
+
+        <Text fontSize={13} color="$mutedForeground" textAlign="center" marginTop="$md">
+          {infoLine(exercise, sets.length)}
+        </Text>
+
+        {exercise.description ? (
+          <Text fontSize={13} color="$mutedForeground" textAlign="center" marginTop="$xl">
+            {exercise.description}
+          </Text>
+        ) : null}
+
+        {exercise.notes ? (
+          <Text fontSize={13} color="$mutedForeground" textAlign="center" marginTop="$md">
+            {exercise.notes}
+          </Text>
+        ) : null}
+
+        <YStack marginTop="$xxl">
+          <XStack alignItems="center" justifyContent="space-between" marginBottom="$md">
+            <Text fontSize={15} fontWeight="500" color="$foreground">
+              Séries ({doneCount}/{sets.length})
+            </Text>
+            <XStack gap="$sm">
+              <AcaoDoExercicio icone="swap" rotulo="Trocar" onPress={() => setSwapOpen(true)} />
+              <AcaoDoExercicio
+                icone="flag"
+                rotulo="Sinalizar"
+                onPress={() => setProblemOpen(true)}
+              />
+            </XStack>
+          </XStack>
+
+          {sets.map((set, i) => (
+            <SeriesCard
+              key={i}
+              number={i + 1}
+              prescribedReps={
+                exercise.sets[i]?.repetitions ?? exercise.sets[0]?.repetitions ?? '—'
+              }
+              state={set}
+              isActive={i === activeIndex}
+              simple={isSimple}
+              isCardio={exercise.subtype === 'CARDIO'}
+              onChange={(patch) => setProgress(exercise.id, i, patch)}
+              onToggle={() => void handleToggle(i)}
+              onSkip={() => void handleToggle(i)}
+            />
+          ))}
+        </YStack>
+        </>
+        )}
+      </ScrollView>
+
+      {/*
+        Rodapé só para exercício de SÉRIES.
+
+        O de tempo tem as ações dentro dele, ligadas ao estado do relógio —
+        "Concluir" antes de o tempo acabar seria pular disfarçado de concluir.
+        Dois conjuntos de ação na mesma tela é o que faz a pessoa tocar no
+        errado.
+      */}
+      {tempoAlvo === null ? (
+      <YStack
+        paddingHorizontal="$xl"
+        paddingTop="$md"
+        paddingBottom={insets.bottom + 14}
+        backgroundColor="$background"
+        onLayout={(e) => setFooterHeight(e.nativeEvent.layout.height)}
+      >
+        <YStack
+          backgroundColor="$card"
+          borderWidth={1}
+          borderColor="$border"
+          borderRadius={16}
+          padding="$sm"
+          gap="$sm"
+        >
+          <Button
+            title={isLast ? 'Concluir treino' : 'Concluir exercício'}
+            icon={<Icon name="check" size={16} color={colors.ink} />}
+            onPress={goNext}
+          />
+          <XStack gap="$sm">
+            <YStack flex={1}>
+              <Button
+                title="Pular exercício"
+                variant="ghost"
+                size="md"
+                icon={<Icon name="skip" size={14} color={colors.textMuted} />}
+                onPress={goNext}
+              />
+            </YStack>
+            {!isLast ? (
+              <YStack flex={1}>
+                <Button
+                  title="Finalizar"
+                  variant="ghost"
+                  size="md"
+                  onPress={() => navigation.navigate('TrainingFinished')}
+                />
+              </YStack>
+            ) : null}
+          </XStack>
+        </YStack>
+      </YStack>
+      ) : null}
+
+      {restEndsAt ? (
+        <RestOverlay
+          endsAt={restEndsAt}
+          onSkip={clearRest}
+          footerHeight={Math.max(footerHeight, insets.bottom + 72)}
+          {...nextUp}
+        />
+      ) : null}
+
+      {swapOpen ? (
+        <ExerciseSwapSheet exercise={exercise} onClose={() => setSwapOpen(false)} />
+      ) : null}
+
+      <ExerciseProblemSheet
+        open={problemOpen}
+        onClose={() => setProblemOpen(false)}
+        onTrocar={() => {
+          setProblemOpen(false);
+          setSwapOpen(true);
+        }}
+        onPular={() => {
+          setProblemOpen(false);
+          goNext();
+        }}
+      />
+
+      <ConfirmDialog
+        open={cancelOpen}
+        title="Tem certeza que deseja cancelar seu check-in?"
+        body="Você poderá fazer o check-in novamente neste treino ou em outro."
+        confirmLabel="Sim, cancelar check-in"
+        cancelLabel="Não, voltar ao exercício"
+        loading={cancelling}
+        onConfirm={() => void confirmCancel()}
+        onCancel={() => setCancelOpen(false)}
+      />
+    </YStack>
+  );
+}
+
+function ControlButton({
+  children,
+  onPress,
+  label,
+}: {
+  children: React.ReactNode;
+  onPress: () => void;
+  label: string;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
+    >
+      <YStack backgroundColor="$control" borderRadius={999} padding="$md">
+        {children}
+      </YStack>
+    </Pressable>
+  );
+}
+
+/** "3 séries · 10-12 reps · 90s descanso", adaptado por fase. */
+function infoLine(exercise: WorkoutExercise, setCount: number): string {
+  if (exercise.subtype === 'CARDIO') {
+    return [exercise.duration ? `${exercise.duration} min` : null, exercise.intensity]
+      .filter(Boolean)
+      .join(' · ');
+  }
+  if (exercise.subtype === 'MOBILITY') {
+    return exercise.holdTime
+      ? `${exercise.holdTime}s por posição`
+      : (exercise.sets[0]?.repetitions ?? 'mobilidade');
+  }
+
+  const parts: string[] = [];
+  if (setCount > 0) parts.push(`${setCount} ${setCount === 1 ? 'série' : 'séries'}`);
+  const reps = exercise.sets[0]?.repetitions;
+  if (reps) parts.push(`${reps} reps`);
+  const rest = exercise.sets[0]?.restTime;
+  if (rest) parts.push(`${rest}s descanso`);
+  return parts.join(' · ');
+}
+
+/**
+ * Ação sobre o exercício atual — trocar, sinalizar problema.
+ *
+ * Pílula contornada e acromática: são ações sobre o conteúdo, e o acento
+ * pertence ao dado. Viraram componente quando passaram de uma para duas, que é
+ * onde duas cópias começam a divergir em padding.
+ */
+function AcaoDoExercicio({
+  icone,
+  rotulo,
+  onPress,
+}: {
+  icone: 'swap' | 'flag';
+  rotulo: string;
+  onPress: () => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <Pressable onPress={onPress} hitSlop={8} accessibilityRole="button" accessibilityLabel={rotulo}>
+      <XStack
+        alignItems="center"
+        gap="$sm"
+        paddingHorizontal="$md"
+        paddingVertical={10}
+        borderRadius={999}
+        borderWidth={1}
+        borderColor="$border"
+      >
+        <Icon name={icone} size={14} color={colors.textMuted} />
+        <Text fontSize={13} fontWeight="500" color="$mutedForeground">
+          {rotulo}
+        </Text>
+      </XStack>
+    </Pressable>
+  );
+}

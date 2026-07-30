@@ -1,0 +1,28 @@
+# TLS para a API.
+#
+# O Caddy obtém e renova o certificado sozinho via ACME — é a razão de ele estar
+# aqui em vez de nginx. O `PUBLIC_URL` do backend precisa bater com este domínio,
+# senão o `redirect_uri` do OAuth de calendário não confere com o registrado no
+# Google e na Microsoft, e a conexão falha no último passo.
+
+{$API_DOMAIN} {
+	encode gzip
+
+	# O app manda o próprio token; nada de cookie de sessão trafega aqui.
+	reverse_proxy 127.0.0.1:3001 {
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+
+	# HSTS. Só depois de o domínio estar servindo HTTPS de forma estável: com
+	# `preload`, voltar atrás leva meses.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

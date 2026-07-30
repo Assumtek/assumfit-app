@@ -1,0 +1,31 @@
+# deps
+node_modules/
+.pnp.*
+# python
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+# env
+.env
+.env.*
+!.env.example
+# builds
+dist/
+build/
+.expo/
+*.tsbuildinfo
+# os / editor
+.DS_Store
+.idea/
+.vscode/
+# nativo gerado por prebuild — a fonte da verdade é o app.json
+app/ios/
+app/android/
+# manual de marca: 195 MB, acima do teto do GitHub; vive fora do versionamento
+app/assets/brand/Manual-de-Marca-Assumfit.pdf
+# artefatos e logs
+*.log
+*.ipa
+# scaffold antigo na raiz — o projeto iOS de verdade é gerado em app/ios
+/ios/

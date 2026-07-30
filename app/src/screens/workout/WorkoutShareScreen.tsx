@@ -1,0 +1,370 @@
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { Text } from '@tamagui/core';
+import { XStack, YStack } from '@tamagui/stacks';
+import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
+import * as Sharing from 'expo-sharing';
+import React, { useRef, useState } from 'react';
+import { Alert, Pressable, ScrollView } from 'react-native';
+import { captureRef } from 'react-native-view-shot';
+
+import { DetailScreen } from '../../components/DetailScreen';
+import { Icon } from '../../components/Icon';
+import { LogoType } from '../../components/Logo';
+import {
+  BlocoEditavel,
+  CANVAS_HEIGHT,
+  CANVAS_WIDTH,
+  EXPORT_WIDTH,
+  FotoDeFundo,
+} from '../../components/ShareCanvas';
+import { Button, Data, Label } from '../../components/ui';
+import { CORNER_HALO, RadialHalo } from '../../components/ui/RadialHalo';
+import { formatDuration } from '../../domain/workout';
+
+/**
+ * Compartilhar o treino — canvas de story, como o `ShareAchievementsScreen`.
+ *
+ * O card é um CANVAS 9:16 (270×480 na tela, exportado em 1080×1920 — as
+ * medidas do MUVX): cada bloco arrasta, belisca para redimensionar, gira com
+ * dois dedos e liga/desliga nos chips. A instrução de lá vale aqui: "Arraste,
+ * redimensione e oculte os blocos. Depois é só compartilhar onde quiser."
+ *
+ * **Nada sai do aparelho sozinho.** A imagem nasce local e só vai a algum
+ * lugar no toque de compartilhar ou salvar. A foto de fundo idem.
+ */
+
+type Params = {
+  workoutName?: string;
+  durationSec?: number | null;
+  exercises?: number | null;
+  volumeKg?: number | null;
+};
+
+type BlocoId = 'selo' | 'nome' | 'duracao' | 'exercicios' | 'volume' | 'data' | 'marca';
+
+const CHIPS: { id: BlocoId; rotulo: string }[] = [
+  { id: 'selo', rotulo: 'Selo' },
+  { id: 'nome', rotulo: 'Treino' },
+  { id: 'duracao', rotulo: 'Duração' },
+  { id: 'exercicios', rotulo: 'Exerc.' },
+  { id: 'volume', rotulo: 'Carga' },
+  { id: 'data', rotulo: 'Data' },
+  { id: 'marca', rotulo: 'AssumFit' },
+];
+
+export function WorkoutShareScreen() {
+  const navigation = useNavigation();
+  const params = (useRoute().params ?? {}) as Params;
+
+  // `captureRef` aceita qualquer host view; o tipo de instância do YStack não é
+  // exportado, e tipar aqui não previne erro nenhum.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const canvas = useRef<any>(null);
+  const [foto, setFoto] = useState<string | null>(null);
+  const [visiveis, setVisiveis] = useState<Set<BlocoId>>(
+    () => new Set<BlocoId>(['selo', 'nome', 'duracao', 'exercicios', 'data', 'marca']),
+  );
+  const [selecionado, setSelecionado] = useState<BlocoId | null>(null);
+  const [ocupado, setOcupado] = useState(false);
+
+  const alternar = (id: BlocoId) =>
+    setVisiveis((atual) => {
+      const proximo = new Set(atual);
+      if (proximo.has(id)) proximo.delete(id);
+      else proximo.add(id);
+      return proximo;
+    });
+
+  const escolherFoto = async (origem: 'camera' | 'galeria') => {
+    const permissao =
+      origem === 'camera'
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissao.granted) {
+      Alert.alert('Permissão necessária', 'Autorize nas Configurações do sistema.');
+      return;
+    }
+    // Sem recorte forçado: a foto entra INTEIRA e o enquadramento é feito no
+    // canvas, com arrastar e zoom — igual ao MUVX. Recortar antes jogaria fora
+    // as bordas que a pessoa ia usar ao reposicionar.
+    const opcoes: ImagePicker.ImagePickerOptions = { quality: 0.9 };
+    const r =
+      origem === 'camera'
+        ? await ImagePicker.launchCameraAsync(opcoes)
+        : await ImagePicker.launchImageLibraryAsync({ ...opcoes, mediaTypes: ['images'] });
+    if (!r.canceled && r.assets[0]) setFoto(r.assets[0].uri);
+  };
+
+  /**
+   * Gera o PNG na resolução de exportação (1080 de largura — o iOS upscala o
+   * snapshot do canvas de 270, fator 4 exato).
+   *
+   * A seleção é limpa ANTES da captura, e o snapshot espera um quadro — sem
+   * isso a borda roxa de seleção sai impressa no story.
+   */
+  const gerar = async (): Promise<string | null> => {
+    setSelecionado(null);
+    await new Promise((r) => setTimeout(r, 50));
+    try {
+      return await captureRef(canvas, {
+        format: 'png',
+        quality: 1,
+        result: 'tmpfile',
+        width: EXPORT_WIDTH,
+      });
+    } catch {
+      Alert.alert('Não foi possível gerar a imagem', 'Tente de novo.');
+      return null;
+    }
+  };
+
+  const compartilhar = async () => {
+    setOcupado(true);
+    try {
+      const uri = await gerar();
+      if (!uri) return;
+      if (!(await Sharing.isAvailableAsync())) return;
+      await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png' });
+    } finally {
+      setOcupado(false);
+    }
+  };
+
+  const salvar = async () => {
+    setOcupado(true);
+    try {
+      const permissao = await MediaLibrary.requestPermissionsAsync();
+      if (!permissao.granted) {
+        Alert.alert('Permissão necessária', 'Autorize o acesso às fotos para salvar.');
+        return;
+      }
+      const uri = await gerar();
+      if (!uri) return;
+      await MediaLibrary.saveToLibraryAsync(uri);
+      Alert.alert('Salvo', 'O story está na sua galeria.');
+    } finally {
+      setOcupado(false);
+    }
+  };
+
+  const dataDeHoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' });
+  const ver = (id: BlocoId) => visiveis.has(id);
+  const escolher = (id: BlocoId) => () => setSelecionado(id);
+
+  return (
+    <DetailScreen title="Compartilhar">
+      <Data marginBottom="$md">
+        Arraste os blocos para reposicionar. Dois dedos redimensionam ou giram. Toque fora para
+        tirar a seleção.
+      </Data>
+
+      {/* Os chips ligam e desligam blocos — publicar a carga é decisão, não padrão. */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 14 }}>
+        <XStack gap="$sm">
+          {CHIPS.map((chip) => (
+            <Pressable
+              key={chip.id}
+              onPress={() => alternar(chip.id)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: ver(chip.id) }}
+              style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
+            >
+              <XStack
+                alignItems="center"
+                gap="$xs"
+                paddingVertical="$sm"
+                paddingHorizontal="$md"
+                borderRadius={999}
+                borderWidth={1}
+                borderColor={ver(chip.id) ? '$primary' : '$borderStrong'}
+                backgroundColor={ver(chip.id) ? '$primarySoft' : 'transparent'}
+              >
+                <Icon name={ver(chip.id) ? 'check' : 'down'} size={11} />
+                <Text fontSize={12} color="$foreground">
+                  {chip.rotulo}
+                </Text>
+              </XStack>
+            </Pressable>
+          ))}
+        </XStack>
+      </ScrollView>
+
+      {/* O CANVAS. Tudo dentro deste YStack vira o story de 1080×1920. */}
+      <YStack alignItems="center">
+        <Pressable onPress={() => setSelecionado(null)}>
+          <YStack
+            ref={canvas}
+            collapsable={false}
+            width={CANVAS_WIDTH}
+            height={CANVAS_HEIGHT}
+            borderRadius={18}
+            overflow="hidden"
+            backgroundColor="#0E0A22"
+          >
+            {foto ? (
+              <FotoDeFundo uri={foto} ativa={selecionado === null} />
+            ) : (
+              <RadialHalo layers={CORNER_HALO} />
+            )}
+            {foto ? (
+              <YStack
+                position="absolute"
+                top={0}
+                left={0}
+                right={0}
+                bottom={0}
+                backgroundColor="rgba(14,10,34,0.45)"
+                pointerEvents="none"
+              />
+            ) : null}
+
+            <BlocoEditavel
+              x={18}
+              y={64}
+              visivel={ver('selo')}
+              selecionado={selecionado === 'selo'}
+              onSelecionar={escolher('selo')}
+            >
+              <XStack
+                paddingVertical={4}
+                paddingHorizontal={10}
+                borderRadius={999}
+                backgroundColor="rgba(135,123,240,0.28)"
+                borderWidth={1}
+                borderColor="rgba(135,123,240,0.55)"
+              >
+                <Text fontSize={9} fontWeight="800" letterSpacing={1.2} color="#ECE7F4">
+                  TREINO CONCLUÍDO
+                </Text>
+              </XStack>
+            </BlocoEditavel>
+
+            <BlocoEditavel
+              x={18}
+              y={96}
+              visivel={ver('nome')}
+              selecionado={selecionado === 'nome'}
+              onSelecionar={escolher('nome')}
+            >
+              <Text
+                fontSize={24}
+                fontWeight="800"
+                color="#ECE7F4"
+                letterSpacing={-0.6}
+                maxWidth={CANVAS_WIDTH - 48}
+              >
+                {params.workoutName ?? 'Treino concluído'}
+              </Text>
+            </BlocoEditavel>
+
+            {params.durationSec ? (
+              <BlocoEditavel
+                x={18}
+                y={330}
+                visivel={ver('duracao')}
+                selecionado={selecionado === 'duracao'}
+                onSelecionar={escolher('duracao')}
+              >
+                <Metrica valor={formatDuration(params.durationSec)} rotulo="duração" />
+              </BlocoEditavel>
+            ) : null}
+
+            {params.exercises ? (
+              <BlocoEditavel
+                x={110}
+                y={330}
+                visivel={ver('exercicios')}
+                selecionado={selecionado === 'exercicios'}
+                onSelecionar={escolher('exercicios')}
+              >
+                <Metrica valor={String(params.exercises)} rotulo="exercícios" />
+              </BlocoEditavel>
+            ) : null}
+
+            {params.volumeKg ? (
+              <BlocoEditavel
+                x={190}
+                y={330}
+                visivel={ver('volume')}
+                selecionado={selecionado === 'volume'}
+                onSelecionar={escolher('volume')}
+              >
+                <Metrica valor={`${Math.round(params.volumeKg)} kg`} rotulo="carga" />
+              </BlocoEditavel>
+            ) : null}
+
+            <BlocoEditavel
+              x={18}
+              y={402}
+              visivel={ver('data')}
+              selecionado={selecionado === 'data'}
+              onSelecionar={escolher('data')}
+            >
+              <Text fontSize={11} color="rgba(236,231,244,0.75)">
+                {dataDeHoje}
+              </Text>
+            </BlocoEditavel>
+
+            <BlocoEditavel
+              x={18}
+              y={430}
+              visivel={ver('marca')}
+              selecionado={selecionado === 'marca'}
+              onSelecionar={escolher('marca')}
+            >
+              <LogoType height={13} color="#ECE7F4" />
+            </BlocoEditavel>
+          </YStack>
+        </Pressable>
+      </YStack>
+
+      <Label marginTop="$xl" marginBottom="$md">
+        imagem de fundo
+      </Label>
+      <XStack gap="$sm">
+        <YStack flex={1}>
+          <Button
+            title="Tirar foto"
+            variant="secondary"
+            size="md"
+            onPress={() => void escolherFoto('camera')}
+          />
+        </YStack>
+        <YStack flex={1}>
+          <Button
+            title="Galeria"
+            variant="secondary"
+            size="md"
+            onPress={() => void escolherFoto('galeria')}
+          />
+        </YStack>
+        {foto ? (
+          <YStack flex={1}>
+            <Button title="Remover" variant="ghost" size="md" onPress={() => setFoto(null)} />
+          </YStack>
+        ) : null}
+      </XStack>
+
+      <YStack gap="$sm" marginTop="$xl">
+        <Button title="Compartilhar" loading={ocupado} onPress={() => void compartilhar()} />
+        <Button title="Salvar na galeria" variant="secondary" onPress={() => void salvar()} />
+        <Button title="Agora não" variant="ghost" onPress={() => navigation.goBack()} />
+      </YStack>
+    </DetailScreen>
+  );
+}
+
+/** Um número do story. Branco fixo: o canvas é escuro nos dois temas. */
+function Metrica({ valor, rotulo }: { valor: string; rotulo: string }) {
+  return (
+    <YStack>
+      <Text fontSize={20} fontWeight="300" color="#ECE7F4" fontVariant={['tabular-nums']}>
+        {valor}
+      </Text>
+      <Text fontSize={9} letterSpacing={1} color="rgba(236,231,244,0.7)" textTransform="uppercase">
+        {rotulo}
+      </Text>
+    </YStack>
+  );
+}

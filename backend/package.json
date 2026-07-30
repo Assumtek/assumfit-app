@@ -1,0 +1,44 @@
+{
+  "name": "assumfit-backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "prisma:generate": "prisma generate",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "db:setup": "npm run migrate:deploy && psql \"$DATABASE_URL\" -f prisma/migrations/20260726000000_timescale/migration.sql",
+    "seed": "ts-node-dev --transpile-only prisma/seed.ts",
+    "seed:exercises": "ts-node-dev --transpile-only prisma/seed-exercises.ts",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.2.1",
+    "argon2": "^0.41.1",
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^8.6.1",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "rate-limit-redis": "^6.0.0",
+    "redis": "^6.1.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.10.5",
+    "jest": "^30.4.2",
+    "prisma": "^6.2.1",
+    "ts-jest": "^29.4.12",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.7.3"
+  }
+}

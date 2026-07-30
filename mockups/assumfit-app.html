@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>assumfit</title>
+<style>
+:root{
+  --black:#000;--s1:#0A0A0A;--s2:#111;--s3:#1A1A1A;--s4:#222;
+  --p:#7B4FFF;--p2:#9D7BFF;--p3:#BBA3FF;
+  --white:#FFF;--grey:#A0A0A0;--grey2:#666;--grey3:#3A3A3A;
+  --teal:#30D158;--amber:#FF9F0A;--rose:#FF453A;--blue:#64D2FF;--pink:#FF375F;--orange:#FF6B00;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
+  --ease:cubic-bezier(.25,.46,.45,.94);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;background:#111;display:flex;align-items:center;justify-content:center;color:var(--white);-webkit-font-smoothing:antialiased}
+
+/* ── PHONE ── */
+.phone{width:393px;height:852px;background:var(--black);border-radius:54px;border:1px solid rgba(255,255,255,.12);overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 6px #0A0A0A,0 0 0 7px rgba(255,255,255,.06),0 48px 140px rgba(0,0,0,.95),0 0 80px rgba(123,79,255,.08);position:relative}
+.phone::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:34px;background:#000;border-radius:0 0 24px 24px;z-index:100}
+
+/* ── STATUS BAR ── */
+.sbar{display:flex;justify-content:space-between;align-items:center;padding:18px 28px 0;flex-shrink:0;z-index:10;position:relative}
+.sbar-t{font-size:16px;font-weight:600;letter-spacing:-.3px;font-variant-numeric:tabular-nums}
+.sbar-r{display:flex;gap:6px;align-items:center}
+.sbar-r svg{width:16px;height:16px;fill:var(--white);opacity:.8}
+/* hamburger */
+.ham-btn{width:32px;height:32px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;cursor:pointer;z-index:200;position:relative}
+.ham-btn span{display:block;width:20px;height:2px;background:var(--white);border-radius:1px;transition:all .25s var(--ease)}
+.ham-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.ham-btn.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.ham-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+/* ── SIDEBAR OVERLAY ── */
+.sidebar-overlay{position:absolute;inset:0;background:rgba(0,0,0,0);z-index:150;pointer-events:none;transition:background .3s var(--ease)}
+.sidebar-overlay.open{background:rgba(0,0,0,.6);pointer-events:all}
+/* ── SIDEBAR ── */
+.sidebar{
+  position:absolute;top:0;left:0;bottom:0;width:78%;
+  background:#0C0C0C;border-right:1px solid var(--border);
+  z-index:160;transform:translateX(-100%);
+  transition:transform .3s var(--ease);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.sidebar.open{transform:translateX(0)}
+.sb-head{padding:56px 22px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-mark{font-size:16px;font-weight:700;letter-spacing:-.4px;color:var(--white);margin-bottom:2px}
+.sb-mark em{font-style:normal;color:var(--p2)}
+.sb-sub{font-size:11px;color:var(--grey2);font-weight:400}
+.sb-body{flex:1;overflow-y:auto;scrollbar-width:none;padding:16px 0 24px}
+.sb-body::-webkit-scrollbar{display:none}
+.sb-section{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--grey2);padding:8px 22px 6px;margin-top:8px}
+.sb-item{
+  display:flex;align-items:center;gap:14px;
+  padding:13px 22px;cursor:pointer;transition:background .12s;
+  position:relative;
+}
+.sb-item:active{background:var(--s2)}
+.sb-item.on{background:rgba(123,79,255,.1)}
+.sb-item.on::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;background:var(--p);border-radius:0 2px 2px 0}
+.sb-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-ic svg{width:17px;height:17px}
+.sb-info{flex:1;min-width:0}
+.sb-name{font-size:13.5px;font-weight:500;color:var(--white)}
+.sb-val{font-size:11px;color:var(--grey);margin-top:1px;font-variant-numeric:tabular-nums}
+.sb-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;flex-shrink:0}
+.sb-divider{height:1px;background:var(--border);margin:8px 22px}
+.sb-footer{padding:16px 22px 28px;border-top:1px solid var(--border);flex-shrink:0}
+.sb-conn{display:flex;align-items:center;gap:8px}
+.sb-conn-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:blink 2.2s infinite}
+.sb-conn-txt{font-size:12px;color:var(--teal);font-weight:500}
+.sb-conn-dev{font-size:11px;color:var(--grey2);margin-top:2px}
+
+/* ── SCREENS ── */
+.screens{flex:1;overflow:hidden;position:relative;min-height:0}
+.screen{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;opacity:0;pointer-events:none;transition:opacity .2s var(--ease),transform .2s var(--ease);transform:translateY(6px)}
+.screen::-webkit-scrollbar{display:none}
+.screen.on{opacity:1;pointer-events:all;transform:translateY(0)}
+
+/* ── NAV ── */
+.bnav{display:flex;background:rgba(0,0,0,.92);border-top:1px solid var(--border);padding:10px 4px 26px;flex-shrink:0;backdrop-filter:blur(24px)}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px 0}
+.ni-ic{width:26px;height:26px;display:flex;align-items:center;justify-content:center}
+.ni-ic svg{width:20px;height:20px;fill:var(--grey2);transition:fill .15s}
+.ni-lb{font-size:10px;font-weight:500;color:var(--grey2);transition:color .15s}
+.ni.on .ni-ic svg{fill:var(--p2)}
+.ni.on .ni-lb{color:var(--p2)}
+
+/* ── CONNECT ── */
+#s-connect{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 28px 36px;min-height:100%}
+.c-mark{font-size:18px;font-weight:700;letter-spacing:-.5px;color:var(--white);margin-bottom:60px}
+.c-mark em{font-style:normal;color:var(--p2)}
+.orbit{position:relative;width:192px;height:192px;display:flex;align-items:center;justify-content:center;margin-bottom:48px}
+.orbit-ring{position:absolute;border-radius:50%;border:1px solid rgba(123,79,255,.18);animation:pulse-ring 3.2s ease-out infinite}
+.orbit-ring:nth-child(1){inset:0;animation-delay:0s}.orbit-ring:nth-child(2){inset:22px;animation-delay:.7s}.orbit-ring:nth-child(3){inset:44px;animation-delay:1.4s}
+@keyframes pulse-ring{0%{opacity:.5;transform:scale(.9)}55%{opacity:.8}100%{opacity:0;transform:scale(1.08)}}
+.orbit-core{width:88px;height:88px;border-radius:50%;background:var(--s2);border:1px solid rgba(123,79,255,.35);display:flex;align-items:center;justify-content:center;box-shadow:0 0 40px rgba(123,79,255,.15);z-index:1}
+.orbit-core svg{width:32px;height:32px;fill:var(--p2)}
+.c-h{font-size:20px;font-weight:600;letter-spacing:-.4px;margin-bottom:8px;text-align:center}
+.c-sub{font-size:13.5px;color:var(--grey);text-align:center;line-height:1.65;margin-bottom:40px}
+.dev-card{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:20px;padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;margin-bottom:14px;transition:background .15s}
+.dev-card:active{background:var(--s3)}
+.dev-ic{width:40px;height:40px;border-radius:11px;background:var(--s3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dev-ic svg{width:20px;height:20px;fill:var(--p2)}
+.dev-name{font-size:14px;font-weight:500;color:var(--white)}
+.dev-id{font-size:11px;color:var(--grey);margin-top:2px;font-variant-numeric:tabular-nums}
+.dev-sig{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.sig-bars{display:flex;gap:2px;align-items:flex-end}
+.sig-bar{width:3px;border-radius:1.5px;background:var(--p2)}
+.sig-bar:nth-child(1){height:5px}.sig-bar:nth-child(2){height:9px}.sig-bar:nth-child(3){height:13px}
+.sig-lbl{font-size:9px;color:var(--grey)}
+.c-btn{width:100%;padding:16px;border-radius:16px;border:none;font-size:15px;font-weight:600;background:var(--p);color:#fff;cursor:pointer;font-family:inherit;letter-spacing:-.2px;transition:opacity .15s;box-shadow:0 4px 20px rgba(123,79,255,.3)}
+.c-btn:active{opacity:.85}
+
+/* ── HOME ── */
+#s-home{padding:14px 20px 0}
+.home-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.home-g{font-size:13px;color:var(--grey);margin-bottom:2px}
+.home-n{font-size:24px;font-weight:700;letter-spacing:-.6px}
+.conn-chip{display:flex;align-items:center;gap:5px;background:rgba(48,209,88,.08);border:1px solid rgba(48,209,88,.2);border-radius:99px;padding:7px 12px}
+.conn-dot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:blink 2.2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.conn-txt{font-size:11px;font-weight:500;color:var(--teal)}
+
+/* metric blocks */
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.mblock{background:var(--s1);border:1px solid var(--border);border-radius:18px;padding:14px 14px 16px;display:flex;flex-direction:column;cursor:pointer;transition:background .12s}
+.mblock:active{background:var(--s2)}
+.mblock-label{font-size:11px;font-weight:500;color:var(--grey);letter-spacing:.01em;margin-bottom:12px}
+.mblock-body{display:flex;align-items:center;gap:12px}
+.mblock-ring{position:relative;width:56px;height:56px;flex-shrink:0}
+.mblock-ring svg{transform:rotate(-90deg);display:block}
+.mblock-ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;letter-spacing:-.3px;font-variant-numeric:tabular-nums}
+.mblock-info{display:flex;flex-direction:column;gap:4px}
+.mblock-rating{font-size:15px;font-weight:700;letter-spacing:-.3px;line-height:1.1}
+.mblock-unit{font-size:10px;font-weight:400;color:var(--grey)}
+
+/* state card */
+.state-card{border-radius:22px;padding:22px 20px 18px;margin-bottom:10px;position:relative;overflow:hidden;text-align:center;background:var(--s1);border:1px solid var(--border);transition:border-color .4s}
+.state-card .sg{position:absolute;top:-50px;left:50%;transform:translateX(-50%);width:240px;height:160px;background:radial-gradient(ellipse,rgba(123,79,255,.1) 0%,transparent 70%);pointer-events:none;transition:background .5s}
+.state-ic{width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;transition:all .4s}
+.state-ic svg{width:26px;height:26px;transition:fill .4s}
+.state-eye{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--grey);margin-bottom:6px}
+.state-ttl{font-size:20px;font-weight:700;letter-spacing:-.5px;margin-bottom:7px;line-height:1.2}
+.state-dsc{font-size:12.5px;color:var(--grey);line-height:1.65;margin-bottom:16px;padding:0 4px}
+.state-prog{height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;margin-bottom:7px}
+.state-prog-f{height:100%;border-radius:2px;transition:width 1.4s var(--ease),background .4s}
+.state-prog-ls{display:flex;justify-content:space-between}
+.state-prog-ls span{font-size:10px;color:var(--grey2)}
+
+.act-btn{width:100%;padding:15px;border-radius:15px;border:none;font-family:inherit;font-size:15px;font-weight:600;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;margin-bottom:10px;transition:opacity .15s;letter-spacing:-.2px}
+.act-btn:active{opacity:.85}
+.act-btn svg{width:16px;height:16px;fill:#fff;flex-shrink:0}
+
+.sec-lbl{font-size:11px;font-weight:600;color:var(--grey);letter-spacing:.06em;text-transform:uppercase;margin-bottom:9px}
+.next{display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:16px;background:var(--s1);border:1px solid var(--border);margin-bottom:8px;cursor:pointer;transition:background .12s}
+.next:active{background:var(--s2)}
+.next-ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.next-ic svg{width:17px;height:17px}
+.next-b{flex:1}
+.next-t{font-size:11px;color:var(--grey);margin-bottom:2px}
+.next-h{font-size:13.5px;font-weight:500}
+.next-tag{font-size:10px;font-weight:600;padding:3px 9px;border-radius:99px;flex-shrink:0}
+.feel{background:var(--s1);border:1px solid var(--border);border-radius:18px;padding:15px;margin-bottom:12px}
+.feel-q{font-size:14px;font-weight:600;margin-bottom:12px;letter-spacing:-.2px}
+.feel-row{display:flex;gap:7px}
+.fo{flex:1;padding:9px 5px;border-radius:11px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;font-family:inherit;transition:all .15s}
+.fo:active{background:var(--s3)}
+.fo.sel{border-color:rgba(123,79,255,.45);background:rgba(123,79,255,.09)}
+.fo-e{font-size:18px;line-height:1}.fo-l{font-size:10px;color:var(--grey);font-weight:500}
+.pad{height:18px}
+
+/* ── DETAIL SCREEN COMMON ── */
+.det-hd{display:flex;align-items:center;gap:12px;margin-bottom:24px;padding:20px 20px 0}
+.back{width:34px;height:34px;border-radius:99px;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .12s;flex-shrink:0}
+.back:active{background:var(--s3)}
+.back svg{width:16px;height:16px;fill:var(--white)}
+.det-title{font-size:17px;font-weight:600;letter-spacing:-.3px}
+.det-body{padding:0 20px}
+
+/* big metric */
+.big-m{text-align:center;padding:12px 0 22px}
+.big-v{font-size:80px;font-weight:200;letter-spacing:-5px;line-height:1;font-variant-numeric:tabular-nums}
+.big-u{font-size:15px;color:var(--grey);margin-top:5px}
+.big-s{font-size:13px;font-weight:500;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:4px}
+.big-s svg{width:13px;height:13px}
+
+/* tabs */
+.tabs{display:flex;gap:4px;margin-bottom:14px;background:var(--s2);border-radius:11px;padding:3px}
+.tab-btn{flex:1;padding:8px;border-radius:8px;border:none;background:transparent;color:var(--grey);font-size:12px;font-weight:500;font-family:inherit;cursor:pointer;transition:all .15s}
+.tab-btn.on{background:var(--s3);color:var(--white)}
+
+/* stats row */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.stat{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:13px;text-align:center}
+.stat-v{font-size:21px;font-weight:500;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.stat-l{font-size:10px;color:var(--grey);margin-top:3px}
+
+/* insight card */
+.insight{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start}
+.ins-ic{width:30px;height:30px;border-radius:9px;background:rgba(123,79,255,.12);border:1px solid rgba(123,79,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ins-ic svg{width:15px;height:15px;fill:var(--p2)}
+.ins-h{font-size:13px;font-weight:600;margin-bottom:3px;letter-spacing:-.2px}
+.ins-b{font-size:12px;color:var(--grey);line-height:1.6}
+
+/* sleep */
+.ring-wrap{display:flex;flex-direction:column;align-items:center;padding:8px 0 20px}
+.ring-svg{position:relative;width:148px;height:148px}
+.ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:200;letter-spacing:-2px}
+.ring-lbl{font-size:13px;color:var(--grey);margin-top:8px}
+.sleep-bar-card{background:var(--s1);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:10px}
+.sbc-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.sbc-t{font-size:13px;font-weight:600}.sbc-d{font-size:13px;font-weight:500;color:var(--p2)}
+.sbc-bar{height:8px;border-radius:4px;overflow:hidden;display:flex;gap:1px;margin-bottom:10px}
+.sbc-seg{height:100%}
+.sbc-leg{display:flex;gap:12px;flex-wrap:wrap}
+.sbc-li{display:flex;align-items:center;gap:5px}
+.sbc-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.sbc-li span{font-size:10px;color:var(--grey)}
+.phases{background:var(--s1);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:10px}
+.ph-row{display:flex;align-items:center;padding:13px 17px;border-bottom:1px solid var(--border)}
+.ph-row:last-child{border:none}
+.ph-ind{width:3px;height:24px;border-radius:2px;margin-right:13px;flex-shrink:0}
+.ph-name{font-size:13px;flex:1}.ph-time{font-size:12px;color:var(--grey);margin-right:14px;font-variant-numeric:tabular-nums}
+.ph-pct{font-size:13px;font-weight:600;min-width:30px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* spo2 */
+.arc-wrap{display:flex;flex-direction:column;align-items:center;padding:12px 0 20px;position:relative}
+.arc-over{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);text-align:center}
+.arc-num{font-size:52px;font-weight:200;letter-spacing:-3px;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.arc-unit{font-size:15px;color:var(--grey)}
+.arc-st{font-size:13px;font-weight:500;margin-top:5px}
+.range-card{background:var(--s1);border:1px solid var(--border);border-radius:18px;padding:17px;margin-bottom:10px}
+.range-t{font-size:11px;font-weight:600;color:var(--grey);text-transform:uppercase;letter-spacing:.06em;margin-bottom:13px}
+.range-bar{height:5px;border-radius:3px;position:relative;margin-bottom:9px;background:linear-gradient(to right,var(--rose) 0%,var(--amber) 32%,var(--teal) 62%,#5BEAB4 100%)}
+.range-thumb{position:absolute;top:50%;transform:translate(-50%,-50%);width:13px;height:13px;border-radius:50%;background:var(--white);border:2px solid var(--black);box-shadow:0 0 0 2px var(--p2);transition:left .8s var(--ease)}
+.range-ls{display:flex;justify-content:space-between}
+.range-ls span{font-size:10px;color:var(--grey2)}
+.hist{background:var(--s1);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:10px}
+.h-row{display:flex;align-items:center;padding:12px 17px;border-bottom:1px solid var(--border)}
+.h-row:last-child{border:none}
+.h-t{font-size:12px;color:var(--grey);width:48px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.h-bar{flex:1;height:3px;background:var(--s3);border-radius:2px;margin:0 12px;overflow:hidden}
+.h-fill{height:100%;border-radius:2px;background:var(--p2)}
+.h-v{font-size:13px;font-weight:500;min-width:34px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* ── TEMPERATURE SCREEN ── */
+.temp-gauge{display:flex;flex-direction:column;align-items:center;padding:12px 0 24px}
+.temp-big{font-size:80px;font-weight:200;letter-spacing:-4px;line-height:1;font-variant-numeric:tabular-nums}
+.temp-deg{font-size:36px;font-weight:300;vertical-align:super;margin-top:4px;display:inline-block;font-size:32px}
+.temp-status{font-size:13px;font-weight:500;margin-top:8px}
+.temp-bar-card{background:var(--s1);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:10px}
+.temp-bar-track{height:8px;border-radius:4px;background:linear-gradient(to right,#64D2FF,#30D158,#FF9F0A,#FF453A);margin:10px 0;position:relative}
+.temp-bar-thumb{position:absolute;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:var(--white);border:2px solid var(--black);box-shadow:0 0 0 2px var(--amber);transition:left .8s var(--ease)}
+.temp-bar-ls{display:flex;justify-content:space-between}
+.temp-bar-ls span{font-size:10px;color:var(--grey2)}
+.temp-hist-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.temp-hist-row:last-child{border:none}
+.thr-time{font-size:12px;color:var(--grey);width:48px;flex-shrink:0}
+.thr-bar{flex:1;height:3px;background:var(--s3);border-radius:2px;overflow:hidden}
+.thr-fill{height:100%;border-radius:2px;background:var(--amber)}
+.thr-val{font-size:13px;font-weight:500;min-width:44px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* ── PRESSURE SCREEN ── */
+.bp-display{display:flex;flex-direction:column;align-items:center;padding:12px 0 24px;gap:4px}
+.bp-nums{display:flex;align-items:baseline;gap:8px}
+.bp-sys{font-size:80px;font-weight:200;letter-spacing:-4px;line-height:1;font-variant-numeric:tabular-nums}
+.bp-div{font-size:36px;font-weight:200;color:var(--grey)}
+.bp-dia{font-size:54px;font-weight:200;letter-spacing:-3px;font-variant-numeric:tabular-nums;color:var(--grey)}
+.bp-unit{font-size:13px;color:var(--grey);margin-top:2px}
+.bp-status{font-size:13px;font-weight:500;margin-top:6px}
+.bp-zones{background:var(--s1);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:10px}
+.bz-row{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border)}
+.bz-row:last-child{border:none}
+.bz-row.current{background:rgba(123,79,255,.08)}
+.bz-ind{width:10px;height:10px;border-radius:50%;margin-right:12px;flex-shrink:0}
+.bz-name{font-size:13px;flex:1}
+.bz-range{font-size:12px;color:var(--grey);font-variant-numeric:tabular-nums}
+.bz-you{font-size:10px;font-weight:600;color:var(--p2);margin-left:8px}
+
+/* ── STRESS SCREEN ── */
+.stress-arc-wrap{display:flex;flex-direction:column;align-items:center;padding:12px 0 20px;position:relative}
+.stress-arc-over{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);text-align:center;white-space:nowrap}
+.stress-num{font-size:52px;font-weight:200;letter-spacing:-3px;line-height:1;font-variant-numeric:tabular-nums}
+.stress-lbl{font-size:13px;color:var(--grey);margin-top:2px}
+.stress-status{font-size:13px;font-weight:500;margin-top:5px}
+.stress-timeline{background:var(--s1);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:10px}
+.stl-title{font-size:13px;font-weight:600;margin-bottom:12px}
+.stl-bars{display:flex;gap:3px;align-items:flex-end;height:60px}
+.stl-bar-w{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.stl-bar{width:100%;border-radius:3px 3px 0 0;transition:height .6s var(--ease)}
+.stl-lbl{font-size:8px;color:var(--grey2)}
+
+/* ── STEPS SCREEN ── */
+.steps-ring-wrap{display:flex;flex-direction:column;align-items:center;padding:8px 0 20px}
+.steps-ring{position:relative;width:148px;height:148px}
+.steps-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.steps-big{font-size:30px;font-weight:700;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.steps-sub{font-size:11px;color:var(--grey);margin-top:2px}
+.steps-lbl{font-size:13px;color:var(--grey);margin-top:8px}
+.activity-list{background:var(--s1);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:10px}
+.act-row{display:flex;align-items:center;padding:13px 17px;border-bottom:1px solid var(--border)}
+.act-row:last-child{border:none}
+.act-ic{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-right:13px;flex-shrink:0}
+.act-ic svg{width:15px;height:15px}
+.act-name{font-size:13px;flex:1}.act-val{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+
+canvas{display:block}
+
+/* ── IDADE BIOLÓGICA ── */
+.bio-hero{display:flex;flex-direction:column;align-items:center;padding:16px 0 24px;position:relative}
+.bio-ages{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin-bottom:8px}
+.bio-real{text-align:center}
+.bio-real-num{font-size:22px;font-weight:300;color:var(--grey);font-variant-numeric:tabular-nums}
+.bio-real-lbl{font-size:10px;color:var(--grey2);margin-top:2px}
+.bio-arrow{font-size:28px;color:var(--grey3);padding-bottom:10px}
+.bio-biol{text-align:center}
+.bio-biol-num{font-size:72px;font-weight:200;letter-spacing:-4px;line-height:1;font-variant-numeric:tabular-nums}
+.bio-biol-lbl{font-size:13px;margin-top:5px;font-weight:500}
+.bio-delta{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;font-size:13px;font-weight:500}
+.bio-delta svg{width:14px;height:14px}
+
+.bio-factors{background:var(--s1);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:10px}
+.bf-head{padding:14px 17px 10px;border-bottom:1px solid var(--border)}
+.bf-title{font-size:13px;font-weight:600}
+.bf-sub{font-size:11px;color:var(--grey);margin-top:2px}
+.bf-row{display:flex;align-items:center;gap:12px;padding:12px 17px;border-bottom:1px solid var(--border)}
+.bf-row:last-child{border:none}
+.bf-ic{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bf-ic svg{width:15px;height:15px}
+.bf-body{flex:1;min-width:0}
+.bf-name{font-size:13px;color:var(--white);font-weight:400}
+.bf-val{font-size:11px;color:var(--grey);margin-top:1px;font-variant-numeric:tabular-nums}
+.bf-impact{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.bf-impact-bar{width:48px;height:4px;background:var(--s3);border-radius:2px;overflow:hidden}
+.bf-impact-fill{height:100%;border-radius:2px}
+.bf-impact-val{font-size:11px;font-weight:600;min-width:32px;text-align:right;font-variant-numeric:tabular-nums}
+
+.bio-tip{background:var(--s1);border:1px solid var(--border);border-radius:18px;padding:14px 16px;margin-bottom:10px}
+.bt-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.bt-action{font-size:14px;font-weight:700;letter-spacing:-.3px;margin-bottom:5px}
+.bt-desc{font-size:12px;color:var(--grey);line-height:1.6}
+
+.bio-trend{background:var(--s1);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:10px}
+.bt2-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.bt2-title{font-size:13px;font-weight:600}
+.bt2-val{font-size:13px;font-weight:500}
+.bio-sparkline{height:48px;width:100%}
+@media(max-height:870px){.phone{height:100dvh;border-radius:0;box-shadow:none}.phone::before{display:none}}
+@media(max-width:420px){.phone{width:100%;border-radius:0;box-shadow:none}.phone::before{display:none}}
+</style>
+</head>
+<body>
+<div class="phone">
+
+<!-- STATUS BAR -->
+<div class="sbar">
+  <div class="ham-btn" id="ham" onclick="toggleSidebar()">
+    <span></span><span></span><span></span>
+  </div>
+  <span class="sbar-t" id="clock">9:41</span>
+  <div class="sbar-r">
+    <svg viewBox="0 0 24 24"><path d="M1 9l2 2c2.88-2.88 6.79-4.08 10.53-3.62l1.99-2C10.8 4.48 5.44 5.96 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.75 7.28-2.75 10.04 0l2-2C15.14 9.05 10.88 8 8 8S.86 9.05-1 13l2 2z" opacity=".8"/></svg>
+    <svg viewBox="0 0 24 12"><rect x="0" y="1" width="20" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".6"/><rect x="1.5" y="2.5" width="14" height="7" rx="1.2"/></svg>
+  </div>
+</div>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sb-overlay" onclick="toggleSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-head">
+    <div class="sb-mark">assum<em>fit</em></div>
+    <div class="sb-sub">Dados de saúde — hoje</div>
+  </div>
+  <div class="sb-body">
+    <div class="sb-section">Principal</div>
+    <div class="sb-item on" onclick="navSidebar('s-home')">
+      <div class="sb-ic" style="background:rgba(123,79,255,.12)">
+        <svg viewBox="0 0 24 24" style="fill:var(--p2)"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+      </div>
+      <div class="sb-info"><div class="sb-name">Início</div><div class="sb-val">visão geral</div></div>
+    </div>
+
+    <div class="sb-divider"></div>
+    <div class="sb-section">Métricas de saúde</div>
+
+    <div class="sb-item" onclick="navSidebar('s-hrv')">
+      <div class="sb-ic" style="background:rgba(123,79,255,.12)">
+        <svg viewBox="0 0 24 24" style="fill:none;stroke:var(--p2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="2,12 5,12 7,5 9,19 11,10 13,14 15,12 22,12"/></svg>
+      </div>
+      <div class="sb-info"><div class="sb-name">Recuperação</div><div class="sb-val" id="sb-hrv-val">72 ms · HRV</div></div>
+      <span class="sb-badge" id="sb-hrv-badge" style="background:rgba(123,79,255,.15);color:var(--p2)">Excelente</span>
+    </div>
+
+    <div class="sb-item" onclick="navSidebar('s-sleep')">
+      <div class="sb-ic" style="background:rgba(48,209,88,.08)">
+        <svg viewBox="0 0 24 24" style="fill:var(--teal)"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+      </div>
+      <div class="sb-info"><div class="sb-name">Qualidade do sono</div><div class="sb-val">7h 12m · score 82</div></div>
+      <span class="sb-badge" style="background:rgba(48,209,88,.1);color:var(--teal)">Bom</span>
+    </div>
+
+    <div class="sb-item" onclick="navSidebar('s-spo2')">
+      <div class="sb-ic" style="background:rgba(100,210,255,.08)">
+        <svg viewBox="0 0 24 24" style="fill:var(--blue)"><path d="M12 2a5 5 0 0 0-5 5c0 3.5 2.5 6.5 5 10.5C14.5 13.5 17 10.5 17 7a5 5 0 0 0-5-5z"/></svg>
+      </div>
+      <div class="sb-info"><div class="sb-name">Oxigênio</div><div class="sb-val" id="sb-spo2-val">98% no sangue</div></div>
+      <span class="sb-badge" id="sb-spo2-badge" style="background:rgba(100,210,255,.08);color:var(--blue)">Excelente</span>
+    </div>
+
+    <div class="sb-item" onclick="navSidebar('s-hrv')">
+      <div class="sb-ic" style="background:rgba(255,69,58,.08)">
+        <svg viewBox="0 0 24 24" style="fill:var(--rose)"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
+      </div>
+      <div class="sb-info"><div class="sb-name">Coração</div><div class="sb-val" id="sb-hr-val">58 bpm · repouso</div></div>
+      <span class="sb-badge" id="sb-hr-badge" style="background:rgba(255,69,58,.08);color:#FF6B6B">Normal</span>
+    </div>
+
+    <div class="sb-item" onclick="navSidebar('s-temp')">
+      <div class="sb-ic" style="background:rgba(255,159,10,.08)">
+        <svg viewBox="0 0 24 24" style="fill:var(--amber)"><path d="M15 13V5a3 3 0 0 0-6 0v8a5 5 0 1 0 6 0zm-3 7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>
+      </div>
+      <div class="sb-info"><div class="sb-name">Temperatura</div><div class="sb-val" id="sb-temp-val">36,6°C · pele</div></div>
+      <span class="sb-badge" id="sb-temp-badge" style="background:rgba(255,159,10,.1);color:var(--amber)">Normal</span>
+    </div>
+
+    <div class="sb-item" onclick="navSidebar('s-bp')">
+      <div class="sb-ic" style="background:rgba(255,55,95,.08)">
+        <svg viewBox="0 0 24 24" style="fill:var(--pink)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+      </div>
+      <div class="sb-info"><div class="sb-name">Pressão arterial</div><div class="sb-val">118 / 76 mmHg</div></div>
+      <span class="sb-badge" style="background:rgba(255,55,95,.08);color:var(--pink)">Ótima</span>
+    </div>
+
+    <div class="sb-item" onclick="navSidebar('s-stress')">
+      <div class="sb-ic" style="background:rgba(255,107,0,.08)">
+        <svg viewBox="0 0 24 24" style="fill:var(--orange)"><path d="M11.5 2C6.81 2 3 5.81 3 10.5S6.81 19 11.5 19h.5v3c4.86-2.34 8-7 8-11.5C20 5.81 16.19 2 11.5 2zm1 14.5h-2v-2h2v2zm0-4h-2c0-3.25 3-3 3-5 0-1.1-.9-2-2-2s-2 .9-2 2h-2c0-2.21 1.79-4 4-4s4 1.79 4 4c0 2.5-3 2.75-3 5z"/></svg>
+      </div>
+      <div class="sb-info"><div class="sb-name">Stress</div><div class="sb-val" id="sb-stress-val">28 · baixo</div></div>
+      <span class="sb-badge" id="sb-stress-badge" style="background:rgba(48,209,88,.08);color:var(--teal)">Calmo</span>
+    </div>
+
+    <div class="sb-item" onclick="navSidebar('s-steps')">
+      <div class="sb-ic" style="background:rgba(100,210,255,.07)">
+        <svg viewBox="0 0 24 24" style="fill:var(--blue)"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></svg>
+      </div>
+      <div class="sb-info"><div class="sb-name">Atividade</div><div class="sb-val">7.842 passos hoje</div></div>
+      <span class="sb-badge" style="background:rgba(100,210,255,.07);color:var(--blue)">Bom</span>
+    </div>
+
+    <div class="sb-item" onclick="navSidebar('s-bioage')">
+      <div class="sb-ic" style="background:rgba(123,79,255,.12)">
+        <svg viewBox="0 0 24 24" style="fill:var(--p2)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+      </div>
+      <div class="sb-info"><div class="sb-name">Idade biológica</div><div class="sb-val" id="sb-bio-val">27 anos · −5 da real</div></div>
+      <span class="sb-badge" id="sb-bio-badge" style="background:rgba(48,209,88,.08);color:var(--teal)">Jovem</span>
+    </div>
+
+    <div class="sb-divider"></div>
+    <div class="sb-section">Dispositivo</div>
+    <div class="sb-item" onclick="navSidebar('s-connect')">
+      <div class="sb-ic" style="background:rgba(123,79,255,.1)">
+        <svg viewBox="0 0 24 24" style="fill:var(--p2)"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg>
+      </div>
+      <div class="sb-info"><div class="sb-name">Staranb ANB-X1</div><div class="sb-val">E4:C3:B2 · −58 dBm</div></div>
+    </div>
+  </div>
+  <div class="sb-footer">
+    <div class="sb-conn">
+      <div class="sb-conn-dot"></div>
+      <div><div class="sb-conn-txt">Conectado</div><div class="sb-conn-dev">Bateria do wearable: 87%</div></div>
+    </div>
+  </div>
+</aside>
+
+<div class="screens">
+
+<!-- CONNECT -->
+<div class="screen on" id="s-connect">
+  <div class="c-mark">assum<em>fit</em></div>
+  <div class="orbit">
+    <div class="orbit-ring"></div><div class="orbit-ring"></div><div class="orbit-ring"></div>
+    <div class="orbit-core"><svg viewBox="0 0 24 24"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg></div>
+  </div>
+  <p class="c-h">Conectar dispositivo</p>
+  <p class="c-sub">Mantenha sua pulseira Staranb<br>próxima ao celular</p>
+  <div class="dev-card" onclick="doConnect()">
+    <div class="dev-ic"><svg viewBox="0 0 24 24" style="fill:var(--p2)"><path d="M9 2h6l1 4H8L9 2zm6 16l-1 4H9l-1-4h7zM7 6h10c1.1 0 2 .9 2 2v8c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V8c0-1.1.9-2 2-2zm5 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm0 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg></div>
+    <div><div class="dev-name">Staranb ANB-X1</div><div class="dev-id">E4:C3:B2:A1:00:1F</div></div>
+    <div class="dev-sig"><div class="sig-bars"><div class="sig-bar"></div><div class="sig-bar"></div><div class="sig-bar"></div></div><div class="sig-lbl">−58 dBm</div></div>
+  </div>
+  <button class="c-btn" id="c-btn" onclick="doConnect()">Conectar via Bluetooth</button>
+</div>
+
+<!-- HOME -->
+<div class="screen" id="s-home">
+  <div class="home-top">
+    <div><div class="home-g" id="home-g">Bom dia</div><div class="home-n">Rafael</div></div>
+    <div class="conn-chip"><div class="conn-dot"></div><span class="conn-txt">Staranb</span></div>
+  </div>
+
+  <div class="metric-grid">
+    <div class="mblock" onclick="navSidebar('s-hrv')">
+      <div class="mblock-label">Recuperação</div>
+      <div class="mblock-body">
+        <div class="mblock-ring">
+          <svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="22" fill="none" stroke="#1A1A1A" stroke-width="5"/><circle id="mb-hrv-arc" cx="28" cy="28" r="22" fill="none" stroke="#7B4FFF" stroke-width="5" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="35"/></svg>
+          <div class="mblock-ring-num" id="mb-hrv-num" style="color:#9D7BFF">72</div>
+        </div>
+        <div class="mblock-info">
+          <div class="mblock-rating" id="mb-hrv-rating" style="color:#9D7BFF">Excelente</div>
+          <div class="mblock-unit" id="mb-hrv-unit">72 ms · HRV</div>
+        </div>
+      </div>
+    </div>
+    <div class="mblock" onclick="navSidebar('s-sleep')">
+      <div class="mblock-label">Qualidade do sono</div>
+      <div class="mblock-body">
+        <div class="mblock-ring">
+          <svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="22" fill="none" stroke="#1A1A1A" stroke-width="5"/><circle cx="28" cy="28" r="22" fill="none" stroke="#30D158" stroke-width="5" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="25"/></svg>
+          <div class="mblock-ring-num" style="color:#30D158">82</div>
+        </div>
+        <div class="mblock-info">
+          <div class="mblock-rating" style="color:#30D158">Bom</div>
+          <div class="mblock-unit">7h 12m</div>
+        </div>
+      </div>
+    </div>
+    <div class="mblock" onclick="navSidebar('s-spo2')">
+      <div class="mblock-label">Oxigênio</div>
+      <div class="mblock-body">
+        <div class="mblock-ring">
+          <svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="22" fill="none" stroke="#1A1A1A" stroke-width="5"/><circle id="mb-spo2-arc" cx="28" cy="28" r="22" fill="none" stroke="#64D2FF" stroke-width="5" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="8"/></svg>
+          <div class="mblock-ring-num" id="mb-spo2-num" style="color:#64D2FF">98</div>
+        </div>
+        <div class="mblock-info">
+          <div class="mblock-rating" id="mb-spo2-rating" style="color:#64D2FF">Excelente</div>
+          <div class="mblock-unit" id="mb-spo2-unit">98% no sangue</div>
+        </div>
+      </div>
+    </div>
+    <div class="mblock" onclick="navSidebar('s-hrv')">
+      <div class="mblock-label">Coração</div>
+      <div class="mblock-body">
+        <div class="mblock-ring">
+          <svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="22" fill="none" stroke="#1A1A1A" stroke-width="5"/><circle id="mb-hr-arc" cx="28" cy="28" r="22" fill="none" stroke="#FF453A" stroke-width="5" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="76"/></svg>
+          <div class="mblock-ring-num" id="mb-hr-num" style="color:#FF6B6B">58</div>
+        </div>
+        <div class="mblock-info">
+          <div class="mblock-rating" id="mb-hr-rating" style="color:#FF6B6B">Normal</div>
+          <div class="mblock-unit" id="mb-hr-unit">58 bpm</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="state-card" id="sc">
+    <div class="sg" id="sg"></div>
+    <div class="state-ic" id="sic"><svg id="s-svg" viewBox="0 0 24 24" style="fill:var(--p2)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg></div>
+    <div class="state-eye" id="s-eye">seu estado agora</div>
+    <div class="state-ttl" id="s-ttl">Você está no seu<br>melhor momento</div>
+    <div class="state-dsc" id="s-dsc">Corpo descansado e recuperado. Ótima hora para tarefas que exigem concentração e decisões importantes.</div>
+    <div class="state-prog"><div class="state-prog-f" id="s-fill" style="width:87%;background:var(--p)"></div></div>
+    <div class="state-prog-ls"><span id="s-start">começa a cair em 2h30</span><span id="s-hi" style="color:var(--p2)">nível alto</span></div>
+  </div>
+
+  <button class="act-btn" id="act-btn" style="background:var(--p);box-shadow:0 4px 20px rgba(123,79,255,.3)">
+    <svg id="act-ic" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    <span id="act-tx">Iniciar sessão de foco</span>
+  </button>
+
+  <div class="feel">
+    <div class="feel-q">Como você está?</div>
+    <div class="feel-row">
+      <button class="fo" onclick="setF(this,'great')"><span class="fo-e">😄</span><span class="fo-l">Ótimo</span></button>
+      <button class="fo" onclick="setF(this,'ok')"><span class="fo-e">😐</span><span class="fo-l">Ok</span></button>
+      <button class="fo" onclick="setF(this,'tired')"><span class="fo-e">😮‍💨</span><span class="fo-l">Cansado</span></button>
+      <button class="fo" onclick="setF(this,'bad')"><span class="fo-e">😞</span><span class="fo-l">Mal</span></button>
+    </div>
+  </div>
+  <div class="pad"></div>
+</div>
+
+<!-- HRV/FC -->
+<div class="screen" id="s-hrv">
+  <div class="det-hd"><div class="back" onclick="goBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div><span class="det-title">Recuperação · HRV</span></div>
+  <div class="det-body">
+    <div class="big-m"><div class="big-v" id="hrv-big" style="color:var(--p2)">72</div><div class="big-u">ms · variabilidade cardíaca</div><div class="big-s" style="color:var(--teal)"><svg viewBox="0 0 24 24" fill="var(--teal)"><path d="M7 14l5-5 5 5z"/></svg>Recuperação ótima</div></div>
+    <div class="tabs"><button class="tab-btn on" onclick="setTab(this)">1H</button><button class="tab-btn" onclick="setTab(this)">6H</button><button class="tab-btn" onclick="setTab(this)">24H</button><button class="tab-btn" onclick="setTab(this)">7D</button></div>
+    <canvas id="cv-big" style="width:100%;height:110px"></canvas>
+    <div class="stats"><div class="stat"><div class="stat-v" id="hr-min">52</div><div class="stat-l">Mín bpm</div></div><div class="stat"><div class="stat-v" id="hr-now">58</div><div class="stat-l">Atual bpm</div></div><div class="stat"><div class="stat-v" id="hr-max">74</div><div class="stat-l">Máx bpm</div></div></div>
+    <div class="insight"><div class="ins-ic"><svg viewBox="0 0 24 24"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg></div><div><div class="ins-h">HRV 18% acima da sua média</div><div class="ins-b">Seu valor de 72ms supera a média dos últimos 30 dias (61ms). Sinal de boa recuperação do sistema nervoso.</div></div></div>
+    <div class="pad"></div>
+  </div>
+</div>
+
+<!-- SLEEP -->
+<div class="screen" id="s-sleep">
+  <div class="det-hd"><div class="back" onclick="goBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div><span class="det-title">Qualidade do sono</span></div>
+  <div class="det-body">
+    <div class="ring-wrap"><div class="ring-svg"><svg width="148" height="148" viewBox="0 0 148 148"><circle cx="74" cy="74" r="62" fill="none" stroke="#1A1A1A" stroke-width="10"/><circle cx="74" cy="74" r="62" fill="none" stroke="var(--p)" stroke-width="10" stroke-dasharray="389.6" stroke-dashoffset="70" stroke-linecap="round" transform="rotate(-90 74 74)"/></svg><div class="ring-num">82</div></div><div class="ring-lbl">Score de sono</div></div>
+    <div class="sleep-bar-card"><div class="sbc-h"><span class="sbc-t">Esta noite</span><span class="sbc-d">7h 12m</span></div><div class="sbc-bar"><div class="sbc-seg" style="width:8%;background:#3A2060;border-radius:4px 0 0 4px"></div><div class="sbc-seg" style="width:22%;background:#7B4FFF"></div><div class="sbc-seg" style="width:45%;background:#2D1F50"></div><div class="sbc-seg" style="width:25%;background:#1A1230;border-radius:0 4px 4px 0"></div></div><div class="sbc-leg"><div class="sbc-li"><div class="sbc-dot" style="background:#7B4FFF"></div><span>REM</span></div><div class="sbc-li"><div class="sbc-dot" style="background:#2D1F50"></div><span>Profundo</span></div><div class="sbc-li"><div class="sbc-dot" style="background:#1A1230"></div><span>Leve</span></div><div class="sbc-li"><div class="sbc-dot" style="background:#3A2060"></div><span>Acordado</span></div></div></div>
+    <div class="phases"><div class="ph-row"><div class="ph-ind" style="background:#7B4FFF"></div><div class="ph-name">REM</div><div class="ph-time">1h 35m</div><div class="ph-pct">22%</div></div><div class="ph-row"><div class="ph-ind" style="background:#5A3DB0"></div><div class="ph-name">Sono profundo</div><div class="ph-time">3h 15m</div><div class="ph-pct">45%</div></div><div class="ph-row"><div class="ph-ind" style="background:#2A1A55"></div><div class="ph-name">Sono leve</div><div class="ph-time">1h 50m</div><div class="ph-pct">25%</div></div><div class="ph-row"><div class="ph-ind" style="background:#1A0F30"></div><div class="ph-name">Acordado</div><div class="ph-time">32m</div><div class="ph-pct">8%</div></div></div>
+    <div class="insight"><div class="ins-ic"><svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg></div><div><div class="ins-h">45% de sono profundo — excepcional</div><div class="ins-b">Mais que o dobro da média de 20%. Favorece memória, recuperação muscular e regulação hormonal.</div></div></div>
+    <div class="pad"></div>
+  </div>
+</div>
+
+<!-- SPO2 -->
+<div class="screen" id="s-spo2">
+  <div class="det-hd"><div class="back" onclick="goBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div><span class="det-title">Oxigênio no sangue</span></div>
+  <div class="det-body">
+    <div class="arc-wrap"><svg width="240" height="136" viewBox="0 0 240 136"><defs><linearGradient id="arcg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#FF453A"/><stop offset="38%" stop-color="#FF9F0A"/><stop offset="100%" stop-color="#30D158"/></linearGradient></defs><path d="M 12 120 A 108 108 0 0 1 228 120" fill="none" stroke="#1A1A1A" stroke-width="12" stroke-linecap="round"/><path d="M 12 120 A 108 108 0 0 1 228 120" fill="none" stroke="url(#arcg)" stroke-width="12" stroke-linecap="round" stroke-dasharray="339.3" stroke-dashoffset="27"/></svg><div class="arc-over"><div class="arc-num"><span id="spo2-big">98</span><span class="arc-unit">%</span></div><div class="arc-st" style="color:var(--teal)">Saturação normal</div></div></div>
+    <div class="range-card"><div class="range-t">Referência clínica</div><div class="range-bar"><div class="range-thumb" id="spo2-thumb" style="left:87%"></div></div><div class="range-ls"><span>85%</span><span>90%</span><span>95%</span><span>100%</span></div></div>
+    <div class="hist"><div class="h-row"><span class="h-t">Agora</span><div class="h-bar"><div class="h-fill" id="h1" style="width:87%"></div></div><span class="h-v" id="hv1">98%</span></div><div class="h-row"><span class="h-t">30 min</span><div class="h-bar"><div class="h-fill" style="width:85%"></div></div><span class="h-v">97%</span></div><div class="h-row"><span class="h-t">1h</span><div class="h-bar"><div class="h-fill" style="width:88%"></div></div><span class="h-v">98%</span></div><div class="h-row"><span class="h-t">2h</span><div class="h-bar"><div class="h-fill" style="width:84%"></div></div><span class="h-v">97%</span></div><div class="h-row"><span class="h-t">Sono</span><div class="h-bar"><div class="h-fill" style="width:81%"></div></div><span class="h-v">96%</span></div></div>
+    <div class="insight"><div class="ins-ic"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg></div><div><div class="ins-h">Saturação excelente</div><div class="ins-b">98% indica oxigenação perfeita. Valores abaixo de 95% sinalizam atenção respiratória.</div></div></div>
+    <div class="pad"></div>
+  </div>
+</div>
+
+<!-- TEMPERATURA -->
+<div class="screen" id="s-temp">
+  <div class="det-hd"><div class="back" onclick="goBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div><span class="det-title">Temperatura corporal</span></div>
+  <div class="det-body">
+    <div class="temp-gauge">
+      <div class="temp-big" style="color:var(--amber)" id="temp-big">36<span class="temp-deg">,6°</span></div>
+      <div style="font-size:13px;color:var(--grey);margin-top:5px">temperatura da pele</div>
+      <div class="temp-status" id="temp-status" style="color:var(--teal);margin-top:6px">Normal</div>
+    </div>
+    <div class="temp-bar-card">
+      <div style="font-size:11px;font-weight:600;color:var(--grey);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Escala de referência</div>
+      <div class="temp-bar-track"><div class="temp-bar-thumb" style="left:55%"></div></div>
+      <div class="temp-bar-ls"><span>35°C</span><span>36°C</span><span>37°C</span><span>38°C</span><span>39°C</span></div>
+    </div>
+    <div class="hist">
+      <div class="h-row"><span class="h-t">Agora</span><div class="h-bar"><div class="h-fill" id="temp-h1" style="width:55%;background:var(--amber)"></div></div><span class="h-v" id="temp-v1">36,6°</span></div>
+      <div class="h-row"><span class="h-t">2h atrás</span><div class="h-bar"><div class="h-fill" style="width:52%;background:var(--amber)"></div></div><span class="h-v">36,5°</span></div>
+      <div class="h-row"><span class="h-t">6h atrás</span><div class="h-bar"><div class="h-fill" style="width:48%;background:var(--amber)"></div></div><span class="h-v">36,3°</span></div>
+      <div class="h-row"><span class="h-t">Acordar</span><div class="h-bar"><div class="h-fill" style="width:44%;background:var(--amber)"></div></div><span class="h-v">36,1°</span></div>
+      <div class="h-row"><span class="h-t">Noite</span><div class="h-bar"><div class="h-fill" style="width:40%;background:var(--blue)"></div></div><span class="h-v">35,9°</span></div>
+    </div>
+    <div class="insight"><div class="ins-ic" style="background:rgba(255,159,10,.12);border-color:rgba(255,159,10,.2)"><svg viewBox="0 0 24 24" style="fill:var(--amber)"><path d="M15 13V5a3 3 0 0 0-6 0v8a5 5 0 1 0 6 0zm-3 7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg></div><div><div class="ins-h">Ciclo circadiano normal</div><div class="ins-b">Sua temperatura sobe ao longo do dia — pico entre 12h e 14h coincide com o melhor momento para performance física.</div></div></div>
+    <div class="pad"></div>
+  </div>
+</div>
+
+<!-- PRESSÃO -->
+<div class="screen" id="s-bp">
+  <div class="det-hd"><div class="back" onclick="goBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div><span class="det-title">Pressão arterial</span></div>
+  <div class="det-body">
+    <div class="bp-display">
+      <div class="bp-nums">
+        <span class="bp-sys" style="color:var(--pink)">118</span>
+        <span class="bp-div">/</span>
+        <span class="bp-dia">76</span>
+      </div>
+      <div class="bp-unit">mmHg · sistólica / diastólica</div>
+      <div class="bp-status" style="color:var(--teal);margin-top:6px">Pressão ótima</div>
+    </div>
+    <div class="bp-zones">
+      <div class="bz-row"><div class="bz-ind" style="background:var(--blue)"></div><div class="bz-name">Baixa</div><div class="bz-range">&lt; 90/60</div></div>
+      <div class="bz-row current"><div class="bz-ind" style="background:var(--teal)"></div><div class="bz-name">Ótima</div><div class="bz-range">90–119 / 60–79</div><span class="bz-you">você</span></div>
+      <div class="bz-row"><div class="bz-ind" style="background:#A8D8A8"></div><div class="bz-name" style="color:var(--grey)">Normal</div><div class="bz-range" style="color:var(--grey)">120–129 / &lt;80</div></div>
+      <div class="bz-row"><div class="bz-ind" style="background:var(--amber)"></div><div class="bz-name" style="color:var(--grey)">Elevada</div><div class="bz-range" style="color:var(--grey)">130–139 / 80–89</div></div>
+      <div class="bz-row"><div class="bz-ind" style="background:var(--rose)"></div><div class="bz-name" style="color:var(--grey)">Alta</div><div class="bz-range" style="color:var(--grey)">&gt; 140/90</div></div>
+    </div>
+    <div class="insight"><div class="ins-ic" style="background:rgba(255,55,95,.1);border-color:rgba(255,55,95,.2)"><svg viewBox="0 0 24 24" style="fill:var(--pink)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg></div><div><div class="ins-h">Tendência: estável há 7 dias</div><div class="ins-b">Dados de BP do Staranb são tendências estimadas via PPG — não substituem medição clínica. Use como acompanhamento de longo prazo.</div></div></div>
+    <div class="pad"></div>
+  </div>
+</div>
+
+<!-- STRESS -->
+<div class="screen" id="s-stress">
+  <div class="det-hd"><div class="back" onclick="goBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div><span class="det-title">Nível de stress</span></div>
+  <div class="det-body">
+    <div class="stress-arc-wrap">
+      <svg width="240" height="136" viewBox="0 0 240 136">
+        <defs><linearGradient id="sg1" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#30D158"/><stop offset="50%" stop-color="#FF9F0A"/><stop offset="100%" stop-color="#FF453A"/></linearGradient></defs>
+        <path d="M 12 120 A 108 108 0 0 1 228 120" fill="none" stroke="#1A1A1A" stroke-width="12" stroke-linecap="round"/>
+        <path d="M 12 120 A 108 108 0 0 1 228 120" fill="none" stroke="url(#sg1)" stroke-width="12" stroke-linecap="round" stroke-dasharray="339.3" stroke-dashoffset="237"/>
+      </svg>
+      <div class="stress-arc-over">
+        <div class="stress-num" id="stress-big" style="color:var(--teal)">28</div>
+        <div class="stress-lbl">índice de stress (0–100)</div>
+        <div class="stress-status" style="color:var(--teal)">Calmo</div>
+      </div>
+    </div>
+    <div class="stress-timeline">
+      <div class="stl-title">Stress ao longo do dia</div>
+      <div class="stl-bars" id="stress-bars"></div>
+    </div>
+    <div class="insight"><div class="ins-ic" style="background:rgba(255,107,0,.1);border-color:rgba(255,107,0,.2)"><svg viewBox="0 0 24 24" style="fill:var(--orange)"><path d="M11.5 2C6.81 2 3 5.81 3 10.5S6.81 19 11.5 19h.5v3c4.86-2.34 8-7 8-11.5C20 5.81 16.19 2 11.5 2zm1 14.5h-2v-2h2v2zm0-4h-2c0-3.25 3-3 3-5 0-1.1-.9-2-2-2s-2 .9-2 2h-2c0-2.21 1.79-4 4-4s4 1.79 4 4c0 2.5-3 2.75-3 5z"/></svg></div><div><div class="ins-h">Stress baixo — sistema nervoso calmo</div><div class="ins-b">Score derivado da variabilidade da frequência respiratória e HRV. Valores abaixo de 40 indicam estado de recuperação ativo.</div></div></div>
+    <div class="pad"></div>
+  </div>
+</div>
+
+<!-- PASSOS / ATIVIDADE -->
+<div class="screen" id="s-steps">
+  <div class="det-hd"><div class="back" onclick="goBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div><span class="det-title">Atividade física</span></div>
+  <div class="det-body">
+    <div class="steps-ring-wrap">
+      <div class="steps-ring">
+        <svg width="148" height="148" viewBox="0 0 148 148">
+          <circle cx="74" cy="74" r="62" fill="none" stroke="#1A1A1A" stroke-width="10"/>
+          <circle cx="74" cy="74" r="62" fill="none" stroke="var(--blue)" stroke-width="10" stroke-dasharray="389.6" stroke-dashoffset="100" stroke-linecap="round" transform="rotate(-90 74 74)"/>
+        </svg>
+        <div class="steps-num"><div class="steps-big" style="color:var(--blue)">7.842</div><div class="steps-sub">de 10.000</div></div>
+      </div>
+      <div class="steps-lbl">passos hoje · 78%</div>
+    </div>
+    <div class="activity-list">
+      <div class="act-row"><div class="act-ic" style="background:rgba(100,210,255,.08)"><svg viewBox="0 0 24 24" style="fill:var(--blue)"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></svg></div><div class="act-name">Passos</div><div class="act-val" style="color:var(--blue)">7.842</div></div>
+      <div class="act-row"><div class="act-ic" style="background:rgba(48,209,88,.08)"><svg viewBox="0 0 24 24" style="fill:var(--teal)"><path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L9 8.3c-.4.2-.6.5-.8.8L6 14h2l1.8-5.1z"/></svg></div><div class="act-name">Distância</div><div class="act-val" style="color:var(--teal)">5,6 km</div></div>
+      <div class="act-row"><div class="act-ic" style="background:rgba(255,159,10,.08)"><svg viewBox="0 0 24 24" style="fill:var(--amber)"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z"/></svg></div><div class="act-name">Calorias ativas</div><div class="act-val" style="color:var(--amber)">312 kcal</div></div>
+      <div class="act-row"><div class="act-ic" style="background:rgba(123,79,255,.1)"><svg viewBox="0 0 24 24" style="fill:var(--p2)"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg></div><div class="act-name">Minutos ativos</div><div class="act-val" style="color:var(--p2)">38 min</div></div>
+    </div>
+    <div class="insight"><div class="ins-ic"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg></div><div><div class="ins-h">78% da meta diária</div><div class="ins-b">Faltam 2.158 passos para os 10.000. Com base no seu ritmo de hoje, você atinge a meta por volta das 18h30.</div></div></div>
+    <div class="pad"></div>
+  </div>
+</div>
+
+<!-- IDADE BIOLÓGICA -->
+<div class="screen" id="s-bioage">
+  <div class="det-hd"><div class="back" onclick="goBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div><span class="det-title">Idade biológica</span></div>
+  <div class="det-body">
+
+    <div class="bio-hero">
+      <div class="bio-ages">
+        <div class="bio-real">
+          <div class="bio-real-num">32</div>
+          <div class="bio-real-lbl">idade real</div>
+        </div>
+        <div class="bio-arrow">→</div>
+        <div class="bio-biol">
+          <div class="bio-biol-num" id="ba-num" style="color:var(--teal)">27</div>
+          <div class="bio-biol-lbl" id="ba-lbl" style="color:var(--teal)">sua idade biológica</div>
+        </div>
+      </div>
+      <div class="bio-delta" id="ba-delta" style="color:var(--teal)">
+        <svg viewBox="0 0 24 24" fill="var(--teal)"><path d="M7 14l5-5 5 5z"/></svg>
+        5 anos mais jovem que a sua idade
+      </div>
+    </div>
+
+    <!-- fatores -->
+    <div class="bio-factors">
+      <div class="bf-head">
+        <div class="bf-title">O que está compondo sua idade</div>
+        <div class="bf-sub">cada fator comparado com a média da sua faixa etária</div>
+      </div>
+      <!-- HRV -->
+      <div class="bf-row">
+        <div class="bf-ic" style="background:rgba(123,79,255,.12)">
+          <svg viewBox="0 0 24 24" style="fill:none;stroke:var(--p2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="2,12 5,12 7,5 9,19 11,10 13,14 15,12 22,12"/></svg>
+        </div>
+        <div class="bf-body">
+          <div class="bf-name">HRV</div>
+          <div class="bf-val" id="ba-hrv-val">72 ms · média da faixa: 54 ms</div>
+        </div>
+        <div class="bf-impact">
+          <div class="bf-impact-bar"><div class="bf-impact-fill" style="width:90%;background:var(--teal)"></div></div>
+          <div class="bf-impact-val" id="ba-hrv-imp" style="color:var(--teal)">−3,2a</div>
+        </div>
+      </div>
+      <!-- Sono -->
+      <div class="bf-row">
+        <div class="bf-ic" style="background:rgba(48,209,88,.08)">
+          <svg viewBox="0 0 24 24" style="fill:var(--teal)"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+        </div>
+        <div class="bf-body">
+          <div class="bf-name">Sono profundo</div>
+          <div class="bf-val">45% · média da faixa: 22%</div>
+        </div>
+        <div class="bf-impact">
+          <div class="bf-impact-bar"><div class="bf-impact-fill" style="width:80%;background:var(--teal)"></div></div>
+          <div class="bf-impact-val" style="color:var(--teal)">−2,1a</div>
+        </div>
+      </div>
+      <!-- FC repouso -->
+      <div class="bf-row">
+        <div class="bf-ic" style="background:rgba(255,69,58,.08)">
+          <svg viewBox="0 0 24 24" style="fill:var(--rose)"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
+        </div>
+        <div class="bf-body">
+          <div class="bf-name">FC repouso</div>
+          <div class="bf-val" id="ba-hr-val">58 bpm · média da faixa: 68 bpm</div>
+        </div>
+        <div class="bf-impact">
+          <div class="bf-impact-bar"><div class="bf-impact-fill" id="ba-hr-bar" style="width:70%;background:var(--teal)"></div></div>
+          <div class="bf-impact-val" id="ba-hr-imp" style="color:var(--teal)">−1,4a</div>
+        </div>
+      </div>
+      <!-- SpO2 -->
+      <div class="bf-row">
+        <div class="bf-ic" style="background:rgba(100,210,255,.08)">
+          <svg viewBox="0 0 24 24" style="fill:var(--blue)"><path d="M12 2a5 5 0 0 0-5 5c0 3.5 2.5 6.5 5 10.5C14.5 13.5 17 10.5 17 7a5 5 0 0 0-5-5z"/></svg>
+        </div>
+        <div class="bf-body">
+          <div class="bf-name">Oxigênio noturno</div>
+          <div class="bf-val" id="ba-spo2-val">97% · média da faixa: 96%</div>
+        </div>
+        <div class="bf-impact">
+          <div class="bf-impact-bar"><div class="bf-impact-fill" style="width:30%;background:var(--teal)"></div></div>
+          <div class="bf-impact-val" style="color:var(--teal)">−0,4a</div>
+        </div>
+      </div>
+      <!-- Temperatura -->
+      <div class="bf-row">
+        <div class="bf-ic" style="background:rgba(255,159,10,.08)">
+          <svg viewBox="0 0 24 24" style="fill:var(--amber)"><path d="M15 13V5a3 3 0 0 0-6 0v8a5 5 0 1 0 6 0zm-3 7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>
+        </div>
+        <div class="bf-body">
+          <div class="bf-name">Regulação térmica</div>
+          <div class="bf-val">variação 0,8° · média: 0,7°</div>
+        </div>
+        <div class="bf-impact">
+          <div class="bf-impact-bar"><div class="bf-impact-fill" style="width:12%;background:var(--amber)"></div></div>
+          <div class="bf-impact-val" style="color:var(--amber)">+0,1a</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ação principal -->
+    <div class="bio-tip">
+      <div class="bt-label" style="color:var(--p2)">para rejuvenescer mais</div>
+      <div class="bt-action">Dormir antes das 22h30</div>
+      <div class="bt-desc">Nos últimos 30 dias, nas noites em que você dormiu antes das 22h30, seu HRV na manhã seguinte foi 14ms maior. Isso equivale a aproximadamente 2 anos a menos na sua idade biológica no dia seguinte.</div>
+    </div>
+
+    <!-- tendência semanal -->
+    <div class="bio-trend">
+      <div class="bt2-head">
+        <span class="bt2-title">Tendência — 30 dias</span>
+        <span class="bt2-val" style="color:var(--teal)">− 0,8 anos este mês</span>
+      </div>
+      <canvas id="cv-bio" class="bio-sparkline"></canvas>
+    </div>
+
+    <div class="insight">
+      <div class="ins-ic" style="background:rgba(123,79,255,.12);border-color:rgba(123,79,255,.2)">
+        <svg viewBox="0 0 24 24" style="fill:var(--p2)"><path d="M11.5 2C6.81 2 3 5.81 3 10.5S6.81 19 11.5 19h.5v3c4.86-2.34 8-7 8-11.5C20 5.81 16.19 2 11.5 2zm1 14.5h-2v-2h2v2zm0-4h-2c0-3.25 3-3 3-5 0-1.1-.9-2-2-2s-2 .9-2 2h-2c0-2.21 1.79-4 4-4s4 1.79 4 4c0 2.5-3 2.75-3 5z"/></svg>
+      </div>
+      <div>
+        <div class="ins-h">Como calculamos</div>
+        <div class="ins-b">Comparamos seus dados com curvas de referência de populações saudáveis por faixa etária (meta-análises de HRV, FC repouso e sono). Não é diagnóstico médico — é um indicador de tendência de saúde cardiovascular e de recuperação.</div>
+      </div>
+    </div>
+
+    <div class="pad"></div>
+  </div>
+</div>
+
+</div><!-- /screens -->
+
+<nav class="bnav" id="bnav" style="display:none">
+  <div class="ni on" data-s="s-home" onclick="navSidebar('s-home')"><div class="ni-ic"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg></div><span class="ni-lb">Início</span></div>
+  <div class="ni" data-s="s-hrv" onclick="navSidebar('s-hrv')"><div class="ni-ic"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="2,12 5,12 7,5 9,19 11,10 13,14 15,12 22,12"/></svg></div><span class="ni-lb">Coração</span></div>
+  <div class="ni" data-s="s-sleep" onclick="navSidebar('s-sleep')"><div class="ni-ic"><svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg></div><span class="ni-lb">Sono</span></div>
+  <div class="ni" data-s="s-steps" onclick="navSidebar('s-steps')"><div class="ni-ic"><svg viewBox="0 0 24 24"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></svg></div><span class="ni-lb">Atividade</span></div>
+  <div class="ni" data-s="s-stress" onclick="navSidebar('s-stress')"><div class="ni-ic"><svg viewBox="0 0 24 24"><path d="M11.5 2C6.81 2 3 5.81 3 10.5S6.81 19 11.5 19h.5v3c4.86-2.34 8-7 8-11.5C20 5.81 16.19 2 11.5 2z"/></svg></div><span class="ni-lb">Stress</span></div>
+</nav>
+</div>
+
+<script>
+/* clock */
+function tick(){const d=new Date();document.getElementById('clock').textContent=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');const el=document.getElementById('home-g');if(el){const h=d.getHours();el.textContent=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';}}
+tick();setInterval(tick,30000);
+
+/* sidebar */
+let sidebarOpen=false;
+function toggleSidebar(){
+  sidebarOpen=!sidebarOpen;
+  document.getElementById('sidebar').classList.toggle('open',sidebarOpen);
+  document.getElementById('sb-overlay').classList.toggle('open',sidebarOpen);
+  document.getElementById('ham').classList.toggle('open',sidebarOpen);
+}
+function navSidebar(id){
+  if(sidebarOpen)toggleSidebar();
+  setTimeout(()=>go(id),sidebarOpen?320:0);
+}
+
+/* nav */
+let cur='s-connect',prev='s-home';
+function go(id){
+  if(id===cur)return;
+  document.getElementById(cur).classList.remove('on');
+  document.getElementById(id).classList.add('on');
+  prev=cur;cur=id;
+  const showNav=id!=='s-connect';
+  document.getElementById('bnav').style.display=showNav?'flex':'none';
+  document.querySelectorAll('.ni').forEach(el=>el.classList.toggle('on',el.dataset.s===id));
+  document.querySelectorAll('.sb-item').forEach(el=>el.classList.remove('on'));
+  const target=document.querySelector(`.sb-item[onclick*="${id}"]`);
+  if(target)target.classList.add('on');
+  if(id==='s-hrv')drawBig();
+  if(id==='s-stress')buildStressBars();
+  if(id==='s-bioage'){calcBioAge();drawBioSparkline();}
+}
+function goBack(){go(prev==='s-connect'?'s-home':prev);}
+function setTab(b){document.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('on'));b.classList.add('on');drawBig();}
+
+/* connect */
+function doConnect(){
+  const btn=document.getElementById('c-btn');
+  btn.textContent='Conectando…';btn.style.background='#1A1A1A';btn.style.color='#666';btn.style.boxShadow='none';
+  setTimeout(()=>{btn.textContent='Conectado';btn.style.background='var(--teal)';btn.style.color='#000';setTimeout(()=>go('s-home'),600);},1800);
+}
+
+/* state */
+function setState(lvl){
+  const sc=document.getElementById('sc'),sg=document.getElementById('sg'),sic=document.getElementById('sic'),
+        svg_el=document.getElementById('s-svg'),eye=document.getElementById('s-eye'),
+        ttl=document.getElementById('s-ttl'),dsc=document.getElementById('s-dsc'),
+        fill=document.getElementById('s-fill'),s=document.getElementById('s-start'),hi=document.getElementById('s-hi'),
+        btn=document.getElementById('act-btn'),bic=document.getElementById('act-ic'),btx=document.getElementById('act-tx');
+  if(lvl==='high'){
+    sc.style.borderColor='rgba(123,79,255,.2)';sg.style.background='radial-gradient(ellipse,rgba(123,79,255,.1) 0%,transparent 70%)';
+    sic.style.background='rgba(123,79,255,.1)';sic.style.borderColor='rgba(123,79,255,.2)';svg_el.style.fill='var(--p2)';
+    svg_el.innerHTML='<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>';
+    eye.textContent='seu estado agora';ttl.innerHTML='Você está no seu<br>melhor momento';
+    dsc.textContent='Corpo descansado e recuperado. Ótima hora para tarefas que exigem concentração.';
+    fill.style.width='87%';fill.style.background='var(--p)';s.textContent='começa a cair em 2h30';hi.textContent='nível alto';hi.style.color='var(--p2)';
+    btn.style.background='var(--p)';btn.style.boxShadow='0 4px 20px rgba(123,79,255,.3)';bic.innerHTML='<path d="M8 5v14l11-7z"/>';btx.textContent='Iniciar sessão de foco';btn.style.color='#fff';
+  }else if(lvl==='mid'){
+    sc.style.borderColor='rgba(48,209,88,.18)';sg.style.background='radial-gradient(ellipse,rgba(48,209,88,.07) 0%,transparent 70%)';
+    sic.style.background='rgba(48,209,88,.08)';sic.style.borderColor='rgba(48,209,88,.18)';svg_el.style.fill='var(--teal)';
+    svg_el.innerHTML='<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
+    eye.textContent='hora de tarefas leves';ttl.innerHTML='Aproveite para<br>reuniões e revisões';
+    dsc.textContent='Pico cognitivo passou. Bom momento para alinhar com o time e responder mensagens.';
+    fill.style.width='42%';fill.style.background='var(--teal)';s.textContent='segundo pico às 16h';hi.textContent='nível médio';hi.style.color='var(--teal)';
+    btn.style.background='var(--teal)';btn.style.boxShadow='0 4px 20px rgba(48,209,88,.25)';bic.innerHTML='<path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/>';btx.textContent='Abrir agenda';btn.style.color='#000';
+  }else{
+    sc.style.borderColor='rgba(255,159,10,.2)';sg.style.background='radial-gradient(ellipse,rgba(255,159,10,.07) 0%,transparent 70%)';
+    sic.style.background='rgba(255,159,10,.08)';sic.style.borderColor='rgba(255,159,10,.18)';svg_el.style.fill='var(--amber)';
+    svg_el.innerHTML='<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
+    eye.textContent='hora de recuperar';ttl.innerHTML='Seu corpo pede<br>uma pausa agora';
+    dsc.textContent='Evite decisões importantes. Hidrate-se e reserve esse momento para tarefas leves.';
+    fill.style.width='22%';fill.style.background='var(--amber)';s.textContent='próximo pico às 16h';hi.textContent='nível baixo';hi.style.color='var(--amber)';
+    btn.style.background='var(--amber)';btn.style.boxShadow='0 4px 20px rgba(255,159,10,.25)';bic.innerHTML='<path d="M12 2a5 5 0 0 0-5 5c0 3.5 2.5 6.5 5 10.5C14.5 13.5 17 10.5 17 7a5 5 0 0 0-5-5z"/>';btx.textContent='Beber água agora';btn.style.color='#000';
+  }
+}
+function setF(el,v){document.querySelectorAll('.fo').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');setState(v==='great'?'high':v==='ok'?'mid':'low');}
+
+/* live data */
+let hrv=72,hr=58,spo2=98,stress=28;
+const CIRC=138.2;
+const hrvH=[],hrH=[];
+for(let i=0;i<90;i++){hrvH.push(Math.max(35,Math.min(105,72+(Math.random()-.5)*22)));hrH.push(Math.max(44,Math.min(88,58+(Math.random()-.5)*12)));}
+
+function liveData(){
+  hrv=Math.max(35,Math.min(105,hrv+(Math.random()-.5)*2.8));
+  hr=Math.max(44,Math.min(88,hr+(Math.random()-.5)*1.5));
+  spo2=Math.max(95,Math.min(99,spo2+(Math.random()-.5)*.25));
+  stress=Math.max(15,Math.min(65,stress+(Math.random()-.5)*3));
+  hrvH.push(Math.round(hrv));if(hrvH.length>90)hrvH.shift();
+  hrH.push(Math.round(hr));if(hrH.length>90)hrH.shift();
+
+  const rhrv=Math.round(hrv),rhr=Math.round(hr),rspo2=Math.round(spo2),rst=Math.round(stress);
+
+  /* HRV block */
+  const hArc=document.getElementById('mb-hrv-arc');
+  if(hArc)hArc.setAttribute('stroke-dashoffset',(CIRC*(1-Math.min(rhrv/100,1))).toFixed(1));
+  const hNum=document.getElementById('mb-hrv-num');if(hNum)hNum.textContent=rhrv;
+  const hRat=document.getElementById('mb-hrv-rating');
+  const hUnit=document.getElementById('mb-hrv-unit');
+  if(hUnit)hUnit.textContent=rhrv+' ms · HRV';
+  if(hRat){if(rhrv>=70){hRat.textContent='Excelente';hRat.style.color='#9D7BFF';}else if(rhrv>=50){hRat.textContent='Bom';hRat.style.color='var(--teal)';}else{hRat.textContent='Pode melhorar';hRat.style.color='var(--amber)';}}
+
+  /* SpO2 block */
+  const sArc=document.getElementById('mb-spo2-arc');
+  if(sArc)sArc.setAttribute('stroke-dashoffset',(CIRC*(1-Math.max(0,(rspo2-85)/15))).toFixed(1));
+  const sNum=document.getElementById('mb-spo2-num');if(sNum)sNum.textContent=rspo2;
+  const sRat=document.getElementById('mb-spo2-rating');const sUnit=document.getElementById('mb-spo2-unit');
+  if(sUnit)sUnit.textContent=rspo2+'% no sangue';
+  if(sRat){if(rspo2>=97){sRat.textContent='Excelente';sRat.style.color='var(--blue)';}else if(rspo2>=95){sRat.textContent='Bom';sRat.style.color='var(--teal)';}else{sRat.textContent='Pode melhorar';sRat.style.color='var(--amber)';}}
+
+  /* HR block */
+  const hRArc=document.getElementById('mb-hr-arc');
+  if(hRArc)hRArc.setAttribute('stroke-dashoffset',(CIRC*(1-Math.max(0,(rhr-44)/(100-44)))).toFixed(1));
+  const hRNum=document.getElementById('mb-hr-num');if(hRNum)hRNum.textContent=rhr;
+  const hRRat=document.getElementById('mb-hr-rating');const hRUnit=document.getElementById('mb-hr-unit');
+  if(hRUnit)hRUnit.textContent=rhr+' bpm';
+  if(hRRat){if(rhr<60){hRRat.textContent='Excelente';hRRat.style.color='#FF6B6B';}else if(rhr<75){hRRat.textContent='Normal';hRRat.style.color='#FF6B6B';}else{hRRat.textContent='Elevado';hRRat.style.color='var(--amber)';}}
+
+  /* detail screens */
+  document.getElementById('hrv-big').textContent=rhrv;
+  document.getElementById('hr-now').textContent=rhr;
+  document.getElementById('hr-min').textContent=Math.min(...hrH.slice(-30));
+  document.getElementById('hr-max').textContent=Math.max(...hrH.slice(-30));
+  document.getElementById('spo2-big').textContent=rspo2;
+  document.getElementById('hv1').textContent=rspo2+'%';
+  document.getElementById('h1').style.width=((rspo2-85)/15*100)+'%';
+  document.getElementById('spo2-thumb').style.left=Math.max(2,Math.min(96,((rspo2-85)/15)*100))+'%';
+
+  /* sidebar vals */
+  const sbHrv=document.getElementById('sb-hrv-val');if(sbHrv)sbHrv.textContent=rhrv+' ms · HRV';
+  const sbHrvB=document.getElementById('sb-hrv-badge');if(sbHrvB){if(rhrv>=70){sbHrvB.textContent='Excelente';sbHrvB.style.color='var(--p2)';sbHrvB.style.background='rgba(123,79,255,.15)';}else if(rhrv>=50){sbHrvB.textContent='Bom';sbHrvB.style.color='var(--teal)';sbHrvB.style.background='rgba(48,209,88,.08)';}else{sbHrvB.textContent='Atenção';sbHrvB.style.color='var(--amber)';sbHrvB.style.background='rgba(255,159,10,.1)';}}
+  const sbSpo=document.getElementById('sb-spo2-val');if(sbSpo)sbSpo.textContent=rspo2+'% no sangue';
+  const sbHr=document.getElementById('sb-hr-val');if(sbHr)sbHr.textContent=rhr+' bpm · repouso';
+  const sbSt=document.getElementById('sb-stress-val');if(sbSt)sbSt.textContent=rst+' · '+(rst<30?'baixo':rst<60?'moderado':'elevado');
+
+  if(cur==='s-hrv')drawBig();
+}
+setInterval(liveData,1800);
+
+/* canvas HRV */
+function drawBig(){
+  const c=document.getElementById('cv-big');if(!c)return;
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();if(!r.width)return;
+  c.width=r.width*dpr;c.height=r.height*dpr;
+  const ctx=c.getContext('2d');ctx.scale(dpr,dpr);
+  const W=r.width,H=r.height;ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;
+  for(let i=1;i<4;i++){ctx.beginPath();ctx.moveTo(0,(H/4)*i);ctx.lineTo(W,(H/4)*i);ctx.stroke();}
+  const data=hrvH,mn=Math.min(...data)-6,mx=Math.max(...data)+6;
+  const ty=v=>H-.88*H*((v-mn)/(mx-mn))-.06*H;
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(123,79,255,.2)');g.addColorStop(1,'rgba(123,79,255,0)');
+  ctx.beginPath();data.forEach((v,i)=>i===0?ctx.moveTo((i/(data.length-1))*W,ty(v)):ctx.lineTo((i/(data.length-1))*W,ty(v)));
+  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fillStyle=g;ctx.fill();
+  ctx.beginPath();data.forEach((v,i)=>i===0?ctx.moveTo((i/(data.length-1))*W,ty(v)):ctx.lineTo((i/(data.length-1))*W,ty(v)));
+  ctx.strokeStyle='#7B4FFF';ctx.lineWidth=1.8;ctx.lineJoin='round';ctx.stroke();
+  const lv=data[data.length-1],lx=W-2,ly=ty(lv);
+  ctx.beginPath();ctx.arc(lx,ly,4,0,Math.PI*2);ctx.fillStyle='#9D7BFF';ctx.fill();
+  ctx.beginPath();ctx.arc(lx,ly,8,0,Math.PI*2);ctx.fillStyle='rgba(157,123,255,.2)';ctx.fill();
+}
+
+/* stress bars */
+const stressData=[22,35,28,45,62,38,25,28,30,22,19,24];
+const stressH=['7h','8h','9h','10h','11h','12h','13h','14h','15h','16h','17h','agora'];
+function buildStressBars(){
+  const c=document.getElementById('stress-bars');if(!c||c.children.length)return;
+  stressData.forEach((v,i)=>{
+    const w=document.createElement('div');w.className='stl-bar-w';
+    const bar=document.createElement('div');bar.className='stl-bar';
+    const pct=Math.round((v/100)*60);
+    bar.style.height=pct+'px';
+    bar.style.background=v<35?'var(--teal)':v<60?'var(--amber)':'var(--rose)';
+    bar.style.borderRadius='3px 3px 0 0';
+    const lbl=document.createElement('div');lbl.className='stl-lbl';lbl.textContent=i%3===0?stressH[i]:'';
+    w.appendChild(bar);w.appendChild(lbl);c.appendChild(w);
+  });
+}
+
+window.addEventListener('load',()=>{
+  const ro=new ResizeObserver(()=>{if(cur==='s-hrv')drawBig();if(cur==='s-bioage')drawBioSparkline();});
+  ro.observe(document.querySelector('.phone'));
+});
+
+/* ── IDADE BIOLÓGICA ── */
+const REAL_AGE=32;
+const REF={hrv:{p50:54,p90:74,p10:38},hr:{p50:68,p10:52,p90:82},spo2:{p50:96,p90:98}};
+
+function calcBioAge(){
+  const rhrv=Math.round(hrv),rhr=Math.round(hr),rspo2=Math.round(spo2);
+  const dHrv  = ((rhrv-REF.hrv.p50)/(REF.hrv.p90-REF.hrv.p50))*4.0;
+  const dHr   = ((REF.hr.p50-rhr)/(REF.hr.p50-REF.hr.p10))*2.5;
+  const dSpo2 = ((rspo2-REF.spo2.p50)/(REF.spo2.p90-REF.spo2.p50))*0.8;
+  const dSleep=2.1, dTemp=-0.1;
+  const totalDelta=dHrv+dHr+dSpo2+dSleep+dTemp;
+  const bioAge=Math.max(18,Math.round(REAL_AGE-totalDelta));
+  const diff=REAL_AGE-bioAge;
+  const color=diff>=3?'var(--teal)':diff>=0?'var(--amber)':'var(--rose)';
+
+  const numEl=document.getElementById('ba-num');
+  if(numEl){numEl.textContent=bioAge;numEl.style.color=color;}
+  const lblEl=document.getElementById('ba-lbl');
+  if(lblEl)lblEl.style.color=color;
+  const dltEl=document.getElementById('ba-delta');
+  if(dltEl){
+    dltEl.style.color=color;
+    const absD=Math.abs(diff);
+    const arrow=diff>=0
+      ?`<svg viewBox="0 0 24 24" fill="${color}" width="14" height="14"><path d="M7 14l5-5 5 5z"/></svg>`
+      :`<svg viewBox="0 0 24 24" fill="${color}" width="14" height="14"><path d="M7 10l5 5 5-5z"/></svg>`;
+    dltEl.innerHTML=diff>0
+      ?`${arrow}${absD} ${absD===1?'ano':'anos'} mais jovem que a sua idade`
+      :diff<0
+      ?`${arrow}${absD} ${absD===1?'ano':'anos'} acima da sua idade`
+      :`igual à sua idade cronológica`;
+  }
+
+  // HRV
+  const hrvVal=document.getElementById('ba-hrv-val');
+  const hrvImp=document.getElementById('ba-hrv-imp');
+  if(hrvVal)hrvVal.textContent=rhrv+' ms · média da faixa: '+REF.hrv.p50+' ms';
+  if(hrvImp){const c=dHrv>=0?'var(--teal)':'var(--rose)';hrvImp.textContent=(dHrv>=0?'−':'+')+Math.abs(dHrv).toFixed(1)+'a';hrvImp.style.color=c;}
+
+  // FC
+  const hrVal=document.getElementById('ba-hr-val');
+  const hrImp=document.getElementById('ba-hr-imp');
+  const hrBar=document.getElementById('ba-hr-bar');
+  if(hrVal)hrVal.textContent=rhr+' bpm · média da faixa: '+REF.hr.p50+' bpm';
+  if(hrBar)hrBar.style.width=Math.min(100,Math.max(0,((REF.hr.p50-rhr)/(REF.hr.p50-REF.hr.p10))*100))+'%';
+  if(hrImp){const c=dHr>=0?'var(--teal)':'var(--rose)';hrImp.textContent=(dHr>=0?'−':'+')+Math.abs(dHr).toFixed(1)+'a';hrImp.style.color=c;}
+
+  // SpO2
+  const spo2Val=document.getElementById('ba-spo2-val');
+  if(spo2Val)spo2Val.textContent=rspo2+'% · média da faixa: '+REF.spo2.p50+'%';
+
+  // sidebar
+  const sbBio=document.getElementById('sb-bio-val');
+  const sbBioBadge=document.getElementById('sb-bio-badge');
+  if(sbBio)sbBio.textContent=bioAge+' anos · '+(diff>=0?'−'+diff:'+'+Math.abs(diff))+' da real';
+  if(sbBioBadge){
+    if(diff>=4){sbBioBadge.textContent='Jovem';sbBioBadge.style.color='var(--teal)';sbBioBadge.style.background='rgba(48,209,88,.08)';}
+    else if(diff>=0){sbBioBadge.textContent='Normal';sbBioBadge.style.color='var(--amber)';sbBioBadge.style.background='rgba(255,159,10,.08)';}
+    else{sbBioBadge.textContent='Atenção';sbBioBadge.style.color='var(--rose)';sbBioBadge.style.background='rgba(255,69,58,.08)';}
+  }
+}
+
+function drawBioSparkline(){
+  const c=document.getElementById('cv-bio');if(!c)return;
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();if(!r.width)return;
+  c.width=r.width*dpr;c.height=r.height*dpr;
+  const ctx=c.getContext('2d');ctx.scale(dpr,dpr);
+  const W=r.width,H=r.height;
+  const data=[];for(let i=0;i<30;i++)data.push(28.5-(i*0.027)+(Math.random()-.5)*0.5);
+  const mn=Math.min(...data)-.4,mx=Math.max(...data)+.4;
+  const ty=v=>H*0.85-H*0.75*((v-mn)/(mx-mn));
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(48,209,88,.2)');g.addColorStop(1,'rgba(48,209,88,0)');
+  ctx.beginPath();data.forEach((v,i)=>i===0?ctx.moveTo((i/(data.length-1))*W,ty(v)):ctx.lineTo((i/(data.length-1))*W,ty(v)));
+  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fillStyle=g;ctx.fill();
+  ctx.beginPath();data.forEach((v,i)=>i===0?ctx.moveTo((i/(data.length-1))*W,ty(v)):ctx.lineTo((i/(data.length-1))*W,ty(v)));
+  ctx.strokeStyle='#30D158';ctx.lineWidth=1.6;ctx.lineJoin='round';ctx.stroke();
+  ctx.fillStyle='rgba(160,160,160,.5)';ctx.font='10px -apple-system,sans-serif';
+  ctx.textAlign='left';ctx.fillText('27,8a',4,H-4);ctx.textAlign='right';ctx.fillText('27,0a',W-4,H-4);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+# Produção.
+#
+# Diferenças que importam em relação ao `docker-compose.yml` de desenvolvimento,
+# e a razão de existirem dois arquivos em vez de um com condicionais:
+#
+# 1. **Nenhum segredo aqui.** Tudo vem de `.env`, que não é versionado. O
+#    arquivo de desenvolvimento tem `JWT_SECRET: dev_secret_change_in_prod`
+#    escrito à vista; subir aquele arquivo em produção era um `docker compose
+#    up` de distância, e `env.ts` agora recusa o boot se isso acontecer.
+# 2. **O banco e o modelo não publicam porta.** Só a API é alcançável de fora.
+#    Com `5432:5432` publicado, o Postgres fica exposto na internet se a máquina
+#    não tiver firewall — e o serviço Python não tem autenticação nenhuma.
+# 3. **Migrations rodam na subida**, antes do servidor aceitar tráfego.
+#
+# Uso: docker compose -f docker-compose.prod.yml up -d
+
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # Sem `ports`: só quem está na rede do compose alcança o banco.
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    # `appendonly` porque o Redis aqui guarda contador de limite de taxa e
+    # revogação de token: perder tudo num restart zeraria o limite justamente
+    # quando o serviço volta — o pior momento para ficar sem proteção.
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Backup do banco. Usa a MESMA imagem do Postgres porque precisa de um
+  # `pg_dump` da mesma versão do servidor — uma versão mais antiga se recusa a
+  # despejar um banco mais novo.
+  backup:
+    image: timescale/timescaledb:latest-pg16
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+    volumes:
+      - ./deploy/backup.sh:/usr/local/bin/backup.sh:ro
+      - backups:/backups
+    entrypoint: ['/bin/sh', '/usr/local/bin/backup.sh']
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  ai:
+    build: ./ai
+    restart: always
+    environment:
+      PYTHONUNBUFFERED: '1'
+      # Sem a chave o serviço SOBE e responde /health — e a geração falha na
+      # primeira chamada real. Já custou uma investigação em desenvolvimento;
+      # em produção ela entra explícita, pelo .env da máquina.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import urllib.request;urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    # Sem `ports`: o serviço não tem autenticação, então só a API fala com ele.
+
+  backend:
+    build: ./backend
+    restart: always
+    ports:
+      - '127.0.0.1:3001:3001'
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      AI_SERVICE_URL: http://ai:8000
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      PUBLIC_URL: ${PUBLIC_URL}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      CALENDAR_ENCRYPTION_KEY: ${CALENDAR_ENCRYPTION_KEY:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET:-}
+    # A migration do Timescale é SQL escrito à mão e não está no histórico do
+    # Prisma; `migrate deploy` aplica o resto. Falhar aqui impede o servidor de
+    # subir com schema defasado, que é o comportamento desejado.
+    command: sh -c "npx prisma migrate deploy && node dist/server.js"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'node', '-e', "require('http').get('http://localhost:3001/health',r=>process.exit(r.statusCode===200?0:1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # A API escuta em 127.0.0.1 e quem termina TLS é o proxy. Manter a terminação
+  # fora do Node evita gerenciar certificado dentro da aplicação e deixa a
+  # renovação por conta do Caddy, que faz ACME sozinho.
+  proxy:
+    image: caddy:2-alpine
+    restart: always
+    network_mode: host
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+
+volumes:
+  pg_data:
+  redis_data:
+  backups:
+  caddy_data:
+  caddy_config:

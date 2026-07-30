@@ -1,0 +1,16 @@
+# O proxy roda em network_mode: host — 127.0.0.1:3001 é a API no mesmo host.
+# TLS é automático (ACME): o certificado chega sozinho quando o DNS de
+# api.assumfit.com.br apontar para esta máquina, e renova sem cron.
+
+api.assumfit.com.br {
+	encode gzip
+
+	# A API já põe os cabeçalhos da aplicação; aqui só o que é do transporte.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		-Server
+	}
+
+	reverse_proxy 127.0.0.1:3001
+}

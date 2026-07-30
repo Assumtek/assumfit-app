@@ -1,0 +1,113 @@
+{
+  "expo": {
+    "name": "AssumFit",
+    "slug": "assumfit",
+    "scheme": "assumfit",
+    "owner": "assumtek",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#0E0A22",
+    "splash": {
+      "backgroundColor": "#0E0A22",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "br.com.assumtek.assumfit",
+      "infoPlist": {
+        "NSBluetoothAlwaysUsageDescription": "O AssumFit usa Bluetooth para ler os dados da sua pulseira Staranb.",
+        "NSLocationWhenInUseUsageDescription": "O AssumFit usa sua localização aproximada apenas para saber a temperatura e a umidade do ambiente, que afetam HRV, frequência cardíaca e sono. A posição não é armazenada.",
+        "UIBackgroundModes": [
+          "bluetooth-central"
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.br.com.assumtek.assumfit.widget"
+        ]
+      }
+    },
+    "android": {
+      "package": "br.com.assumtek.assumfit",
+      "adaptiveIcon": {
+        "backgroundColor": "#000000",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.BLUETOOTH_SCAN",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.BLUETOOTH_SCAN",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": true,
+          "modes": [
+            "central"
+          ],
+          "bluetoothAlwaysPermission": "O AssumFit usa Bluetooth para ler os dados da sua pulseira Staranb."
+        }
+      ],
+      "expo-secure-store",
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "O AssumFit lê apenas seu histórico de sono do app Saúde, para calcular o score de energia. Nada é enviado para publicidade nem compartilhado com terceiros, e você pode revogar quando quiser."
+        }
+      ],
+      "expo-sharing",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#877BF0"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O AssumFit usa suas fotos apenas quando você escolhe uma para o card de treino que vai compartilhar. A imagem não sai do aparelho até você tocar em compartilhar.",
+          "cameraPermission": "O AssumFit usa a câmera apenas para a foto do card de treino que você vai compartilhar."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Para salvar o card do seu treino na galeria.",
+          "savePhotosPermission": "Para salvar o card do seu treino na galeria.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
+      "@bacons/apple-targets"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "6436c02e-4147-4d05-a55d-34f631596241"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6436c02e-4147-4d05-a55d-34f631596241"
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "_aviso": "VALORES PROVISÓRIOS. São estimativas de trabalho para a estrutura do cálculo funcionar, NÃO curvas de meta-análise. Antes de qualquer uso com usuário real, substituir por percentis de literatura revisada (ex.: Umetani et al. para HRV por idade; estudos populacionais de FC de repouso). Enquanto este aviso existir, a idade biológica é indicativa e assim deve ser apresentada na interface.",
+  "_unidades": {
+    "hrv": "RMSSD em ms",
+    "hr": "bpm em repouso",
+    "spo2": "% de saturação",
+    "deep_pct": "fração da noite em sono profundo"
+  },
+  "_pesos_anos": {
+    "comentario": "Quantos anos de idade biológica cada fator pode mover, no máximo, antes do clamp global.",
+    "hrv": 4.0,
+    "hr": 2.5,
+    "spo2": 0.8,
+    "sleep": 2.5,
+    "temp": 0.5
+  },
+  "_limites": {
+    "clamp_por_fator": { "hrv": 6.0, "hr": 4.0, "spo2": 2.0, "sleep": 4.0, "temp": 1.0 },
+    "clamp_total_anos": 15.0,
+    "idade_minima": 18
+  },
+  "faixas": [
+    {
+      "max_idade": 29,
+      "hrv": { "p10": 45, "p50": 64, "p90": 88 },
+      "hr": { "p10": 50, "p50": 66, "p90": 80 },
+      "spo2": { "p50": 97, "p90": 99 },
+      "deep_pct": 0.22
+    },
+    {
+      "max_idade": 39,
+      "hrv": { "p10": 38, "p50": 54, "p90": 74 },
+      "hr": { "p10": 52, "p50": 68, "p90": 82 },
+      "spo2": { "p50": 96, "p90": 98 },
+      "deep_pct": 0.2
+    },
+    {
+      "max_idade": 49,
+      "hrv": { "p10": 31, "p50": 45, "p90": 62 },
+      "hr": { "p10": 53, "p50": 69, "p90": 83 },
+      "spo2": { "p50": 96, "p90": 98 },
+      "deep_pct": 0.17
+    },
+    {
+      "max_idade": 59,
+      "hrv": { "p10": 26, "p50": 37, "p90": 52 },
+      "hr": { "p10": 54, "p50": 70, "p90": 84 },
+      "spo2": { "p50": 95, "p90": 97 },
+      "deep_pct": 0.15
+    },
+    {
+      "max_idade": 200,
+      "hrv": { "p10": 21, "p50": 30, "p90": 43 },
+      "hr": { "p10": 55, "p50": 70, "p90": 85 },
+      "spo2": { "p50": 95, "p90": 97 },
+      "deep_pct": 0.13
+    }
+  ],
+  "ajuste_sexo": {
+    "_comentario": "Deslocamento aplicado sobre os percentis da faixa etária.",
+    "f": { "hrv": 2, "hr": 3 },
+    "m": { "hrv": 0, "hr": 0 }
+  }
+}

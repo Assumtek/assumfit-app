@@ -1,0 +1,838 @@
+// Schema do AssumFit.
+//
+// Duas coisas que o Prisma NÃO gerencia e por isso vivem em migrations SQL
+// escritas à mão (ver prisma/migrations/):
+//   1. A hypertable de `biometric_readings`. O TimescaleDB exige que toda
+//      PK/UNIQUE inclua a coluna de particionamento — daí a chave composta
+//      (id, recorded_at) em vez de um id solto.
+//   2. A política de retenção e os índices por expressão.
+
+// Todo campo de instante é `@db.Timestamptz`. O padrão do Prisma é
+// `timestamp without time zone`, que perde o fuso — inaceitável para leitura de
+// wearable, que é um instante absoluto e pode ser gravada em qualquer lugar do
+// mundo. Também é o que torna `(coluna AT TIME ZONE ...)::date` imutável e
+// portanto indexável.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Sex {
+  f
+  m
+}
+
+/// Ciclo menstrual registrado pela pessoa.
+///
+/// A pulseira NÃO mede isto: o SDK do fabricante só aceita a configuração para
+/// exibir lembrete no relógio. O dado nasce de quem registra, e por isso mora
+/// aqui e não em `biometric_readings`.
+///
+/// Dado sensível de saúde (LGPD Art. 11), com o agravante de descrever
+/// diretamente a vida reprodutiva — por isso consentimento próprio
+/// (`menstrual_tracking`), separado do de biometria e revogável sozinho.
+model MenstrualCycle {
+  id           BigInt   @id @default(autoincrement())
+  userId       String   @map("user_id") @db.Uuid
+  /// Primeiro dia de fluxo, no fuso de quem registrou. DATE, não timestamp:
+  /// ninguém registra o minuto em que menstruou, e guardar hora criaria a
+  /// ilusão de precisão que o dado não tem.
+  startedAt    DateTime @map("started_at") @db.Date
+  /// Dias de fluxo. `null` enquanto o ciclo corrente não terminou.
+  durationDays Int?     @map("duration_days")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, startedAt])
+  @@index([userId, startedAt(sort: Desc)])
+  @@map("menstrual_cycles")
+}
+
+enum ConsentPurpose {
+  /// Registro de ciclo menstrual. Separado do de biometria porque descreve a
+  /// vida reprodutiva, e quem aceita um não necessariamente aceita o outro.
+  menstrual_tracking
+  /// Coleta e processamento de dado biométrico — dado sensível, LGPD Art. 11.
+  biometric_processing
+  /// Transferência internacional: a infra roda fora do Brasil, LGPD Art. 33.
+  international_transfer
+  /// Comunicações de produto. Nunca obrigatório.
+  marketing
+  /// Leitura da agenda de terceiros (Google, Microsoft). Nunca obrigatório, e
+  /// separado dos demais porque o calendário contém dado de OUTRAS pessoas —
+  /// nomes e e-mails de quem participa das reuniões. Consentir com o
+  /// tratamento da própria biometria não autoriza isso.
+  calendar_read
+  /// Anamnese de saúde para prescrição de treino: cardiopatia, gestação,
+  /// medicação em uso, lesão. É dado de saúde pelo mesmo Art. 5º II que cobre a
+  /// biometria, e por isso tem finalidade PRÓPRIA — consentir com a leitura do
+  /// HRV não autoriza guardar que a pessoa é cardiopata. Revogar apaga a
+  /// anamnese, e sem anamnese não há geração.
+  workout_generation
+}
+
+/// Como a pessoa passa o dia de trabalho. Muda a meta de passos, o alerta de
+/// sedentarismo e a leitura de fadiga: quem fica oito horas em pé chega ao fim
+/// do dia cansado sem que isso signifique má recuperação.
+enum WorkPosture {
+  sitting
+  standing
+  alternating
+  moving
+}
+
+/// O turno é a entrada mais decisiva do perfil: quem trabalha à noite tem o
+/// ritmo circadiano deslocado, e aplicar a curva padrão a essa pessoa produz
+/// recomendação errada em TODA hora do dia.
+enum WorkSchedule {
+  business
+  shifts
+  night
+  flexible
+}
+
+enum ExerciseFrequency {
+  regular
+  sometimes
+  none
+}
+
+enum CalendarProvider {
+  google
+  microsoft
+}
+
+enum DeviceStatus {
+  /// Em posse do assinante.
+  in_use
+  /// Devolvido após cancelamento.
+  returned
+  /// Não devolvido no prazo, ou declarado perdido.
+  lost
+}
+
+enum SubscriptionStatus {
+  trialing
+  active
+  past_due
+  canceled
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  name         String
+  /// Necessária para a idade biológica comparar contra a faixa etária certa.
+  birthDate    DateTime  @map("birth_date") @db.Date
+  /// Referências de HRV e FC diferem por sexo biológico.
+  sex          Sex
+  /// Deslocamento do fuso em minutos (America/Sao_Paulo = -180).
+  ///
+  /// A hora do dia é ENTRADA do modelo: o vale da tarde só existe em relação ao
+  /// relógio de quem está lendo. Sem esta coluna, o job noturno usava uma
+  /// constante de Brasília para todo mundo, e quem viajasse recebia a curva
+  /// deslocada. Minutos, não horas, porque há fusos de meia hora.
+  tzOffsetMin  Int       @default(-180) @map("tz_offset_min")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  /// Exclusão de conta apaga o dado de verdade; este campo é só para auditar
+  /// a solicitação, nunca para "esconder" o registro.
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  consents        Consent[]
+  devices         Device[]
+  subscriptions   Subscription[]
+  refreshTokens   RefreshToken[]
+  energyScores    EnergyScore[]
+  menstrualCycles MenstrualCycle[]
+  bioAgeScores    BioAgeScore[]
+  dailyHabits     DailyHabit[]
+  sessions        ProductivitySession[]
+  calendars       CalendarAccount[]
+  lifestyle       LifestyleProfile?
+  anamnesis       HealthAnamnesis?
+  trainingPlans   TrainingPlan[]
+  executions      WorkoutExecution[]
+  generations     PlanGenerationRequest[]
+
+  @@map("users")
+  anamnesisVersions HealthAnamnesisVersion[]
+  anamnesisConversations AnamnesisConversation[]
+}
+
+/// Consentimento por finalidade, versionado. Sem isso não há base legal para
+/// tratar dado biométrico.
+model Consent {
+  id        String         @id @default(uuid()) @db.Uuid
+  userId    String         @map("user_id") @db.Uuid
+  purpose   ConsentPurpose
+  /// Versão do termo aceito — o texto muda, o registro precisa saber qual.
+  version   String
+  grantedAt DateTime       @default(now()) @map("granted_at") @db.Timestamptz(3)
+  revokedAt DateTime?      @map("revoked_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+  @@map("consents")
+}
+
+/// O aparelho é ativo da empresa emprestado ao assinante, não vendido.
+model Device {
+  id           String       @id @default(uuid()) @db.Uuid
+  userId       String?      @map("user_id") @db.Uuid
+  serialNumber String       @unique @map("serial_number")
+  /// Endereço BLE, preenchido no primeiro pareamento.
+  bleAddress   String?      @map("ble_address")
+  model        String       @default("ANB-X1")
+  status       DeviceStatus @default(in_use)
+  shippedAt    DateTime?    @map("shipped_at") @db.Timestamptz(3)
+  returnedAt   DateTime?    @map("returned_at") @db.Timestamptz(3)
+  batteryPct   Int?         @map("battery_pct")
+  lastSeenAt   DateTime?    @map("last_seen_at") @db.Timestamptz(3)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("devices")
+}
+
+model Subscription {
+  id                String             @id @default(uuid()) @db.Uuid
+  userId            String             @map("user_id") @db.Uuid
+  status            SubscriptionStatus @default(trialing)
+  startedAt         DateTime           @default(now()) @map("started_at") @db.Timestamptz(3)
+  canceledAt        DateTime?          @map("canceled_at") @db.Timestamptz(3)
+  currentPeriodEnd  DateTime?          @map("current_period_end") @db.Timestamptz(3)
+  /// Custo do aparelho já desembolsado. É o que define o payback do assinante.
+  hardwareCostCents Int                @default(0) @map("hardware_cost_cents")
+  priceCents        Int                @default(0) @map("price_cents")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("subscriptions")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  /// Guardamos o hash, nunca o token.
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+/// Hypertable do TimescaleDB. A PK composta é exigência do particionamento.
+model BiometricReading {
+  id          BigInt   @default(autoincrement())
+  userId      String   @map("user_id") @db.Uuid
+  recordedAt  DateTime @map("recorded_at") @db.Timestamptz(3)
+  hrvMs       Float?   @map("hrv_ms")
+  heartRate   Int?     @map("heart_rate")
+  spo2Pct     Float?   @map("spo2_pct")
+  temperature Float?
+  steps       Int?
+  bpSystolic  Int?     @map("bp_systolic")
+  bpDiastolic Int?     @map("bp_diastolic")
+  stressScore Float?   @map("stress_score")
+  respRate    Float?   @map("resp_rate")
+  source      String   @default("staranb")
+  /// Chave de deduplicação vinda do device. Torna o ingest idempotente:
+  /// o wearable acumula offline e reenvia o mesmo lote sem duplicar.
+  clientId    String?  @map("client_id")
+
+  @@id([id, recordedAt])
+  @@unique([userId, recordedAt, source])
+  @@index([userId, recordedAt])
+  @@map("biometric_readings")
+}
+
+model EnergyScore {
+  id          BigInt   @id @default(autoincrement())
+  userId      String   @map("user_id") @db.Uuid
+  hourStart   DateTime @map("hour_start") @db.Timestamptz(3)
+  score       Float
+  hrvUsed     Float?   @map("hrv_used")
+  sleepUsed   Float?   @map("sleep_used")
+  /// true enquanto não há linha de base pessoal suficiente.
+  calibrating Boolean  @default(true)
+  /// Resposta completa do serviço de modelo, incluindo a frase redigida.
+  ///
+  /// Guardada para não pagar uma chamada de LLM por abertura do app: dentro da
+  /// mesma hora, com as mesmas entradas, a frase é a mesma. Quem abre o app
+  /// cinco vezes numa hora gera uma chamada, não cinco.
+  insight     Json?
+  /// Impressão digital das entradas que produziram `insight`.
+  ///
+  /// A hora sozinha não serve como chave: dentro da mesma hora a pulseira pode
+  /// mandar leitura nova, e aí o score muda e a frase precisa mudar junto.
+  inputsHash  String?  @map("inputs_hash") @db.VarChar(64)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, hourStart])
+  @@map("energy_scores")
+}
+
+model BioAgeScore {
+  id           BigInt   @id @default(autoincrement())
+  userId       String   @map("user_id") @db.Uuid
+  calculatedAt DateTime @map("calculated_at") @db.Timestamptz(3)
+  realAge      Int      @map("real_age")
+  bioAge       Int      @map("bio_age")
+  delta        Int
+  dHrv         Float?   @map("d_hrv")
+  dHr          Float?   @map("d_hr")
+  dSpo2        Float?   @map("d_spo2")
+  dSleep       Float?   @map("d_sleep")
+  dTemp        Float?   @map("d_temp")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, calculatedAt])
+  @@map("bio_age_scores")
+}
+
+model ProductivitySession {
+  id                 BigInt    @id @default(autoincrement())
+  userId             String    @map("user_id") @db.Uuid
+  type               String
+  startedAt          DateTime  @map("started_at") @db.Timestamptz(3)
+  endedAt            DateTime? @map("ended_at") @db.Timestamptz(3)
+  durationMin        Int?      @map("duration_min")
+  energyScoreAtStart Float?    @map("energy_score_at_start")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startedAt])
+  @@map("productivity_sessions")
+}
+
+/// Conta de calendário conectada.
+///
+/// Guarda CREDENCIAL, não conteúdo: nenhum evento é persistido em lugar nenhum.
+/// A agenda é buscada no provedor a cada consulta e descartada depois de
+/// renderizada — mesma escolha da coordenada do clima. Guardar os compromissos
+/// significaria manter, no nosso banco, o nome e o horário das reuniões de
+/// pessoas que nunca aceitaram termo algum conosco.
+/// Perfil de rotina, coletado no onboarding.
+///
+/// Não é cadastro nem enfeite: cada campo aqui muda uma recomendação concreta.
+/// Postura decide o aviso de movimento, turno desloca a curva circadiana, e o
+/// dia de treino muda o que o app sugere numa manhã de energia alta. Campo que
+/// não altera nenhuma sugestão não deveria estar nesta tabela — pergunta sem
+/// consequência é só atrito no onboarding.
+model LifestyleProfile {
+  userId       String             @id @map("user_id") @db.Uuid
+  /// Texto livre: "desenvolvedora", "enfermeiro", "motorista". Não vira enum
+  /// porque a variedade real é grande e o valor está na descrição da pessoa.
+  occupation   String?
+  workPosture  WorkPosture?       @map("work_posture")
+  /// Horas seguidas na mesma posição. É o número que separa risco de conforto.
+  postureHours Int?               @map("posture_hours")
+  workSchedule WorkSchedule?      @map("work_schedule")
+  /// Hora decimal de dormir. Só perguntada a quem tem turno irregular, porque é
+  /// ela que permite estimar o cronótipo antes de haver 7 noites medidas.
+  bedtime      Float?
+  exercises    ExerciseFrequency?
+  /// O que atrapalha, para quem não pratica. Muda o tom da sugestão.
+  blocker      String?
+  /// Modalidades: "musculação", "corrida", "futebol"…
+  activities   String[]           @default([])
+  /// Dias da semana, 0 = domingo.
+  trainDays    Int[]              @default([]) @map("train_days")
+  trainPeriod  String?            @map("train_period")
+  trainPlace   String?            @map("train_place")
+  goal         String?
+  completedAt  DateTime?          @map("completed_at") @db.Timestamptz(3)
+  updatedAt    DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("lifestyle_profiles")
+}
+
+model CalendarAccount {
+  id           String           @id @default(uuid()) @db.Uuid
+  userId       String           @map("user_id") @db.Uuid
+  provider     CalendarProvider
+  /// Qual conta foi conectada, para a pessoa reconhecer na tela.
+  accountEmail String           @map("account_email")
+  /// Cifrados em AES-256-GCM. Ver `lib/crypto.ts`.
+  accessToken  String           @map("access_token")
+  refreshToken String           @map("refresh_token")
+  expiresAt    DateTime         @map("expires_at") @db.Timestamptz(3)
+  scope        String
+  connectedAt  DateTime         @default(now()) @map("connected_at") @db.Timestamptz(3)
+  lastSyncAt   DateTime?        @map("last_sync_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@map("calendar_accounts")
+}
+
+model DailyHabit {
+  id            BigInt   @id @default(autoincrement())
+  userId        String   @map("user_id") @db.Uuid
+  date          DateTime @db.Date
+  waterMl       Int      @default(0) @map("water_ml")
+  sleepScore    Float?   @map("sleep_score")
+  /// Duração da noite em minutos. Sem ela o score não tem avaliação: "82" pode
+  /// ser uma noite ótima de 7h ou um cochilo bem pontuado — `ratings.ts` exige os dois.
+  sleepMinutes  Int?     @map("sleep_minutes")
+  focusSessions Int      @default(0) @map("focus_sessions")
+  mood          String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("daily_habits")
+}
+
+// ==========================================================================
+// TREINO
+//
+// O plano é do usuário e gerado por IA. Não existe personal, biblioteca de
+// treinos, pasta nem plano compartilhado — se aparecer um campo que só faz
+// sentido com um profissional do outro lado, ele veio de fora e não pertence
+// aqui.
+//
+// A prescrição é fechada pelo catálogo: `WorkoutExercise.exerciseId` é
+// obrigatório e aponta para `Exercise`. O modelo não inventa exercício, e o
+// banco é a última linha que garante isso.
+// ==========================================================================
+
+enum MuscleGroup {
+  PEITO
+  COSTAS
+  OMBROS
+  BICEPS
+  TRICEPS
+  ANTEBRACO
+  ABDOMEN
+  QUADRICEPS
+  POSTERIOR_COXA
+  GLUTEOS
+  PANTURRILHA
+  CORPO_INTEIRO
+}
+
+enum ExerciseType {
+  FORCA
+  CARDIO
+  ALONGAMENTO
+  MOBILIDADE
+  FUNCIONAL
+}
+
+enum ExperienceLevel {
+  INICIANTE
+  INTERMEDIARIO
+  AVANCADO
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum TrainingPlanDayType {
+  WORKOUT
+  OFF
+}
+
+/// Fase da sessão. O agrupamento é o mesmo que a tela de execução exibe em
+/// abas, e é o que impede o alongamento de virar volume de treino.
+enum WorkoutPhaseType {
+  ALONGAMENTO
+  TREINO
+  CARDIO
+}
+
+/// Discriminador do item: define quais campos do `WorkoutExercise` valem.
+enum ExerciseSubtype {
+  STRENGTH
+  CARDIO
+  MOBILITY
+}
+
+enum TrainingPlanStatus {
+  ACTIVE
+  EXPIRED
+  REPLACED
+}
+
+enum TrainingGoal {
+  emagrecimento
+  hipertrofia
+  performance
+  mobilidade
+  saude
+  reabilitacao
+}
+
+enum TrainingLocation {
+  academia
+  casa
+  ar_livre
+}
+
+enum WorkoutExecutionStatus {
+  IN_PROGRESS
+  FINISHED
+  CANCELLED
+  /// Fechada pelo job por abandono — sessão que ficou aberta além do razoável.
+  /// Separada de CANCELLED porque cancelar é ato do usuário e isto não é.
+  AUTO_CLOSED
+}
+
+enum GenerationStatus {
+  PENDING
+  RUNNING
+  /// Plano gerado, aprovado no gate e materializado.
+  DONE
+  /// Perfil exige avaliação profissional antes de treinar (RiskTier 3 ou 4, ou
+  /// o próprio modelo devolvendo REFERRAL). Não é erro: é o desfecho correto.
+  REFERRAL
+  /// Reprovado no gate (catálogo, estrutura ou hard gate do grader).
+  BLOCKED
+  /// Falha técnica (o serviço de modelo caiu, estourou timeout). Reprocessável,
+  /// ao contrário de BLOCKED.
+  FAILED
+}
+
+/// Classificação de risco clínico derivada das flags da anamnese.
+///
+/// A diferença que importa em relação ao produto de onde isto veio: lá o TIER_3
+/// ia para uma fila de validação humana, revisada por um profissional. Aqui não
+/// existe esse profissional, então TIER_3 encaminha igual ao TIER_4. Prescrever
+/// para cardiopata sem revisor é exatamente o que faria este produto atravessar
+/// a fronteira de dispositivo médico.
+enum RiskTier {
+  TIER_0
+  TIER_1
+  TIER_2
+  TIER_3
+  TIER_4
+}
+
+/// Catálogo de exercícios. É o universo FECHADO de prescrição: o modelo só pode
+/// referenciar ids que existem aqui, e isso é checado três vezes — no prompt, no
+/// validador determinístico do serviço de modelo e na FK desta tabela.
+///
+/// Semeado por `prisma/seed-exercises.ts` a partir de `prisma/data/exercises.json`.
+/// Não tem `videoUrl`: a mídia da origem não é nossa para servir.
+model Exercise {
+  id          String          @id @db.Uuid
+  name        String
+  description String?
+  muscleGroup MuscleGroup     @map("muscle_group")
+  /// Texto livre ("Halteres + banco reto", "Nenhum (peso corporal)"). Não vira
+  /// enum porque a origem tem 169 combinações distintas e o valor está na
+  /// descrição — o modelo lê isso, não filtra por igualdade.
+  equipment   String
+  level       ExperienceLevel @default(INICIANTE)
+  type        ExerciseType
+  active      Boolean         @default(true)
+
+  workoutExercises WorkoutExercise[]
+
+  @@index([muscleGroup])
+  @@index([type])
+  @@index([active])
+  @@map("exercises")
+}
+
+/// Anamnese de saúde. Dado sensível: existe sob o consentimento
+/// `workout_generation` e é apagada quando ele é revogado.
+///
+/// Guarda a RESPOSTA, não a conclusão. As flags clínicas (`cardiopata`,
+/// `gestante`, `glp1`…) são derivadas na hora por `services/workout/context-builder.ts`,
+/// porque a tabela flag→referência muda com a evidência e uma flag congelada em
+/// coluna envelheceria sem ninguém perceber.
+model HealthAnamnesis {
+  userId    String   @id @map("user_id") @db.Uuid
+  /// Respostas do PAR-Q e das condições declaradas, no formato do grafo em
+  /// `app/src/domain/anamnesis.ts`.
+  answers   Json
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("health_anamneses")
+}
+
+/// Uma entrevista em andamento.
+///
+/// Estado no SERVIDOR, e não no aparelho: a entrevista tem dezoito perguntas e
+/// ramifica, e alguém que fecha o app no meio precisa voltar de onde parou —
+/// não recomeçar. Guardar no aparelho perderia isso na primeira troca de
+/// celular, que é exatamente quando a pessoa está começando a usar o produto.
+///
+/// `messages` e `answers` são JSON de propósito. Normalizar mensagem de conversa
+/// em tabela própria custaria três tabelas para um dado que só é lido inteiro,
+/// sempre, e nunca consultado por campo.
+model AnamnesisConversation {
+  id        String                      @id @default(uuid()) @db.Uuid
+  userId    String                      @map("user_id") @db.Uuid
+  status    AnamnesisConversationStatus @default(ACTIVE)
+  /// `{ [questionId]: resposta }`
+  answers   Json                        @default("{}")
+  /// `[{ role, type, content, questionId, at }]`
+  messages  Json                        @default("[]")
+  createdAt DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime                    @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@map("anamnesis_conversations")
+}
+
+enum AnamnesisConversationStatus {
+  ACTIVE
+  COMPLETED
+  ABANDONED
+}
+
+/// Cada versão das respostas, guardada quando a anamnese é reescrita.
+///
+/// `HealthAnamnesis` guarda só o estado ATUAL — `userId` é a chave primária, e
+/// responder de novo sobrescreve. Isso é certo para gerar treino (o agente
+/// precisa do que vale agora) e errado para a pessoa: ela não tinha como ver o
+/// que declarou da última vez, nem por que o plano anterior era daquele jeito.
+///
+/// Guarda a resposta INTEIRA, e não um diff. Diff de JSON de saúde é ilegível
+/// sem a versão de referência, e o volume aqui é de dezenas de linhas por
+/// pessoa na vida toda — não vale trocar clareza por bytes.
+model HealthAnamnesisVersion {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  answers   Json
+  /// Bandeiras clínicas derivadas na época. Guardadas junto porque a regra que
+  /// as deriva muda com o tempo, e recalcular hoje daria outro resultado — o
+  /// que apagaria a razão de o plano daquele mês ter sido o que foi.
+  flags     String[]
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("health_anamnesis_versions")
+}
+
+model TrainingPlan {
+  id               String             @id @default(uuid()) @db.Uuid
+  userId           String             @map("user_id") @db.Uuid
+  name             String
+  goal             TrainingGoal?
+  level            ExperienceLevel?
+  frequencyPerWeek Int?               @map("frequency_per_week")
+  location         TrainingLocation?
+  status           TrainingPlanStatus @default(ACTIVE)
+  /// Fundamentação que o modelo escreveu para a prescrição. Fica guardada
+  /// porque é o que permite auditar POR QUE um plano ficou daquele jeito.
+  rationale        String?
+  startDate        DateTime           @map("start_date") @db.Timestamptz(3)
+  /// Validade. Um plano não fica ativo para sempre: o corpo adapta, e treinar
+  /// o mesmo estímulo por meses é o caminho para a estagnação.
+  endDate          DateTime           @map("end_date") @db.Timestamptz(3)
+  createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  days TrainingPlanDay[]
+
+  @@index([userId, status])
+  @@map("training_plans")
+}
+
+model TrainingPlanDay {
+  id        String              @id @default(uuid()) @db.Uuid
+  planId    String              @map("plan_id") @db.Uuid
+  dayOfWeek DayOfWeek           @map("day_of_week")
+  dayType   TrainingPlanDayType @default(OFF) @map("day_type")
+  workoutId String?             @map("workout_id") @db.Uuid
+
+  plan       TrainingPlan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  workout    Workout?           @relation(fields: [workoutId], references: [id], onDelete: SetNull)
+  executions WorkoutExecution[]
+
+  @@unique([planId, dayOfWeek])
+  @@index([planId])
+  @@map("training_plan_days")
+}
+
+model Workout {
+  id                String        @id @default(uuid()) @db.Uuid
+  name              String
+  muscleGroups      MuscleGroup[] @map("muscle_groups")
+  estimatedDuration Int?          @map("estimated_duration")
+  observations      String?
+
+  phases     WorkoutPhase[]
+  exercises  WorkoutExercise[]
+  planDays   TrainingPlanDay[]
+  executions WorkoutExecution[]
+
+  @@map("workouts")
+}
+
+model WorkoutPhase {
+  id        String           @id @default(uuid()) @db.Uuid
+  workoutId String           @map("workout_id") @db.Uuid
+  type      WorkoutPhaseType
+  order     Int
+
+  workout   Workout           @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  exercises WorkoutExercise[]
+
+  @@unique([workoutId, type])
+  @@index([workoutId])
+  @@map("workout_phases")
+}
+
+model WorkoutExercise {
+  id         String          @id @default(uuid()) @db.Uuid
+  workoutId  String          @map("workout_id") @db.Uuid
+  phaseId    String          @map("phase_id") @db.Uuid
+  /// Obrigatório, e é a regra inteira: não existe exercício prescrito fora do
+  /// catálogo. Sem `onDelete: Cascade` de propósito — apagar um exercício do
+  /// catálogo que já foi prescrito deve FALHAR, não sumir do plano de alguém.
+  exerciseId String          @map("exercise_id") @db.Uuid
+  order      Int
+  subtype    ExerciseSubtype @default(STRENGTH)
+  notes      String?
+  /// CARDIO: duração em minutos e intensidade descrita.
+  duration   Int?
+  intensity  String?
+  /// MOBILITY: tempo de sustentação em segundos.
+  holdTime   Int?            @map("hold_time")
+
+  workout    Workout              @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  phase      WorkoutPhase         @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  exercise   Exercise             @relation(fields: [exerciseId], references: [id])
+  sets       WorkoutExerciseSet[]
+  executions ExerciseExecution[]
+
+  @@index([workoutId])
+  @@index([phaseId])
+  @@map("workout_exercises")
+}
+
+model WorkoutExerciseSet {
+  id                String @id @default(uuid()) @db.Uuid
+  workoutExerciseId String @map("workout_exercise_id") @db.Uuid
+  order             Int
+  /// Faixa, não número: "8-12", "30s", "até a falha". Prescrição de repetição é
+  /// intervalo — fixar um inteiro perderia a informação.
+  repetitions       String
+  restTime          Int?   @map("rest_time")
+  /// Carga sugerida em kg. Quase sempre nula: a primeira sessão é que descobre.
+  load              Float?
+
+  workoutExercise WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+
+  @@index([workoutExerciseId])
+  @@map("workout_exercise_sets")
+}
+
+/// A sessão. Uma por check-in.
+model WorkoutExecution {
+  id                String                 @id @default(uuid()) @db.Uuid
+  userId            String                 @map("user_id") @db.Uuid
+  workoutId         String                 @map("workout_id") @db.Uuid
+  trainingPlanDayId String?                @map("training_plan_day_id") @db.Uuid
+  status            WorkoutExecutionStatus @default(IN_PROGRESS)
+  startedAt         DateTime               @default(now()) @map("started_at") @db.Timestamptz(3)
+  finishedAt        DateTime?              @map("finished_at") @db.Timestamptz(3)
+  durationSec       Int?                   @map("duration_sec")
+  /// 0–100. Quantas séries prescritas foram efetivamente concluídas.
+  completionPct     Float?                 @map("completion_pct")
+  /// Percepção de esforço (escala de Borg adaptada, 1–10) e nota da sessão
+  /// (1–5), coletadas no pós-treino.
+  perceivedEffort   Int?                   @map("perceived_effort")
+  rating            Int?
+  comment           String?
+
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workout   Workout             @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  planDay   TrainingPlanDay?    @relation(fields: [trainingPlanDayId], references: [id], onDelete: SetNull)
+  exercises ExerciseExecution[]
+
+  @@index([userId, startedAt])
+  @@index([userId, status])
+  @@map("workout_executions")
+}
+
+/// O que foi feito de verdade, série a série. É a diferença entre o prescrito e
+/// o executado — e é daqui que sai o auto-preenchimento de carga da próxima vez.
+model ExerciseExecution {
+  id                String   @id @default(uuid()) @db.Uuid
+  executionId       String   @map("execution_id") @db.Uuid
+  workoutExerciseId String   @map("workout_exercise_id") @db.Uuid
+  setOrder          Int      @map("set_order")
+  load              Float?
+  repetitions       Int?
+  completed         Boolean  @default(false)
+  completedAt       DateTime @default(now()) @map("completed_at") @db.Timestamptz(3)
+
+  execution       WorkoutExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  workoutExercise WorkoutExercise  @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([executionId, workoutExerciseId, setOrder])
+  @@index([executionId])
+  @@map("exercise_executions")
+}
+
+/// Controle e auditoria da geração. A geração leva de 50 a 120 segundos (duas
+/// chamadas de modelo sobre o catálogo inteiro), então não cabe num request —
+/// o app abre a requisição e consulta o status.
+///
+/// `score`, `traceId` e `blockReason` existem para responder, meses depois, por
+/// que um plano específico foi entregue ou recusado.
+model PlanGenerationRequest {
+  id             String           @id @default(uuid()) @db.Uuid
+  userId         String           @map("user_id") @db.Uuid
+  status         GenerationStatus @default(PENDING)
+  riskTier       RiskTier?        @map("risk_tier")
+  /// Flags clínicas derivadas na hora da geração. Registradas porque a tabela
+  /// de derivação muda — sem isto, um plano antigo fica inexplicável.
+  flags          String[]         @default([])
+  trainingPlanId String?          @map("training_plan_id") @db.Uuid
+  score          Float?
+  traceId        String?          @map("trace_id")
+  /// Código do motivo, não a frase: `encaminhamento_clinico`, `seguranca_clinica`,
+  /// `catalogo`, `qualidade`, `timeout`. A frase mostrada ao usuário é montada
+  /// no backend a partir dele.
+  blockReason    String?          @map("block_reason")
+  /// Texto do usuário pedindo outra tentativa ("achei pesado demais").
+  feedback       String?
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  finishedAt     DateTime?        @map("finished_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@map("plan_generation_requests")
+}
