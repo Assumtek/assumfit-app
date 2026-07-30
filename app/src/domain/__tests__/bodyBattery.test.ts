@@ -40,11 +40,12 @@ describe('calcBodyBattery', () => {
     expect(b.curve).toHaveLength(0);
   });
 
-  it('descarrega ao longo de um dia estressante', () => {
+  it('descarrega ao longo de um dia estressante, e o gasto soma positivo', () => {
     const amostras = Array.from({ length: 10 }, (_, i) => ({ at: as(8 + i), value: 85 }));
     const b = calcBodyBattery(noite(90), amostras)!;
     expect(b.current).toBeLessThan(b.morning);
-    expect(b.used).toBeLessThan(0);
+    expect(b.used).toBeGreaterThan(0);
+    expect(b.used).toBe(b.morning - b.current);
   });
 
   it('carrega em repouso prolongado', () => {
@@ -104,13 +105,27 @@ describe('calcBodyBattery', () => {
     expect(calcBodyBattery(noite(80), [], 30)!.gain).toBe(morningLevel(noite(80)) - 30);
   });
 
-  it('soneca à tarde não vira gasto positivo', () => {
+  it('dia só de calma recarrega sem inventar gasto', () => {
     const b = calcBodyBattery(noite(30), [
       { at: as(8), value: 10 },
       { at: as(12), value: 10 },
     ])!;
     expect(b.current).toBeGreaterThan(b.morning);
     expect(b.used).toBe(0);
+    expect(b.recharged).toBeGreaterThan(0);
+  });
+
+  it('cair e recuperar no mesmo dia É gasto — não some no saldo', () => {
+    // Manhã tensa (85) drena; tarde calma (10) devolve. O saldo fecha perto do
+    // teto, mas o dia GASTOU — era o caso que travava o número em zero.
+    const b = calcBodyBattery(noite(70), [
+      { at: as(8), value: 85 },
+      { at: as(10), value: 85 },
+      { at: as(12), value: 10 },
+      { at: as(16), value: 10 },
+    ])!;
+    expect(b.used).toBeGreaterThan(0);
+    expect(b.recharged).toBeGreaterThan(0);
   });
 });
 

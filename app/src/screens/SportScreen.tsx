@@ -104,6 +104,31 @@ export function SportScreen() {
     if (pos) setPosicao({ lat: pos.coords.latitude, lon: pos.coords.longitude });
   };
 
+  // EXEMPLO-STRAVA: bloco temporário para visualizar a tela de conclusão.
+  // Uma volta de ~2,5 km no Ibirapuera, 16 min — removido depois da olhada.
+  const exemploAberto = useRef(false);
+  useEffect(() => {
+    if (!__DEV__ || exemploAberto.current) return;
+    exemploAberto.current = true;
+    const pontos: GeoPoint[] = Array.from({ length: 120 }, (_, i) => {
+      const t = (i / 120) * Math.PI * 2;
+      return {
+        lat: -23.5875 + Math.sin(t) * 0.0038 + Math.sin(t * 5) * 0.0003,
+        lon: -46.6573 + Math.cos(t) * 0.0046 + Math.cos(t * 3) * 0.0004,
+        at: i * 8000,
+      };
+    });
+    setResumo({
+      sport: SPORTS[0],
+      elapsed: 16 * 60_000 + 42_000,
+      dist: 2540,
+      kcal: 187,
+      avgHr: 152,
+      maxHr: 174,
+      points: pontos,
+    });
+  }, []);
+
   const carregar = useCallback(async () => {
     try {
       setHistorico(await api.fetchSportSessions(30));

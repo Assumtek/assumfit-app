@@ -40,8 +40,17 @@ export type BodyBattery = {
   curve: BatteryPoint[];
   /** Com quanto a pessoa acordou — o teto do dia. */
   morning: number;
-  /** Quanto foi gasto desde que acordou. Sempre ≤ 0. */
+  /**
+   * Soma de tudo que o dia DRENOU, em pontos positivos.
+   *
+   * Não é `morning - current`: um dia que caiu 20 no trânsito e recuperou 20
+   * na soneca gastou 20, não zero. A versão anterior media só o saldo abaixo
+   * do teto da manhã — e para quem passa o dia na faixa calma do estresse o
+   * número travava em 0 para sempre, parecendo quebrado.
+   */
   used: number;
+  /** Soma de tudo que o dia RECARREGOU acordado (pausas, calma), em pontos. */
+  recharged: number;
   /**
    * Quanto a noite devolveu, em pontos.
    *
@@ -115,12 +124,15 @@ export function calcBodyBattery(
       curve: [],
       morning,
       used: 0,
+      recharged: 0,
       gain: bedtimeLevel == null ? null : morning - bedtimeLevel,
     };
   }
 
   const curve: BatteryPoint[] = [{ at: ordenadas[0].at, level: morning }];
   let nivel = morning;
+  let drenado = 0;
+  let recarregado = 0;
 
   for (let i = 1; i < ordenadas.length; i++) {
     const anterior = ordenadas[i - 1];
@@ -136,7 +148,12 @@ export function calcBodyBattery(
      disso a bateria simplesmente não se move.
     */
     const efetivos = Math.min(minutos, 120);
+    const antes = nivel;
     nivel = clamp(nivel + taxaDe(anterior.value) * efetivos);
+    // O gasto e a recarga somam MOVIMENTO real (pós-clamp): dreno no teto ou
+    // no piso não conta ponto que a bateria não tinha para dar.
+    if (nivel < antes) drenado += antes - nivel;
+    else recarregado += nivel - antes;
     curve.push({ at: atual.at, level: Math.round(nivel) });
   }
 
@@ -145,9 +162,8 @@ export function calcBodyBattery(
     current,
     curve,
     morning,
-    // Sempre ≤ 0: é gasto, não saldo. Uma bateria que subiu durante o dia
-    // (soneca à tarde) não vira "gasto positivo" — vira gasto zero.
-    used: Math.min(0, current - morning),
+    used: Math.round(drenado),
+    recharged: Math.round(recarregado),
     gain: bedtimeLevel == null ? null : morning - bedtimeLevel,
   };
 }
