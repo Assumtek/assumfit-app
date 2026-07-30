@@ -186,12 +186,8 @@ export function Sidebar() {
             active={current === 'Health'}
             onPress={() => go('Health')}
           />
-          <Entry
-            name="Treino"
-            detail="plano e check-in"
-            active={current === 'Plan'}
-            onPress={() => go('Plan')}
-          />
+          {/* O treino de musculação mora DENTRO de Esporte: uma porta só para
+              tudo que é atividade física, com a musculação como carro-chefe. */}
           {/*
             O ciclo só existe para quem tem sexo biológico feminino no cadastro.
 
@@ -224,7 +220,7 @@ export function Sidebar() {
           />
           <Entry
             name="Esporte"
-            detail="corrida, ciclismo e mais"
+            detail="musculação, corrida e mais"
             active={current === 'Sport'}
             onPress={() => go('Sport')}
           />

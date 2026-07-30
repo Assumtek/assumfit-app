@@ -1,4 +1,5 @@
 import { Text } from '@tamagui/core';
+import { useNavigation } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -49,6 +50,7 @@ const elapsedOf = (s: Sessao, now: number): number =>
 
 export function SportScreen() {
   const { colors } = useTheme();
+  const navigation = useNavigation();
   const latest = useBiometricStore((s) => s.latest);
 
   const [sessao, setSessao] = useState<Sessao | null>(null);
@@ -253,6 +255,39 @@ export function SportScreen() {
         Escolha a modalidade e inicie. Batimento ao vivo da pulseira, distância por GPS e
         caloria estimada pela intensidade.
       </Body>
+
+      {/*
+        Musculação é o carro-chefe e abre o MÓDULO de treino inteiro — plano
+        gerado por IA, check-in, progresso. As demais modalidades são o
+        cronômetro desta tela. Cartão largo e com acento: hierarquia, não
+        decoração.
+      */}
+      <Pressable
+        onPress={() => navigation.navigate('Plan' as never)}
+        accessibilityRole="button"
+        accessibilityLabel="Abrir treino de musculação"
+        style={({ pressed }) => [{ marginBottom: 12 }, pressed && { opacity: 0.7 }]}
+      >
+        <XStack
+          borderRadius={16}
+          borderWidth={1}
+          borderColor="$primary"
+          backgroundColor="$primarySoft"
+          paddingVertical="$lg"
+          paddingHorizontal="$lg"
+          alignItems="center"
+          gap="$md"
+        >
+          <Icon name="dumbbell" size={20} color={colors.accent} />
+          <YStack flex={1} gap={2}>
+            <Text fontSize={15} fontWeight="700" color="$foreground">
+              Musculação
+            </Text>
+            <Data fontSize={11}>seu plano, check-in e progresso</Data>
+          </YStack>
+          <Icon name="arrowRight" size={16} color={colors.accent} />
+        </XStack>
+      </Pressable>
 
       <XStack flexWrap="wrap" gap="$md" marginBottom="$xxl">
         {SPORTS.map((sport) => (
