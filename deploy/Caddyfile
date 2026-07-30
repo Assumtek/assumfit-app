@@ -1,25 +1,36 @@
 # O proxy roda em network_mode: host — 127.0.0.1:3001 é a API no mesmo host.
-# TLS é automático (ACME): o certificado chega sozinho quando o DNS de
-# api.assumfit.com.br apontar para esta máquina, e renova sem cron.
+# TLS é automático (ACME) para os três nomes; certificados chegam sozinhos
+# quando o DNS de cada um apontar para esta máquina, e renovam sem cron.
 
+# O site institucional — landing e política de privacidade.
+assumfit.com.br {
+	encode gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		-Server
+	}
+	root * /site
+	# /privacidade sem extensão: é a URL que vai nas lojas e no rodapé.
+	try_files {path} {path}.html
+	file_server
+}
+
+www.assumfit.com.br {
+	redir https://assumfit.com.br{uri} permanent
+}
+
+# A API.
 api.assumfit.com.br {
 	encode gzip
-
-	# A API já põe os cabeçalhos da aplicação; aqui só o que é do transporte.
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
 		-Server
 	}
 
-	# Página estática exigida pelas lojas — a URL pública da política.
-	handle /privacidade {
-		rewrite * /privacidade.html
-		root * /site
-		file_server
-	}
+	# O endereço antigo da política continua vivo, apontando para o canônico.
+	redir /privacidade https://assumfit.com.br/privacidade permanent
 
-	handle {
-		reverse_proxy 127.0.0.1:3001
-	}
+	reverse_proxy 127.0.0.1:3001
 }
