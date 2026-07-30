@@ -37,6 +37,8 @@ export function MealsScreen() {
   const [aviso, setAviso] = useState<string | null>(null);
   /** Registro aberto — a sub-tela de detalhe com a foto grande. */
   const [detalhe, setDetalhe] = useState<api.MealRecord | null>(null);
+  /** A sub-tela de captura — foto, galeria e descrição atrás de um botão só. */
+  const [criando, setCriando] = useState(false);
   /** O que a pessoa diz que tem no prato — entra na análise com precedência. */
   const [descricao, setDescricao] = useState('');
   /** Alimento em edição no detalhe; index -1 = novo. */
@@ -150,6 +152,10 @@ export function MealsScreen() {
         }
         setMeals((atual) => [record, ...(atual ?? [])]);
         setDescricao('');
+        // Da captura direto para o registro criado: é ali que se confere o
+        // resultado e se corrige na hora o que a análise errou.
+        setCriando(false);
+        setDetalhe(record);
       }
     } catch {
       setAviso('A análise falhou. Confira a conexão e tente de novo.');
@@ -451,6 +457,64 @@ export function MealsScreen() {
     );
   }
 
+  // ——— Sub-tela: nova refeição — foto, galeria e a descrição num lugar só. ———
+  if (criando) {
+    return (
+      <DetailScreen
+        title="Nova refeição"
+        onBack={() => {
+          setCriando(false);
+          setAviso(null);
+        }}
+      >
+        <Body marginTop="$md" marginBottom="$lg" maxWidth="92%">
+          Fotografe o prato e o AssumFit identifica os alimentos, estima as porções e calcula a
+          faixa de calorias pela tabela nutricional oficial (TACO).
+        </Body>
+
+        <YStack marginBottom="$md">
+          <CampoComVoz
+            valor={descricao}
+            onChange={setDescricao}
+            placeholder="O que tem no prato? (opcional — melhora a análise)"
+          />
+        </YStack>
+
+        <XStack gap="$md" marginBottom="$xl">
+          <YStack flex={1}>
+            <Button
+              title={analisando ? 'Analisando…' : 'Fotografar prato'}
+              onPress={() => void analisar(true)}
+              disabled={analisando}
+            />
+          </YStack>
+          <YStack flex={1}>
+            <Button
+              title="Da galeria"
+              variant="secondary"
+              onPress={() => void analisar(false)}
+              disabled={analisando}
+            />
+          </YStack>
+        </XStack>
+
+        {analisando ? (
+          <XStack alignItems="center" gap="$md" marginBottom="$lg">
+            <ActivityIndicator size="small" color={colors.accent} />
+            <Data>identificando os alimentos e consultando a tabela nutricional…</Data>
+          </XStack>
+        ) : null}
+
+        {aviso ? <Note title="Não deu desta vez" body={aviso} /> : null}
+
+        <Note
+          title="A foto fica com você"
+          body="Ela é guardada só neste aparelho, junto do registro. No servidor é analisada e descartada."
+        />
+      </DetailScreen>
+    );
+  }
+
   const hoje = new Date().toDateString();
   const deHoje = (meals ?? []).filter((m) => new Date(m.at).toDateString() === hoje);
   const kcalMin = deHoje.reduce((s, m) => s + m.kcalMin, 0);
@@ -487,52 +551,24 @@ export function MealsScreen() {
         </HeroCard>
       </YStack>
 
-      {/* As palavras da pessoa entram na análise com PRECEDÊNCIA — é a
-          calibração mais barata que existe: "arroz, feijão, farofa e frango"
-          resolve a farofa esquecida e a carne trocada antes de acontecerem. */}
-      <YStack marginBottom="$md">
-        <CampoComVoz
-          valor={descricao}
-          onChange={setDescricao}
-          placeholder="O que tem no prato? (opcional — melhora a análise)"
+      <YStack alignSelf="flex-start" marginBottom="$xl">
+        <Button
+          title="Nova refeição"
+          onPress={() => {
+            setAviso(null);
+            setCriando(true);
+          }}
         />
       </YStack>
-
-      <XStack gap="$md" marginBottom="$xl">
-        <YStack flex={1}>
-          <Button
-            title={analisando ? 'Analisando…' : 'Fotografar prato'}
-            onPress={() => void analisar(true)}
-            disabled={analisando}
-          />
-        </YStack>
-        <YStack flex={1}>
-          <Button
-            title="Da galeria"
-            variant="secondary"
-            onPress={() => void analisar(false)}
-            disabled={analisando}
-          />
-        </YStack>
-      </XStack>
-
-      {analisando ? (
-        <XStack alignItems="center" gap="$md" marginBottom="$lg">
-          <ActivityIndicator size="small" color={colors.accent} />
-          <Data>identificando os alimentos e consultando a tabela nutricional…</Data>
-        </XStack>
-      ) : null}
-
-      {aviso ? <Note title="Não deu desta vez" body={aviso} /> : null}
 
       {meals === null ? (
         <YStack paddingVertical="$xl">
           <ActivityIndicator size="small" color={colors.textMuted} />
         </YStack>
-      ) : meals.length === 0 && !aviso ? (
+      ) : meals.length === 0 ? (
         <Note
           title="Como funciona"
-          body="Fotografe o prato e o AssumFit identifica os alimentos, estima as porções e calcula a faixa de calorias pela tabela nutricional oficial (TACO). A foto fica guardada no seu aparelho, junto do registro — no servidor ela é analisada e descartada."
+          body="Toque em Nova refeição, fotografe o prato, e o AssumFit identifica os alimentos, estima as porções e calcula a faixa de calorias pela tabela nutricional oficial (TACO). A foto fica guardada no seu aparelho, junto do registro."
         />
       ) : meals.length > 0 ? (
         <Section label="Últimas refeições">
