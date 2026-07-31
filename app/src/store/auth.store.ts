@@ -48,7 +48,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   signIn: async (email, password) => {
     set({ loading: true, error: null });
     try {
-      await api.login(email, password);
+      // O teclado do iOS capitaliza e o autofill acrescenta espaço — e-mail é
+      // insensível a caixa por definição. O servidor também normaliza; aqui é
+      // o cinto que evita a viagem de rede para receber um 401 de maiúscula.
+      await api.login(email.trim().toLowerCase(), password);
       set({ status: 'signedIn', loading: false });
       void useUserStore.getState().load();
       return true;
@@ -61,7 +64,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   signUp: async (input) => {
     set({ loading: true, error: null });
     try {
-      await api.register(input);
+      await api.register({ ...input, email: input.email.trim().toLowerCase() });
       set({ status: 'signedIn', loading: false });
       void useUserStore.getState().load();
       return true;

@@ -8,7 +8,7 @@ import * as auth from '../services/auth.service';
 export const authRoutes = Router();
 
 const registerSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().toLowerCase().email(),
   password: z.string().min(10, 'Senha precisa de pelo menos 10 caracteres'),
   name: z.string().min(2),
   birthDate: z.string().date(),
@@ -27,7 +27,7 @@ authRoutes.post(
 authRoutes.post(
   '/login',
   asyncRoute(async (req, res) => {
-    const body = z.object({ email: z.string().email(), password: z.string() }).parse(req.body);
+    const body = z.object({ email: z.string().trim().toLowerCase().email(), password: z.string() }).parse(req.body);
     res.json(await auth.login(body.email, body.password));
   }),
 );
