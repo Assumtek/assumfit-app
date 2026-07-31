@@ -132,3 +132,29 @@ describe('monthAhead', () => {
     expect(monthAhead(ciclos, '2026-07-10')!.nextStart).toBe('2026-07-29');
   });
 });
+
+describe('discardedIntervals', () => {
+  const { discardedIntervals } = require('../cycle');
+
+  it('conta os intervalos que a média descartou', () => {
+    // 38 e 40 dias: fora da faixa 21–35 — a pessoa de ciclo longo fornece
+    // dados todo mês e o filtro os descarta; a tela precisa saber disso.
+    const cycles = [
+      { startedAt: '2026-05-01', durationDays: null },
+      { startedAt: '2026-06-08', durationDays: null }, // 38
+      { startedAt: '2026-07-18', durationDays: null }, // 40
+    ];
+    expect(discardedIntervals(cycles)).toBe(2);
+  });
+
+  it('zero quando tudo está na faixa ou não há intervalos', () => {
+    expect(discardedIntervals([])).toBe(0);
+    expect(discardedIntervals([{ startedAt: '2026-07-01', durationDays: null }])).toBe(0);
+    expect(
+      discardedIntervals([
+        { startedAt: '2026-06-03', durationDays: null },
+        { startedAt: '2026-07-01', durationDays: null }, // 28
+      ]),
+    ).toBe(0);
+  });
+});

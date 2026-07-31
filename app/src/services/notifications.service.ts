@@ -172,6 +172,11 @@ const CICLO_PROXIMO = 'ciclo-proximo';
  * discreto de propósito: a tela de bloqueio é vista por quem passa perto, e
  * "ciclo" sem número nem data já diz o suficiente para quem pediu o aviso.
  */
+/** Desliga o aviso de previsão — o interruptor da tela de Ciclo. */
+export async function cancelCycleHeadsUp() {
+  await Notifications.cancelScheduledNotificationAsync(CICLO_PROXIMO).catch(() => undefined);
+}
+
 export async function scheduleCycleHeadsUp(nextStartIso: string) {
   if (!(await ensurePermission())) return;
   await Notifications.cancelScheduledNotificationAsync(CICLO_PROXIMO).catch(() => undefined);

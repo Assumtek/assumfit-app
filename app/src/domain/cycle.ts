@@ -101,6 +101,26 @@ export function averageLength(cycles: LoggedCycle[]): number | null {
 }
 
 /**
+ * Quantos intervalos o filtro de 21–35 dias descartou.
+ *
+ * O descarte protege a média, mas descartar EM SILÊNCIO transformava ciclo
+ * regularmente longo (38 dias, por exemplo) em "erro de digitação" para
+ * sempre: a pessoa fornecia dados todo mês e recebia a referência
+ * populacional — com atraso fantasma a cada ciclo. A tela usa esta contagem
+ * para DIZER que a previsão está limitada. Descrever variabilidade não é
+ * diagnóstico; esconder o descarte é desonestidade.
+ */
+export function discardedIntervals(cycles: LoggedCycle[]): number {
+  const inicios = [...cycles].map((c) => c.startedAt).sort();
+  let fora = 0;
+  for (let i = 1; i < inicios.length; i++) {
+    const d = diasEntre(inicios[i - 1], inicios[i]);
+    if (d < 21 || d > 35) fora++;
+  }
+  return fora;
+}
+
+/**
  * Em que ponto do ciclo a pessoa está numa data.
  *
  * `null` sem nenhum registro — sem primeiro dia não há ciclo, e inventar um

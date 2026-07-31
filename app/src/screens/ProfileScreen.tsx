@@ -211,7 +211,9 @@ export function ProfileScreen() {
                   versão {consent.version} · {formatDate(consent.grantedAt)}
                 </Data>
               </YStack>
-              <RowValue color="$primary">ativo</RowValue>
+              {/* $foreground, não acento: texto em #877BF0 mede ~2,8:1 no tema
+                  claro — o estado "ativo" se distingue por peso, não por cor. */}
+              <RowValue color="$foreground" fontWeight="700">ativo</RowValue>
             </Row>
           ))
         ) : (

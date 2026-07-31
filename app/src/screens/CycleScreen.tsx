@@ -1,16 +1,16 @@
 import { XStack, YStack } from '@tamagui/stacks';
+import { File, Paths } from 'expo-file-system';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, Switch } from 'react-native';
 
 import { Note, Row, Section } from '../components/Card';
 import { CycleCalendar } from '../components/CycleCalendar';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
-import { Body, Button, Data, Display, RatingText } from '../components/ui';
+import { Body, Button, Data, Headline } from '../components/ui';
 import {
-  DEFAULT_LENGTH,
   PHASE_COPY,
-  averageLength,
+  discardedIntervals,
   monthAhead,
   nextPeriod,
   phaseOn,
@@ -18,7 +18,7 @@ import {
   type LoggedCycle,
 } from '../domain/cycle';
 import * as api from '../services/api.service';
-import { scheduleCycleHeadsUp } from '../services/notifications.service';
+import { cancelCycleHeadsUp, scheduleCycleHeadsUp } from '../services/notifications.service';
 import { useTheme } from '../theme/ThemeProvider';
 
 /** Chave `YYYY-MM-DD` no fuso LOCAL — `toISOString` viraria o dia à noite. */
@@ -29,20 +29,73 @@ function hoje(): string {
   return `${d.getFullYear()}-${mes}-${dia}`;
 }
 
+/** "30 de julho" — e com o ano quando não é o corrente, senão o histórico
+ *  de doze meses fica ambíguo com o mês atual. */
 function porExtenso(iso: string): string {
-  return new Date(`${iso}T12:00:00`).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' });
+  const d = new Date(`${iso}T12:00:00`);
+  const comAno = d.getFullYear() !== new Date().getFullYear();
+  return d.toLocaleDateString('pt-BR', {
+    day: 'numeric',
+    month: 'long',
+    ...(comAno ? { year: 'numeric' } : {}),
+  });
+}
+
+function capitaliza(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 /** Ordem em que as fases acontecem — usada na régua do ciclo. */
 const ORDEM: CyclePhase[] = ['menstrual', 'follicular', 'ovulatory', 'luteal'];
 
+/**
+ * A partir de quantos dias de atraso a tela troca de estado.
+ *
+ * Um ou dois dias é variação comum de previsão por calendário; três é quando
+ * a pessoa começa a olhar a tela com outra pergunta — e fase afirmada com
+ * confiança sobre uma previsão vencida beira o que o produto jurou não fazer.
+ */
+const ATRASO_VIRA_ESTADO = 3;
+
+/** Preferência local do aviso "dois dias antes" — liga/desliga no aparelho. */
+const ARQUIVO_AVISO_CICLO = 'aviso-ciclo.v1.json';
+
+async function lerAvisoLigado(): Promise<boolean> {
+  try {
+    const f = new File(Paths.document, ARQUIVO_AVISO_CICLO);
+    if (!f.exists) return true; // ligado por padrão — a pessoa consentiu no registro
+    return (JSON.parse(await f.text()) as { ligado: boolean }).ligado;
+  } catch {
+    return true;
+  }
+}
+
+function gravarAvisoLigado(ligado: boolean) {
+  try {
+    const f = new File(Paths.document, ARQUIVO_AVISO_CICLO);
+    if (!f.exists) f.create();
+    f.write(JSON.stringify({ ligado }));
+  } catch {
+    // Sem disco a escolha vale só nesta sessão.
+  }
+}
+
 export function CycleScreen() {
   const { colors } = useTheme();
 
   const [cycles, setCycles] = useState<LoggedCycle[] | null>(null);
+  /** `null` = ainda não sei (carregando ou falha) — diferente de "negou". */
   const [consentiu, setConsentiu] = useState<boolean | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  /** 403 do portão de sexo biológico — não é problema de conexão. */
+  const [bloqueado, setBloqueado] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const [confirmacao, setConfirmacao] = useState<string | null>(null);
+  const [avisoLigado, setAvisoLigado] = useState(true);
+
+  useEffect(() => {
+    void lerAvisoLigado().then(setAvisoLigado);
+  }, []);
 
   const carregar = useCallback(async () => {
     setErro(null);
@@ -50,10 +103,20 @@ export function CycleScreen() {
       const [lista, ok] = await Promise.all([api.fetchCycles(), api.fetchCycleConsent()]);
       setCycles(lista);
       setConsentiu(ok);
-    } catch {
+      setBloqueado(false);
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 403) {
+        // O portão duplo do servidor: a tela só existe para sexo biológico
+        // feminino no cadastro. Dizer "verifique a conexão" aqui era mentira.
+        setBloqueado(true);
+        setCycles([]);
+        return;
+      }
       setErro('Não foi possível carregar seus registros. Verifique a conexão com o servidor.');
       setCycles([]);
-      setConsentiu(false);
+      // consentiu fica null: falha de rede NÃO significa que o consentimento
+      // sumiu — reapresentar o botão de consentir aqui confundia.
     }
   }, []);
 
@@ -66,34 +129,54 @@ export function CycleScreen() {
   const hoje_ = hoje();
   const estado = useMemo(() => (cycles ? phaseOn(hoje_, cycles) : null), [cycles, hoje_]);
   const proxima = useMemo(() => (cycles ? nextPeriod(cycles) : null), [cycles]);
-  const media = useMemo(() => (cycles ? averageLength(cycles) : null), [cycles]);
   const mes = useMemo(() => (cycles ? monthAhead(cycles, hoje_) : null), [cycles, hoje_]);
+  const descartados = useMemo(() => (cycles ? discardedIntervals(cycles) : 0), [cycles]);
 
-  // O aviso de ciclo chegando é rearmado a cada previsão nova — registro novo
-  // move a data, e um aviso na data velha seria pior que nenhum.
+  const atraso = estado && estado.daysToNext < 0 ? -estado.daysToNext : 0;
+  const emAtraso = atraso >= ATRASO_VIRA_ESTADO;
+
+  // O aviso é rearmado a cada previsão nova — e respeita o interruptor.
   useEffect(() => {
+    if (!avisoLigado) {
+      void cancelCycleHeadsUp();
+      return;
+    }
     if (mes?.nextStart) void scheduleCycleHeadsUp(mes.nextStart);
-  }, [mes?.nextStart]);
+  }, [mes?.nextStart, avisoLigado]);
 
-  /**
-   * Marca ou desmarca um dia como início de menstruação.
-   *
-   * Aceita qualquer data passada, e não só hoje: quase sempre a pessoa lembra
-   * depois, e um registro que só aceita "hoje" obriga a errar a data ou a
-   * desistir.
-   */
-  const alternarDia = async (dia: string, jaRegistrado: boolean) => {
+  const executar = async (dia: string, remover: boolean) => {
     setSalvando(true);
     setErro(null);
+    setConfirmacao(null);
     try {
-      if (jaRegistrado) await api.deleteCycle(dia);
+      if (remover) await api.deleteCycle(dia);
       else await api.logCycle(dia);
       await carregar();
+      setConfirmacao(
+        remover ? `Registro de ${porExtenso(dia)} removido.` : `Início registrado em ${porExtenso(dia)}.`,
+      );
     } catch {
       setErro('Não foi possível salvar. Verifique a conexão e tente de novo.');
     } finally {
       setSalvando(false);
     }
+  };
+
+  /**
+   * Marca ou desmarca um dia como início de menstruação.
+   *
+   * Aceita qualquer data passada: quase sempre a pessoa lembra depois. Apagar
+   * pede confirmação — "tocar para ver o que é" não pode custar o registro.
+   */
+  const alternarDia = (dia: string, jaRegistrado: boolean) => {
+    if (!jaRegistrado) {
+      void executar(dia, false);
+      return;
+    }
+    Alert.alert('Remover este registro?', `O início marcado em ${porExtenso(dia)} sai do histórico.`, [
+      { text: 'Manter', style: 'cancel' },
+      { text: 'Remover', style: 'destructive', onPress: () => void executar(dia, true) },
+    ]);
   };
 
   const consentir = async () => {
@@ -109,6 +192,40 @@ export function CycleScreen() {
     }
   };
 
+  /**
+   * A revogação prometida no consentimento — executável, como a LGPD exige
+   * (Art. 8º §5º: revogar tem que ser tão fácil quanto consentir). Apaga os
+   * registros no servidor; a confirmação repete o custo antes do toque final.
+   */
+  const revogar = () => {
+    Alert.alert(
+      'Revogar o consentimento?',
+      'Os ciclos registrados são apagados do servidor, em definitivo. Você pode voltar a consentir depois, mas os registros não voltam.',
+      [
+        { text: 'Manter', style: 'cancel' },
+        {
+          text: 'Revogar e apagar',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              setSalvando(true);
+              try {
+                await api.setCycleConsent(false);
+                await cancelCycleHeadsUp();
+                await carregar();
+                setConfirmacao('Consentimento revogado e registros apagados.');
+              } catch {
+                setErro('Não foi possível revogar agora. Tente de novo.');
+              } finally {
+                setSalvando(false);
+              }
+            })();
+          },
+        },
+      ],
+    );
+  };
+
   if (cycles === null) {
     return (
       <DetailScreen title="Ciclo" refreshControl={refresh}>
@@ -119,26 +236,40 @@ export function CycleScreen() {
     );
   }
 
+  if (bloqueado) {
+    return (
+      <DetailScreen title="Ciclo" refreshControl={refresh}>
+        <Note
+          title="Tela indisponível para este perfil"
+          body="O acompanhamento de ciclo existe para perfis com sexo biológico feminino no cadastro — é ele que define as faixas de referência. Se o seu cadastro está errado, corrija em Perfil."
+        />
+      </DetailScreen>
+    );
+  }
+
   return (
     <DetailScreen title="Ciclo" refreshControl={refresh}>
-      {erro ? <Note title="Não foi possível carregar" body={erro} /> : null}
+      {erro ? <Note title="Não deu desta vez" body={erro} /> : null}
 
-      {estado ? (
+      {estado && !emAtraso ? (
         <>
+          {/*
+            A FASE é a manchete — regra de ouro do produto: a avaliação em
+            linguagem humana no destaque, o número técnico como sub-rótulo. O
+            "dia 23" é contagem de calendário sobre estimativa; tratá-lo como
+            medição de 72pt era herança do template das telas de métrica.
+          */}
           <YStack marginTop="$md" marginBottom="$lg">
-            <Display>{estado.day}</Display>
+            <Headline>{PHASE_COPY[estado.phase].label}</Headline>
             <Data marginTop="$xs" color="$mutedForeground">
-              dia do ciclo · de {estado.length}
-              {estado.estimating ? ' (estimado)' : ''}
+              dia {estado.day} de {estado.length}
+              {estado.estimating ? ' · estimado pela referência típica' : ''}
             </Data>
-            <RatingText marginTop="$sm" color="$primary">
-              {PHASE_COPY[estado.phase].label}
-            </RatingText>
           </YStack>
 
           {/*
-            Régua das quatro fases. O acento marca a fase ATUAL e nada mais —
-            é dado, não decoração, e é o único acento da tela.
+            Régua das quatro fases. O acento marca a fase ATUAL no traço — e o
+            rótulo ativo também engrossa, porque só cor exclui quem não a vê.
           */}
           <XStack gap="$xs" marginBottom="$lg">
             {ORDEM.map((f) => (
@@ -148,8 +279,12 @@ export function CycleScreen() {
                   borderRadius={1}
                   backgroundColor={f === estado.phase ? '$primary' : '$borderStrong'}
                 />
-                <Data fontSize={11} color={f === estado.phase ? '$foreground' : '$mutedForeground'}>
-                  {PHASE_COPY[f].label.replace('Fase ', '')}
+                <Data
+                  fontSize={11}
+                  fontWeight={f === estado.phase ? '700' : '400'}
+                  color={f === estado.phase ? '$foreground' : '$mutedForeground'}
+                >
+                  {capitaliza(PHASE_COPY[f].label.replace('Fase ', ''))}
                 </Data>
               </YStack>
             ))}
@@ -167,14 +302,36 @@ export function CycleScreen() {
           <Section label="Previsão">
             <Row>
               <Body flex={1} color="$foreground">Próxima menstruação</Body>
-              <Data flexShrink={0}>{proxima ? porExtenso(proxima) : '—'}</Data>
+              <Data flexShrink={0} color="$foreground">
+                {proxima ? porExtenso(proxima) : '—'}
+              </Data>
             </Row>
-            <Row last>
+            <Row last={!mes}>
               <Body flex={1} color="$foreground">
-                {estado.daysToNext < 0 ? 'Atraso' : 'Faltam'}
+                {estado.daysToNext === 0 ? 'Pela previsão' : atraso > 0 ? 'Atraso' : 'Faltam'}
               </Body>
-              <Data flexShrink={0}>{Math.abs(estado.daysToNext)} dias</Data>
+              <Data flexShrink={0} color="$foreground">
+                {estado.daysToNext === 0
+                  ? 'é hoje'
+                  : `${Math.abs(estado.daysToNext)} ${Math.abs(estado.daysToNext) === 1 ? 'dia' : 'dias'}`}
+              </Data>
             </Row>
+            {mes ? (
+              <Row last>
+                <YStack flex={1} gap={2}>
+                  <Body color="$foreground">Aviso dois dias antes</Body>
+                  <Data fontSize={11}>notificação no aparelho, com título discreto</Data>
+                </YStack>
+                <Switch
+                  value={avisoLigado}
+                  onValueChange={(v) => {
+                    setAvisoLigado(v);
+                    gravarAvisoLigado(v);
+                  }}
+                  trackColor={{ true: colors.accent }}
+                />
+              </Row>
+            ) : null}
           </Section>
 
           {mes ? (
@@ -188,11 +345,12 @@ export function CycleScreen() {
                     </Data>
                   </Row>
                 ))}
-                {/* A linha que mais importa leva o acento — e o aviso ao lado
-                    do dado, porque previsão de fertilidade sem ele é perigosa. */}
+                {/* A linha que mais importa: o aviso mora AO LADO do dado,
+                    porque previsão de fertilidade sem ele é perigosa. O acento
+                    fica no traço da régua — em texto ele reprova contraste. */}
                 <Row last>
                   <YStack flex={1} gap={2}>
-                    <Body color="$primary">Janela fértil</Body>
+                    <Body color="$foreground" fontWeight="700">Janela fértil</Body>
                     <Data fontSize={11}>
                       previsão para autoconhecimento — não serve como contraceptivo
                     </Data>
@@ -201,17 +359,40 @@ export function CycleScreen() {
                     <Data color="$foreground">
                       {porExtenso(mes.fertile.from)} – {porExtenso(mes.fertile.to)}
                     </Data>
-                    <Data fontSize={11}>ovulação ~{porExtenso(mes.fertile.peak)}</Data>
+                    <Data fontSize={11}>
+                      ovulação ~{porExtenso(mes.fertile.peak)}
+                      {mes.estimating ? ' · faixa aproximada' : ''}
+                    </Data>
                   </YStack>
                 </Row>
               </Section>
-              <Data marginTop="$md">
-                Novo ciclo previsto para {porExtenso(mes.nextStart)}
-                {mes.estimating ? ' (estimativa pela referência populacional)' : ''} — o app avisa
-                dois dias antes.
-              </Data>
+              {mes.estimating ? (
+                <Data marginTop="$md">
+                  Ainda estimando pela referência típica — as janelas afinam com mais registros.
+                </Data>
+              ) : null}
             </YStack>
           ) : null}
+        </>
+      ) : estado && emAtraso ? (
+        <>
+          {/*
+            O ATRASO é um estado de primeira classe — era o momento de maior
+            carga emocional da tela e o único sem desenho: fase afirmada como
+            fato, previsão no passado e promessa de aviso que nunca dispararia.
+            Aqui a tela PARA DE AFIRMAR: sem fase, sem janelas, sem hipótese de
+            causa — atraso é atraso, e o resto é da pessoa com quem ela quiser.
+          */}
+          <YStack marginTop="$md" marginBottom="$lg">
+            <Headline>Atraso de {atraso} {atraso === 1 ? 'dia' : 'dias'}</Headline>
+            <Data marginTop="$xs" color="$mutedForeground">
+              a previsão era {proxima ? porExtenso(proxima) : '—'} · ciclo atual com {estado.day} dias
+            </Data>
+          </YStack>
+          <Note
+            title="A previsão passou"
+            body="Registre o primeiro dia quando ele vier — a previsão recalcula sozinha. Variação entre ciclos é comum, e a previsão por calendário erra com frequência."
+          />
         </>
       ) : (
         <Note
@@ -220,12 +401,37 @@ export function CycleScreen() {
         />
       )}
 
+      {descartados >= 2 ? (
+        <Note
+          title="Previsão limitada para o seu ritmo"
+          body="Seus intervalos recentes variam além da faixa que a previsão usa (21 a 35 dias). O app segue a referência típica e pode errar mais no seu caso — os registros continuam valendo e ficam guardados."
+        />
+      ) : null}
+
       {consentiu ? (
         <>
-          <Section label="Toque no dia em que começou" />
-          <CycleCalendar cycles={cycles} onToggle={(d, j) => void alternarDia(d, j)} busy={salvando} />
+          <Section label="Calendário" />
+          <Data marginBottom="$sm">Toque no dia em que a menstruação começou.</Data>
+          <CycleCalendar cycles={cycles} onToggle={alternarDia} busy={salvando} />
+          {/* Legenda: a distinção registro × previsão é o coração honesto do
+              calendário — ela não pode morar só num comentário de código. */}
+          <XStack gap="$lg" marginTop="$sm" alignItems="center">
+            <XStack alignItems="center" gap="$xs">
+              <YStack width={5} height={5} borderRadius={3} backgroundColor="$primary" />
+              <Data fontSize={11}>início registrado</Data>
+            </XStack>
+            <XStack alignItems="center" gap="$xs">
+              <YStack width={12} height={2} borderRadius={1} backgroundColor="$borderStrong" />
+              <Data fontSize={11}>previsão</Data>
+            </XStack>
+          </XStack>
+          {confirmacao ? (
+            <Data marginTop="$sm" color="$foreground">
+              {confirmacao}
+            </Data>
+          ) : null}
         </>
-      ) : (
+      ) : consentiu === false ? (
         <>
           {/*
             O consentimento é a porta, não um aviso no rodapé.
@@ -243,31 +449,47 @@ export function CycleScreen() {
               title="Concordo e quero registrar"
               onPress={() => void consentir()}
               loading={salvando}
-              icon={<Icon name="drop" size={16} color={colors.ink} />}
+              icon={<Icon name="drop" size={16} color="#0E0A22" />}
             />
           </YStack>
         </>
-      )}
+      ) : null}
 
       {cycles.length ? (
         <Section label="Registros">
-          {cycles.slice(0, 6).map((c, i) => (
-            <Row key={c.startedAt} last={i === Math.min(cycles.length, 6) - 1}>
-              <Body flex={1} color="$foreground">{porExtenso(c.startedAt)}</Body>
-              <Data flexShrink={0}>{c.durationDays ? `${c.durationDays} dias de fluxo` : '—'}</Data>
-            </Row>
-          ))}
+          {cycles.slice(0, 6).map((c, i, lista) => {
+            /*
+             O intervalo REAL até o início anterior — dado computado, no lugar
+             da coluna "dias de fluxo" que nada no app gravava e ficava "—"
+             para sempre (coluna morta prometendo um dado que não existia).
+            */
+            const anterior = lista[i + 1] ?? cycles[i + 1];
+            const intervalo = anterior
+              ? Math.round(
+                  (new Date(`${c.startedAt}T12:00:00`).getTime() -
+                    new Date(`${anterior.startedAt}T12:00:00`).getTime()) /
+                    86_400_000,
+                )
+              : null;
+            return (
+              <Row key={c.startedAt} last={i === Math.min(cycles.length, 6) - 1}>
+                <Body flex={1} color="$foreground">{porExtenso(c.startedAt)}</Body>
+                <Data flexShrink={0}>{intervalo ? `ciclo de ${intervalo} dias` : 'primeiro registro'}</Data>
+              </Row>
+            );
+          })}
         </Section>
       ) : null}
 
-      {/*
-        Duas ressalvas que não são texto de rodapé — são o limite do produto.
-
-        A primeira porque previsão de ovulação por calendário erra com
-        frequência, e alguém tratando isto como contracepção assumiria um risco
-        que o app não avisou. A segunda porque ciclo irregular tem causas
-        clínicas, e nomeá-las seria diagnóstico.
-      */}
+      {consentiu ? (
+        <Pressable
+          onPress={revogar}
+          accessibilityRole="button"
+          style={({ pressed }) => [{ paddingVertical: 24 }, pressed && { opacity: 0.5 }]}
+        >
+          <Body color="$destructive">Revogar consentimento e apagar registros</Body>
+        </Pressable>
+      ) : null}
     </DetailScreen>
   );
 }

@@ -73,6 +73,26 @@ export function HelpScreen() {
         </Body>
       </Section>
 
+      <Section label="Ciclo menstrual">
+        <Explica
+          termo="Como a previsão funciona"
+          texto="Pelos seus registros: a média dos intervalos entre os inícios que você marcou. Enquanto não há registros suficientes, a referência típica de 28 dias entra no lugar — por isso as primeiras previsões dizem 'estimado'. Ciclos fora da faixa de 21 a 35 dias não entram na média, e quando isso acontece com frequência a tela avisa que a previsão fica limitada."
+        />
+        <Explica
+          termo="Janela fértil"
+          texto="É calculada por calendário, a partir da previsão — e previsão por calendário erra com frequência. Serve para autoconhecimento; não serve como método contraceptivo nem para planejar gravidez com segurança."
+        />
+        <Explica
+          termo="Atraso"
+          texto="Atraso é atraso: a tela mostra quantos dias e para de afirmar fase e janelas, porque a previsão venceu. O app não sugere causas — variação entre ciclos é comum, e o que fazer com um atraso é seu, com quem você quiser."
+        />
+        <Explica
+          termo="Consentimento e revogação"
+          texto="O ciclo tem consentimento próprio, separado do de biometria. Revogar — no fim da própria tela de Ciclo — apaga os registros do servidor em definitivo."
+          last
+        />
+      </Section>
+
       <Section label="Seus dados">
         <Explica
           termo="Onde o dado biométrico mora"
