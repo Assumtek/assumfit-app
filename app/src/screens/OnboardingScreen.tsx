@@ -120,7 +120,7 @@ export function OnboardingScreen() {
               title="Começar a usar"
               onPress={() => {
                 void finish();
-                navigation.reset({ index: 0, routes: [{ name: 'Main' as never }] });
+                navigation.reset({ index: 0, routes: [{ name: 'Tabs' as never }] });
               }}
               icon={<Icon name="arrowRight" size={16} color={colors.ink} />}
             />

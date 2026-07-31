@@ -1,9 +1,11 @@
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 import { Sidebar } from '../components/Sidebar';
+import { DentroDasAbas, TabBar } from '../components/TabBar';
 import { ActivityScreen } from '../screens/ActivityScreen';
 import { AgendaScreen } from '../screens/AgendaScreen';
 import { BioAgeScreen } from '../screens/BioAgeScreen';
@@ -56,6 +58,35 @@ import type { Palette } from '../theme/palette';
 import { type Scheme, useTheme } from '../theme/ThemeProvider';
 
 const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
+
+/**
+ * As cinco abas — os gestos DIÁRIOS: Início, Saúde, Esporte, Refeições, Foco.
+ *
+ * Só as raízes vivem aqui; todo detalhe continua no stack raiz, empurrado POR
+ * CIMA da barra. É o desenho que evita a armadilha registrada na decisão
+ * anterior contra abas: nenhuma tela é duplicada em dois navegadores, e cada
+ * `push` existente continua resolvendo no mesmo lugar de sempre. O preço
+ * honesto é a barra não persistir dentro de um detalhe — aceito de propósito.
+ *
+ * O eventual (Ciclo, Agenda, Água, Dispositivo, Perfil…) segue na sidebar.
+ */
+function TabsNavigator() {
+  return (
+    <DentroDasAbas.Provider value={true}>
+      <Tab.Navigator
+        tabBar={(props) => <TabBar {...props} />}
+        screenOptions={{ headerShown: false }}
+      >
+        <Tab.Screen name="Main" component={HomeScreen} options={{ title: 'Início' }} />
+        <Tab.Screen name="Health" component={HealthScreen} options={{ title: 'Saúde' }} />
+        <Tab.Screen name="Sport" component={SportScreen} options={{ title: 'Esporte' }} />
+        <Tab.Screen name="Meals" component={MealsScreen} options={{ title: 'Refeições' }} />
+        <Tab.Screen name="Focus" component={FocusScreen} options={{ title: 'Foco' }} />
+      </Tab.Navigator>
+    </DentroDasAbas.Provider>
+  );
+}
 
 /**
  * O tema da navegação existe para pintar o que NÃO é nosso: o fundo que aparece
@@ -82,8 +113,16 @@ const linking = {
       SignIn: 'entrar',
       SignUp: 'criar-conta',
       Connect: 'connect',
-      Main: 'home',
-      Health: 'saude',
+      // As cinco raízes moram nas abas; as URLs antigas continuam as mesmas.
+      Tabs: {
+        screens: {
+          Main: 'home',
+          Health: 'saude',
+          Sport: 'esporte',
+          Meals: 'refeicoes',
+          Focus: 'foco',
+        },
+      },
       Battery: 'bateria',
       Breathing: 'respirar',
       Alerts: 'avisos',
@@ -98,9 +137,6 @@ const linking = {
       Activity: 'passos',
       Habits: 'habitos',
       WaterReminder: 'lembrete-agua',
-      Meals: 'refeicoes',
-      Sport: 'esporte',
-      Focus: 'foco',
       Agenda: 'agenda',
       Onboarding: 'perfil-rotina',
       Profile: 'perfil',
@@ -128,9 +164,14 @@ const linking = {
 };
 
 /**
- * Navegação por stack único mais menu lateral. Não há barra inferior: com dez
- * métricas, cinco abas escondiam metade do produto e obrigavam a duplicar cada
- * tela em dois lugares. O índice completo vive na sidebar.
+ * Tab bar com cinco gestos diários + stack raiz para todo o resto + sidebar
+ * para o eventual.
+ *
+ * A decisão anterior era contra abas ("cinco abas escondiam metade do produto
+ * e obrigavam a duplicar cada tela"). O desenho atual responde às duas dores
+ * sem repeti-las: as abas carregam só as CINCO raízes do dia a dia; nenhuma
+ * tela de detalhe é duplicada — todas seguem no stack raiz, empurradas por
+ * cima da barra; e o índice completo continua existindo na sidebar.
  */
 export function Navigation() {
   const { colors, scheme } = useTheme();
@@ -190,7 +231,7 @@ export function Navigation() {
          é o comportamento certo nos dois ramos.
         */
         initialRouteName={
-          status === 'signedIn' ? (pairedDeviceId || bandSkipped ? 'Main' : 'Connect') : undefined
+          status === 'signedIn' ? (pairedDeviceId || bandSkipped ? 'Tabs' : 'Connect') : undefined
         }
         screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.ink } }}
       >
@@ -202,8 +243,7 @@ export function Navigation() {
         ) : (
           <>
         <Stack.Screen name="Connect" component={ConnectScreen} />
-        <Stack.Screen name="Main" component={HomeScreen} />
-        <Stack.Screen name="Health" component={HealthScreen} />
+        <Stack.Screen name="Tabs" component={TabsNavigator} />
         <Stack.Screen name="Battery" component={BodyBatteryScreen} />
         <Stack.Screen name="Breathing" component={BreathingScreen} />
         <Stack.Screen name="Alerts" component={AlertsScreen} />
@@ -218,9 +258,6 @@ export function Navigation() {
         <Stack.Screen name="Activity" component={ActivityScreen} />
         <Stack.Screen name="Habits" component={HabitsScreen} />
         <Stack.Screen name="WaterReminder" component={WaterReminderScreen} />
-        <Stack.Screen name="Meals" component={MealsScreen} />
-        <Stack.Screen name="Sport" component={SportScreen} />
-        <Stack.Screen name="Focus" component={FocusScreen} />
         <Stack.Screen name="Agenda" component={AgendaScreen} />
         <Stack.Screen name="BioAge" component={BioAgeScreen} />
         <Stack.Screen name="Device" component={DeviceScreen} />

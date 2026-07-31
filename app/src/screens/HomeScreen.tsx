@@ -18,6 +18,7 @@ import { useInsightStore } from '../store/insight.store';
 import { useBiometricStore } from '../store/biometric.store';
 import { useUiStore } from '../store/ui.store';
 import { greeting, useUserStore } from '../store/user.store';
+import { useBottomClearance } from '../components/TabBar';
 import { useTheme } from '../theme/ThemeProvider';
 
 /**
@@ -38,6 +39,7 @@ export function HomeScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const folgaInferior = useBottomClearance();
   const latest = useBiometricStore((s) => s.latest);
   const sleep = useBiometricStore((s) => s.sleep);
   const connection = useBiometricStore((s) => s.connection);
@@ -80,7 +82,7 @@ export function HomeScreen() {
     const conectado = connection === 'connected';
     return (
       <YStack flex={1} backgroundColor="$background">
-        <YStack flex={1} paddingHorizontal={24} paddingBottom={insets.bottom + 48} paddingTop={insets.top + 12}>
+        <YStack flex={1} paddingHorizontal={24} paddingBottom={folgaInferior} paddingTop={insets.top + 12}>
           <Cabecalho conectado={conectado} onMenu={openSidebar} />
 
           {/* Bloco de espera: alinhado à esquerda, como o resto do sistema. */}
@@ -108,7 +110,7 @@ export function HomeScreen() {
               <Button
                 title={conectado ? (supportsGattInspection ? 'Diagnosticar pulseira' : 'Ver dispositivo') : 'Parear pulseira'}
                 onPress={() =>
-                  (navigation as any).push((conectado ? (supportsGattInspection ? 'Gatt' : 'Device') : 'Connect') as never)
+                  (navigation as any).navigate((conectado ? (supportsGattInspection ? 'Gatt' : 'Device') : 'Connect') as never)
                 }
                 // Fixo nos dois temas, como o `primaryForeground` do config e
                 // pelo mesmo motivo (ver Button.tsx): sobre o roxo, só o ink
@@ -146,7 +148,7 @@ export function HomeScreen() {
       style={{ flex: 1, backgroundColor: colors.ink }}
       contentContainerStyle={{
         paddingHorizontal: 24,
-        paddingBottom: insets.bottom + 48,
+        paddingBottom: folgaInferior,
         paddingTop: insets.top + 12,
       }}
       showsVerticalScrollIndicator={false}
@@ -314,7 +316,7 @@ export function HomeScreen() {
         <YStack alignSelf="flex-start" marginTop="$xl">
           <Button
             title={energy.action.label}
-            onPress={() => (navigation as any).push(ACTION_ROUTE[energy.action.icon] as never)}
+            onPress={() => (navigation as any).navigate(ACTION_ROUTE[energy.action.icon] as never)}
             icon={<Icon name="arrowRight" size={16} color="#0E0A22" />}
           />
         </YStack>
@@ -352,19 +354,19 @@ export function HomeScreen() {
         <MetricBlock
           label="HRV"
           rating={rateHrv(latest.hrvMs)}
-          onPress={() => (navigation as any).push('Hrv' as never)}
+          onPress={() => (navigation as any).navigate('Hrv' as never)}
         />
         <MetricBlock
           label="Sono"
           rating={rateSleep(sleep?.score ?? null, sleep?.totalMin ?? null)}
-          onPress={() => (navigation as any).push('Sleep' as never)}
+          onPress={() => (navigation as any).navigate('Sleep' as never)}
         />
       </XStack>
       <XStack gap="$sm" marginBottom="$sm">
         <MetricBlock
           label="Oxigênio"
           rating={rateSpo2(latest.spo2Pct)}
-          onPress={() => (navigation as any).push('Oxygen' as never)}
+          onPress={() => (navigation as any).navigate('Oxygen' as never)}
         />
         {/* Mesmo destino do HRV de propósito: FC de repouso e variabilidade
             são a mesma tela ("Coração e HRV") — o título de lá assume os dois
@@ -372,7 +374,7 @@ export function HomeScreen() {
         <MetricBlock
           label="Coração"
           rating={rateHeartRate(latest.heartRate)}
-          onPress={() => (navigation as any).push('Hrv' as never)}
+          onPress={() => (navigation as any).navigate('Hrv' as never)}
         />
       </XStack>
 
@@ -419,7 +421,7 @@ function Cabecalho({
 
       <XStack alignItems="center" gap="$lg">
         <Pressable
-          onPress={() => (navigation as any).push('Help' as never)}
+          onPress={() => (navigation as any).navigate('Help' as never)}
           hitSlop={13}
           accessibilityRole="button"
           accessibilityLabel="Ajuda"
@@ -428,7 +430,7 @@ function Cabecalho({
         </Pressable>
 
         <Pressable
-          onPress={() => (navigation as any).push('Alerts' as never)}
+          onPress={() => (navigation as any).navigate('Alerts' as never)}
           hitSlop={13}
           accessibilityRole="button"
           accessibilityLabel="Avisos"

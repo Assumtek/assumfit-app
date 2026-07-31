@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUiStore } from '../store/ui.store';
 import { useTheme } from '../theme/ThemeProvider';
 import { Icon } from './Icon';
+import { useBottomClearance } from './TabBar';
 import { Title } from './ui';
 
 type Props = {
@@ -40,6 +41,7 @@ export function DetailScreen({ title, children, refreshControl, onBack }: Props)
   const { colors } = useTheme();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const folgaInferior = useBottomClearance();
   const openSidebar = useUiStore((s) => s.openSidebar);
   const voltar = onBack ?? (navigation.canGoBack() ? () => navigation.goBack() : null);
 
@@ -51,7 +53,8 @@ export function DetailScreen({ title, children, refreshControl, onBack }: Props)
         contentContainerStyle={{
           paddingHorizontal: 24,
           paddingTop: insets.top + 12,
-          paddingBottom: insets.bottom + 48,
+          // Dentro das abas a folga cobre a barra flutuante; fora, o padrão.
+          paddingBottom: folgaInferior,
         }}
         showsVerticalScrollIndicator={false}
       >

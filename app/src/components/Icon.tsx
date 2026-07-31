@@ -1,4 +1,5 @@
 import {
+  Brain,
   Zap,
   Flower2,
   Volleyball,
@@ -110,7 +111,8 @@ export type IconName =
   | 'pause'
   | 'pencil'
   | 'trash'
-  | 'refresh';
+  | 'refresh'
+  | 'brain';
 
 /**
  * Nome semântico → componente do Lucide.
@@ -167,6 +169,7 @@ const GLYPH = {
   pencil: Pencil,
   trash: Trash2,
   refresh: RefreshCw,
+  brain: Brain,
 } as const;
 
 type Props = {

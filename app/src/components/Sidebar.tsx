@@ -39,8 +39,6 @@ export function Sidebar() {
   const close = useUiStore((s) => s.closeSidebar);
   const current = useUiStore((s) => s.currentRoute);
 
-  const latest = useBiometricStore((s) => s.latest);
-  const sleep = useBiometricStore((s) => s.sleep);
   const battery = useBiometricStore((s) => s.batteryPct);
   const connection = useBiometricStore((s) => s.connection);
   const user = useUserStore((s) => s.user);
@@ -48,7 +46,6 @@ export function Sidebar() {
   const avatarUri = useUserStore((s) => s.avatarUri);
   const water = useHabitsStore((s) => s.today.waterMl);
   const waterGoal = useHabitsStore((s) => s.goalMl);
-  const focusSessions = useHabitsStore((s) => s.today.focusSessions);
 
   const slide = useRef(new Animated.Value(0)).current;
 
@@ -60,26 +57,6 @@ export function Sidebar() {
       useNativeDriver: true,
     }).start();
   }, [open, slide]);
-
-  /*
-   O resumo é uma CONTAGEM, não uma avaliação.
-
-   A entrada do menu não tem espaço para nove notas, e escolher uma delas para
-   representar as outras oito seria arbitrário. Quantas grandezas a pulseira
-   conseguiu medir hoje responde a pergunta que o menu precisa responder — vale
-   a pena entrar? — e ainda denuncia o aparelho que parou de medir, que é a
-   falha que mais passa despercebida.
-  */
-  const medidas = [
-    latest?.hrvMs,
-    latest?.heartRate,
-    latest?.spo2Pct,
-    latest?.stressScore,
-    latest?.bpSystolic,
-    latest?.steps,
-    sleep?.score,
-  ].filter((v) => v != null).length;
-  const resumoDeSaude = medidas === 0 ? 'nada medido ainda' : `${medidas} de 7 medidas hoje`;
 
   /*
    As nove métricas saíram DAQUI e foram para a tela Saúde.
@@ -177,17 +154,10 @@ export function Sidebar() {
           </XStack>
         </Pressable>
 
+        {/* Os cinco gestos DIÁRIOS (Início, Saúde, Esporte, Refeições, Foco)
+            moram na tab bar; a sidebar carrega o eventual. */}
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-          <SectionLabel>Hoje</SectionLabel>
-          <Entry name="Visão geral" detail="início" active={current === 'Main'} onPress={() => go('Main')} />
-          <Entry
-            name="Saúde"
-            detail={resumoDeSaude}
-            active={current === 'Health'}
-            onPress={() => go('Health')}
-          />
-          {/* O treino de musculação mora DENTRO de Esporte: uma porta só para
-              tudo que é atividade física, com a musculação como carro-chefe. */}
+          <SectionLabel>Rotina</SectionLabel>
           {/*
             O ciclo só existe para quem tem sexo biológico feminino no cadastro.
 
@@ -204,31 +174,11 @@ export function Sidebar() {
               onPress={() => go('Cycle')}
             />
           ) : null}
-
-          <SectionLabel>Rotina</SectionLabel>
           <Entry
             name="Agenda do dia"
             detail="janelas de energia"
             active={current === 'Agenda'}
             onPress={() => go('Agenda')}
-          />
-          <Entry
-            name="Sessão de foco"
-            detail={focusSessions === 0 ? 'nenhuma hoje' : `${focusSessions} hoje`}
-            active={current === 'Focus'}
-            onPress={() => go('Focus')}
-          />
-          <Entry
-            name="Esporte"
-            detail="musculação, corrida e mais"
-            active={current === 'Sport'}
-            onPress={() => go('Sport')}
-          />
-          <Entry
-            name="Refeições"
-            detail="calorias por foto"
-            active={current === 'Meals'}
-            onPress={() => go('Meals')}
           />
           <Entry
             name="Água"

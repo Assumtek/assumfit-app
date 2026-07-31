@@ -21,6 +21,20 @@ export type RootParamList = {
  */
 export const navigationRef = createNavigationContainerRef<RootParamList>();
 
+/**
+ * As cinco raízes moram no navigator de abas. Este funil traduz o nome legado
+ * ('Main', 'Sport'…) para `Tabs → aba` — e é por ele que notificação antiga
+ * agendada no aparelho, sidebar e Avisos continuam navegando sem saber que a
+ * arquitetura mudou.
+ */
+const NAS_ABAS = new Set(['Main', 'Health', 'Sport', 'Meals', 'Focus']);
+
 export function navigate(route: keyof RootParamList | string) {
-  if (navigationRef.isReady()) navigationRef.navigate(route as keyof RootParamList);
+  if (!navigationRef.isReady()) return;
+  if (NAS_ABAS.has(route as string)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (navigationRef as any).navigate('Tabs', { screen: route });
+    return;
+  }
+  navigationRef.navigate(route as keyof RootParamList);
 }
