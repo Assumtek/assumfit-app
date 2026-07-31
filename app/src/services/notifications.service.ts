@@ -268,28 +268,41 @@ export async function scheduleMorningGreeting(temperatureC: number, humidityPct:
   });
 }
 
+/** As métricas que disparam o aviso de atenção — e para onde cada uma leva. */
+const ATENCAO = {
+  spo2: { nome: 'oxigenação', route: 'Oxygen' },
+  pressao: { nome: 'pressão', route: 'Pressure' },
+  hr: { nome: 'frequência cardíaca', route: 'Hrv' },
+} as const;
+
+export type MetricaDeAtencao = keyof typeof ATENCAO;
+
 /**
- * Medição fora da faixa — atenção SEM o valor.
+ * Medição fora da faixa — atenção COM a métrica, SEM o valor.
  *
- * O corpo do texto não diz qual métrica nem quanto: a tela de bloqueio é vista
- * por quem passa perto, e "SpO₂ 88%" ali é dado clínico exposto a terceiros. O
- * toque abre a tela de Saúde, onde o dado mora protegido pelo desbloqueio.
+ * O corpo NOMEIA o que merece a olhada ("sua oxigenação…") — decisão de
+ * jul/2026: o aviso genérico obrigava a caçar qual dos nove indicadores era —
+ * mas o NÚMERO continua fora: a tela de bloqueio é vista por quem passa
+ * perto, e "SpO₂ 88%" ali é dado clínico exposto a terceiros. O toque abre a
+ * tela DA métrica, onde o valor mora protegido pelo desbloqueio.
  *
  * Cooldown de 6 h POR MÉTRICA, no chamador: a mesma medição ruim relida a cada
  * cinco minutos viraria metralhadora — e alerta repetido é alerta ignorado.
  */
-export async function notifyAttention() {
+export async function notifyAttention(metrica: MetricaDeAtencao) {
   if (!(await ensurePermission())) return;
+  const { nome, route } = ATENCAO[metrica];
+  const corpo = `Sua ${nome} de hoje merece atenção. Abra para ver com calma.`;
   const id = await Notifications.scheduleNotificationAsync({
     content: {
       title: 'Vale uma olhada',
-      body: 'Uma das suas medições de hoje merece atenção. Abra para ver com calma.',
+      body: corpo,
       sound: true,
-      data: { route: 'Health' },
+      data: { route },
     },
     trigger: null,
   });
-  registrarNoFeed(id, 'Vale uma olhada', 'Uma das suas medições de hoje merece atenção. Abra para ver com calma.', 'Health');
+  registrarNoFeed(id, 'Vale uma olhada', corpo, route);
 }
 
 /**

@@ -171,7 +171,7 @@ import type { Activity, PressureReading, Reading, SleepNight, SleepSegment } fro
 import { ble } from '../services/ble';
 import * as api from '../services/api.service';
 import { fetchLastNight, isHealthAvailable, requestSleepAccess } from '../services/health.service';
-import { notifyAttention, notifyBreathing, setupAndroidChannel } from '../services/notifications.service';
+import { notifyAttention, notifyBreathing, setupAndroidChannel, type MetricaDeAtencao } from '../services/notifications.service';
 import { syncQueue } from '../services/sync.service';
 import { rateHeartRate, ratePressure, rateSpo2 } from '../domain/ratings';
 import { useWorkoutStore } from './workout.store';
@@ -731,7 +731,7 @@ function vigiarLeitura(reading: Reading) {
 
   // -- medição fora da faixa → atenção --
   if (treinando) return; // durante treino, tudo oscila por definição
-  const alertas: [string, boolean][] = [
+  const alertas: [MetricaDeAtencao, boolean][] = [
     ['spo2', rateSpo2(reading.spo2Pct).state === 'alert'],
     ['pressao', ratePressure(reading.bpSystolic, reading.bpDiastolic).state === 'alert'],
     ['hr', rateHeartRate(reading.heartRate).state === 'alert'],
@@ -741,7 +741,7 @@ function vigiarLeitura(reading: Reading) {
     const anterior = ultimoAviso.get(metrica) ?? 0;
     if (agora - anterior < COOLDOWN_ATENCAO_MS) continue;
     ultimoAviso.set(metrica, agora);
-    void notifyAttention();
+    void notifyAttention(metrica);
     break; // um aviso por leitura: três banners simultâneos é pânico, não cuidado
   }
 }
