@@ -591,7 +591,9 @@ export function SportScreen() {
               alignItems="center"
               justifyContent="center"
             >
-              <Icon name={pausado ? 'play' : 'pause'} size={26} color={colors.ink} />
+              {/* Ink fixo da marca: sobre o acento, nos DOIS temas — a mesma
+                  regra do texto do Button primário. */}
+              <Icon name={pausado ? 'play' : 'pause'} size={26} color="#0E0A22" />
             </YStack>
           </Pressable>
           {/* Espelho do X para o layout equilibrar — sem função ainda. */}
