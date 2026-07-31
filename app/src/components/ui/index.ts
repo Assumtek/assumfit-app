@@ -10,6 +10,7 @@ export {
   Body,
   Data,
   Display,
+  Headline,
   Label,
   Metric,
   MetricSm,

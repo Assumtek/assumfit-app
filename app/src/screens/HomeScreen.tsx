@@ -1,5 +1,4 @@
 import { useNavigation } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, LayoutChangeEvent, Pressable, ScrollView } from 'react-native';
@@ -7,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '../components/Icon';
 import { MetricBlock } from '../components/MetricBlock';
-import { Body, Button, Data, Label, Metric, Title } from '../components/ui';
+import { Body, Button, Data, Headline, Label, Metric, MetricSm, SectionTitle } from '../components/ui';
 import { LiveChart, LiveDot } from '../components/charts/LiveChart';
 import { Meter } from '../components/charts/Meter';
 import { CALIBRATION_DAYS, ENERGY_BANDS, energyState } from '../domain/energy';
@@ -88,7 +87,7 @@ export function HomeScreen() {
           {/* Bloco de espera: alinhado à esquerda, como o resto do sistema. */}
           <YStack flex={1} justifyContent="center" paddingBottom="$xxxl">
             <Label marginBottom="$sm">{greeting()}</Label>
-            <Title>{user.name}</Title>
+            <SectionTitle>{user.name}</SectionTitle>
 
             <Body marginTop="$lg" marginBottom="$xxl" maxWidth="92%">
               {conectado
@@ -162,7 +161,7 @@ export function HomeScreen() {
       <XStack alignItems="flex-end" justifyContent="space-between">
         <YStack flex={1}>
           <Label marginBottom="$sm">{greeting()}</Label>
-          <Title>{user.name}</Title>
+          <SectionTitle>{user.name}</SectionTitle>
         </YStack>
 
         {/* Ambiente em número, ao lado do nome. Fica FORA do grid 2×2 de
@@ -181,27 +180,17 @@ export function HomeScreen() {
                 {city}
               </Label>
             ) : null}
+            {/* MetricSm, não 30pt cru: o ambiente é contexto, e a 30 ele
+                disputava com o score — o único número grande da tela é o
+                instrumento. */}
             <XStack alignItems="baseline" gap="$xs">
-              <Text
-                fontSize={30}
-                fontWeight="300"
-                letterSpacing={-1.2}
-                fontVariant={['tabular-nums']}
-                color={ambient.heatStress ? '$destructive' : '$foreground'}
-              >
+              <MetricSm color={ambient.heatStress ? '$destructive' : '$foreground'}>
                 {Math.round(ambient.temperatureC)}
-              </Text>
+              </MetricSm>
               <Data>°C</Data>
-              <Text
-                fontSize={30}
-                fontWeight="300"
-                letterSpacing={-1.2}
-                color="$mutedForeground"
-                marginLeft="$sm"
-                fontVariant={['tabular-nums']}
-              >
+              <MetricSm color="$mutedForeground" marginLeft="$sm">
                 {Math.round(ambient.humidityPct)}
-              </Text>
+              </MetricSm>
               <Data>%</Data>
             </XStack>
             {/* Em PALAVRA, além da cor: só o número terracota exclui quem não
@@ -245,16 +234,7 @@ export function HomeScreen() {
             </XStack>
           </Pressable>
         </XStack>
-        <Text
-          fontSize={26}
-          fontWeight="600"
-          letterSpacing={-0.8}
-          lineHeight={32}
-          color="$foreground"
-          marginBottom="$md"
-        >
-          {energy.title}
-        </Text>
+        <Headline marginBottom="$md">{energy.title}</Headline>
         <Body marginBottom="$lg" maxWidth="92%">
           {energy.description}
         </Body>

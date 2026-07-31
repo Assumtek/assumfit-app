@@ -68,6 +68,21 @@ export const Title = styled(Text, {
   color: '$foreground',
 });
 
+/**
+ * A MANCHETE — a frase que a tela existe para dizer ("Seu corpo pede uma
+ * pausa"). Um degrau ACIMA do `Title`: numa tela cuja tarefa é decidir o dia,
+ * a mensagem do produto não pode perder do cumprimento. Peso 600, não 700: é
+ * afirmação, não grito — o 700 fica para título e avaliação.
+ */
+export const Headline = styled(Text, {
+  ...base,
+  fontSize: 30,
+  fontWeight: '600',
+  letterSpacing: -1,
+  lineHeight: 36,
+  color: '$foreground',
+});
+
 /** Cabeçalho de seção. */
 export const SectionTitle = styled(Text, {
   ...base,
