@@ -73,6 +73,22 @@ export function HelpScreen() {
         </Body>
       </Section>
 
+      <Section label="Esporte">
+        <Explica
+          termo="Calorias como faixa"
+          texto="A caloria de uma sessão é MET da modalidade × peso × tempo — e o peso ainda não está no cadastro. Por isso ela aparece como FAIXA (60 a 85 kg de referência), não como número exato: a faixa declara a incerteza em vez de fingir precisão."
+        />
+        <Explica
+          termo="Onde o percurso mora"
+          texto="A trilha de GPS fica só no aparelho em que foi gravada e morre com o registro — para o servidor sobem apenas os totais (tempo, distância, batimento). O story de compartilhar desenha o traçado sem mapa, sem rua e sem endereço."
+        />
+        <Explica
+          termo="Sessão de tela aberta"
+          texto="Nesta versão o GPS não corre em segundo plano: a distância só é medida com a tela da sessão aberta. Se o app fechar, a sessão concluída fica guardada no aparelho e sobe sozinha na próxima abertura. Sessões de menos de um minuto não entram no histórico."
+          last
+        />
+      </Section>
+
       <Section label="Agenda e janelas de energia">
         <Explica
           termo="Janelas de energia"

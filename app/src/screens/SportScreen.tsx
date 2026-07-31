@@ -3,16 +3,17 @@ import { useNavigation } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, AppState, Pressable } from 'react-native';
+import { AccessibilityInfo, Alert, AppState, Pressable } from 'react-native';
 import MapView, { Polyline } from 'react-native-maps';
 
 import { Note, Row, Section } from '../components/Card';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
-import { Body, Button, Data, Display, Label, MetricSm } from '../components/ui';
+import { Body, Button, Data, Display, Label, MetricSm, SectionTitle } from '../components/ui';
 import {
   SPORTS,
   kcalFor,
+  kcalRangeLabel,
   paceMinPerKm,
   sportClock,
   trackDistanceM,
@@ -29,6 +30,7 @@ import {
   iniciarIlhaDeEsporte,
 } from '../../modules/widgetbridge';
 import * as api from '../services/api.service';
+import * as outbox from '../services/sport-outbox';
 import { SportShare } from '../components/SportShare';
 import { useBiometricStore } from '../store/biometric.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -112,6 +114,8 @@ export function SportScreen() {
 
   const carregar = useCallback(async () => {
     try {
+      // Primeiro o que ficou no aparelho; a lista do servidor já vem com elas.
+      await outbox.reenviarPendentes();
       setHistorico(await api.fetchSportSessions(30));
     } catch {
       setHistorico([]);
@@ -232,35 +236,37 @@ export function SportScreen() {
 
     setSessao(null);
     encerrarIlhaDeEsporte();
-    if (elapsed < 60_000) return; // sessão de segundos foi engano, não treino
+    if (elapsed < 60_000) {
+      // Descarte mudo é sumiço aos olhos de quem tocou encerrar na ilha.
+      setAviso('Sessões de menos de um minuto não entram no histórico.');
+      return;
+    }
 
     const avgHr = hr.length ? Math.round(hr.reduce((a, b) => a + b, 0) / hr.length) : null;
     const maxHr = hr.length ? Math.max(...hr) : null;
     setResumo({ sport: sessao.sport, elapsed, dist, kcal, avgHr, maxHr, points: sessao.points });
 
+    const payload = {
+      sport: sessao.sport.kind,
+      startedAt: new Date(sessao.startedAt).toISOString(),
+      durationS: Math.round(elapsed / 1000),
+      distanceM: dist && dist > 0 ? dist : null,
+      kcal,
+      avgHr,
+      maxHr,
+    };
+    // No APARELHO antes da rede: a partir desta linha a sessão não se perde
+    // mais — o percurso viaja junto e vira o mapinha quando o envio confirmar.
+    outbox.guardarPendente({ ...payload, points: sessao.points });
+
     setSalvando(true);
     try {
-      const registro = await api.saveSportSession({
-        sport: sessao.sport.kind,
-        startedAt: new Date(sessao.startedAt).toISOString(),
-        durationS: Math.round(elapsed / 1000),
-        distanceM: dist && dist > 0 ? dist : null,
-        kcal,
-        avgHr,
-        maxHr,
-      });
+      const registro = await api.saveSportSession(payload);
+      outbox.guardarPercurso(registro.id, sessao.points);
+      outbox.removerPendente(payload.startedAt);
       setHistorico((atual) => [registro, ...(atual ?? [])]);
-      // O percurso fica NO APARELHO, chaveado pelo id do registro — é o que
-      // permite reabrir o mapinha do histórico sem a rota nunca ter subido.
-      if (sessao.points.length > 1) {
-        try {
-          new File(Paths.document, `percurso-${registro.id}.json`).write(JSON.stringify(sessao.points));
-        } catch {
-          // Sem espaço em disco o histórico fica sem mapa — nunca sem registro.
-        }
-      }
     } catch {
-      setAviso('A sessão terminou mas não subiu para o servidor. Ela reaparece ao sincronizar.');
+      setAviso('A sessão ficou guardada no aparelho — sobe sozinha na próxima abertura.');
     } finally {
       setSalvando(false);
     }
@@ -335,6 +341,32 @@ export function SportScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessao !== null]);
 
+  /*
+   A seta pede confirmação; o MENU navegava sem guarda nenhuma — e desmontar
+   esta tela mata a sessão sem salvar. Com sessão ativa, QUALQUER remoção da
+   tela (menu, gesto de voltar, navegação por ref) passa pelo funil do X. O
+   ref existe porque o listener é registrado uma vez por sessão e o
+   `confirmarEncerrar` do fechamento daquele render ficaria com pausas velhas.
+  */
+  const confirmarRef = useRef(confirmarEncerrar);
+  confirmarRef.current = confirmarEncerrar;
+  useEffect(() => {
+    if (!sessao) return;
+    return (navigation as any).addListener('beforeRemove', (e: { preventDefault: () => void }) => {
+      e.preventDefault();
+      confirmarRef.current();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessao !== null]);
+
+  // VoiceOver: a pausa vinda da ilha só existia visualmente. Anuncia a transição.
+  const pausadoAgora = sessao !== null && sessao.pausedSince !== null;
+  useEffect(() => {
+    if (!sessao) return;
+    AccessibilityInfo.announceForAccessibility(pausadoAgora ? 'Sessão pausada' : 'Sessão em andamento');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pausadoAgora]);
+
   const abrirDetalhe = async (s: api.SportSession) => {
     let points: GeoPoint[] | null = null;
     try {
@@ -371,7 +403,7 @@ export function SportScreen() {
           sport={resumo.sport}
           elapsed={resumo.elapsed}
           dist={resumo.dist}
-          kcal={resumo.kcal}
+          kcalFaixa={kcalRangeLabel(resumo.sport.met, resumo.elapsed)}
           avgHr={resumo.avgHr}
           points={resumo.points}
           onClose={() => setCompartilhando(false)}
@@ -396,18 +428,24 @@ export function SportScreen() {
             unidade="km"
             rotulo={resumo.dist ? paceMinPerKm(resumo.dist, resumo.elapsed) ?? 'distância' : 'sem GPS'}
           />
-          <Medida valor={`~${resumo.kcal}`} unidade="kcal" rotulo="estimadas" />
           <Medida
             valor={resumo.avgHr ? String(resumo.avgHr) : '—'}
             unidade="bpm"
-            rotulo={resumo.maxHr ? `máx ${resumo.maxHr}` : 'médio'}
+            rotulo={resumo.avgHr ? (resumo.maxHr ? `média · máx ${resumo.maxHr}` : 'média') : 'sem amostras'}
           />
+          <Medida valor={kcalRangeLabel(resumo.sport.met, resumo.elapsed)} unidade="kcal" rotulo="estimadas" />
         </XStack>
         {salvando ? <Data marginBottom="$md">salvando no histórico…</Data> : null}
-        {aviso ? <Data color="$destructive" marginBottom="$md">{aviso}</Data> : null}
+        {aviso ? <Data marginBottom="$md">{aviso}</Data> : null}
+        {/* Como no fim de treino da Musculação: compartilhar vem antes e é
+            secundário; "Concluir" fecha — depois dele ninguém volta. */}
         <YStack gap="$md">
-          <Button title="Compartilhar" onPress={() => setCompartilhando(true)} />
-          <Button title="Concluir" variant="secondary" onPress={() => { setResumo(null); setCompartilhando(false); }} />
+          <Button title="Compartilhar sessão" variant="secondary" onPress={() => setCompartilhando(true)} />
+          <Button
+            title="Concluir"
+            icon={<Icon name="check" size={16} color="#0E0A22" />}
+            onPress={() => { setResumo(null); setCompartilhando(false); setAviso(null); }}
+          />
         </YStack>
       </DetailScreen>
     );
@@ -437,14 +475,13 @@ export function SportScreen() {
             unidade="km"
             rotulo={d.distanceM ? paceMinPerKm(d.distanceM, d.durationS * 1000) ?? 'distância' : 'sem GPS'}
           />
-          <Medida valor={`~${d.kcal}`} unidade="kcal" rotulo="estimadas" />
           <Medida
             valor={d.avgHr ? String(d.avgHr) : '—'}
             unidade="bpm"
-            rotulo={d.maxHr ? `máx ${d.maxHr}` : 'médio'}
+            rotulo={d.avgHr ? (d.maxHr ? `média · máx ${d.maxHr}` : 'média') : 'sem amostras'}
           />
+          <Medida valor={faixaKcal(d.sport, d.durationS, d.kcal)} unidade="kcal" rotulo="estimadas" />
         </XStack>
-        <Button title="Voltar" variant="secondary" onPress={() => setDetalhe(null)} />
       </DetailScreen>
     );
   }
@@ -452,10 +489,14 @@ export function SportScreen() {
   if (sessao) {
     const elapsed = elapsedOf(sessao, now);
     const dist = trackDistanceM(sessao.points);
-    const kcal = kcalFor(sessao.sport.met, PESO_PADRAO_KG, elapsed);
     const pace = paceMinPerKm(dist, elapsed);
     const pausado = sessao.pausedSince !== null;
     const ultimo = sessao.points[sessao.points.length - 1];
+    // "ao vivo" é alegação: sem leitura fresca, o valor vira traço em vez de
+    // relíquia com selo de vivo — a pulseira solta no km 3 não pode congelar
+    // um número que a tela continua jurando ser de agora.
+    const bpmFresco = latest !== null && now - latest.recordedAt <= 20_000;
+    const gpsAtivo = sessao.points.length > 0;
 
     // Com sessão correndo, a seta não NAVEGA: ela pede a mesma confirmação
     // do X — sair da tela mataria a sessão sem cerimônia.
@@ -495,17 +536,26 @@ export function SportScreen() {
         </YStack>
 
         <XStack justifyContent="space-between" paddingHorizontal="$md" marginBottom="$xxl">
+          {/* "0,00 km" com GPS negado pareceria medição. Medido ou traço. */}
           <Medida
-            valor={sessao.sport.gps ? (dist / 1000).toFixed(2).replace('.', ',') : '—'}
+            valor={sessao.sport.gps && gpsAtivo ? (dist / 1000).toFixed(2).replace('.', ',') : '—'}
             unidade="km"
-            rotulo={pace ?? 'distância'}
+            rotulo={
+              !sessao.sport.gps
+                ? 'sem GPS'
+                : gpsAtivo
+                  ? pace ?? 'distância'
+                  : watcher.current
+                    ? 'aguardando GPS'
+                    : 'sem GPS'
+            }
           />
           <Medida
-            valor={latest?.heartRate ? String(Math.round(latest.heartRate)) : '—'}
+            valor={bpmFresco ? String(Math.round(latest!.heartRate)) : '—'}
             unidade="bpm"
-            rotulo="ao vivo"
+            rotulo={bpmFresco ? 'ao vivo' : 'sem sinal da pulseira'}
           />
-          <Medida valor={`~${kcal}`} unidade="kcal" rotulo="estimadas" />
+          <Medida valor={kcalRangeLabel(sessao.sport.met, elapsed)} unidade="kcal" rotulo="estimadas" />
         </XStack>
 
         <XStack justifyContent="center" alignItems="center" gap="$xxl">
@@ -549,9 +599,10 @@ export function SportScreen() {
         </XStack>
 
         {aviso ? <Data marginTop="$xl">{aviso}</Data> : null}
+        {/* Uma frase, de ESTADO: a limitação operacional desta versão. O resto
+            da explicação (trilha no aparelho, totais no servidor) mora na Ajuda. */}
         <Data marginTop="$xl" color="$mutedForeground">
-          Mantenha a tela aberta durante a sessão — o GPS desta versão não corre em segundo
-          plano. A trilha fica no aparelho; para o servidor sobem só os totais.
+          Mantenha a tela aberta — o GPS desta versão não corre em segundo plano.
         </Data>
       </DetailScreen>
     );
@@ -607,13 +658,11 @@ export function SportScreen() {
           </Row>
         </Section>
 
-        {aviso && posicao === null && !preparando.gps ? <Data marginTop="$md">{aviso}</Data> : null}
-
         <YStack marginTop="$xl" gap="$md">
           <Button
             title="Iniciar"
             onPress={() => void iniciar(preparando)}
-            icon={<Icon name="play" size={16} color={colors.ink} />}
+            icon={<Icon name="play" size={16} color="#0E0A22" />}
           />
           <Button title="Voltar" variant="ghost" onPress={() => setPreparando(null)} />
         </YStack>
@@ -650,14 +699,14 @@ export function SportScreen() {
           alignItems="center"
           gap="$md"
         >
-          <Icon name="dumbbell" size={20} color={colors.accent} />
+          {/* A hierarquia do cartão vem da borda e do fundo; os GLIFOS de
+              navegação seguem acromáticos, como manda a regra do acento. */}
+          <Icon name="dumbbell" size={20} color={colors.textMuted} />
           <YStack flex={1} gap={2}>
-            <Text fontSize={15} fontWeight="700" color="$foreground">
-              Musculação
-            </Text>
+            <SectionTitle fontSize={15}>Musculação</SectionTitle>
             <Data fontSize={11}>seu plano, check-in e progresso</Data>
           </YStack>
-          <Icon name="arrowRight" size={16} color={colors.accent} />
+          <Icon name="arrowRight" size={16} color={colors.textMuted} />
         </XStack>
       </Pressable>
 
@@ -679,9 +728,9 @@ export function SportScreen() {
               gap="$sm"
             >
               <Icon name={sport.icon as never} size={22} color={colors.textMuted} />
-              <Text fontSize={14} color="$foreground">
+              <Body fontSize={14} color="$foreground">
                 {sport.label}
-              </Text>
+              </Body>
               <Data fontSize={10}>{sport.gps ? 'com GPS' : 'sem GPS'}</Data>
             </YStack>
           </Pressable>
@@ -690,23 +739,34 @@ export function SportScreen() {
 
       {aviso ? <Note title="Aviso" body={aviso} /> : null}
 
+      {historico === null ? <Data marginTop="$md">carregando histórico…</Data> : null}
+
       {historico && historico.length > 0 ? (
         <Section label="Últimas sessões">
           {historico.slice(0, 10).map((s, i) => (
-            <Pressable key={s.id} onPress={() => void abrirDetalhe(s)} accessibilityRole="button">
-            <Row last={i === Math.min(historico.length, 10) - 1}>
-              <YStack flex={1} gap={2}>
-                <Body color="$foreground">{rotulo(s.sport)}</Body>
-                <Data>
-                  {quando(s.startedAt)} · {sportClock(s.durationS * 1000)}
-                  {s.distanceM ? ` · ${(s.distanceM / 1000).toFixed(2).replace('.', ',')} km` : ''}
-                </Data>
-              </YStack>
-              <YStack alignItems="flex-end" gap={2} flexShrink={0}>
-                <Data color="$foreground">~{s.kcal} kcal</Data>
-                {s.avgHr ? <Data>{s.avgHr} bpm médio</Data> : null}
-              </YStack>
-            </Row>
+            <Pressable
+              key={s.id}
+              onPress={() => void abrirDetalhe(s)}
+              accessibilityRole="button"
+              accessibilityLabel={
+                `${rotulo(s.sport)}, ${quando(s.startedAt)}, ${sportClock(s.durationS * 1000)}` +
+                (s.distanceM ? `, ${(s.distanceM / 1000).toFixed(2).replace('.', ',')} quilômetros` : '') +
+                (s.avgHr ? `, ${s.avgHr} batimentos por minuto em média` : '')
+              }
+            >
+              <Row last={i === Math.min(historico.length, 10) - 1}>
+                <YStack flex={1} gap={2}>
+                  <Body color="$foreground">{rotulo(s.sport)}</Body>
+                  <Data>
+                    {quando(s.startedAt)} · {sportClock(s.durationS * 1000)}
+                    {s.distanceM ? ` · ${(s.distanceM / 1000).toFixed(2).replace('.', ',')} km` : ''}
+                  </Data>
+                </YStack>
+                <YStack alignItems="flex-end" gap={2} flexShrink={0}>
+                  <Data color="$foreground">{faixaKcal(s.sport, s.durationS, s.kcal)} kcal</Data>
+                  {s.avgHr ? <Data>{s.avgHr} bpm médio</Data> : null}
+                </YStack>
+              </Row>
             </Pressable>
           ))}
         </Section>
@@ -756,7 +816,9 @@ function MapaDePercurso({ points, accent }: { points: GeoPoint[]; accent: string
 
 function Medida({ valor, unidade, rotulo }: { valor: string; unidade: string; rotulo: string }) {
   return (
-    <YStack alignItems="center" gap={2}>
+    // Um nó só para o VoiceOver: sem o agrupamento, cada métrica eram três
+    // paradas e o trio custava nove swipes.
+    <YStack alignItems="center" gap={2} accessible accessibilityLabel={`${valor} ${unidade}, ${rotulo}`}>
       <XStack alignItems="baseline" gap={3}>
         <MetricSm fontSize={28}>{valor}</MetricSm>
         <Data>{unidade}</Data>
@@ -767,6 +829,16 @@ function Medida({ valor, unidade, rotulo }: { valor: string; unidade: string; ro
 }
 
 const rotulo = (kind: string) => SPORTS.find((s) => s.kind === kind)?.label ?? kind;
+
+/**
+ * A faixa de caloria de uma sessão do HISTÓRICO, recalculada de MET × duração.
+ * O servidor guarda o ponto médio; a faixa é como o número aparece — e quando a
+ * modalidade não é reconhecida, o ponto guardado entra com o `~` de estimativa.
+ */
+function faixaKcal(kind: string, durationS: number, kcal: number): string {
+  const met = SPORTS.find((s) => s.kind === kind)?.met;
+  return met ? kcalRangeLabel(met, durationS * 1000) : `~${kcal}`;
+}
 
 function quando(iso: string): string {
   const d = new Date(iso);

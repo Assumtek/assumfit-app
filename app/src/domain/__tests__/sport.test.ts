@@ -1,4 +1,4 @@
-import { kcalFor, paceMinPerKm, sportClock, trackDistanceM } from '../sport';
+import { kcalFor, kcalRange, kcalRangeLabel, paceMinPerKm, sportClock, trackDistanceM } from '../sport';
 
 describe('esporte', () => {
   it('distância acumulada descarta salto de GPS', () => {
@@ -13,6 +13,16 @@ describe('esporte', () => {
   it('caloria é MET × peso × horas, arredondada', () => {
     // Corrida (9.8) × 70 kg × 0,5 h = 343.
     expect(kcalFor(9.8, 70, 30 * 60_000)).toBe(343);
+  });
+
+  it('faixa de caloria abre o peso desconhecido em intervalo', () => {
+    // Corrida (9.8) × 0,5 h: 60 kg → 294, 85 kg → 417. O 70 kg pontual (343)
+    // cai DENTRO da faixa — a faixa não muda a conta, declara a incerteza.
+    expect(kcalRange(9.8, 30 * 60_000)).toEqual([294, 417]);
+    expect(kcalRangeLabel(9.8, 30 * 60_000)).toBe('294–417');
+    const [min, max] = kcalRange(9.8, 30 * 60_000);
+    expect(kcalFor(9.8, 70, 30 * 60_000)).toBeGreaterThan(min);
+    expect(kcalFor(9.8, 70, 30 * 60_000)).toBeLessThan(max);
   });
 
   it('ritmo formata min/km e some sem distância', () => {

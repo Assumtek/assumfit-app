@@ -74,6 +74,28 @@ export function kcalFor(met: number, weightKg: number, elapsedMs: number): numbe
   return Math.round(met * weightKg * (elapsedMs / 3_600_000));
 }
 
+/**
+ * A faixa de peso de referência enquanto o cadastro não tem balança.
+ *
+ * O peso é a variável que NÃO medimos na conta de MET — fingir precisão com um
+ * número pontual seria a mesma desonestidade que a caloria por foto evita ao
+ * aparecer como faixa. 60–85 kg cobre o grosso da população adulta; quem está
+ * fora lê uma faixa um pouco deslocada, não um número falso.
+ */
+const PESO_MIN_KG = 60;
+const PESO_MAX_KG = 85;
+
+/** A faixa honesta de calorias da sessão: o peso desconhecido vira intervalo. */
+export function kcalRange(met: number, elapsedMs: number): [number, number] {
+  return [kcalFor(met, PESO_MIN_KG, elapsedMs), kcalFor(met, PESO_MAX_KG, elapsedMs)];
+}
+
+/** `180–255 kcal` — a faixa pronta para tela, com o traço do intervalo. */
+export function kcalRangeLabel(met: number, elapsedMs: number): string {
+  const [min, max] = kcalRange(met, elapsedMs);
+  return `${min}–${max}`;
+}
+
 /** `5'32"/km` — o ritmo do corredor. `null` sem distância que preste. */
 export function paceMinPerKm(distanceMeters: number, elapsedMs: number): string | null {
   if (distanceMeters < 100) return null;

@@ -1,32 +1,56 @@
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import React, { useRef, useState } from 'react';
-import { Alert, Pressable } from 'react-native';
+import { Alert, Pressable, ScrollView } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import Svg, { Circle, Polyline as SvgPolyline } from 'react-native-svg';
 
 import type { GeoPoint, Sport } from '../domain/sport';
 import { paceMinPerKm, sportClock } from '../domain/sport';
-import { CANVAS_HEIGHT, CANVAS_WIDTH, EXPORT_WIDTH, FotoDeFundo } from './ShareCanvas';
+import { Icon } from './Icon';
+import { LogoType } from './Logo';
+import {
+  BlocoEditavel,
+  CANVAS_HEIGHT,
+  CANVAS_WIDTH,
+  EXPORT_WIDTH,
+  FotoDeFundo,
+} from './ShareCanvas';
 import { Button, Data, Label } from './ui';
-import { useTheme } from '../theme/ThemeProvider';
+import { CORNER_HALO, RadialHalo } from './ui/RadialHalo';
 
 /**
- * O story da sessão — o desenho do caminho por cima da foto, como no Strava.
+ * O story da sessão — o MESMO canvas editável do fim de treino da Musculação:
+ * blocos que arrastam, beliscam e giram, chips que ligam e desligam, foto de
+ * fundo opcional. A diferença é a estrela: o TRAÇADO do percurso, desenho puro
+ * sem mapa, sem rua e sem endereço — o papel do Strava, na versão que não
+ * revela onde a corrida aconteceu.
  *
- * O TRAÇADO é a estrela: a polyline do percurso vira desenho puro (sem mapa,
- * sem rua, sem endereço) projetado sobre a foto que a pessoa escolher. É
- * também a versão mais segura de compartilhar: o desenho solto não revela onde
- * a corrida aconteceu. Formato 9:16, exportado em 1080×1920 — o tamanho que o
- * Stories espera.
+ * **Nada sai do aparelho sozinho.** A imagem nasce local e só vai a algum
+ * lugar no toque de compartilhar ou salvar. Batimento e caloria começam
+ * DESLIGADOS: publicar dado de saúde é decisão, não padrão.
  */
+
+type BlocoId =
+  | 'selo'
+  | 'modalidade'
+  | 'tracado'
+  | 'tempo'
+  | 'distancia'
+  | 'ritmo'
+  | 'kcal'
+  | 'bpm'
+  | 'data'
+  | 'marca';
+
 export function SportShare({
   sport,
   elapsed,
   dist,
-  kcal,
+  kcalFaixa,
   avgHr,
   points,
   onClose,
@@ -34,112 +58,360 @@ export function SportShare({
   sport: Sport;
   elapsed: number;
   dist: number | null;
-  kcal: number;
+  /** A faixa honesta ("294–417"), já formatada pelo domínio. */
+  kcalFaixa: string;
   avgHr: number | null;
   points: GeoPoint[];
   onClose: () => void;
 }) {
-  const { colors } = useTheme();
-  const canvas = useRef(null);
+  // `captureRef` aceita qualquer host view; o tipo de instância do YStack não é
+  // exportado, e tipar aqui não previne erro nenhum.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const canvas = useRef<any>(null);
   const [foto, setFoto] = useState<string | null>(null);
-  const [comTracado, setComTracado] = useState(points.length > 1);
+  const [visiveis, setVisiveis] = useState<Set<BlocoId>>(
+    () =>
+      new Set<BlocoId>([
+        'selo',
+        'modalidade',
+        'tracado',
+        'tempo',
+        'distancia',
+        'ritmo',
+        'data',
+        'marca',
+      ]),
+  );
+  const [selecionado, setSelecionado] = useState<BlocoId | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
-  const escolherFoto = async (camera: boolean) => {
-    if (camera) {
-      const perm = await ImagePicker.requestCameraPermissionsAsync();
-      if (!perm.granted) return;
+  const pace = dist ? paceMinPerKm(dist, elapsed) : null;
+  const temTracado = points.length > 1;
+
+  // Só chip de bloco que EXISTE nesta sessão: sem GPS não há traçado a ligar.
+  const chips: { id: BlocoId; rotulo: string }[] = [
+    { id: 'selo', rotulo: 'Selo' },
+    { id: 'modalidade', rotulo: 'Modalidade' },
+    ...(temTracado ? [{ id: 'tracado' as const, rotulo: 'Traçado' }] : []),
+    { id: 'tempo', rotulo: 'Tempo' },
+    ...(dist ? [{ id: 'distancia' as const, rotulo: 'Km' }] : []),
+    ...(pace ? [{ id: 'ritmo' as const, rotulo: 'Ritmo' }] : []),
+    { id: 'kcal', rotulo: 'Kcal' },
+    ...(avgHr ? [{ id: 'bpm' as const, rotulo: 'Bpm' }] : []),
+    { id: 'data', rotulo: 'Data' },
+    { id: 'marca', rotulo: 'AssumFit' },
+  ];
+
+  const alternar = (id: BlocoId) =>
+    setVisiveis((atual) => {
+      const proximo = new Set(atual);
+      if (proximo.has(id)) proximo.delete(id);
+      else proximo.add(id);
+      return proximo;
+    });
+
+  const escolherFoto = async (origem: 'camera' | 'galeria') => {
+    const permissao =
+      origem === 'camera'
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissao.granted) {
+      Alert.alert('Permissão necessária', 'Autorize nas Configurações do sistema.');
+      return;
     }
-    const opcoes: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.9 };
-    const r = camera
-      ? await ImagePicker.launchCameraAsync(opcoes)
-      : await ImagePicker.launchImageLibraryAsync(opcoes);
-    if (r.assets?.[0]?.uri) setFoto(r.assets[0].uri);
+    // Sem recorte forçado: a foto entra INTEIRA e o enquadramento é feito no
+    // canvas, com arrastar e zoom.
+    const opcoes: ImagePicker.ImagePickerOptions = { quality: 0.9 };
+    const r =
+      origem === 'camera'
+        ? await ImagePicker.launchCameraAsync(opcoes)
+        : await ImagePicker.launchImageLibraryAsync({ ...opcoes, mediaTypes: ['images'] });
+    if (!r.canceled && r.assets[0]) setFoto(r.assets[0].uri);
   };
 
-  const compartilhar = async () => {
-    setOcupado(true);
+  /**
+   * A seleção é limpa ANTES da captura, e o snapshot espera um quadro — sem
+   * isso a borda roxa de seleção sai impressa no story.
+   */
+  const gerar = async (): Promise<string | null> => {
+    setSelecionado(null);
+    await new Promise((r) => setTimeout(r, 50));
     try {
-      const uri = await captureRef(canvas, {
+      return await captureRef(canvas, {
         format: 'png',
         quality: 1,
         result: 'tmpfile',
         width: EXPORT_WIDTH,
       });
-      await Sharing.shareAsync(uri, { mimeType: 'image/png' });
     } catch {
       Alert.alert('Não foi possível gerar a imagem', 'Tente de novo.');
+      return null;
+    }
+  };
+
+  const compartilhar = async () => {
+    setOcupado(true);
+    try {
+      const uri = await gerar();
+      if (!uri) return;
+      if (!(await Sharing.isAvailableAsync())) return;
+      await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png' });
     } finally {
       setOcupado(false);
     }
   };
 
-  const pace = dist ? paceMinPerKm(dist, elapsed) : null;
+  const salvar = async () => {
+    setOcupado(true);
+    try {
+      const permissao = await MediaLibrary.requestPermissionsAsync();
+      if (!permissao.granted) {
+        Alert.alert('Permissão necessária', 'Autorize o acesso às fotos para salvar.');
+        return;
+      }
+      const uri = await gerar();
+      if (!uri) return;
+      await MediaLibrary.saveToLibraryAsync(uri);
+      Alert.alert('Salvo', 'O story está na sua galeria.');
+    } finally {
+      setOcupado(false);
+    }
+  };
+
+  const dataDeHoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' });
+  const ver = (id: BlocoId) => visiveis.has(id);
+  const escolher = (id: BlocoId) => () => setSelecionado(id);
 
   return (
-    <YStack flex={1} alignItems="center" paddingTop="$md">
-      {/* O canvas 9:16 — o que se vê é o que sai. */}
-      <YStack
-        ref={canvas}
-        width={CANVAS_WIDTH}
-        height={CANVAS_HEIGHT}
-        borderRadius={18}
-        overflow="hidden"
-        backgroundColor="$backgroundStrong"
-        collapsable={false}
-      >
-        {foto ? <FotoDeFundo uri={foto} ativa={false} /> : null}
+    <YStack>
+      <Data marginBottom="$md">
+        Arraste os blocos para reposicionar. Dois dedos redimensionam ou giram. Toque fora para
+        tirar a seleção.
+      </Data>
 
-        {comTracado && points.length > 1 ? (
-          <YStack position="absolute" top={70} left={0} right={0} alignItems="center">
-            <Tracado points={points} width={CANVAS_WIDTH * 0.72} height={CANVAS_HEIGHT * 0.44} />
-          </YStack>
-        ) : null}
+      {/* Os chips ligam e desligam blocos — publicar batimento é decisão, não padrão. */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 14 }}>
+        <XStack gap="$sm">
+          {chips.map((chip) => (
+            <Pressable
+              key={chip.id}
+              onPress={() => alternar(chip.id)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: ver(chip.id) }}
+              style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
+            >
+              <XStack
+                alignItems="center"
+                gap="$xs"
+                paddingVertical="$sm"
+                paddingHorizontal="$md"
+                borderRadius={999}
+                borderWidth={1}
+                borderColor={ver(chip.id) ? '$primary' : '$borderStrong'}
+                backgroundColor={ver(chip.id) ? '$primarySoft' : 'transparent'}
+              >
+                <Icon name={ver(chip.id) ? 'check' : 'down'} size={11} />
+                <Text fontSize={12} color="$foreground">
+                  {chip.rotulo}
+                </Text>
+              </XStack>
+            </Pressable>
+          ))}
+        </XStack>
+      </ScrollView>
 
-        {/* O rodapé de dados — os números medidos, com a marca discreta. */}
-        <YStack position="absolute" left={14} right={14} bottom={14} gap={2}>
-          <Text fontSize={9} fontWeight="700" letterSpacing={1.4} style={{ color: '#877BF0' }}>
-            {sport.label.toUpperCase()}
-          </Text>
-          <XStack alignItems="baseline" gap={10}>
-            <Text fontSize={28} fontWeight="200" style={{ color: '#FFFFFF' }}>
-              {sportClock(elapsed)}
-            </Text>
-            {dist ? (
-              <Text fontSize={15} fontWeight="300" style={{ color: '#FFFFFF' }}>
-                {(dist / 1000).toFixed(2).replace('.', ',')} km
+      {/* O CANVAS. Tudo dentro deste YStack vira o story de 1080×1920. */}
+      <YStack alignItems="center">
+        <Pressable onPress={() => setSelecionado(null)}>
+          <YStack
+            ref={canvas}
+            collapsable={false}
+            width={CANVAS_WIDTH}
+            height={CANVAS_HEIGHT}
+            borderRadius={18}
+            overflow="hidden"
+            backgroundColor="#0E0A22"
+          >
+            {foto ? (
+              <FotoDeFundo uri={foto} ativa={selecionado === null} />
+            ) : (
+              <RadialHalo layers={CORNER_HALO} />
+            )}
+            {foto ? (
+              <YStack
+                position="absolute"
+                top={0}
+                left={0}
+                right={0}
+                bottom={0}
+                backgroundColor="rgba(14,10,34,0.45)"
+                pointerEvents="none"
+              />
+            ) : null}
+
+            <BlocoEditavel
+              x={18}
+              y={64}
+              visivel={ver('selo')}
+              selecionado={selecionado === 'selo'}
+              onSelecionar={escolher('selo')}
+            >
+              <XStack
+                paddingVertical={4}
+                paddingHorizontal={10}
+                borderRadius={999}
+                backgroundColor="rgba(135,123,240,0.28)"
+                borderWidth={1}
+                borderColor="rgba(135,123,240,0.55)"
+              >
+                <Text fontSize={9} fontWeight="800" letterSpacing={1.2} color="#ECE7F4">
+                  SESSÃO CONCLUÍDA
+                </Text>
+              </XStack>
+            </BlocoEditavel>
+
+            <BlocoEditavel
+              x={18}
+              y={96}
+              visivel={ver('modalidade')}
+              selecionado={selecionado === 'modalidade'}
+              onSelecionar={escolher('modalidade')}
+            >
+              <Text
+                fontSize={24}
+                fontWeight="800"
+                color="#ECE7F4"
+                letterSpacing={-0.6}
+                maxWidth={CANVAS_WIDTH - 48}
+              >
+                {sport.label}
               </Text>
+            </BlocoEditavel>
+
+            {temTracado ? (
+              <BlocoEditavel
+                x={38}
+                y={128}
+                visivel={ver('tracado')}
+                selecionado={selecionado === 'tracado'}
+                onSelecionar={escolher('tracado')}
+              >
+                <Tracado points={points} width={CANVAS_WIDTH * 0.72} height={CANVAS_HEIGHT * 0.39} />
+              </BlocoEditavel>
             ) : null}
-          </XStack>
-          <XStack gap={10}>
-            {pace ? <Data fontSize={10} style={{ color: 'rgba(255,255,255,0.75)' }}>{pace}</Data> : null}
-            <Data fontSize={10} style={{ color: 'rgba(255,255,255,0.75)' }}>~{kcal} kcal</Data>
+
+            <BlocoEditavel
+              x={18}
+              y={330}
+              visivel={ver('tempo')}
+              selecionado={selecionado === 'tempo'}
+              onSelecionar={escolher('tempo')}
+            >
+              <Metrica valor={sportClock(elapsed)} rotulo="tempo" />
+            </BlocoEditavel>
+
+            {dist ? (
+              <BlocoEditavel
+                x={103}
+                y={330}
+                visivel={ver('distancia')}
+                selecionado={selecionado === 'distancia'}
+                onSelecionar={escolher('distancia')}
+              >
+                <Metrica valor={`${(dist / 1000).toFixed(2).replace('.', ',')} km`} rotulo="distância" />
+              </BlocoEditavel>
+            ) : null}
+
+            {pace ? (
+              <BlocoEditavel
+                x={188}
+                y={330}
+                visivel={ver('ritmo')}
+                selecionado={selecionado === 'ritmo'}
+                onSelecionar={escolher('ritmo')}
+              >
+                <Metrica valor={pace} rotulo="ritmo" />
+              </BlocoEditavel>
+            ) : null}
+
+            <BlocoEditavel
+              x={18}
+              y={372}
+              visivel={ver('kcal')}
+              selecionado={selecionado === 'kcal'}
+              onSelecionar={escolher('kcal')}
+            >
+              <Metrica valor={`${kcalFaixa} kcal`} rotulo="estimadas" />
+            </BlocoEditavel>
+
             {avgHr ? (
-              <Data fontSize={10} style={{ color: 'rgba(255,255,255,0.75)' }}>{avgHr} bpm</Data>
+              <BlocoEditavel
+                x={128}
+                y={372}
+                visivel={ver('bpm')}
+                selecionado={selecionado === 'bpm'}
+                onSelecionar={escolher('bpm')}
+              >
+                <Metrica valor={`${avgHr} bpm`} rotulo="médio" />
+              </BlocoEditavel>
             ) : null}
-          </XStack>
-          <Text fontSize={10} fontWeight="700" letterSpacing={-0.4} marginTop={4} style={{ color: '#FFFFFF' }}>
-            assum<Text fontSize={10} fontWeight="700" style={{ color: '#877BF0' }}>fit</Text>
-          </Text>
-        </YStack>
+
+            <BlocoEditavel
+              x={18}
+              y={410}
+              visivel={ver('data')}
+              selecionado={selecionado === 'data'}
+              onSelecionar={escolher('data')}
+            >
+              <Text fontSize={11} color="rgba(236,231,244,0.75)">
+                {dataDeHoje}
+              </Text>
+            </BlocoEditavel>
+
+            <BlocoEditavel
+              x={18}
+              y={436}
+              visivel={ver('marca')}
+              selecionado={selecionado === 'marca'}
+              onSelecionar={escolher('marca')}
+            >
+              <LogoType height={13} color="#ECE7F4" />
+            </BlocoEditavel>
+          </YStack>
+        </Pressable>
       </YStack>
 
-      {/* Controles fora do canvas: nada disto sai na imagem. */}
-      <XStack gap="$sm" marginTop="$lg" flexWrap="wrap" justifyContent="center">
-        <Chip rotulo="Foto" onPress={() => void escolherFoto(false)} />
-        <Chip rotulo="Câmera" onPress={() => void escolherFoto(true)} />
-        {points.length > 1 ? (
-          <Chip
-            rotulo={comTracado ? 'Tirar traçado' : 'Mostrar traçado'}
-            ativo={comTracado}
-            onPress={() => setComTracado((v) => !v)}
+      <Label marginTop="$xl" marginBottom="$md">
+        imagem de fundo
+      </Label>
+      <XStack gap="$sm">
+        <YStack flex={1}>
+          <Button
+            title="Tirar foto"
+            variant="secondary"
+            size="md"
+            onPress={() => void escolherFoto('camera')}
           />
+        </YStack>
+        <YStack flex={1}>
+          <Button
+            title="Galeria"
+            variant="secondary"
+            size="md"
+            onPress={() => void escolherFoto('galeria')}
+          />
+        </YStack>
+        {foto ? (
+          <YStack flex={1}>
+            <Button title="Remover" variant="ghost" size="md" onPress={() => setFoto(null)} />
+          </YStack>
         ) : null}
       </XStack>
 
-      <YStack width="100%" paddingHorizontal="$xl" gap="$md" marginTop="$lg">
-        <Button title={ocupado ? 'Gerando…' : 'Compartilhar'} onPress={() => void compartilhar()} disabled={ocupado} />
-        <Button title="Voltar" variant="ghost" onPress={onClose} />
+      <YStack gap="$sm" marginTop="$xl">
+        <Button title="Compartilhar" loading={ocupado} onPress={() => void compartilhar()} />
+        <Button title="Salvar na galeria" variant="secondary" onPress={() => void salvar()} />
+        <Button title="Agora não" variant="ghost" onPress={onClose} />
       </YStack>
     </YStack>
   );
@@ -180,19 +452,16 @@ function Tracado({ points, width, height }: { points: GeoPoint[]; width: number;
   );
 }
 
-function Chip({ rotulo, onPress, ativo }: { rotulo: string; onPress: () => void; ativo?: boolean }) {
+/** Um número do story. Branco fixo: o canvas é escuro nos dois temas. */
+function Metrica({ valor, rotulo }: { valor: string; rotulo: string }) {
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => pressed && { opacity: 0.6 }}>
-      <YStack
-        paddingHorizontal={14}
-        paddingVertical={7}
-        borderRadius={999}
-        borderWidth={1}
-        borderColor={ativo ? '$primary' : '$borderStrong'}
-        backgroundColor={ativo ? '$primarySoft' : 'transparent'}
-      >
-        <Label fontSize={11}>{rotulo}</Label>
-      </YStack>
-    </Pressable>
+    <YStack>
+      <Text fontSize={20} fontWeight="300" color="#ECE7F4" fontVariant={['tabular-nums']}>
+        {valor}
+      </Text>
+      <Text fontSize={9} letterSpacing={1} color="rgba(236,231,244,0.7)" textTransform="uppercase">
+        {rotulo}
+      </Text>
+    </YStack>
   );
 }
