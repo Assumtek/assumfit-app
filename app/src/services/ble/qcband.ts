@@ -541,7 +541,41 @@ export class QCBandService implements BleService {
 
   async connect(deviceId: string): Promise<void> {
     if (!QCBand) throw new Error('SDK do fabricante indisponível neste build');
-    await QCBand.connect(deviceId);
+    try {
+      await QCBand.connect(deviceId);
+    } catch (err) {
+      /*
+       Conexão FRIA: o nativo só conecta em aparelho presente no mapa de
+       descobertos, e o mapa nasce vazio a cada processo — o `connect` do
+       arranque, o do primeiro plano e o botão Reconectar caíam todos aqui e
+       falhavam em silêncio. A saída é redescobrir: escaneia até o aparelho
+       pareado aparecer (ou 12 s) e conecta com ele fresco no mapa.
+      */
+      await this.redescobrir(deviceId);
+      await QCBand.connect(deviceId);
+    }
+  }
+
+  /** Escaneia até o aparelho aparecer; resolve na hora, rejeita no prazo. */
+  private redescobrir(deviceId: string, prazoMs = 12_000): Promise<void> {
+    return new Promise((resolve, reject) => {
+      let encerrado = false;
+      const finalizar = (erro?: Error) => {
+        if (encerrado) return;
+        encerrado = true;
+        clearTimeout(timer);
+        parar();
+        if (erro) reject(erro);
+        else resolve();
+      };
+      const parar = this.scan((device) => {
+        if (device.id === deviceId) finalizar();
+      });
+      const timer = setTimeout(
+        () => finalizar(new Error('Pulseira não encontrada por perto')),
+        prazoMs,
+      );
+    });
   }
 
   async disconnect(): Promise<void> {

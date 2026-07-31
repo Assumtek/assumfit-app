@@ -155,7 +155,7 @@ export function AgendaScreen() {
             events.length > 0 ? (
               <EnergyRail key={block.startHour} block={block} />
             ) : (
-              <BlockCard key={block.startHour} block={block} onPress={() => (navigation as any).navigate('Tabs', { screen: 'Focus' })} />
+              <BlockCard key={block.startHour} block={block} onPress={() => (navigation as any).push('Focus' as never)} />
             ),
           )}
 
@@ -206,7 +206,7 @@ export function AgendaScreen() {
       >
         <Button
           title="Iniciar sessão de foco"
-          onPress={() => (navigation as any).navigate('Tabs', { screen: 'Focus' })}
+          onPress={() => (navigation as any).push('Focus' as never)}
           icon={<Icon name="play" size={16} color={colors.ink} />}
         />
       </YStack>

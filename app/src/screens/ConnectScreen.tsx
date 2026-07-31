@@ -38,7 +38,7 @@ export function ConnectScreen() {
     if (connection !== 'connected') return;
     void loadLifestyle().then(() => {
       const pronto = useLifestyleStore.getState().completedAt !== null;
-      navigation.reset({ index: 0, routes: [{ name: (pronto ? 'Tabs' : 'Onboarding') as never }] });
+      navigation.reset({ index: 0, routes: [{ name: (pronto ? 'Main' : 'Onboarding') as never }] });
     });
   }, [connection, navigation, loadLifestyle]);
 
@@ -195,7 +195,7 @@ export function ConnectScreen() {
           style={({ pressed }) => [{ paddingVertical: 12 }, pressed && { opacity: 0.5 }]}
           onPress={() => {
             skipBand();
-            navigation.reset({ index: 0, routes: [{ name: 'Tabs' as never }] });
+            navigation.reset({ index: 0, routes: [{ name: 'Main' as never }] });
           }}
           accessibilityRole="button"
           accessibilityLabel="Explorar o app sem a pulseira"

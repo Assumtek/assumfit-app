@@ -1,4 +1,5 @@
 import {
+  Menu,
   Brain,
   Zap,
   Flower2,
@@ -112,6 +113,7 @@ export type IconName =
   | 'pencil'
   | 'trash'
   | 'refresh'
+  | 'menu'
   | 'brain';
 
 /**
@@ -169,6 +171,7 @@ const GLYPH = {
   pencil: Pencil,
   trash: Trash2,
   refresh: RefreshCw,
+  menu: Menu,
   brain: Brain,
 } as const;
 

@@ -130,7 +130,7 @@ export function GeneratingScreen() {
           <Button
             title="Voltar para o início"
             variant="ghost"
-            onPress={() => navigation.navigate('Tabs')}
+            onPress={() => navigation.navigate('Main')}
           />
 
           {isReferral ? (

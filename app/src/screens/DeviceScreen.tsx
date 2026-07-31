@@ -27,6 +27,19 @@ export function DeviceScreen() {
   };
 
   const [localizando, setLocalizando] = React.useState(false);
+  // Estado local além do `connection === 'connecting'`: a REDESCOBERTA (scan
+  // até a pulseira aparecer) acontece antes de o rádio dizer "connecting", e
+  // o botão não pode parecer parado nesses segundos.
+  const [reconectando, setReconectando] = React.useState(false);
+  const reconectar = async () => {
+    if (!pairedDeviceId) return;
+    setReconectando(true);
+    try {
+      await connect(pairedDeviceId);
+    } finally {
+      setReconectando(false);
+    }
+  };
   const localizar = async () => {
     setLocalizando(true);
     try {
@@ -110,12 +123,12 @@ export function DeviceScreen() {
         */
         <YStack marginTop="$xl" gap="$md">
           <Button
-            title={conectando ? 'Reconectando…' : 'Reconectar'}
-            onPress={() => pairedDeviceId && void connect(pairedDeviceId)}
-            disabled={conectando || !pairedDeviceId}
-            loading={conectando}
+            title={reconectando || conectando ? 'Reconectando…' : 'Reconectar'}
+            onPress={() => void reconectar()}
+            disabled={reconectando || conectando || !pairedDeviceId}
+            loading={reconectando || conectando}
           />
-          {connectError && !conectando ? (
+          {connectError && !reconectando && !conectando ? (
             <Note
               title="Não deu para reconectar"
               body="Confira se a pulseira está por perto e carregada, e se o Bluetooth do iPhone está ligado — aí tente de novo."

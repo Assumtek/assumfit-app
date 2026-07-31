@@ -155,7 +155,25 @@ final class QCBandBridge: NSObject, CBCentralManagerDelegate {
   }
 
   func connect(id: String) throws {
-    guard let peripheral = discovered[id], let central = central else {
+    guard let central = central else {
+      throw QCBandError.deviceNotFound
+    }
+    var alvo = discovered[id]
+    if alvo == nil, let uuid = UUID(uuidString: id) {
+      /*
+       Reconexão FRIA: o mapa de descobertos nasce vazio a cada processo, e
+       era por isso que o connect do arranque e o botão Reconectar falhavam
+       com deviceNotFound. O CoreBluetooth guarda o periférico pareado por
+       identificador — recuperá-lo aqui dispensa rescanear para reconectar.
+       (O lado JS ainda cai para scan quando até isto falhar.)
+      */
+      alvo = central.retrievePeripherals(withIdentifiers: [uuid]).first
+      if let recuperado = alvo {
+        discovered[id] = recuperado
+        onLog?(["raw": "connect frio: periférico recuperado por identificador"])
+      }
+    }
+    guard let peripheral = alvo else {
       throw QCBandError.deviceNotFound
     }
     central.stopScan()

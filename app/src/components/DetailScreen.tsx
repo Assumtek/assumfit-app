@@ -7,7 +7,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUiStore } from '../store/ui.store';
 import { useTheme } from '../theme/ThemeProvider';
 import { Icon } from './Icon';
-import { useBottomClearance } from './TabBar';
 import { Title } from './ui';
 
 type Props = {
@@ -41,7 +40,6 @@ export function DetailScreen({ title, children, refreshControl, onBack }: Props)
   const { colors } = useTheme();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const folgaInferior = useBottomClearance();
   const openSidebar = useUiStore((s) => s.openSidebar);
   const voltar = onBack ?? (navigation.canGoBack() ? () => navigation.goBack() : null);
 
@@ -53,8 +51,8 @@ export function DetailScreen({ title, children, refreshControl, onBack }: Props)
         contentContainerStyle={{
           paddingHorizontal: 24,
           paddingTop: insets.top + 12,
-          // Dentro das abas a folga cobre a barra flutuante; fora, o padrão.
-          paddingBottom: folgaInferior,
+          
+          paddingBottom: insets.bottom + 48,
         }}
         showsVerticalScrollIndicator={false}
       >
@@ -82,12 +80,11 @@ export function DetailScreen({ title, children, refreshControl, onBack }: Props)
             onPress={openSidebar}
             accessibilityRole="button"
             accessibilityLabel="Abrir menu"
-            hitSlop={16}
+            hitSlop={10}
           >
-            {/* Duas linhas de larguras diferentes: um "hambúrguer" de três
-                traços iguais é vocabulário de app genérico. */}
-            <YStack width={18} height={1} backgroundColor="$mutedForeground" marginBottom={5} />
-            <YStack width={12} height={1} backgroundColor="$mutedForeground" />
+            {/* O sanduíche visível: as duas linhas hairline eram discretas
+                demais para a porta de toda a navegação (feedback de campo). */}
+            <Icon name="menu" size={24} strokeWidth={2} color={colors.text} />
           </Pressable>
         </YStack>
 

@@ -169,7 +169,7 @@ export function TrainingFinishedScreen() {
           <Button
             title="Pronto"
             icon={<Icon name="check" size={16} color={colors.ink} />}
-            onPress={() => navigation.navigate('Tabs')}
+            onPress={() => navigation.navigate('Main')}
           />
 
         </YStack>

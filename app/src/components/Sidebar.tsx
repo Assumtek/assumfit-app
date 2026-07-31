@@ -41,11 +41,14 @@ export function Sidebar() {
 
   const battery = useBiometricStore((s) => s.batteryPct);
   const connection = useBiometricStore((s) => s.connection);
+  const latest = useBiometricStore((s) => s.latest);
+  const sleep = useBiometricStore((s) => s.sleep);
   const user = useUserStore((s) => s.user);
   const profile = useUserStore((s) => s.profile);
   const avatarUri = useUserStore((s) => s.avatarUri);
   const water = useHabitsStore((s) => s.today.waterMl);
   const waterGoal = useHabitsStore((s) => s.goalMl);
+  const focusSessions = useHabitsStore((s) => s.today.focusSessions);
 
   const slide = useRef(new Animated.Value(0)).current;
 
@@ -57,6 +60,22 @@ export function Sidebar() {
       useNativeDriver: true,
     }).start();
   }, [open, slide]);
+
+  /*
+   O resumo é uma CONTAGEM, não uma avaliação: quantas grandezas a pulseira
+   conseguiu medir hoje responde "vale a pena entrar?" e denuncia o aparelho
+   que parou de medir.
+  */
+  const medidas = [
+    latest?.hrvMs,
+    latest?.heartRate,
+    latest?.spo2Pct,
+    latest?.stressScore,
+    latest?.bpSystolic,
+    latest?.steps,
+    sleep?.score,
+  ].filter((v) => v != null).length;
+  const resumoDeSaude = medidas === 0 ? 'nada medido ainda' : `${medidas} de 7 medidas hoje`;
 
   /*
    As nove métricas saíram DAQUI e foram para a tela Saúde.
@@ -154,10 +173,15 @@ export function Sidebar() {
           </XStack>
         </Pressable>
 
-        {/* Os cinco gestos DIÁRIOS (Início, Saúde, Esporte, Refeições, Foco)
-            moram na tab bar; a sidebar carrega o eventual. */}
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-          <SectionLabel>Rotina</SectionLabel>
+          <SectionLabel>Hoje</SectionLabel>
+          <Entry name="Visão geral" detail="início" active={current === 'Main'} onPress={() => go('Main')} />
+          <Entry
+            name="Saúde"
+            detail={resumoDeSaude}
+            active={current === 'Health'}
+            onPress={() => go('Health')}
+          />
           {/*
             O ciclo só existe para quem tem sexo biológico feminino no cadastro.
 
@@ -174,11 +198,31 @@ export function Sidebar() {
               onPress={() => go('Cycle')}
             />
           ) : null}
+
+          <SectionLabel>Rotina</SectionLabel>
           <Entry
             name="Agenda do dia"
             detail="janelas de energia"
             active={current === 'Agenda'}
             onPress={() => go('Agenda')}
+          />
+          <Entry
+            name="Sessão de foco"
+            detail={focusSessions === 0 ? 'nenhuma hoje' : `${focusSessions} hoje`}
+            active={current === 'Focus'}
+            onPress={() => go('Focus')}
+          />
+          <Entry
+            name="Esporte"
+            detail="musculação, corrida e mais"
+            active={current === 'Sport'}
+            onPress={() => go('Sport')}
+          />
+          <Entry
+            name="Refeições"
+            detail="calorias por foto"
+            active={current === 'Meals'}
+            onPress={() => go('Meals')}
           />
           <Entry
             name="Água"
