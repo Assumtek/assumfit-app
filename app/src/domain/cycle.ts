@@ -225,29 +225,32 @@ export function monthAhead(cycles: LoggedCycle[], today: string): MonthAhead | n
  * e não sobre sintoma clínico. "Sua temperatura basal sobe na fase lútea" é
  * fisiologia descritiva; "isso indica X" seria diagnóstico.
  */
+/**
+ * Curta de propósito (ago/2026): a tela mostra body+training como UM parágrafo,
+ * e a versão anterior — duas frases longas de fisiologia — virava parede de
+ * texto. O que é explicação de método mora na Ajuda; aqui fica o que muda o
+ * dia. As duas verdades de segurança sobrevivem à tesoura: o aquecimento da
+ * ovulação e o "sem que nada esteja errado" da lútea.
+ */
 export const PHASE_COPY: Record<CyclePhase, { label: string; body: string; training: string }> = {
   menstrual: {
     label: 'Menstruação',
-    body:
-      'Estrogênio e progesterona no ponto mais baixo do ciclo. Energia costuma cair, e a percepção de esforço sobe para a mesma carga de sempre.',
-    training: 'Movimento leve costuma cair melhor que treino intenso. Se o corpo pedir descanso, ele tem razão.',
+    body: 'Hormônios no ponto mais baixo — é normal a energia cair e o esforço pesar mais.',
+    training: 'Vá de movimento leve. Se o corpo pedir descanso, ele tem razão.',
   },
   follicular: {
     label: 'Fase folicular',
-    body:
-      'Estrogênio subindo. É a fase em que a maioria relata mais disposição, melhor recuperação entre séries e mais tolerância a volume.',
-    training: 'Boa janela para as sessões mais exigentes e para começar algo novo.',
+    body: 'Estrogênio subindo: mais disposição e recuperação melhor.',
+    training: 'Boa janela para os treinos mais pesados — e para começar algo novo.',
   },
   ovulatory: {
     label: 'Ovulação',
-    body:
-      'Estrogênio no pico e temperatura basal prestes a subir. Costuma ser o ponto mais alto de energia do ciclo.',
-    training: 'Momento de força e potência. Vale atenção extra ao aquecimento — a frouxidão ligamentar aumenta aqui.',
+    body: 'O ponto mais alto de energia do ciclo.',
+    training: 'Dia de força e potência — só capriche no aquecimento: as articulações ficam mais soltas aqui.',
   },
   luteal: {
     label: 'Fase lútea',
-    body:
-      'Progesterona alta. A temperatura basal sobe cerca de 0,3 °C e o HRV tende a cair — o que aparece no score sem que nada esteja errado.',
-    training: 'Volume moderado costuma render mais que intensidade. Hidratação e sono pesam mais nesta fase.',
+    body: 'Progesterona alta: o HRV tende a cair, e isso aparece no score sem que nada esteja errado.',
+    training: 'Volume moderado rende mais que intensidade. Água e sono pesam mais agora.',
   },
 };

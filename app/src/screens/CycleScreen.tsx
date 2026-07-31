@@ -263,7 +263,7 @@ export function CycleScreen() {
             <Headline>{PHASE_COPY[estado.phase].label}</Headline>
             <Data marginTop="$xs" color="$mutedForeground">
               dia {estado.day} de {estado.length}
-              {estado.estimating ? ' · estimado pela referência típica' : ''}
+              {estado.estimating ? ' · estimado' : ''}
             </Data>
           </YStack>
 
@@ -290,38 +290,55 @@ export function CycleScreen() {
             ))}
           </XStack>
 
-          <Section label="O que muda agora">
-            <Row>
-              <Body flex={1} color="$foreground">{PHASE_COPY[estado.phase].body}</Body>
-            </Row>
-            <Row last>
-              <Body flex={1} color="$foreground">{PHASE_COPY[estado.phase].training}</Body>
-            </Row>
-          </Section>
+          {/*
+            Um parágrafo, sem caixa: o que a fase muda e o que fazer com o
+            treino são a MESMA conversa — duas Rows em Section davam moldura de
+            formulário a texto corrido, e moldura é o que esta tela tinha
+            demais.
+          */}
+          <Body marginBottom="$xl" maxWidth="94%">
+            {PHASE_COPY[estado.phase].body} {PHASE_COPY[estado.phase].training}
+          </Body>
 
+          {/*
+            UMA Section de previsão. "Previsão" e "Seu mês" diziam as mesmas
+            datas em dois lugares; as janelas genéricas saíram (a Agenda já
+            mostra janelas de energia) — a FÉRTIL é a que importa aqui, e o
+            aviso mora ao lado dela porque previsão de fertilidade sem ele é
+            perigosa.
+          */}
           <Section label="Previsão">
             <Row>
               <Body flex={1} color="$foreground">Próxima menstruação</Body>
               <Data flexShrink={0} color="$foreground">
                 {proxima ? porExtenso(proxima) : '—'}
-              </Data>
-            </Row>
-            <Row last={!mes}>
-              <Body flex={1} color="$foreground">
-                {estado.daysToNext === 0 ? 'Pela previsão' : atraso > 0 ? 'Atraso' : 'Faltam'}
-              </Body>
-              <Data flexShrink={0} color="$foreground">
                 {estado.daysToNext === 0
-                  ? 'é hoje'
-                  : `${Math.abs(estado.daysToNext)} ${Math.abs(estado.daysToNext) === 1 ? 'dia' : 'dias'}`}
+                  ? ' · é hoje'
+                  : estado.daysToNext > 0
+                    ? ` · em ${estado.daysToNext} ${estado.daysToNext === 1 ? 'dia' : 'dias'}`
+                    : ` · atraso de ${Math.abs(estado.daysToNext)} ${Math.abs(estado.daysToNext) === 1 ? 'dia' : 'dias'}`}
               </Data>
             </Row>
             {mes ? (
-              <Row last>
+              <Row>
                 <YStack flex={1} gap={2}>
-                  <Body color="$foreground">Aviso dois dias antes</Body>
-                  <Data fontSize={11}>notificação no aparelho, com título discreto</Data>
+                  <Body color="$foreground" fontWeight="700">Janela fértil</Body>
+                  <Data fontSize={11}>para autoconhecimento — não é método contraceptivo</Data>
                 </YStack>
+                <YStack alignItems="flex-end" flexShrink={0} gap={2}>
+                  <Data color="$foreground">
+                    {porExtenso(mes.fertile.from)} – {porExtenso(mes.fertile.to)}
+                  </Data>
+                  <Data fontSize={11}>
+                    ovulação ~{porExtenso(mes.fertile.peak)}
+                    {mes.estimating ? ' · faixa aproximada' : ''}
+                  </Data>
+                </YStack>
+              </Row>
+            ) : null}
+            {mes ? (
+              <Row last>
+                <Body flex={1} color="$foreground">Aviso dois dias antes</Body>
                 <Switch
                   value={avisoLigado}
                   onValueChange={(v) => {
@@ -333,46 +350,6 @@ export function CycleScreen() {
               </Row>
             ) : null}
           </Section>
-
-          {mes ? (
-            <YStack marginTop="$xl">
-              <Section label={`Seu mês, a partir de ${porExtenso(mes.windows[0].from)}`}>
-                {mes.windows.map((j) => (
-                  <Row key={j.label}>
-                    <Body flex={1} color="$foreground">{j.label}</Body>
-                    <Data flexShrink={0}>
-                      {porExtenso(j.from)} – {porExtenso(j.to)}
-                    </Data>
-                  </Row>
-                ))}
-                {/* A linha que mais importa: o aviso mora AO LADO do dado,
-                    porque previsão de fertilidade sem ele é perigosa. O acento
-                    fica no traço da régua — em texto ele reprova contraste. */}
-                <Row last>
-                  <YStack flex={1} gap={2}>
-                    <Body color="$foreground" fontWeight="700">Janela fértil</Body>
-                    <Data fontSize={11}>
-                      previsão para autoconhecimento — não serve como contraceptivo
-                    </Data>
-                  </YStack>
-                  <YStack alignItems="flex-end" flexShrink={0} gap={2}>
-                    <Data color="$foreground">
-                      {porExtenso(mes.fertile.from)} – {porExtenso(mes.fertile.to)}
-                    </Data>
-                    <Data fontSize={11}>
-                      ovulação ~{porExtenso(mes.fertile.peak)}
-                      {mes.estimating ? ' · faixa aproximada' : ''}
-                    </Data>
-                  </YStack>
-                </Row>
-              </Section>
-              {mes.estimating ? (
-                <Data marginTop="$md">
-                  Ainda estimando pela referência típica — as janelas afinam com mais registros.
-                </Data>
-              ) : null}
-            </YStack>
-          ) : null}
         </>
       ) : estado && emAtraso ? (
         <>
@@ -391,27 +368,33 @@ export function CycleScreen() {
           </YStack>
           <Note
             title="A previsão passou"
-            body="Registre o primeiro dia quando ele vier — a previsão recalcula sozinha. Variação entre ciclos é comum, e a previsão por calendário erra com frequência."
+            body="Registre o primeiro dia quando ele vier — a previsão recalcula sozinha. Variação entre ciclos é comum."
           />
         </>
       ) : (
         <Note
           title="Nenhum ciclo registrado"
-          body="Registre o primeiro dia da sua menstruação e o app passa a mostrar em que fase você está, o que ela muda no seu dia e quando a próxima é esperada."
+          body="Registre o primeiro dia da menstruação e o app mostra a fase, o que ela muda no seu dia e quando vem a próxima."
         />
       )}
 
       {descartados >= 2 ? (
         <Note
           title="Previsão limitada para o seu ritmo"
-          body="Seus intervalos recentes variam além da faixa que a previsão usa (21 a 35 dias). O app segue a referência típica e pode errar mais no seu caso — os registros continuam valendo e ficam guardados."
+          body="Seus intervalos variam além da faixa que a previsão usa (21 a 35 dias) — ela pode errar mais no seu caso. Os registros continuam valendo."
         />
       ) : null}
 
       {consentiu ? (
         <>
-          <Section label="Calendário" />
-          <Data marginBottom="$sm">Toque no dia em que a menstruação começou.</Data>
+          {/* Sem cabeçalho de seção: o calendário se apresenta sozinho. A
+              instrução só existe antes do primeiro registro — depois, ensinar
+              o que a pessoa já fez é ruído. */}
+          {cycles.length === 0 ? (
+            <Data marginTop="$lg" marginBottom="$sm">Toque no dia em que começou.</Data>
+          ) : (
+            <YStack marginTop="$lg" />
+          )}
           <CycleCalendar cycles={cycles} onToggle={alternarDia} busy={salvando} />
           {/* Legenda: a distinção registro × previsão é o coração honesto do
               calendário — ela não pode morar só num comentário de código. */}
@@ -442,7 +425,7 @@ export function CycleScreen() {
           */}
           <Note
             title="Antes de registrar"
-            body="O ciclo é dado sensível e tem consentimento próprio, separado do de biometria. Ele fica no seu perfil, não é usado para publicidade e não é compartilhado. Se você revogar, os ciclos registrados são apagados."
+            body="O ciclo é dado sensível, com consentimento próprio e separado do de biometria. Não é usado para publicidade nem compartilhado. Revogar apaga os registros."
           />
           <YStack marginTop="$lg" marginBottom="$md">
             <Button
