@@ -171,10 +171,22 @@ export function phaseProjected(
   cycles: LoggedCycle[],
 ): { phase: CyclePhase; projected: boolean } | null {
   const estado = phaseOn(date, cycles);
-  if (!estado) return null;
-  if (estado.day <= estado.length) return { phase: estado.phase, projected: false };
-  const dia = ((estado.day - 1) % estado.length) + 1;
-  return { phase: faseDoDia(dia, estado.length, DEFAULT_FLOW_DAYS), projected: true };
+  if (estado) {
+    if (estado.day <= estado.length) return { phase: estado.phase, projected: false };
+    const dia = ((estado.day - 1) % estado.length) + 1;
+    return { phase: faseDoDia(dia, estado.length, DEFAULT_FLOW_DAYS), projected: true };
+  }
+
+  // Antes do PRIMEIRO registro: retro-projeção ancorada nele, com o mesmo
+  // módulo — "se os ciclos anteriores repetiram o ritmo". É a única forma de
+  // o calendário pintar o mês inteiro, e continua marcada como projeção.
+  const primeiro = [...cycles].sort((a, b) => a.startedAt.localeCompare(b.startedAt))[0];
+  if (!primeiro) return null;
+  const length = averageLength(cycles) ?? DEFAULT_LENGTH;
+  const atras = diasEntre(date, primeiro.startedAt);
+  if (atras <= 0) return null;
+  const dia = ((length - (atras % length)) % length) + 1;
+  return { phase: faseDoDia(dia, length, DEFAULT_FLOW_DAYS), projected: true };
 }
 
 /** Data prevista da próxima menstruação. `null` sem registro. */

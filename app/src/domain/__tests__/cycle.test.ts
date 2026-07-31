@@ -177,3 +177,17 @@ describe('phaseProjected', () => {
     expect(phaseProjected('2026-07-03', [])).toBeNull();
   });
 });
+
+describe('phaseProjected — retro-projeção', () => {
+  const { phaseProjected } = require('../cycle');
+
+  it('pinta os dias anteriores ao primeiro registro, marcados como projeção', () => {
+    const cycles = [{ startedAt: '2026-07-15', durationDays: null }];
+    // 28 dias antes de 15/jul cai exatamente noutro início projetado.
+    expect(phaseProjected('2026-06-17', cycles)).toEqual({ phase: 'menstrual', projected: true });
+    // Meio do ciclo retro-projetado: não pode ser null.
+    const meio = phaseProjected('2026-07-01', cycles);
+    expect(meio).not.toBeNull();
+    expect(meio?.projected).toBe(true);
+  });
+});

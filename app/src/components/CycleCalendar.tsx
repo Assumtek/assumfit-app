@@ -64,14 +64,17 @@ export function CycleCalendar({
 
   const mover = (delta: number) => {
     const d = new Date(ano, mes + delta, 1);
-    // Não deixa navegar para o futuro: registrar dia que não aconteceu jogaria
-    // a previsão inteira para frente.
-    if (d > new Date(agora.getFullYear(), agora.getMonth(), 1)) return;
+    // OLHAR o futuro pode (a projeção pinta as fases; as células continuam
+    // intocáveis — registrar dia que não aconteceu seguiria proibido). O teto
+    // de seis meses existe porque projeção além disso é chute vestido de dado.
+    if (d > new Date(agora.getFullYear(), agora.getMonth() + 6, 1)) return;
     setAno(d.getFullYear());
     setMes(d.getMonth());
   };
 
-  const noFuturo = ano === agora.getFullYear() && mes === agora.getMonth();
+  const noTeto =
+    ano === agora.getFullYear() + Math.floor((agora.getMonth() + 6) / 12) &&
+    mes === (agora.getMonth() + 6) % 12;
 
   return (
     <YStack marginTop="$md" marginBottom="$lg">
@@ -84,12 +87,12 @@ export function CycleCalendar({
         </Body>
         <Pressable
           onPress={() => mover(1)}
-          disabled={noFuturo}
+          disabled={noTeto}
           accessibilityRole="button"
           accessibilityLabel="Próximo mês"
           hitSlop={12}
         >
-          <Icon name="arrowRight" size={18} color={noFuturo ? colors.hairlineStrong : colors.text} />
+          <Icon name="arrowRight" size={18} color={noTeto ? colors.hairlineStrong : colors.text} />
         </Pressable>
       </XStack>
 
@@ -109,9 +112,10 @@ export function CycleCalendar({
           const registrado = registrados.has(k);
           const futuro = k > hoje;
           // A fase de cada dia sai do MESMO cálculo da tela — o passado pela
-          // fase real, o futuro pela PROJEÇÃO (módulo da média): o calendário
-          // é a visão principal do ciclo e pinta o mês inteiro.
-          const fase = futuro ? phaseProjected(k, cycles) : phaseOn(k, cycles);
+          // fase real, o futuro E o trecho anterior ao primeiro registro pela
+          // PROJEÇÃO: o calendário é a visão principal e pinta o mês INTEIRO.
+          const real = futuro ? null : phaseOn(k, cycles);
+          const fase = real ?? phaseProjected(k, cycles);
 
           return (
             <Pressable
@@ -189,11 +193,14 @@ const CELULA: ViewStyle = {
  * ainda ordena as fases por "peso" fisiológico: menstruação mais forte,
  * ovulação em seguida, folicular e lútea como fundo.
  */
+// Degraus altos o bastante para TODAS as fases lerem de relance — 0,13 na
+// lútea sumia, principalmente no tema claro, e "todas as fases no calendário"
+// era o pedido explícito.
 const OPACIDADE_DA_FASE: Record<CyclePhase, number> = {
-  menstrual: 0.85,
-  ovulatory: 0.5,
-  follicular: 0.26,
-  luteal: 0.13,
+  menstrual: 0.9,
+  ovulatory: 0.6,
+  follicular: 0.38,
+  luteal: 0.2,
 };
 
 export function corDaFase(fase: CyclePhase, accent: string): string {
