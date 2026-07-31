@@ -39,6 +39,13 @@ api.assumfit.com.br {
 		rewrite * /privacidade.html
 		file_server
 	}
+	# Suporte idem: URL exigida pela ficha das lojas, servida daqui enquanto o
+	# DNS do raiz não vem.
+	@suporte path /suporte
+	handle @suporte {
+		rewrite * /suporte.html
+		file_server
+	}
 	handle {
 		reverse_proxy 127.0.0.1:3001
 	}
