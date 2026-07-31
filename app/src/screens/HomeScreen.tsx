@@ -7,20 +7,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../components/Icon';
 import { MetricBlock } from '../components/MetricBlock';
 import { Body, Button, Data, Headline, Label, Metric, MetricSm, SectionTitle } from '../components/ui';
-import { DayCurve } from '../components/charts/DayCurve';
 import { LiveChart, LiveDot } from '../components/charts/LiveChart';
 import { Meter } from '../components/charts/Meter';
-import { calcBioAge } from '../domain/bioAge';
 import { CALIBRATION_DAYS, ENERGY_BANDS, energyState } from '../domain/energy';
 import { frescor, rateHeartRate, rateHrv, rateSleep, rateSpo2 } from '../domain/ratings';
 import { supportsGattInspection } from '../services/ble';
 import { useAmbientStore } from '../store/ambient.store';
 import { useInsightStore } from '../store/insight.store';
-import { deepSleepPct, useBiometricStore } from '../store/biometric.store';
-import { useWorkoutStore } from '../store/workout.store';
+import { useBiometricStore } from '../store/biometric.store';
 import { useUiStore } from '../store/ui.store';
 import { greeting, useUserStore } from '../store/user.store';
-import type { TrainingPlan } from '../services/api.service';
 import { useBottomClearance } from '../components/TabBar';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -47,7 +43,6 @@ export function HomeScreen() {
   const sleep = useBiometricStore((s) => s.sleep);
   const connection = useBiometricStore((s) => s.connection);
   const user = useUserStore((s) => s.user);
-  const age = useUserStore((s) => s.age());
   const openSidebar = useUiStore((s) => s.openSidebar);
   const hrvHistory = useBiometricStore((s) => s.hrvHistory);
   const [chartWidth, setChartWidth] = useState(0);
@@ -57,20 +52,11 @@ export function HomeScreen() {
   const model = useInsightStore((s) => s.model);
   const insightStatus = useInsightStore((s) => s.status);
   const refreshInsight = useInsightStore((s) => s.refresh);
-  const plan = useWorkoutStore((s) => s.plan);
-  const refreshWorkout = useWorkoutStore((s) => s.refresh);
-  const [curveWidth, setCurveWidth] = useState(0);
   const hour = new Date().getHours();
 
   useEffect(() => {
     void refreshAmbient();
   }, [refreshAmbient]);
-
-  // O treino do dia na home precisa do plano carregado; o refresh já é
-  // fail-soft (catch interno) e barato — o widget depende do mesmo dado.
-  useEffect(() => {
-    void refreshWorkout();
-  }, [refreshWorkout]);
 
   // A hora entra na dependência: virou a hora, o insight é outro.
   useEffect(() => {
@@ -155,27 +141,6 @@ export function HomeScreen() {
       ? { label: insight.action.label, icon: insight.action.key }
       : local.action,
   };
-
-  // A curva do dia: a do modelo quando respondeu (conhece água/sono/base de
-  // 30 dias); a local sempre existe e sustenta o offline.
-  const curva = model?.curve?.length ? model.curve.map((p) => p.score) : local.curve;
-
-  // Mesmo cálculo offline da tela de detalhe (o gêmeo com paridade testada).
-  const bio = calcBioAge({
-    realAge: age,
-    sex: user.sex,
-    hrvMs: latest.hrvMs,
-    restingHr: latest.heartRate,
-    spo2Pct: latest.spo2Pct,
-    deepSleepPct: sleep ? deepSleepPct(sleep) : null,
-    tempRangeC: null,
-  });
-  const resumoBioAge =
-    bio.delta > 0
-      ? `${bio.bioAge} anos — ${bio.delta} ${bio.delta === 1 ? 'ano abaixo' : 'anos abaixo'} da real`
-      : bio.delta < 0
-        ? `${bio.bioAge} anos — ${Math.abs(bio.delta)} ${Math.abs(bio.delta) === 1 ? 'ano acima' : 'anos acima'} da real`
-        : `${bio.bioAge} anos — igual à idade real`;
 
   return (
     <ScrollView
@@ -319,27 +284,6 @@ export function HomeScreen() {
           </YStack>
         </XStack>
 
-        {/*
-          A curva das 24 HORAS — calculada desde sempre (local e modelo) e
-          nunca mostrada. Sem ela, "seu corpo decide o dia" era "decide a
-          hora": a régua diz onde você está, a curva diz o que ainda vem. O
-          toque abre a Agenda, que é onde a curva vira janela de compromisso.
-        */}
-        <Pressable
-          onPress={() => (navigation as any).navigate('Agenda' as never)}
-          accessibilityRole="button"
-          accessibilityLabel={`Curva de energia do dia${energy.nextLabel ? `, ${energy.nextLabel}` : ''}. Abre a agenda`}
-          style={({ pressed }) => pressed && { opacity: 0.7 }}
-        >
-          <YStack
-            marginTop="$lg"
-            onLayout={(e: LayoutChangeEvent) => setCurveWidth(e.nativeEvent.layout.width)}
-          >
-            <DayCurve data={curva} hour={hour} width={curveWidth} />
-            <Data marginTop="$xs">sua curva de hoje · agenda</Data>
-          </YStack>
-        </Pressable>
-
         {/* Só no modo local: o texto do modelo já explica a calibração dentro
             do próprio parágrafo, e repetir aqui daria o mesmo aviso duas vezes
             na mesma tela. */}
@@ -357,14 +301,6 @@ export function HomeScreen() {
           />
         </YStack>
       </YStack>
-
-      {/*
-        O treino do dia com presença ESTRUTURAL — o pilar "IA que age" não
-        pode depender de a IA escolher a ação `dumbbell` naquela hora. Peça
-        fixa: treino do plano quando há, descanso quando é descanso, convite
-        quando não há plano. A palavra "treino" volta a existir na home.
-      */}
-      <TreinoDeHoje plan={plan} onPress={() => (navigation as any).navigate('Plan' as never)} />
 
       {/* Série ao vivo: o pulso na ponta é o que diferencia dado corrente de número parado. */}
       <YStack
@@ -422,92 +358,7 @@ export function HomeScreen() {
         />
       </XStack>
 
-      {/*
-        O fecho da tela — antes o scroll morria seco no card de menor
-        hierarquia. Idade biológica é gancho da assinatura e morava no
-        penúltimo card da segunda aba; e o grid 2×2 parecia o inventário
-        completo quando esconde seis métricas. As duas linhas resolvem os
-        dois: um fim com valor, e a porta anunciada para o resto.
-      */}
-      <YStack marginTop="$lg">
-        <Fecho
-          rotulo="Idade biológica"
-          valor={resumoBioAge}
-          onPress={() => (navigation as any).navigate('BioAge' as never)}
-        />
-        <Fecho
-          rotulo="Tudo que a pulseira mede"
-          valor="estresse, pressão, passos e mais"
-          onPress={() => (navigation as any).navigate('Health' as never)}
-        />
-      </YStack>
     </ScrollView>
-  );
-}
-
-/** A peça fixa do treino — plano de hoje, descanso, ou o convite para gerar. */
-function TreinoDeHoje({ plan, onPress }: { plan: TrainingPlan | null; onPress: () => void }) {
-  const { colors } = useTheme();
-  const hoje = plan?.days.find((d) => d.dayOfWeek === plan.today);
-  const treino = hoje?.workout ?? null;
-
-  const titulo = !plan ? 'Monte seu treino com a IA' : treino ? treino.name : 'Descanso programado';
-  const detalhe = !plan
-    ? 'anamnese e plano personalizado em minutos'
-    : treino
-      ? [
-          treino.estimatedDuration ? `~${treino.estimatedDuration} min` : null,
-          `${treino.exerciseCount} ${treino.exerciseCount === 1 ? 'exercício' : 'exercícios'}`,
-        ]
-          .filter(Boolean)
-          .join(' · ')
-      : 'recuperação é o que faz a adaptação acontecer';
-
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`Treino de hoje: ${titulo}`}
-      style={({ pressed }) => pressed && { opacity: 0.6 }}
-    >
-      <XStack
-        alignItems="center"
-        gap="$md"
-        paddingVertical="$lg"
-        borderTopWidth={1}
-        borderBottomWidth={1}
-        borderColor="$border"
-        marginBottom="$xl"
-      >
-        <YStack flex={1} minWidth={0} gap={2}>
-          <Label>treino de hoje</Label>
-          <SectionTitle numberOfLines={1}>{titulo}</SectionTitle>
-          <Data numberOfLines={1}>{detalhe}</Data>
-        </YStack>
-        <Icon name="arrowRight" size={16} color={colors.textMuted} />
-      </XStack>
-    </Pressable>
-  );
-}
-
-/** Linha de fecho: um destino anunciado com o valor dele — nunca um card. */
-function Fecho({ rotulo, valor, onPress }: { rotulo: string; valor: string; onPress: () => void }) {
-  const { colors } = useTheme();
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${rotulo}: ${valor}`}
-      style={({ pressed }) => pressed && { opacity: 0.6 }}
-    >
-      <XStack alignItems="center" gap="$md" paddingVertical="$md" borderTopWidth={1} borderColor="$border">
-        <YStack flex={1} minWidth={0} gap={2}>
-          <Body color="$foreground">{rotulo}</Body>
-          <Data numberOfLines={1}>{valor}</Data>
-        </YStack>
-        <Icon name="arrowRight" size={14} color={colors.textMuted} />
-      </XStack>
-    </Pressable>
   );
 }
 
