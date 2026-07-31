@@ -135,35 +135,33 @@ export function CycleCalendar({
               style={CELULA}
             >
               <>
-                {/* O anel marca o HOJE — o calendário virou a visão principal
-                    e o olho precisa de âncora para o presente. */}
+                {/*
+                  O DIA INTEIRO carrega a fase: a mancha no círculo do número.
+                  A tira de 3px que ficava embaixo não diferenciava quatro
+                  intensidades — área pequena demais para rampa de opacidade
+                  ler. No círculo de 30px, lê. O anel marca o HOJE.
+                */}
                 <YStack
-                  width={26}
-                  height={26}
-                  borderRadius={13}
-                  borderWidth={1}
-                  borderColor={k === hoje ? '$borderStrong' : 'transparent'}
+                  width={30}
+                  height={30}
+                  borderRadius={15}
+                  borderWidth={k === hoje ? 1.5 : 0}
+                  borderColor={k === hoje ? '$foreground' : 'transparent'}
                   alignItems="center"
                   justifyContent="center"
+                  style={fase ? { backgroundColor: corDaFase(fase.phase, colors.accent) } : undefined}
                 >
-                  <Data color={futuro ? '$borderStrong' : k === hoje ? '$foreground' : '$faint'}>
+                  <Data style={{ color: corDoNumero(fase?.phase ?? null, futuro, k === hoje, colors) }}>
                     {dia}
                   </Data>
                 </YStack>
                 {/*
-                  Dois sinais diferentes, de propósito: o ponto cheio é o dia
-                  que VOCÊ registrou; o traço é fase deduzida — no futuro,
-                  projetada. Misturar os dois faria previsão parecer registro.
+                  O ponto cheio continua sendo o ÚNICO glifo de registro — a
+                  mancha é fase deduzida (no futuro e antes do primeiro
+                  registro, projetada). Misturar faria previsão virar fato.
                 */}
                 {registrado ? (
                   <YStack width={5} height={5} borderRadius={3} backgroundColor="$primary" />
-                ) : fase ? (
-                  <YStack
-                    width={14}
-                    height={3}
-                    borderRadius={1.5}
-                    style={{ backgroundColor: corDaFase(fase.phase, colors.accent) }}
-                  />
                 ) : (
                   <YStack width={5} height={5} />
                 )}
@@ -193,14 +191,13 @@ const CELULA: ViewStyle = {
  * ainda ordena as fases por "peso" fisiológico: menstruação mais forte,
  * ovulação em seguida, folicular e lútea como fundo.
  */
-// Degraus altos o bastante para TODAS as fases lerem de relance — 0,13 na
-// lútea sumia, principalmente no tema claro, e "todas as fases no calendário"
-// era o pedido explícito.
+// Sobre a MANCHA do dia inteiro (30px), estes degraus separam as quatro fases
+// de relance — na tira de 3px de antes, nenhum degrau separava.
 const OPACIDADE_DA_FASE: Record<CyclePhase, number> = {
   menstrual: 0.9,
-  ovulatory: 0.6,
-  follicular: 0.38,
-  luteal: 0.2,
+  ovulatory: 0.5,
+  follicular: 0.24,
+  luteal: 0.1,
 };
 
 export function corDaFase(fase: CyclePhase, accent: string): string {
@@ -208,4 +205,25 @@ export function corDaFase(fase: CyclePhase, accent: string): string {
   const g = parseInt(accent.slice(3, 5), 16);
   const b = parseInt(accent.slice(5, 7), 16);
   return `rgba(${r},${g},${b},${OPACIDADE_DA_FASE[fase]})`;
+}
+
+/**
+ * O número precisa sobreviver à mancha embaixo dele.
+ *
+ * Menstruação (0,9) é praticamente o acento puro nos dois temas → o ink
+ * escuro da marca, a mesma regra do texto do Button. Ovulação (0,5) resolve
+ * para roxo médio-claro no claro e médio-escuro no escuro → o foreground do
+ * tema serve nos dois. As fases fracas mantêm a lógica normal da grade.
+ */
+function corDoNumero(
+  fase: CyclePhase | null,
+  futuro: boolean,
+  ehHoje: boolean,
+  colors: { text: string; textFaint: string; hairlineStrong: string },
+): string {
+  if (fase === 'menstrual') return '#0E0A22';
+  if (fase === 'ovulatory') return colors.text;
+  if (futuro) return colors.hairlineStrong;
+  if (ehHoje) return colors.text;
+  return colors.textFaint;
 }

@@ -316,9 +316,9 @@ export function CycleScreen() {
             {ORDEM.map((f) => (
               <XStack key={f} alignItems="center" gap="$xs">
                 <YStack
-                  width={14}
-                  height={3}
-                  borderRadius={1.5}
+                  width={12}
+                  height={12}
+                  borderRadius={6}
                   style={{ backgroundColor: corDaFase(f, colors.accent) }}
                 />
                 <Data fontSize={11}>
