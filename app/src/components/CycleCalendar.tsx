@@ -14,9 +14,10 @@ import { useTheme } from '../theme/ThemeProvider';
  * a data depois — no dia seguinte, na semana seguinte — e um botão que só
  * aceita hoje obriga a mentir a data ou a não registrar.
  *
- * Tocar num dia marca ou desmarca o INÍCIO da menstruação naquele dia. Não é
- * seleção de intervalo: o que o cálculo precisa é do primeiro dia, e pedir
- * início e fim dobraria o atrito para um dado que a fase nem usa.
+ * Tocar num dia marca ou desmarca AQUELE dia de menstruação — o modelo por
+ * dia da Apple Health e do Flo (benchmark de ago/2026). Dias consecutivos
+ * viram um ciclo no domínio (`groupCycles`), e o comprimento da sequência é a
+ * duração real do fluxo — o "término" sai de graça: é parar de marcar.
  */
 
 const SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
@@ -36,11 +37,15 @@ function hojeChave(): string {
 }
 
 export function CycleCalendar({
-  cycles,
+  marcados,
+  grupos,
   onToggle,
   busy,
 }: {
-  cycles: LoggedCycle[];
+  /** Cada DIA de menstruação marcado — o modelo por dia da Apple e do Flo. */
+  marcados: string[];
+  /** Os ciclos agrupados (para pintar as fases). */
+  grupos: LoggedCycle[];
   onToggle: (dia: string, jaRegistrado: boolean) => void;
   busy: boolean;
 }) {
@@ -50,7 +55,7 @@ export function CycleCalendar({
   const [ano, setAno] = useState(agora.getFullYear());
   const [mes, setMes] = useState(agora.getMonth());
 
-  const registrados = useMemo(() => new Set(cycles.map((c) => c.startedAt)), [cycles]);
+  const registrados = useMemo(() => new Set(marcados), [marcados]);
   const hoje = hojeChave();
 
   const primeiroDiaSemana = new Date(ano, mes, 1).getDay();
@@ -114,8 +119,8 @@ export function CycleCalendar({
           // A fase de cada dia sai do MESMO cálculo da tela — o passado pela
           // fase real, o futuro E o trecho anterior ao primeiro registro pela
           // PROJEÇÃO: o calendário é a visão principal e pinta o mês INTEIRO.
-          const real = futuro ? null : phaseOn(k, cycles);
-          const fase = real ?? phaseProjected(k, cycles);
+          const real = futuro ? null : phaseOn(k, grupos);
+          const fase = real ?? phaseProjected(k, grupos);
 
           return (
             <Pressable
@@ -126,7 +131,7 @@ export function CycleCalendar({
               accessibilityState={{ selected: registrado, disabled: futuro }}
               accessibilityLabel={
                 `${dia} de ${MESES[mes]}` +
-                (registrado ? ', início de menstruação registrado' : '') +
+                (registrado ? ', dia de menstruação registrado' : '') +
                 (fase ? `, ${PHASE_COPY[fase.phase].label}${futuro ? ', previsão' : ''}` : '')
               }
               // A medida fica no `Pressable`, e não num filho: é ele que ocupa

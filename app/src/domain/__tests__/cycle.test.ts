@@ -191,3 +191,27 @@ describe('phaseProjected — retro-projeção', () => {
     expect(meio?.projected).toBe(true);
   });
 });
+
+describe('groupCycles', () => {
+  const { groupCycles } = require('../cycle');
+
+  it('agrupa dias consecutivos num ciclo com duração real de fluxo', () => {
+    expect(
+      groupCycles(['2026-07-15', '2026-07-16', '2026-07-17', '2026-07-18']),
+    ).toEqual([{ startedAt: '2026-07-15', durationDays: 4 }]);
+  });
+
+  it('separa sequências com lacuna e ordena o que chegar embaralhado', () => {
+    expect(groupCycles(['2026-07-17', '2026-06-18', '2026-07-15', '2026-07-16'])).toEqual([
+      { startedAt: '2026-06-18', durationDays: 1 },
+      { startedAt: '2026-07-15', durationDays: 3 },
+    ]);
+  });
+
+  it('deduplica dias repetidos e aceita vazio', () => {
+    expect(groupCycles(['2026-07-15', '2026-07-15'])).toEqual([
+      { startedAt: '2026-07-15', durationDays: 1 },
+    ]);
+    expect(groupCycles([])).toEqual([]);
+  });
+});

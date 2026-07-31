@@ -11,6 +11,7 @@ import { Body, Button, Data, Headline } from '../components/ui';
 import {
   PHASE_COPY,
   discardedIntervals,
+  groupCycles,
   monthAhead,
   nextPeriod,
   phaseOn,
@@ -127,10 +128,33 @@ export function CycleScreen() {
   const refresh = usePullRefresh(carregar);
 
   const hoje_ = hoje();
-  const estado = useMemo(() => (cycles ? phaseOn(hoje_, cycles) : null), [cycles, hoje_]);
-  const proxima = useMemo(() => (cycles ? nextPeriod(cycles) : null), [cycles]);
-  const mes = useMemo(() => (cycles ? monthAhead(cycles, hoje_) : null), [cycles, hoje_]);
-  const descartados = useMemo(() => (cycles ? discardedIntervals(cycles) : 0), [cycles]);
+  /*
+   O servidor guarda DIAS marcados (um registro por dia de menstruação — o
+   modelo por dia da Apple e do Flo); o domínio agrupa dias consecutivos em
+   CICLOS com duração real de fluxo. Toda a matemática consome os grupos.
+  */
+  const dias = useMemo(() => (cycles ? cycles.map((c) => c.startedAt) : []), [cycles]);
+  const diasSet = useMemo(() => new Set(dias), [dias]);
+  const grupos = useMemo(() => groupCycles(dias), [dias]);
+  const estado = useMemo(() => (cycles ? phaseOn(hoje_, grupos) : null), [cycles, grupos, hoje_]);
+  const proxima = useMemo(() => (cycles ? nextPeriod(grupos) : null), [cycles, grupos]);
+  const mes = useMemo(() => (cycles ? monthAhead(grupos, hoje_) : null), [cycles, grupos, hoje_]);
+  const descartados = useMemo(() => (cycles ? discardedIntervals(grupos) : 0), [cycles, grupos]);
+
+  /*
+   As CONFIRMAÇÕES do benchmark (Flo pergunta "chegou?"; na Apple o término é
+   parar de marcar): com fluxo ativo, um toque marca hoje também; na janela da
+   previsão (ou atraso), um toque registra a chegada. Sem formulário, sem
+   texto — botão contextual.
+  */
+  const ontem_ = useMemo(() => {
+    const d = new Date(`${hoje_}T12:00:00`);
+    d.setDate(d.getDate() - 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }, [hoje_]);
+  const fluxoAtivo = !diasSet.has(hoje_) && diasSet.has(ontem_);
+  const naJanela =
+    !!estado && !diasSet.has(hoje_) && !fluxoAtivo && estado.daysToNext <= 1;
 
   const atraso = estado && estado.daysToNext < 0 ? -estado.daysToNext : 0;
   const emAtraso = atraso >= ATRASO_VIRA_ESTADO;
@@ -163,20 +187,14 @@ export function CycleScreen() {
   };
 
   /**
-   * Marca ou desmarca um dia como início de menstruação.
-   *
-   * Aceita qualquer data passada: quase sempre a pessoa lembra depois. Apagar
-   * pede confirmação — "tocar para ver o que é" não pode custar o registro.
+   * Marca ou desmarca UM DIA de menstruação — alternância livre, como no
+   * benchmark (Apple/Flo): com o registro por dia, um toque errado custa um
+   * dia, não um ciclo, e a confirmação viraria atrito em quem marca cinco
+   * dias seguidos. Aceita qualquer data passada: quase sempre se lembra
+   * depois.
    */
   const alternarDia = (dia: string, jaRegistrado: boolean) => {
-    if (!jaRegistrado) {
-      void executar(dia, false);
-      return;
-    }
-    Alert.alert('Remover este registro?', `O início marcado em ${porExtenso(dia)} sai do histórico.`, [
-      { text: 'Manter', style: 'cancel' },
-      { text: 'Remover', style: 'destructive', onPress: () => void executar(dia, true) },
-    ]);
+    void executar(dia, jaRegistrado);
   };
 
   const consentir = async () => {
@@ -302,16 +320,30 @@ export function CycleScreen() {
       */}
       {consentiu ? (
         <>
-          {cycles.length === 0 ? (
-            <Data marginTop="$md" marginBottom="$sm">Toque no dia em que começou.</Data>
+          {/* As confirmações do benchmark, como BOTÃO e não texto: chegada na
+              janela da previsão (ou atraso) e continuação do fluxo. O término
+              é parar de marcar — como na Apple. */}
+          {naJanela || fluxoAtivo ? (
+            <YStack alignSelf="flex-start" marginTop="$md">
+              <Button
+                title={fluxoAtivo ? 'Menstruando hoje também' : 'Minha menstruação chegou'}
+                size="md"
+                onPress={() => void executar(hoje_, false)}
+                loading={salvando}
+                icon={<Icon name="drop" size={14} color="#0E0A22" />}
+              />
+            </YStack>
           ) : null}
-          <CycleCalendar cycles={cycles} onToggle={alternarDia} busy={salvando} />
-          {/* Legenda: o ponto é REGISTRO; os traços são fase deduzida — e a
+          {cycles.length === 0 ? (
+            <Data marginTop="$md" marginBottom="$sm">Toque nos dias de menstruação.</Data>
+          ) : null}
+          <CycleCalendar marcados={dias} grupos={grupos} onToggle={alternarDia} busy={salvando} />
+          {/* Legenda: o ponto é REGISTRO; a mancha é fase deduzida — e a
               rampa de intensidade é a ordem das fases, não quatro cores. */}
           <XStack flexWrap="wrap" gap="$md" rowGap="$xs" marginTop="$sm" alignItems="center">
             <XStack alignItems="center" gap="$xs">
               <YStack width={5} height={5} borderRadius={3} backgroundColor="$primary" />
-              <Data fontSize={11}>início registrado</Data>
+              <Data fontSize={11}>dia de menstruação</Data>
             </XStack>
             {ORDEM.map((f) => (
               <XStack key={f} alignItems="center" gap="$xs">
@@ -358,12 +390,8 @@ export function CycleScreen() {
 
       {estado && !emAtraso ? (
         <>
-          {/* Um parágrafo, sem caixa: o que a fase muda e o que fazer com o
-              treino são a MESMA conversa. */}
-          <Body marginTop="$lg" marginBottom="$xl" maxWidth="94%">
-            {PHASE_COPY[estado.phase].body} {PHASE_COPY[estado.phase].training}
-          </Body>
-
+          {/* Sem parágrafo de fase — pedido explícito (ago/2026): a tela é o
+              calendário; o texto de fase mora no rótulo e na Ajuda. */}
           {/* UMA Section de previsão — a FÉRTIL é a linha que importa, com o
               aviso ao lado porque previsão de fertilidade sem ele é perigosa. */}
           <Section label="Previsão">
@@ -419,15 +447,12 @@ export function CycleScreen() {
         />
       ) : null}
 
-      {cycles.length ? (
+      {grupos.length ? (
         <Section label="Registros">
-          {cycles.slice(0, 6).map((c, i, lista) => {
-            /*
-             O intervalo REAL até o início anterior — dado computado, no lugar
-             da coluna "dias de fluxo" que nada no app gravava e ficava "—"
-             para sempre (coluna morta prometendo um dado que não existia).
-            */
-            const anterior = lista[i + 1] ?? cycles[i + 1];
+          {[...grupos].reverse().slice(0, 6).map((c, i, lista) => {
+            // Intervalo real até o ciclo anterior + fluxo real dos dias
+            // marcados — os dois vêm do agrupamento, nada é prometido à toa.
+            const anterior = lista[i + 1];
             const intervalo = anterior
               ? Math.round(
                   (new Date(`${c.startedAt}T12:00:00`).getTime() -
@@ -435,10 +460,14 @@ export function CycleScreen() {
                     86_400_000,
                 )
               : null;
+            const partes = [
+              c.durationDays && c.durationDays >= 2 ? `${c.durationDays} dias de fluxo` : null,
+              intervalo ? `ciclo de ${intervalo} dias` : null,
+            ].filter(Boolean);
             return (
-              <Row key={c.startedAt} last={i === Math.min(cycles.length, 6) - 1}>
+              <Row key={c.startedAt} last={i === Math.min(lista.length, 6) - 1}>
                 <Body flex={1} color="$foreground">{porExtenso(c.startedAt)}</Body>
-                <Data flexShrink={0}>{intervalo ? `ciclo de ${intervalo} dias` : 'primeiro registro'}</Data>
+                <Data flexShrink={0}>{partes.length ? partes.join(' · ') : 'primeiro registro'}</Data>
               </Row>
             );
           })}

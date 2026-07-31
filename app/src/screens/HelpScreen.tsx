@@ -75,8 +75,8 @@ export function HelpScreen() {
 
       <Section label="Ciclo menstrual">
         <Explica
-          termo="Como a previsão funciona"
-          texto="Pelos seus registros: a média dos intervalos entre os inícios que você marcou. Enquanto não há registros suficientes, a referência típica de 28 dias entra no lugar — por isso as primeiras previsões dizem 'estimado'. Ciclos fora da faixa de 21 a 35 dias não entram na média, e quando isso acontece com frequência a tela avisa que a previsão fica limitada."
+          termo="Como registrar e como a previsão funciona"
+          texto="Marque no calendário CADA dia de menstruação — dias seguidos formam um ciclo, e a quantidade deles é a duração do fluxo. O término é simplesmente parar de marcar. A previsão vem da média dos intervalos entre os inícios; enquanto não há registros suficientes, a referência típica de 28 dias entra no lugar — por isso as primeiras previsões dizem 'estimado'. Ciclos fora da faixa de 21 a 35 dias não entram na média, e quando isso acontece com frequência a tela avisa."
         />
         <Explica
           termo="Janela fértil"

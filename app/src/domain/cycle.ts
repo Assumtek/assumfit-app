@@ -134,7 +134,10 @@ export function phaseOn(date: string, cycles: LoggedCycle[], today = date): Cycl
   const media = averageLength(ordenados);
   const length = media ?? DEFAULT_LENGTH;
   const day = diasEntre(ultimo.startedAt, date) + 1;
-  const fluxo = ultimo.durationDays ?? DEFAULT_FLOW_DAYS;
+  // Fluxo REAL quando a pessoa marcou os dias (sequência >= 2); um dia só é
+  // quase sempre o hábito antigo de marcar apenas o início — vale o padrão.
+  const fluxo =
+    ultimo.durationDays && ultimo.durationDays >= 2 ? ultimo.durationDays : DEFAULT_FLOW_DAYS;
 
   const phase = faseDoDia(day, length, fluxo);
 
@@ -145,6 +148,28 @@ export function phaseOn(date: string, cycles: LoggedCycle[], today = date): Cycl
     daysToNext: length - diasEntre(ultimo.startedAt, today),
     estimating: media === null,
   };
+}
+
+/**
+ * Dias marcados → ciclos.
+ *
+ * O registro é POR DIA — o modelo da Apple Health e do Flo: cada dia de
+ * menstruação marcado no calendário. Dias consecutivos formam um ciclo: o
+ * primeiro é o início, e o comprimento da sequência é a duração REAL do
+ * fluxo — o dado que `durationDays` sempre prometeu e nada gravava.
+ */
+export function groupCycles(days: string[]): LoggedCycle[] {
+  const ordenados = [...new Set(days)].sort();
+  const grupos: LoggedCycle[] = [];
+  for (const dia of ordenados) {
+    const atual = grupos[grupos.length - 1];
+    if (atual && diasEntre(atual.startedAt, dia) === (atual.durationDays ?? 1)) {
+      atual.durationDays = (atual.durationDays ?? 1) + 1;
+    } else {
+      grupos.push({ startedAt: dia, durationDays: 1 });
+    }
+  }
+  return grupos;
 }
 
 /** As bandas do ciclo num dia N — a única versão dessa conta. */
@@ -235,7 +260,10 @@ export function monthAhead(cycles: LoggedCycle[], today: string): MonthAhead | n
   const ordenados = [...cycles].sort((a, b) => a.startedAt.localeCompare(b.startedAt));
   const ultimo = [...ordenados].reverse().find((c) => diasEntre(c.startedAt, today) >= 0)!;
   const inicio = ultimo.startedAt;
-  const fluxo = ultimo.durationDays ?? DEFAULT_FLOW_DAYS;
+  // Fluxo REAL quando a pessoa marcou os dias (sequência >= 2); um dia só é
+  // quase sempre o hábito antigo de marcar apenas o início — vale o padrão.
+  const fluxo =
+    ultimo.durationDays && ultimo.durationDays >= 2 ? ultimo.durationDays : DEFAULT_FLOW_DAYS;
   const ovulacao = estado.length - LUTEAL_DAYS; // dia do ciclo, 1-based
 
   const dia = (n: number) => somaDias(inicio, n - 1);
