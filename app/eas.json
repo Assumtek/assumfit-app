@@ -43,6 +43,7 @@
   "submit": {
     "production": {
       "ios": {
+        "ascAppId": "6796407503",
         "appleTeamId": "5695J86AVD",
         "ascApiKeyPath": "/Users/silvia/.credenciais/assumfit/AuthKey_8SZZR8RRQH.p8",
         "ascApiKeyId": "8SZZR8RRQH",

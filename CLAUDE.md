@@ -175,6 +175,38 @@ codegen do React Native gera durante o `pod install`. Apagar quebra o build com
 "Build input file cannot be found", que parece corrupção de projeto. Cache de
 verdade é `~/Library/Developer/Xcode/DerivedData`.
 
+### Build de LOJA sem a cota do EAS (jul/2026, funcionou de ponta a ponta)
+
+Com a cota de iOS do plano Free esgotada, o `.ipa` de App Store sai desta
+máquina. O que NÃO funciona, e por quê, para ninguém repetir o caminho:
+
+- `eas build --local -p ios` — falha na assinatura: o certificado de
+  distribuição guardado no EAS é do tipo LEGADO ("iPhone Distribution"), e o
+  keychain de login desta máquina tem um "Apple Distribution" moderno que o
+  Xcode prefere; o perfil não o contém e o build morre com "profile doesn't
+  include signing certificate".
+- `xcodebuild -exportArchive` com assinatura automática — "Cloud signing
+  permission error": a chave ASC (`~/.credenciais/assumfit/`) não tem papel de
+  Admin.
+- Export com assinatura MANUAL e perfis instalados — o gerenciador de perfis
+  do Xcode 26 APAGA perfis desconhecidos de
+  `~/Library/Developer/Xcode/UserData/Provisioning Profiles` no meio do
+  próprio exportArchive; o do widget some antes de ser lido.
+
+O que funciona: archive com a chave ASC (`-allowProvisioningUpdates` +
+`-authenticationKey*`, que para ARCHIVE bastam) e depois **re-assinatura
+manual** do `.app`, estilo `fastlane sigh resign` — perfis de App Store
+embutidos nos bundles (app e `PlugIns/Treino.appex`), entitlements extraídos
+do PRÓPRIO perfil (menos `healthkit.access`, que o app não usa), keychain
+temporário com senha conhecida (sem prompt de GUI), `codesign` de dentro para
+fora (Frameworks → appex → app) e zip do `Payload/`. Perfis e p12 (com senha)
+saem do JSON de job de qualquer build do EAS (`logFiles` decodifica com
+**brotli**, não gzip). Upload por `eas submit -p ios --path <ipa>` — submit
+não tem cota; o `ascAppId` já está no `eas.json`. Conferir o artefato antes:
+Frameworks com `ExpoModulesJSI` e `grep api.assumfit.com.br` no `main.jsbundle`
+(o env de produção entra no ARCHIVE via `EXPO_PUBLIC_API_URL=...` na linha do
+xcodebuild).
+
 ### Testar com o relógio real
 
 **O simulador não tem Bluetooth.** O CoreBluetooth reporta `unsupported` e não
