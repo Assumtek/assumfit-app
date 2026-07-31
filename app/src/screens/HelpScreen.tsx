@@ -73,6 +73,18 @@ export function HelpScreen() {
         </Body>
       </Section>
 
+      <Section label="Agenda e janelas de energia">
+        <Explica
+          termo="Janelas de energia"
+          texto="A grade do dia é a sua curva de energia projetada hora a hora a partir da última leitura da pulseira: janela alta para o trabalho difícil, média para reuniões e revisão, baixa para recuperar. A projeção se ajusta ao longo do dia, conforme novas medições chegam — o horário da leitura usada aparece no topo da tela."
+        />
+        <Explica
+          termo="Compromissos"
+          texto="Com Google Agenda ou Outlook conectados, as reuniões entram na mesma régua de horas — a barrinha de cada uma mostra em que janela ela cai. Os eventos são lidos no provedor na hora e nunca guardados; participantes viram contagem, nunca lista de nomes."
+          last
+        />
+      </Section>
+
       <Section label="Ciclo menstrual">
         <Explica
           termo="Como registrar e como a previsão funciona"
