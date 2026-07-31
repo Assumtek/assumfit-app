@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { AppState, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TamaguiProvider, Theme } from '@tamagui/core';
@@ -38,6 +38,30 @@ function Root() {
 
   // Uma única assinatura do wearable para a árvore inteira.
   useEffect(() => listen(), [listen]);
+
+  /*
+   Pulseira de volta ao alcance não pode exigir cerimônia.
+
+   A reconexão do arranque roda UMA vez; se a pulseira estava longe naquele
+   instante (ou o Bluetooth desligado), nada tentava de novo e a pessoa tinha
+   que desconectar e parear do zero. Agora todo retorno ao primeiro plano
+   tenta reconectar em silêncio — falha fica muda de propósito: a pulseira
+   pode estar carregando em casa, e o cabeçalho da home já diz "Sem conexão".
+  */
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (estado) => {
+      if (estado !== 'active') return;
+      const { pairedDeviceId, connection, connect } = useBiometricStore.getState();
+      if (
+        typeof pairedDeviceId === 'string' &&
+        connection !== 'connected' &&
+        connection !== 'connecting'
+      ) {
+        void connect(pairedDeviceId).catch(() => undefined);
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   /*
    Toque em notificação leva à tela certa.

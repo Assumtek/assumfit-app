@@ -17,6 +17,8 @@ export function DeviceScreen() {
   const battery = useBiometricStore((s) => s.batteryPct);
   const latest = useBiometricStore((s) => s.latest);
   const disconnect = useBiometricStore((s) => s.disconnect);
+  const connect = useBiometricStore((s) => s.connect);
+  const connectError = useBiometricStore((s) => s.connectError);
   const pairedDeviceId = useBiometricStore((s) => s.pairedDeviceId);
 
   const onDisconnect = async () => {
@@ -58,10 +60,16 @@ export function DeviceScreen() {
     );
   }
 
+  const conectando = connection === 'connecting';
   const rows = [
     { label: 'Modelo', value: 'AssumFit Watch' },
-    { label: 'Identificador', value: 'E4:C3:B2:A1:00:1F' },
-    { label: 'Estado', value: connection === 'connected' ? 'Conectado' : 'Desconectado' },
+    // O identificador REAL do pareamento — havia um MAC fixo escrito aqui, e
+    // identificador inventado numa tela de hardware é mentira com cara de dado.
+    { label: 'Identificador', value: pairedDeviceId ?? '—' },
+    {
+      label: 'Estado',
+      value: connection === 'connected' ? 'Conectado' : conectando ? 'Reconectando…' : 'Desconectado',
+    },
     { label: 'Bateria', value: battery != null ? `${battery}%` : '—' },
     { label: 'Origem dos dados', value: latest?.source === 'mock' ? 'Simulado' : 'Sensor' },
   ];
@@ -93,7 +101,32 @@ export function DeviceScreen() {
             disabled={localizando}
           />
         </YStack>
-      ) : null}
+      ) : (
+        /*
+         Reconectar SEM cerimônia: o aparelho já está pareado — cair de volta
+         na tela de pareamento inicial trata uma queda de sinal como se fosse
+         uma decisão nova. Um toque aqui, e o app volta a tentar sozinho a
+         cada retorno ao primeiro plano (ver App.tsx).
+        */
+        <YStack marginTop="$xl" gap="$md">
+          <Button
+            title={conectando ? 'Reconectando…' : 'Reconectar'}
+            onPress={() => pairedDeviceId && void connect(pairedDeviceId)}
+            disabled={conectando || !pairedDeviceId}
+            loading={conectando}
+          />
+          {connectError && !conectando ? (
+            <Note
+              title="Não deu para reconectar"
+              body="Confira se a pulseira está por perto e carregada, e se o Bluetooth do iPhone está ligado — aí tente de novo."
+            />
+          ) : null}
+          <Note
+            title="Sem conexão com a pulseira"
+            body="Seu histórico continua disponível em todas as telas. O que depende do rádio — medição nova, bateria e localizar — volta quando reconectar."
+          />
+        </YStack>
+      )}
 
       {/* O mesmo componente que Hábitos usa — ver SedentaryReminder.tsx. */}
       <SedentaryReminder />
