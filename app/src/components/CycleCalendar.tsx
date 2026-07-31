@@ -4,7 +4,7 @@ import { Pressable, type ViewStyle } from 'react-native';
 
 import { Icon } from './Icon';
 import { Body, Data } from './ui';
-import { PHASE_COPY, phaseOn, type CyclePhase, type LoggedCycle } from '../domain/cycle';
+import { PHASE_COPY, phaseOn, phaseProjected, type CyclePhase, type LoggedCycle } from '../domain/cycle';
 import { useTheme } from '../theme/ThemeProvider';
 
 /**
@@ -108,9 +108,10 @@ export function CycleCalendar({
           const k = chave(ano, mes, dia);
           const registrado = registrados.has(k);
           const futuro = k > hoje;
-          // A fase de cada dia sai do MESMO cálculo da tela — o calendário
-          // mostra o ciclo, não uma segunda versão dele.
-          const estado = futuro ? null : phaseOn(k, cycles);
+          // A fase de cada dia sai do MESMO cálculo da tela — o passado pela
+          // fase real, o futuro pela PROJEÇÃO (módulo da média): o calendário
+          // é a visão principal do ciclo e pinta o mês inteiro.
+          const fase = futuro ? phaseProjected(k, cycles) : phaseOn(k, cycles);
 
           return (
             <Pressable
@@ -122,7 +123,7 @@ export function CycleCalendar({
               accessibilityLabel={
                 `${dia} de ${MESES[mes]}` +
                 (registrado ? ', início de menstruação registrado' : '') +
-                (estado ? `, ${PHASE_COPY[estado.phase].label}` : '')
+                (fase ? `, ${PHASE_COPY[fase.phase].label}${futuro ? ', previsão' : ''}` : '')
               }
               // A medida fica no `Pressable`, e não num filho: é ele que ocupa
               // a coluna da grade, e `width: 1/7` num filho de largura
@@ -130,22 +131,34 @@ export function CycleCalendar({
               style={CELULA}
             >
               <>
-                <Data color={futuro ? '$borderStrong' : k === hoje ? '$foreground' : '$faint'}>
-                  {dia}
-                </Data>
-              {/*
-                Dois sinais diferentes, de propósito: o ponto cheio é o dia que
-                VOCÊ registrou; o traço é a fase que o cálculo deduziu. Misturar
-                os dois faria previsão parecer registro.
-              */}
+                {/* O anel marca o HOJE — o calendário virou a visão principal
+                    e o olho precisa de âncora para o presente. */}
+                <YStack
+                  width={26}
+                  height={26}
+                  borderRadius={13}
+                  borderWidth={1}
+                  borderColor={k === hoje ? '$borderStrong' : 'transparent'}
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Data color={futuro ? '$borderStrong' : k === hoje ? '$foreground' : '$faint'}>
+                    {dia}
+                  </Data>
+                </YStack>
+                {/*
+                  Dois sinais diferentes, de propósito: o ponto cheio é o dia
+                  que VOCÊ registrou; o traço é fase deduzida — no futuro,
+                  projetada. Misturar os dois faria previsão parecer registro.
+                */}
                 {registrado ? (
                   <YStack width={5} height={5} borderRadius={3} backgroundColor="$primary" />
-                ) : estado ? (
+                ) : fase ? (
                   <YStack
-                    width={12}
-                    height={2}
-                    borderRadius={1}
-                    style={{ backgroundColor: corDaFase(estado.phase, colors) }}
+                    width={14}
+                    height={3}
+                    borderRadius={1.5}
+                    style={{ backgroundColor: corDaFase(fase.phase, colors.accent) }}
                   />
                 ) : (
                   <YStack width={5} height={5} />
@@ -169,14 +182,23 @@ const CELULA: ViewStyle = {
 };
 
 /**
- * A fase menstrual usa o acento; as demais, tons neutros.
+ * Quatro fases, UM acento: o mesmo roxo em quatro intensidades.
  *
- * Um acento por tela é regra do sistema, e aqui ele pertence ao dado que a
- * pessoa registrou. Pintar quatro fases com quatro cores transformaria o
- * calendário num gráfico decorativo.
+ * Um acento por tela é regra do sistema — quatro matizes transformariam o
+ * calendário em gráfico decorativo. A rampa de opacidade mantém a cor única e
+ * ainda ordena as fases por "peso" fisiológico: menstruação mais forte,
+ * ovulação em seguida, folicular e lútea como fundo.
  */
-function corDaFase(fase: CyclePhase, colors: { accentSoft: string; hairlineStrong: string; hairline: string }) {
-  if (fase === 'menstrual') return colors.accentSoft;
-  if (fase === 'ovulatory') return colors.hairlineStrong;
-  return colors.hairline;
+const OPACIDADE_DA_FASE: Record<CyclePhase, number> = {
+  menstrual: 0.85,
+  ovulatory: 0.5,
+  follicular: 0.26,
+  luteal: 0.13,
+};
+
+export function corDaFase(fase: CyclePhase, accent: string): string {
+  const r = parseInt(accent.slice(1, 3), 16);
+  const g = parseInt(accent.slice(3, 5), 16);
+  const b = parseInt(accent.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${OPACIDADE_DA_FASE[fase]})`;
 }

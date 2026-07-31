@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, Switch } from 'react-native';
 
 import { Note, Row, Section } from '../components/Card';
-import { CycleCalendar } from '../components/CycleCalendar';
+import { CycleCalendar, corDaFase } from '../components/CycleCalendar';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
 import { Body, Button, Data, Headline } from '../components/ui';
@@ -267,46 +267,105 @@ export function CycleScreen() {
             </Data>
           </YStack>
 
+        </>
+      ) : estado && emAtraso ? (
+        <>
           {/*
-            Régua das quatro fases. O acento marca a fase ATUAL no traço — e o
-            rótulo ativo também engrossa, porque só cor exclui quem não a vê.
+            O ATRASO é um estado de primeira classe — era o momento de maior
+            carga emocional da tela e o único sem desenho: fase afirmada como
+            fato, previsão no passado e promessa de aviso que nunca dispararia.
+            Aqui a tela PARA DE AFIRMAR: sem fase, sem janelas, sem hipótese de
+            causa — atraso é atraso, e o resto é da pessoa com quem ela quiser.
           */}
-          <XStack gap="$xs" marginBottom="$lg">
+          <YStack marginTop="$md" marginBottom="$lg">
+            <Headline>Atraso de {atraso} {atraso === 1 ? 'dia' : 'dias'}</Headline>
+            <Data marginTop="$xs" color="$mutedForeground">
+              a previsão era {proxima ? porExtenso(proxima) : '—'} · ciclo atual com {estado.day} dias
+            </Data>
+          </YStack>
+          <Note
+            title="A previsão passou"
+            body="Registre o primeiro dia quando ele vier — a previsão recalcula sozinha. Variação entre ciclos é comum."
+          />
+        </>
+      ) : (
+        <Note
+          title="Nenhum ciclo registrado"
+          body="Registre o primeiro dia da menstruação e o app mostra a fase, o que ela muda no seu dia e quando vem a próxima."
+        />
+      )}
+
+      {/*
+        O CALENDÁRIO é a visão principal — logo sob a manchete, com o mês
+        inteiro pintado por fase (a rampa do mesmo roxo) e o hoje no anel. A
+        régua de fases saiu: virou redundância do que o calendário já mostra.
+      */}
+      {consentiu ? (
+        <>
+          {cycles.length === 0 ? (
+            <Data marginTop="$md" marginBottom="$sm">Toque no dia em que começou.</Data>
+          ) : null}
+          <CycleCalendar cycles={cycles} onToggle={alternarDia} busy={salvando} />
+          {/* Legenda: o ponto é REGISTRO; os traços são fase deduzida — e a
+              rampa de intensidade é a ordem das fases, não quatro cores. */}
+          <XStack flexWrap="wrap" gap="$md" rowGap="$xs" marginTop="$sm" alignItems="center">
+            <XStack alignItems="center" gap="$xs">
+              <YStack width={5} height={5} borderRadius={3} backgroundColor="$primary" />
+              <Data fontSize={11}>início registrado</Data>
+            </XStack>
             {ORDEM.map((f) => (
-              <YStack key={f} flex={1} gap="$xs">
+              <XStack key={f} alignItems="center" gap="$xs">
                 <YStack
-                  height={2}
-                  borderRadius={1}
-                  backgroundColor={f === estado.phase ? '$primary' : '$borderStrong'}
+                  width={14}
+                  height={3}
+                  borderRadius={1.5}
+                  style={{ backgroundColor: corDaFase(f, colors.accent) }}
                 />
-                <Data
-                  fontSize={11}
-                  fontWeight={f === estado.phase ? '700' : '400'}
-                  color={f === estado.phase ? '$foreground' : '$mutedForeground'}
-                >
-                  {capitaliza(PHASE_COPY[f].label.replace('Fase ', ''))}
+                <Data fontSize={11}>
+                  {capitaliza(PHASE_COPY[f].label.replace('Fase ', '').toLowerCase())}
                 </Data>
-              </YStack>
+              </XStack>
             ))}
           </XStack>
-
+          {confirmacao ? (
+            <Data marginTop="$sm" color="$foreground">
+              {confirmacao}
+            </Data>
+          ) : null}
+        </>
+      ) : consentiu === false ? (
+        <>
           {/*
-            Um parágrafo, sem caixa: o que a fase muda e o que fazer com o
-            treino são a MESMA conversa — duas Rows em Section davam moldura de
-            formulário a texto corrido, e moldura é o que esta tela tinha
-            demais.
+            O consentimento é a porta, não um aviso no rodapé.
+
+            Sem ele o servidor recusa a escrita — e mostrar um calendário que
+            não grava seria pior que não mostrar nada.
           */}
-          <Body marginBottom="$xl" maxWidth="94%">
+          <Note
+            title="Antes de registrar"
+            body="O ciclo é dado sensível, com consentimento próprio e separado do de biometria. Não é usado para publicidade nem compartilhado. Revogar apaga os registros."
+          />
+          <YStack marginTop="$lg" marginBottom="$md">
+            <Button
+              title="Concordo e quero registrar"
+              onPress={() => void consentir()}
+              loading={salvando}
+              icon={<Icon name="drop" size={16} color="#0E0A22" />}
+            />
+          </YStack>
+        </>
+      ) : null}
+
+      {estado && !emAtraso ? (
+        <>
+          {/* Um parágrafo, sem caixa: o que a fase muda e o que fazer com o
+              treino são a MESMA conversa. */}
+          <Body marginTop="$lg" marginBottom="$xl" maxWidth="94%">
             {PHASE_COPY[estado.phase].body} {PHASE_COPY[estado.phase].training}
           </Body>
 
-          {/*
-            UMA Section de previsão. "Previsão" e "Seu mês" diziam as mesmas
-            datas em dois lugares; as janelas genéricas saíram (a Agenda já
-            mostra janelas de energia) — a FÉRTIL é a que importa aqui, e o
-            aviso mora ao lado dela porque previsão de fertilidade sem ele é
-            perigosa.
-          */}
+          {/* UMA Section de previsão — a FÉRTIL é a linha que importa, com o
+              aviso ao lado porque previsão de fertilidade sem ele é perigosa. */}
           <Section label="Previsão">
             <Row>
               <Body flex={1} color="$foreground">Próxima menstruação</Body>
@@ -351,91 +410,13 @@ export function CycleScreen() {
             ) : null}
           </Section>
         </>
-      ) : estado && emAtraso ? (
-        <>
-          {/*
-            O ATRASO é um estado de primeira classe — era o momento de maior
-            carga emocional da tela e o único sem desenho: fase afirmada como
-            fato, previsão no passado e promessa de aviso que nunca dispararia.
-            Aqui a tela PARA DE AFIRMAR: sem fase, sem janelas, sem hipótese de
-            causa — atraso é atraso, e o resto é da pessoa com quem ela quiser.
-          */}
-          <YStack marginTop="$md" marginBottom="$lg">
-            <Headline>Atraso de {atraso} {atraso === 1 ? 'dia' : 'dias'}</Headline>
-            <Data marginTop="$xs" color="$mutedForeground">
-              a previsão era {proxima ? porExtenso(proxima) : '—'} · ciclo atual com {estado.day} dias
-            </Data>
-          </YStack>
-          <Note
-            title="A previsão passou"
-            body="Registre o primeiro dia quando ele vier — a previsão recalcula sozinha. Variação entre ciclos é comum."
-          />
-        </>
-      ) : (
-        <Note
-          title="Nenhum ciclo registrado"
-          body="Registre o primeiro dia da menstruação e o app mostra a fase, o que ela muda no seu dia e quando vem a próxima."
-        />
-      )}
+      ) : null}
 
       {descartados >= 2 ? (
         <Note
           title="Previsão limitada para o seu ritmo"
           body="Seus intervalos variam além da faixa que a previsão usa (21 a 35 dias) — ela pode errar mais no seu caso. Os registros continuam valendo."
         />
-      ) : null}
-
-      {consentiu ? (
-        <>
-          {/* Sem cabeçalho de seção: o calendário se apresenta sozinho. A
-              instrução só existe antes do primeiro registro — depois, ensinar
-              o que a pessoa já fez é ruído. */}
-          {cycles.length === 0 ? (
-            <Data marginTop="$lg" marginBottom="$sm">Toque no dia em que começou.</Data>
-          ) : (
-            <YStack marginTop="$lg" />
-          )}
-          <CycleCalendar cycles={cycles} onToggle={alternarDia} busy={salvando} />
-          {/* Legenda: a distinção registro × previsão é o coração honesto do
-              calendário — ela não pode morar só num comentário de código. */}
-          <XStack gap="$lg" marginTop="$sm" alignItems="center">
-            <XStack alignItems="center" gap="$xs">
-              <YStack width={5} height={5} borderRadius={3} backgroundColor="$primary" />
-              <Data fontSize={11}>início registrado</Data>
-            </XStack>
-            <XStack alignItems="center" gap="$xs">
-              <YStack width={12} height={2} borderRadius={1} backgroundColor="$borderStrong" />
-              <Data fontSize={11}>previsão</Data>
-            </XStack>
-          </XStack>
-          {confirmacao ? (
-            <Data marginTop="$sm" color="$foreground">
-              {confirmacao}
-            </Data>
-          ) : null}
-        </>
-      ) : consentiu === false ? (
-        <>
-          {/*
-            O consentimento é a porta, não um aviso no rodapé.
-
-            Sem ele o servidor recusa a escrita — e mostrar um calendário que
-            não grava seria pior que não mostrar nada. O texto diz o que
-            acontece ao revogar porque essa é a parte que costuma ser omitida.
-          */}
-          <Note
-            title="Antes de registrar"
-            body="O ciclo é dado sensível, com consentimento próprio e separado do de biometria. Não é usado para publicidade nem compartilhado. Revogar apaga os registros."
-          />
-          <YStack marginTop="$lg" marginBottom="$md">
-            <Button
-              title="Concordo e quero registrar"
-              onPress={() => void consentir()}
-              loading={salvando}
-              icon={<Icon name="drop" size={16} color="#0E0A22" />}
-            />
-          </YStack>
-        </>
       ) : null}
 
       {cycles.length ? (

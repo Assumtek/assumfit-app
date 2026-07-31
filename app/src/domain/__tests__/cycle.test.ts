@@ -158,3 +158,22 @@ describe('discardedIntervals', () => {
     ).toBe(0);
   });
 });
+
+describe('phaseProjected', () => {
+  const { phaseProjected } = require('../cycle');
+  const base = [{ startedAt: '2026-07-01', durationDays: null }];
+
+  it('dentro do ciclo corrente repassa a fase real', () => {
+    expect(phaseProjected('2026-07-03', base)).toEqual({ phase: 'menstrual', projected: false });
+  });
+
+  it('além do ciclo corrente embrulha no comprimento e marca como projeção', () => {
+    // 2026-08-01 é o dia 32 de um ciclo de 28: projeta o dia 4 do próximo.
+    const r = phaseProjected('2026-08-01', base);
+    expect(r).toEqual({ phase: 'menstrual', projected: true });
+  });
+
+  it('null sem registro', () => {
+    expect(phaseProjected('2026-07-03', [])).toBeNull();
+  });
+});

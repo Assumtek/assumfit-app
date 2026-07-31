@@ -136,14 +136,7 @@ export function phaseOn(date: string, cycles: LoggedCycle[], today = date): Cycl
   const day = diasEntre(ultimo.startedAt, date) + 1;
   const fluxo = ultimo.durationDays ?? DEFAULT_FLOW_DAYS;
 
-  // A ovulação sai de trás para frente: length menos a fase lútea estável.
-  const ovulacao = length - LUTEAL_DAYS;
-
-  let phase: CyclePhase;
-  if (day <= fluxo) phase = 'menstrual';
-  else if (Math.abs(day - ovulacao) <= OVULATORY_WINDOW) phase = 'ovulatory';
-  else if (day < ovulacao) phase = 'follicular';
-  else phase = 'luteal';
+  const phase = faseDoDia(day, length, fluxo);
 
   return {
     phase,
@@ -152,6 +145,36 @@ export function phaseOn(date: string, cycles: LoggedCycle[], today = date): Cycl
     daysToNext: length - diasEntre(ultimo.startedAt, today),
     estimating: media === null,
   };
+}
+
+/** As bandas do ciclo num dia N — a única versão dessa conta. */
+function faseDoDia(day: number, length: number, fluxo: number): CyclePhase {
+  // A ovulação sai de trás para frente: length menos a fase lútea estável.
+  const ovulacao = length - LUTEAL_DAYS;
+  if (day <= fluxo) return 'menstrual';
+  if (Math.abs(day - ovulacao) <= OVULATORY_WINDOW) return 'ovulatory';
+  if (day < ovulacao) return 'follicular';
+  return 'luteal';
+}
+
+/**
+ * Fase PROJETADA para qualquer data — inclusive além do ciclo corrente.
+ *
+ * O calendário quer pintar o mês inteiro, e `phaseOn` congela em "lútea" para
+ * sempre depois que o dia passa do comprimento. Aqui o dia embrulha no módulo
+ * da média: é a projeção "se os ciclos repetirem o ritmo" — que é exatamente o
+ * que um calendário de previsão promete, e nada além. `projected: true` marca
+ * o trecho que já é pura repetição presumida.
+ */
+export function phaseProjected(
+  date: string,
+  cycles: LoggedCycle[],
+): { phase: CyclePhase; projected: boolean } | null {
+  const estado = phaseOn(date, cycles);
+  if (!estado) return null;
+  if (estado.day <= estado.length) return { phase: estado.phase, projected: false };
+  const dia = ((estado.day - 1) % estado.length) + 1;
+  return { phase: faseDoDia(dia, estado.length, DEFAULT_FLOW_DAYS), projected: true };
 }
 
 /** Data prevista da próxima menstruação. `null` sem registro. */
