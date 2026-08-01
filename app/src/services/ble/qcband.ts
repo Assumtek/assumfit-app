@@ -391,7 +391,7 @@ export class QCBandService implements BleService {
    * teve janela para preencher — e derrubar os outros quatro por causa dele
    * seria trocar quatro séries boas por nenhuma.
    */
-  async fetchHistory(): Promise<DayHistory> {
+  async fetchHistory(dayIndex = 0): Promise<DayHistory> {
     const vazio: DayHistory = { heartRate: [], stress: [], spo2: [], pressure: [], steps: [] };
     if (!QCBand) return vazio;
 
@@ -433,11 +433,12 @@ export class QCBandService implements BleService {
       return [];
     };
 
-    const fc = await ler('fc', () => QCBand!.getHeartRateHistory(0));
-    const estresse = await ler('estresse', () => QCBand!.getStressHistory(0));
-    const oxigenio = await ler('spo2', () => QCBand!.getSpo2History(0));
-    const pressao = await ler('pressão', () => QCBand!.getPressureHistory());
-    const passos = await ler('passos', () => QCBand!.getStepsHistory(0));
+    const fc = await ler('fc', () => QCBand!.getHeartRateHistory(dayIndex));
+    const estresse = await ler('estresse', () => QCBand!.getStressHistory(dayIndex));
+    const oxigenio = await ler('spo2', () => QCBand!.getSpo2History(dayIndex));
+    // A porta de pressão não aceita dia — só existe a leitura corrente.
+    const pressao = dayIndex === 0 ? await ler('pressão', () => QCBand!.getPressureHistory()) : [];
+    const passos = await ler('passos', () => QCBand!.getStepsHistory(dayIndex));
 
     const hoje = new Date();
     const inicioDoDia = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()).getTime();

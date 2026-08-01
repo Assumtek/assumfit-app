@@ -91,7 +91,8 @@ export interface BleService {
    * Opcional porque depende do aparelho guardar histórico: o GATT padrão do
    * Bluetooth SIG não tem nada parecido, e o wearable simulado não tem memória.
    */
-  fetchHistory?(): Promise<DayHistory>;
+  /** `dayIndex` 0 é hoje; o protocolo do aparelho endereça até 6 (uma semana). */
+  fetchHistory?(dayIndex?: number): Promise<DayHistory>;
   /**
    * Manda o aparelho medir AGORA a grandeza pedida.
    *

@@ -178,6 +178,33 @@ export async function ingest(readings: Reading[]): Promise<{ inserted: number }>
 }
 
 /**
+ * Amostra recuperada da MEMÓRIA da pulseira — dos dias em que o celular não
+ * estava por perto. Difere de `Reading` num ponto: pode não ter batimento
+ * (um dia antigo pode ter só passos ou só estresse naquela janela).
+ */
+export type MemoryReading = {
+  recordedAt: number;
+  heartRate?: number | null;
+  spo2Pct?: number | null;
+  steps?: number | null;
+  stressScore?: number | null;
+};
+
+export async function ingestMemory(readings: MemoryReading[]): Promise<{ inserted: number }> {
+  const { data } = await api.post<{ inserted: number }>('/biometric/ingest', {
+    readings: readings.map((r) => ({
+      recordedAt: new Date(r.recordedAt).toISOString(),
+      heartRate: r.heartRate != null ? Math.round(r.heartRate) : null,
+      spo2Pct: r.spo2Pct ?? null,
+      steps: r.steps ?? null,
+      stressScore: r.stressScore ?? null,
+      source: 'staranb',
+    })),
+  });
+  return data;
+}
+
+/**
  * Última leitura registrada no servidor.
  *
  * O endpoint existia desde sempre e ninguém o consumia — por isso a tela abria

@@ -249,6 +249,7 @@ type BiometricState = {
    * atualizar" faria.
    */
   syncHistory: () => Promise<void>;
+  recoverBandMemory: () => Promise<void>;
   /** Grandeza sendo medida agora, `null` quando não há medição em curso. */
   measuring: MeasurableKind | null;
   /** Motivo da última falha de medição, para a tela poder mostrar. */
@@ -343,6 +344,10 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
       await ble.connect(deviceId);
       gravarAparelhoPareado(deviceId);
       set({ pairedDeviceId: deviceId, batteryPct: ble.getBatteryLevel(), connectError: null });
+      // A memória da pulseira guarda uma SEMANA — quem passou dias longe do
+      // celular tem os dias presos lá. A varredura espera o arranque da
+      // conexão assentar (o canal é serial e o dia de hoje tem prioridade).
+      setTimeout(() => void get().recoverBandMemory(), 20_000);
     } catch (err) {
       set({ connectError: err instanceof Error ? err.message : 'Falha ao conectar' });
     }
@@ -565,6 +570,30 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
 
     const e = get();
     persistirDerivado(get());
+  },
+
+  /**
+   * Varre a MEMÓRIA da pulseira — os dias em que o celular não estava por
+   * perto. O protocolo endereça 7 dias (0–6); o de hoje já entra pelo
+   * `syncHistory`, então aqui vão do mais antigo ao de ontem, em série (o
+   * canal é serial), direto para o servidor. Re-varrer os mesmos dias em
+   * cada reconexão não duplica nada: o ingest é idempotente por
+   * (usuário, instante, fonte).
+   */
+  recoverBandMemory: async () => {
+    if (!ble.fetchHistory || !api.isAuthenticated()) return;
+    for (let dia = 6; dia >= 1; dia--) {
+      const h = await ble.fetchHistory(dia).catch(() => null);
+      if (!h) continue;
+      const amostras: api.MemoryReading[] = [
+        ...h.heartRate.map((a) => ({ recordedAt: a.at, heartRate: a.value })),
+        ...h.stress.map((a) => ({ recordedAt: a.at, stressScore: a.value })),
+        ...h.spo2.map((a) => ({ recordedAt: a.at, spo2Pct: a.value })),
+        ...h.steps.map((p) => ({ recordedAt: p.at, steps: p.steps })),
+      ];
+      if (amostras.length) await api.ingestMemory(amostras).catch(() => undefined);
+      if (__DEV__ && amostras.length) console.log(`[memória] dia -${dia}: ${amostras.length} amostras`);
+    }
   },
 
   connectHealth: async () => {

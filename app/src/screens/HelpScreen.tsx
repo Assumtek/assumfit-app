@@ -66,10 +66,15 @@ export function HelpScreen() {
       </Section>
 
       <Section label="Quando um número não aparece">
-        <Body flex={1}>
+        <Body flex={1} marginBottom="$md">
           Traço significa que aquela grandeza não foi medida — nunca que ela deu zero. A pulseira
           mede em janelas agendadas, e algumas medições dependem de ela estar bem encaixada no
           pulso. Sinal ausente não estraga o resto: o peso dele é redistribuído entre os outros.
+        </Body>
+        <Body flex={1}>
+          Longe do celular, a pulseira continua medindo sozinha e guarda até 7 dias na memória.
+          Ao reconectar, o app recupera o que ficou acumulado — só o ao vivo (número em tempo
+          real, sessão de esporte com GPS) precisa do celular por perto.
         </Body>
       </Section>
 
