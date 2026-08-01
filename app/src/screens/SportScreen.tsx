@@ -31,6 +31,7 @@ import {
 } from '../../modules/widgetbridge';
 import * as api from '../services/api.service';
 import * as outbox from '../services/sport-outbox';
+import { iniciarRastreio, pararRastreio, useSportTrackStore } from '../services/sport-track';
 import { SportShare } from '../components/SportShare';
 import { useBiometricStore } from '../store/biometric.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -89,7 +90,10 @@ export function SportScreen() {
   const [salvando, setSalvando] = useState(false);
   /** Encerramento pedido pelo botão da ilha — o instante do toque. */
   const [pedidoDeEncerrar, setPedidoDeEncerrar] = useState<number | null>(null);
-  const watcher = useRef<Location.LocationSubscription | null>(null);
+  /** GPS ligado para ESTA sessão — decide entre "aguardando GPS" e "sem GPS". */
+  const [rastreando, setRastreando] = useState(false);
+  /** Quantos pontos do buffer de rastreio já entraram na sessão. */
+  const cursorDoRastreio = useRef(0);
 
   /*
    Preparação: pede a localização JÁ na tela intermediária — o mapa centrado
@@ -168,25 +172,19 @@ export function SportScreen() {
 
   const iniciar = async (sport: Sport) => {
     setAviso(null);
+    setRastreando(false);
     if (sport.gps) {
       const perm = await Location.requestForegroundPermissionsAsync();
       if (perm.status === 'granted') {
-        watcher.current = await Location.watchPositionAsync(
-          { accuracy: Location.Accuracy.High, distanceInterval: 5 },
-          (pos) => {
-            setSessao((s) =>
-              s && s.pausedSince === null
-                ? {
-                    ...s,
-                    points: [
-                      ...s.points,
-                      { lat: pos.coords.latitude, lon: pos.coords.longitude, at: pos.timestamp },
-                    ],
-                  }
-                : s,
-            );
-          },
-        );
+        // O rastreio corre por tarefa do sistema e SEGUE em segundo plano —
+        // trocar de app ou apagar a tela não congela mais a distância.
+        cursorDoRastreio.current = 0;
+        try {
+          await iniciarRastreio();
+          setRastreando(true);
+        } catch {
+          setAviso('O GPS não ligou — a distância fica de fora; o resto funciona.');
+        }
       } else {
         setAviso('Sem acesso à localização a distância não é medida — o resto funciona.');
       }
@@ -223,8 +221,8 @@ export function SportScreen() {
 
   const encerrar = async (emMs?: number) => {
     if (!sessao) return;
-    watcher.current?.remove();
-    watcher.current = null;
+    void pararRastreio();
+    setRastreando(false);
 
     // Encerrado pelo botão da ilha, o fim é O TOQUE, não a hora em que o app
     // voltou à frente — entre os dois podem ter passado minutos parados.
@@ -378,19 +376,41 @@ export function SportScreen() {
     setDetalhe({ sessao: s, points });
   };
 
-  // Desmontar a tela NÃO encerra o watcher se há sessão? Encerra: sessão de
-  // esporte é de tela aberta nesta versão — honesto e documentado no aviso.
-  // A ilha cai junto — órfã, ela contaria um treino que já não existe. O
-  // guard poupa a ilha de OUTRA sessão (foco) quando saímos sem sessão aqui.
+  // Desmontar com sessão viva é raro (o beforeRemove guarda a porta), mas se
+  // acontecer o rastreio de fundo NÃO pode sobreviver órfão — ele seguraria o
+  // GPS e a notificação do Android para sempre. A ilha cai junto — órfã, ela
+  // contaria um treino que já não existe. O guard poupa a ilha de OUTRA
+  // sessão (foco) quando saímos sem sessão aqui.
   const haSessao = useRef(false);
   haSessao.current = sessao !== null;
   useEffect(
     () => () => {
-      watcher.current?.remove();
-      if (haSessao.current) encerrarIlhaDeEsporte();
+      if (haSessao.current) {
+        void pararRastreio();
+        encerrarIlhaDeEsporte();
+      }
     },
     [],
   );
+
+  /*
+   Os pontos chegam pelo BUFFER da tarefa de fundo, não por callback de tela:
+   é o que os faz continuar chegando com o app atrás. O cursor marca o que já
+   entrou; pausa descarta em vez de acumular — andar durante a pausa não é
+   percurso.
+  */
+  useEffect(() => {
+    if (!sessao) return;
+    const aplicar = (points: GeoPoint[]) => {
+      const novos = points.slice(cursorDoRastreio.current);
+      cursorDoRastreio.current = points.length;
+      if (!novos.length) return;
+      setSessao((s) => (s && s.pausedSince === null ? { ...s, points: [...s.points, ...novos] } : s));
+    };
+    aplicar(useSportTrackStore.getState().points);
+    return useSportTrackStore.subscribe((state) => aplicar(state.points));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessao !== null]);
 
   /*
    A conclusão estilo Strava: o percurso desenhado por inteiro, ajustado ao
@@ -545,7 +565,7 @@ export function SportScreen() {
                 ? 'sem GPS'
                 : gpsAtivo
                   ? pace ?? 'distância'
-                  : watcher.current
+                  : rastreando
                     ? 'aguardando GPS'
                     : 'sem GPS'
             }
@@ -601,11 +621,6 @@ export function SportScreen() {
         </XStack>
 
         {aviso ? <Data marginTop="$xl">{aviso}</Data> : null}
-        {/* Uma frase, de ESTADO: a limitação operacional desta versão. O resto
-            da explicação (trilha no aparelho, totais no servidor) mora na Ajuda. */}
-        <Data marginTop="$xl" color="$mutedForeground">
-          Mantenha a tela aberta — o GPS desta versão não corre em segundo plano.
-        </Data>
       </DetailScreen>
     );
   }

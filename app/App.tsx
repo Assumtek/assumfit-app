@@ -7,6 +7,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TamaguiProvider, Theme } from '@tamagui/core';
 
 import tamaguiConfig from './tamagui.config';
+// Registra a TAREFA de rastreio de esporte no escopo global — o TaskManager
+// exige que ela exista antes de o SO entregar qualquer lote de localização,
+// inclusive quando o Android religa o serviço com o app morto.
+import './src/services/sport-track';
 import { Navigation } from './src/navigation';
 import { navigate } from './src/navigation/ref';
 import { IntroScreen } from './src/screens/IntroScreen';

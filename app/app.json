@@ -14,7 +14,7 @@
       "bundleIdentifier": "br.com.assumtek.assumfit",
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "O AssumFit usa Bluetooth para ler os dados do seu AssumFit Watch.",
-        "NSLocationWhenInUseUsageDescription": "O AssumFit usa sua localização aproximada apenas para saber a temperatura e a umidade do ambiente, que afetam HRV, frequência cardíaca e sono. A posição não é armazenada.",
+        "NSLocationWhenInUseUsageDescription": "O AssumFit usa sua localização para a temperatura e a umidade do ambiente e, durante uma sessão de esporte, para medir distância e desenhar o percurso — que fica somente no seu aparelho.",
         "UIBackgroundModes": [
           "bluetooth-central"
         ],
@@ -106,6 +106,14 @@
         "expo-audio",
         {
           "microphonePermission": "O AssumFit usa o microfone apenas quando você toca no botão de gravar, para ditar mensagens ao personal e à anamnese. O áudio vira texto e é descartado."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O AssumFit usa sua localização para a temperatura e a umidade do ambiente e, durante uma sessão de esporte, para medir distância e desenhar o percurso — que fica somente no seu aparelho.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
         }
       ]
     ],

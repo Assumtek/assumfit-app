@@ -83,8 +83,8 @@ export function HelpScreen() {
           texto="A trilha de GPS fica só no aparelho em que foi gravada e morre com o registro — para o servidor sobem apenas os totais (tempo, distância, batimento). O story de compartilhar desenha o traçado sem mapa, sem rua e sem endereço."
         />
         <Explica
-          termo="Sessão de tela aberta"
-          texto="Nesta versão o GPS não corre em segundo plano: a distância só é medida com a tela da sessão aberta. Se o app fechar, a sessão concluída fica guardada no aparelho e sobe sozinha na próxima abertura. Sessões de menos de um minuto não entram no histórico."
+          termo="Sessão em segundo plano"
+          texto="Durante uma sessão, o GPS continua medindo com o app atrás ou a tela apagada — no iPhone o sistema mostra o indicador de localização, e no Android uma notificação fixa segura o rastreio; os dois somem quando a sessão termina. Sessões concluídas ficam guardadas no aparelho e sobem sozinhas se a rede faltar. Sessões de menos de um minuto não entram no histórico."
           last
         />
       </Section>
