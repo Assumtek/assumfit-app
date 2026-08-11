@@ -46,6 +46,14 @@ api.assumfit.com.br {
 		rewrite * /suporte.html
 		file_server
 	}
+	# Exclusão de conta: o Google Play EXIGE uma URL pública onde a pessoa peça
+	# a exclusão sem instalar o app — o fluxo dentro do app, que basta para a
+	# Apple, não satisfaz a política deles.
+	@excluir path /excluir-conta
+	handle @excluir {
+		rewrite * /excluir-conta.html
+		file_server
+	}
 	handle {
 		reverse_proxy 127.0.0.1:3001
 	}
