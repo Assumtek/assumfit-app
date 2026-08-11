@@ -180,27 +180,16 @@ export function ProfileScreen() {
         </Section>
       )}
 
-      <Section label="Assinatura">
-        {profile?.subscription ? (
-          <>
-            <Row>
-              <RowLabel>Situação</RowLabel>
-              <RowValue>{subscriptionLabel(profile.subscription.status)}</RowValue>
-            </Row>
-            <Row>
-              <RowLabel>Desde</RowLabel>
-              <RowValue>{formatDate(profile.subscription.startedAt)}</RowValue>
-            </Row>
-            <Row last>
-              <RowLabel>Mensalidade</RowLabel>
-              <RowValue>{money(profile.subscription.priceCents)}</RowValue>
-            </Row>
-          </>
-        ) : (
-          <Body>Nenhuma assinatura registrada nesta conta.</Body>
-        )}
-      </Section>
+      {/*
+        Não há seção de assinatura, e a ausência é deliberada.
 
+        Ela mostrava situação, data e MENSALIDADE em reais — de uma assinatura
+        que nada no produto cria: a linha só nasce no seed, que não roda em
+        produção. Todo usuário real lia "Nenhuma assinatura registrada nesta
+        conta", e a revisão da App Store leu uma tela que fala de mensalidade
+        como sinal de conteúdo pago sem compra dentro do app (2.1(b), ago/2026).
+        Volta quando existir cobrança de verdade para descrever.
+      */}
       <Section label="Consentimentos">
         {profile && profile.consents.length > 0 ? (
           profile.consents.map((consent, i) => (
@@ -275,16 +264,6 @@ function mascaraData(texto: string): string {
   if (digitos.length <= 4) return `${digitos.slice(0, 2)}/${digitos.slice(2)}`;
   return `${digitos.slice(0, 2)}/${digitos.slice(2, 4)}/${digitos.slice(4)}`;
 }
-
-const money = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
-
-const SUBSCRIPTION_LABEL: Record<string, string> = {
-  trialing: 'Em teste',
-  active: 'Ativa',
-  past_due: 'Pagamento atrasado',
-  canceled: 'Cancelada',
-};
-const subscriptionLabel = (status: string) => SUBSCRIPTION_LABEL[status] ?? status;
 
 /**
  * O par rótulo/valor de uma linha de cadastro.

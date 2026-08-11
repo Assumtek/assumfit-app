@@ -1,13 +1,6 @@
-import {
-  ExperienceLevel,
-  GenerationStatus,
-  RiskTier,
-  SubscriptionStatus,
-  TrainingGoal,
-  TrainingLocation,
-} from '@prisma/client';
+import { ExperienceLevel, GenerationStatus, RiskTier, TrainingGoal, TrainingLocation } from '@prisma/client';
 
-import { badRequest, forbidden } from '../../lib/errors';
+import { badRequest } from '../../lib/errors';
 import { logError } from '../../lib/log';
 import { prisma } from '../../lib/prisma';
 import { AgentUnavailable, generate } from './agent.client';
@@ -18,8 +11,8 @@ import { parsePlan, persistPlan } from './plan-persistence';
 import { classify, isReferral } from './risk-tier';
 
 /**
- * O pipeline inteiro: elegibilidade → anamnese → flags → risco → catálogo →
- * geração → gate → persistência.
+ * O pipeline inteiro: anamnese → flags → risco → catálogo → geração → gate →
+ * persistência.
  *
  * Roda FORA do ciclo da requisição. A geração leva de 50 a 120 segundos, e uma
  * rota que segurasse isso estouraria qualquer proxy no caminho. O app abre a
@@ -53,29 +46,21 @@ export function messageFor(reason: string | null): string {
   return (reason && REASON_MESSAGES[reason]) || REASON_MESSAGES.qualidade;
 }
 
-/** Assinatura ativa é o gate de acesso. Não há compra avulsa de treino. */
-async function assertEligible(userId: string): Promise<void> {
-  const subscription = await prisma.subscription.findFirst({
-    where: {
-      userId,
-      status: { in: [SubscriptionStatus.active, SubscriptionStatus.trialing] },
-    },
-  });
-  if (!subscription) {
-    throw forbidden('Geração de treino disponível para assinaturas ativas.');
-  }
-}
-
 /**
  * Abre a requisição de geração e devolve o id imediatamente.
+ *
+ * NÃO há gate de assinatura aqui, e a ausência é deliberada. Existiu um
+ * `assertEligible` que exigia assinatura `active` ou `trialing` — mas nada no
+ * produto cria essa linha: `prisma.subscription.create` só aparece no seed, que
+ * se recusa a rodar em produção. O gate então reprovava TODO usuário real, e o
+ * recurso ficava inacessível para quem quer que instalasse o app. Quando houver
+ * cobrança de verdade, o gate volta com quem cria a assinatura junto.
  *
  * Recusa abrir uma segunda enquanto houver uma em andamento: duas gerações
  * concorrentes produziriam dois planos ativos, e a última a terminar venceria
  * por acidente de ordem.
  */
 export async function requestGeneration(userId: string, feedback?: string): Promise<string> {
-  await assertEligible(userId);
-
   const anamnesis = await prisma.healthAnamnesis.findUnique({ where: { userId } });
   if (!anamnesis) {
     throw badRequest('Responda a anamnese antes de gerar o treino.', 'anamnese_ausente');
