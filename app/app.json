@@ -12,6 +12,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "br.com.assumtek.assumfit",
+      "buildNumber": "2",
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "O AssumFit usa Bluetooth para ler os dados do seu AssumFit Watch.",
         "NSLocationWhenInUseUsageDescription": "O AssumFit usa sua localização para a temperatura e a umidade do ambiente e, durante uma sessão de esporte, para medir distância e desenhar o percurso — que fica somente no seu aparelho.",
@@ -37,11 +38,6 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.BLUETOOTH_SCAN",
-        "android.permission.BLUETOOTH_CONNECT",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.BLUETOOTH",
-        "android.permission.BLUETOOTH_ADMIN",
         "android.permission.BLUETOOTH_SCAN",
         "android.permission.BLUETOOTH_CONNECT",
         "android.permission.ACCESS_COARSE_LOCATION",
