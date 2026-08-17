@@ -37,8 +37,7 @@ async function bloqueio(userId: string, precisaConsentimento: boolean): Promise<
 /**
  * Consentimento do registro de ciclo.
  *
- * Mesmo desenho do `calendar_read`: separado, revogável e com efeito real ao
- * revogar. Aqui revogar APAGA os ciclos registrados — manter o dado depois do
+ * Consentimento separado, revogável e com efeito real ao revogar. Aqui revogar APAGA os ciclos registrados — manter o dado depois do
  * "não" transformaria o consentimento em formalidade, e este é justamente o
  * dado que alguém mais pode querer que suma.
  */

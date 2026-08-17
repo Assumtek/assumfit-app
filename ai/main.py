@@ -20,6 +20,7 @@ from models.correlations import sleep_onset_vs_next_hrv, steps_vs_deep_sleep, wa
 from models.insight import DayContext, build as build_insight, day_notes
 from models.insight_llm import Facts, write as write_insight
 from models.lifestyle import Lifestyle, chronotype_from, circadian_shift
+from models.morning import MorningFacts, write_morning
 
 app = FastAPI(title="AssumFit AI", version="1.0.0")
 
@@ -66,7 +67,6 @@ class TodayInput(BaseModel):
     steps: int | None = Field(default=None, ge=0, le=200000)
     sport_count: int = Field(default=0, ge=0, le=50)
     last_sport: TodaySportInput | None = None
-    focus_sessions: int = Field(default=0, ge=0, le=100)
     meals_count: int = Field(default=0, ge=0, le=50)
     meals_kcal_mid: int | None = Field(default=None, ge=0, le=50000)
     workout: TodayWorkoutInput | None = None
@@ -122,7 +122,6 @@ def _dia(data: EnergyInput) -> DayContext | None:
         steps=t.steps,
         sport_count=t.sport_count,
         last_sport=(t.last_sport.kind, t.last_sport.minutes) if t.last_sport else None,
-        focus_sessions=t.focus_sessions,
         meals_count=t.meals_count,
         meals_kcal_mid=t.meals_kcal_mid,
         workout=(t.workout.name, t.workout.done) if t.workout else None,
@@ -197,14 +196,60 @@ def energy_insight(data: EnergyInput) -> dict:
     }
 
 
+class MorningInput(BaseModel):
+    """Os fatos da manhã seguinte, apurados pelo backend e pelo app."""
+
+    temperature_c: int = Field(ge=-30, le=60)
+    humidity_pct: int = Field(ge=0, le=100)
+    trains_tomorrow: bool = False
+    workout_name: str | None = Field(default=None, max_length=120)
+    streak_days: int = Field(default=0, ge=0, le=3650)
+    city: str | None = Field(default=None, max_length=80)
+
+
+@app.post("/insights/morning")
+def morning(data: MorningInput) -> dict:
+    """O texto da notificação das 7h30 — redigido pelo modelo, com molde de reserva.
+
+    Devolve `source` para o chamador saber o que recebeu: numa notificação
+    agendada, "veio do molde" e "veio do modelo" são indistinguíveis na tela, e
+    sem esse campo não há como perceber que o LLM parou de responder.
+    """
+    return write_morning(
+        MorningFacts(
+            temperature_c=data.temperature_c,
+            humidity_pct=data.humidity_pct,
+            trains_tomorrow=data.trains_tomorrow,
+            workout_name=data.workout_name,
+            streak_days=data.streak_days,
+            city=data.city,
+        )
+    )
+
+
 class BioAgeInput(BaseModel):
+    """Entradas da idade biológica.
+
+    `hrv_ms` e `deep_sleep_pct` são opcionais desde a reescrita de ago/2026:
+    sinal ausente sai da média em vez de valer zero. O que virou indispensável
+    é a FC de repouso — sem ela não há aptidão, que é o eixo principal.
+
+    `spo2_pct` e `temp_range_c` continuam aceitos e são IGNORADOS: entravam no
+    cálculo antigo com peso inventado, e não há norma por idade que sustente
+    convertê-los em anos.
+    """
+
     real_age: int = Field(ge=16, le=110)
     sex: Literal["f", "m"]
-    hrv_ms: float = Field(gt=0, le=400)
     resting_hr: float = Field(gt=20, le=240)
-    spo2_pct: float = Field(ge=50, le=100)
-    deep_sleep_pct: float = Field(ge=0, le=1)
-    temp_range_c: float = Field(default=0.7, ge=0, le=10)
+    hrv_ms: float | None = Field(default=None, gt=0, le=400)
+    deep_sleep_pct: float | None = Field(default=None, ge=0, le=1)
+    #: Do peso e da altura declarados na anamnese.
+    bmi: float | None = Field(default=None, ge=10, le=70)
+    #: Minutos de treino do plano concluído + esporte registrado, na semana.
+    weekly_active_min: float | None = Field(default=None, ge=0, le=10_000)
+    spo2_pct: float | None = Field(default=None, ge=50, le=100)
+    temp_range_c: float | None = Field(default=None, ge=0, le=10)
 
 
 @app.post("/bioage/calcular")
@@ -214,9 +259,9 @@ def bioage(data: BioAgeInput) -> dict:
         sex=data.sex,
         hrv_ms=data.hrv_ms,
         resting_hr=data.resting_hr,
-        spo2_pct=data.spo2_pct,
         deep_sleep_pct=data.deep_sleep_pct,
-        temp_range_c=data.temp_range_c,
+        bmi=data.bmi,
+        weekly_active_min=data.weekly_active_min,
     ).to_dict()
 
 

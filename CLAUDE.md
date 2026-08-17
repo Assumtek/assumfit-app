@@ -66,7 +66,7 @@ quando muda dependência nativa ou `app.json` — mudança de JS chega por Metro
 ### Deep links
 
 Toda tela tem rota (`assumfit://bioage`, `assumfit://hrv`, `assumfit://sono`,
-`assumfit://agenda`, `assumfit://foco`, `assumfit://perfil`,
+`assumfit://perfil`,
 `assumfit://configuracoes`…), declaradas em `navigation/index.tsx`. Servem para
 notificação abrir a tela certa e, no desenvolvimento, para pular direto:
 
@@ -463,21 +463,6 @@ O endereço da API vai fixado no build por perfil do `eas.json`. Sem
 `EXPO_PUBLIC_API_URL`, um build de produção **não compila** em vez de apontar
 para localhost em silêncio.
 
-## Agenda de terceiros
-
-Google e Outlook entram por OAuth do lado do SERVIDOR — o refresh token nunca
-chega ao aparelho. Três regras:
-
-- **Nenhum evento é persistido.** Busca no provedor, normaliza e descarta. Uma
-  agenda carrega nome e horário de reunião de gente que não é assinante.
-- **Participante vira contagem, nunca lista.** O produto precisa saber se é
-  reunião de oito pessoas; não precisa saber quem são.
-- **Consentimento próprio** (`calendar_read`), separado do de biometria e
-  revogável. Revogar apaga as conexões junto.
-
-Os tokens ficam cifrados em AES-256-GCM (`lib/crypto.ts`) com chave fora do
-banco: são credencial de outro serviço, e revogar a nossa sessão não os invalida.
-
 ## Onboarding e perfil de rotina
 
 As perguntas se RAMIFICAM: quem responde "não pratico atividade" nunca vê "em
@@ -498,7 +483,7 @@ presente.
 
 ## Escopo médico
 
-O produto é de bem-estar e produtividade, **não é dispositivo médico**. Não há diagnóstico, alerta clínico nem recomendação de tratamento em nenhuma tela.
+O produto é de esporte, bem-estar e autoconhecimento, **não é dispositivo médico**. Não há diagnóstico, alerta clínico nem recomendação de tratamento em nenhuma tela. (Desde ago/2026 a home incentiva treino e recuperação, não produtividade — ver PRODUCT.md § Reposicionamento.)
 
 O disclaimer e as explicações de método moram na tela de **Ajuda** ("Isto não é
 um exame", pressão como tendência, de onde vem cada número) — decisão de

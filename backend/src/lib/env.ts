@@ -28,25 +28,8 @@ const schema = z.object({
   /** Origens de navegador liberadas, separadas por vírgula. */
   CORS_ORIGINS: z.string().default(''),
 
-  /** URL pública desta API. Compõe o `redirect_uri` do OAuth. */
+  /** URL pública desta API — entra nos links que saem daqui. */
   PUBLIC_URL: z.string().url().default('http://localhost:3001'),
-
-  /**
-   * Chave de 32 bytes em hexadecimal para cifrar credencial de terceiros.
-   *
-   * Token de calendário é credencial de OUTRO serviço: com ele, quem obtiver o
-   * banco lê a agenda das pessoas fora do nosso sistema, e revogar a nossa
-   * sessão não resolve. Por isso vai cifrado, com chave que não mora no banco.
-   */
-  CALENDAR_ENCRYPTION_KEY: z
-    .string()
-    .regex(/^[0-9a-fA-F]{64}$/, 'CALENDAR_ENCRYPTION_KEY precisa ser 32 bytes em hexadecimal')
-    .optional(),
-
-  GOOGLE_CLIENT_ID: z.string().optional(),
-  GOOGLE_CLIENT_SECRET: z.string().optional(),
-  MICROSOFT_CLIENT_ID: z.string().optional(),
-  MICROSOFT_CLIENT_SECRET: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -97,8 +80,3 @@ if (env.NODE_ENV === 'production') {
   }
 }
 
-/** Um provedor de calendário só existe se as credenciais dele existirem. */
-export const calendarEnabled = {
-  google: Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.CALENDAR_ENCRYPTION_KEY),
-  microsoft: Boolean(env.MICROSOFT_CLIENT_ID && env.MICROSOFT_CLIENT_SECRET && env.CALENDAR_ENCRYPTION_KEY),
-};

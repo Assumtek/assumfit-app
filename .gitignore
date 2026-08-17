@@ -29,3 +29,7 @@ app/assets/brand/Manual-de-Marca-Assumfit.pdf
 *.ipa
 # scaffold antigo na raiz — o projeto iOS de verdade é gerado em app/ios
 /ios/
+
+# ferramentas locais de IA (config de máquina, não do produto)
+.claude/
+.impeccable/

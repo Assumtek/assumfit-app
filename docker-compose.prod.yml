@@ -93,12 +93,14 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       PUBLIC_URL: ${PUBLIC_URL}
+      # Ditado por voz (S3 + Transcribe). Sem estas, o backend responde 503 em
+      # /transcribe/* e o app avisa que o ditado está indisponível — a lista de
+      # environment é explícita, então variável fora dela NÃO chega ao contêiner.
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION:-sa-east-1}
+      AUDIO_BUCKET: ${AUDIO_BUCKET:-assumfit-audio}
       CORS_ORIGINS: ${CORS_ORIGINS:-}
-      CALENDAR_ENCRYPTION_KEY: ${CALENDAR_ENCRYPTION_KEY:-}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
-      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET:-}
     # A migration do Timescale é SQL escrito à mão e não está no histórico do
     # Prisma; `migrate deploy` aplica o resto. Falhar aqui impede o servidor de
     # subir com schema defasado, que é o comportamento desejado.

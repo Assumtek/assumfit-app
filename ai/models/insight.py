@@ -49,7 +49,6 @@ class DayContext:
     sport_count: int = 0
     #: (modalidade, minutos) do último esporte de hoje.
     last_sport: tuple[str, int] | None = None
-    focus_sessions: int = 0
     meals_count: int = 0
     meals_kcal_mid: int | None = None
     #: (nome do treino do plano para hoje, já feito?).
@@ -81,9 +80,6 @@ def day_notes(today: DayContext | None, hour: int) -> str | None:
         notas.append(f"{today.meals_count} {plural} (~{today.meals_kcal_mid} kcal)")
     elif today.meals_count == 0 and hour >= 13:
         notas.append("nenhuma refeição registrada hoje")
-    if today.focus_sessions > 0:
-        plural = "sessão de foco concluída" if today.focus_sessions == 1 else "sessões de foco concluídas"
-        notas.append(f"{today.focus_sessions} {plural}")
     return "; ".join(notas[:4]) if notas else None
 
 
@@ -156,21 +152,26 @@ WEAK_NORM = 0.40
 #: Simétrico: só é elogio se o sinal estiver realmente forte.
 STRONG_NORM = 0.60
 
+# REPOSICIONAMENTO (ago/2026, decisão da fundadora): o score fala PRONTIDÃO
+# para treinar, não energia para produzir. A home incentiva esporte, movimento
+# e recuperação; foco e agenda SAÍRAM do produto (ago/2026) e nunca voltam como ação
+# sugerida. O espelho offline disto é `app/src/domain/energy.ts` — mudou aqui,
+# muda lá.
 HEADLINES: dict[Level, str] = {
-    "high": "Você está no seu melhor momento",
-    "mid": "Bom para reuniões e revisões",
-    "low": "Seu corpo pede uma pausa",
+    "high": "Corpo pronto para treinar forte",
+    "mid": "Bom momento para movimento leve",
+    "low": "Seu corpo pede recuperação",
 }
 
 EYEBROWS: dict[Level, str] = {
-    "high": "seu estado agora",
-    "mid": "hora de tarefas leves",
+    "high": "pronto para treinar",
+    "mid": "bom para se mover",
     "low": "hora de recuperar",
 }
 
 ACTIONS: dict[Level, Action] = {
-    "high": Action("play", "Iniciar sessão de foco"),
-    "mid": Action("calendar", "Abrir agenda"),
+    "high": Action("dumbbell", "Abrir o treino de hoje"),
+    "mid": Action("footprints", "Registrar um esporte"),
     "low": Action("drop", "Beber água agora"),
 }
 
@@ -193,9 +194,9 @@ LIFT_TEXT = {
 }
 
 ADVICE: dict[Level, str] = {
-    "high": "Reserve a janela para o que exige concentração contínua.",
-    "mid": "Bom momento para alinhar pendências e responder mensagens.",
-    "low": "Evite decisões importantes e reserve o horário para tarefas leves.",
+    "high": "Aproveite a janela para treinar ou praticar seu esporte com intensidade.",
+    "mid": "Caminhada, mobilidade ou um esporte tranquilo servem bem agora.",
+    "low": "Deixe a intensidade para amanhã: água, movimento leve e um sono cedo valem mais agora.",
 }
 
 
@@ -310,12 +311,12 @@ def build(
         ctx = personalize(lifestyle, level=level, hour=hour, weekday=weekday, curve=energy.curve)
 
     # Dia de treino com energia baixa troca a AÇÃO, não só o texto: mandar
-    # "iniciar sessão de foco" para quem precisa decidir se treina ou não é
+    # "iniciar sessão de foco" (recurso extinto em ago/2026) para quem precisa decidir se treina ou não era
     # responder outra pergunta.
     #
     # Com o contexto do DIA, a ação deixa de ser função só da faixa: treino do
-    # plano pendente vale mais que "abrir agenda", e uma tarde parada pede
-    # movimento antes de pedir foco. A ordem é deliberada — descanso (fisiologia)
+    # plano pendente vale mais que qualquer conselho de agenda, e uma tarde
+    # parada pede movimento. A ordem é deliberada — descanso (fisiologia)
     # vence tudo; depois o compromisso assumido (treino); depois o corpo parado;
     # por fim o registro do dia.
     action = ACTIONS[level]
@@ -330,6 +331,12 @@ def build(
             action = Action("footprints", "Registrar um esporte")
         elif today.meals_count == 0 and 12 <= hour <= 21:
             action = Action("flame", "Registrar refeição")
+        elif action.key == "dumbbell" and today.workout is not None and today.workout[1]:
+            # O padrão da faixa alta é o treino — mas reabrir um treino já
+            # concluído não é a próxima ação de ninguém. Existe desde que o
+            # reposicionamento trocou a antiga "sessão de foco" pelo treino;
+            # antes o conflito não tinha como acontecer.
+            action = Action("footprints", "Registrar um esporte")
 
     return HomeInsight(
         eyebrow=EYEBROWS[level],

@@ -48,7 +48,6 @@ export function Sidebar() {
   const avatarUri = useUserStore((s) => s.avatarUri);
   const water = useHabitsStore((s) => s.today.waterMl);
   const waterGoal = useHabitsStore((s) => s.goalMl);
-  const focusSessions = useHabitsStore((s) => s.today.focusSessions);
 
   const slide = useRef(new Animated.Value(0)).current;
 
@@ -199,19 +198,13 @@ export function Sidebar() {
             />
           ) : null}
 
+          {/*
+            Esporte, refeições e água: o que o reposicionamento de ago/2026
+            deixou na rotina. Sessão de foco e agenda de terceiros SAÍRAM do
+            produto (ago/2026) — o app é de esporte, bem-estar e recuperação,
+            e produtividade não era o assunto nem no menu.
+          */}
           <SectionLabel>Rotina</SectionLabel>
-          <Entry
-            name="Agenda do dia"
-            detail="janelas de energia"
-            active={current === 'Agenda'}
-            onPress={() => go('Agenda')}
-          />
-          <Entry
-            name="Sessão de foco"
-            detail={focusSessions === 0 ? 'nenhuma hoje' : `${focusSessions} hoje`}
-            active={current === 'Focus'}
-            onPress={() => go('Focus')}
-          />
           <Entry
             name="Esporte"
             detail="musculação, corrida e mais"

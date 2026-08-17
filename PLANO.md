@@ -15,14 +15,12 @@
 | App — autenticação | ✅ login, cadastro, consentimento LGPD, Keychain |
 | App — tema claro/escuro | ✅ sistema/claro/escuro, persistido; exige rebuild para “sistema” valer |
 | App — perfil e configurações | ✅ cadastro editável, assinatura, consentimentos, sair, excluir conta |
-| App — agenda e sessão de foco | ✅ grade de horas e pomodoro calibrado pela energia |
 | Backend — API e banco | ✅ testado por `curl`: auth, ingest idempotente, séries, baseline |
 | Integração app ↔ backend | ✅ fila de sincronização testada; falta exercitar pela interface |
 | Serviço de IA (Python) | ✅ energia, bio age, cronótipo, correlações, insight da home — 37 testes |
 | IA no caminho do usuário | ✅ home consome `/insights/energy`; job horário grava `energy_scores` e `bio_age_scores` |
 | Onboarding de rotina | ✅ perguntas ramificadas, perfil alimentando o modelo |
 | Testes | ✅ 81 no app, 1961 no serviço de IA (personas × 24h), incluindo paridade TS↔Python |
-| Agenda Google e Outlook | ✅ OAuth no servidor, tokens cifrados, consentimento próprio — falta credencial do Google Cloud e do Azure |
 | Preparo de produção | ✅ compose de prod, TLS por Caddy, Redis, backup verificado, imagem sem toolchain, encerramento gracioso |
 | LGPD | ✅ consentimento por finalidade, exclusão real, **exportação de dados** (Art. 18 II e V) |
 | Seed | ✅ 5 perfis fisiológicos, 30 dias, ~42 mil leituras |
@@ -67,8 +65,8 @@ pedir a documentação ao Tianpengyu, que faz ODM e deve ter SDK.
 **Ainda depende de hardware:** SpO₂ e temperatura (subtipos a confirmar) e
 validação do batimento contra um Polar H10.
 
-**Depende de decisão ou credencial:** integração de calendário (OAuth), cobrança
-de assinatura, HealthKit e Health Connect.
+**Depende de decisão ou credencial:** cobrança de assinatura, HealthKit e
+Health Connect.
 
 **Clima ambiente — feito, com ressalvas.** `GET /weather` busca temperatura,
 umidade e sensação térmica por coordenada, com cache de 30 min por célula de

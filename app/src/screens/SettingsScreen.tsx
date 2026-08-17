@@ -5,7 +5,6 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Linking, Pressable } from 'react-native';
 
 import { Row, Section } from '../components/Card';
-import { Checkbox } from '../components/Field';
 import { DetailScreen } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
 import { ThemeSwitch } from '../components/ThemeSwitch';
@@ -17,16 +16,10 @@ import { isHealthAvailable } from '../services/health.service';
 import { usingSecureStorage } from '../services/tokenStorage';
 import { useAuthStore } from '../store/auth.store';
 import { useBiometricStore } from '../store/biometric.store';
-import { useCalendarStore } from '../store/calendar.store';
 import { useUserStore } from '../store/user.store';
 import { useTheme } from '../theme/ThemeProvider';
 
 const APP_VERSION = '1.0.0';
-
-const PROVIDER_LABEL: Record<string, string> = {
-  google: 'Google Agenda',
-  microsoft: 'Outlook',
-};
 
 /**
  * Configurações.
@@ -48,17 +41,6 @@ export function SettingsScreen() {
   const connectHealth = useBiometricStore((s) => s.connectHealth);
   const [busy, setBusy] = useState(false);
 
-  const connections = useCalendarStore((s) => s.connections);
-  const consented = useCalendarStore((s) => s.consented);
-  const loadCalendar = useCalendarStore((s) => s.load);
-  const grantConsent = useCalendarStore((s) => s.grantConsent);
-  const connect = useCalendarStore((s) => s.connect);
-  const disconnect = useCalendarStore((s) => s.disconnect);
-
-  // Recarrega ao voltar do navegador: o deep link do OAuth aterrissa aqui.
-  useEffect(() => {
-    void loadCalendar();
-  }, [loadCalendar]);
 
   const confirmSignOut = () =>
     Alert.alert('Sair da conta', 'Você precisará entrar de novo neste aparelho.', [
@@ -156,51 +138,6 @@ export function SettingsScreen() {
         <LinkRow label="Ver consentimentos" onPress={() => (navigation as any).push('Profile' as never)} />
         <LinkRow label="Permissões do sistema" onPress={() => void Linking.openSettings()} />
       </Section>
-
-      <Section label="Agenda">
-        {connections?.available.length ? (
-          <>
-            <Checkbox
-              checked={consented}
-              onToggle={() => void grantConsent(!consented)}
-              title="Ler minha agenda"
-              body="Permite cruzar seus compromissos com a curva de energia do dia. Os eventos não são guardados: são buscados na hora e descartados. Quem participa das reuniões nunca é enviado — só quantas pessoas."
-            />
-
-            {consented
-              ? connections.available.map((provider) => {
-                  const account = connections.connected.find((c) => c.provider === provider);
-                  return (
-                    <Row key={provider} last={provider === connections.available.at(-1)}>
-                      <YStack flex={1} gap="$xs">
-                        <RowLabel>{PROVIDER_LABEL[provider]}</RowLabel>
-                        {account ? <Data>{account.accountEmail}</Data> : null}
-                      </YStack>
-                      <Pressable
-                        onPress={() =>
-                          void (account ? disconnect(provider) : connect(provider)).catch(() =>
-                            Alert.alert('Não foi possível', 'Confira a conexão e tente de novo.'),
-                          )
-                        }
-                        hitSlop={8}
-                        accessibilityRole="button"
-                      >
-                        <Text fontSize={15} color={account ? '$destructive' : '$foreground'}>
-                          {account ? 'Desconectar' : 'Conectar'}
-                        </Text>
-                      </Pressable>
-                    </Row>
-                  );
-                })
-              : null}
-          </>
-        ) : (
-          <Body>
-            A integração com Google Agenda e Outlook não está configurada neste ambiente.
-          </Body>
-        )}
-      </Section>
-
 
       <Section label="Conta">
         <LinkRow label="Sair da conta" onPress={confirmSignOut} arrow={false} />

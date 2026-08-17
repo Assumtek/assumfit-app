@@ -11,7 +11,7 @@ import { prisma } from '../lib/prisma';
  * Contagem de calorias por foto — o desenho do MUVX no nosso serviço de IA.
  *
  * A FOTO não é armazenada em lugar nenhum: sobe, é analisada e morre no
- * caminho — mesmo contrato dos eventos de agenda. O que persiste é o
+ * caminho — analisa e descarta. O que persiste é o
  * resultado: alimentos, porções e a faixa de calorias, que é o que a tela de
  * histórico precisa.
  */

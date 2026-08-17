@@ -51,7 +51,6 @@ Números de preço, payback e frete ainda não estão definidos — ver [PLANO.m
 - **ORM:** Prisma
 - **Banco:** PostgreSQL 16 + TimescaleDB
 - **Auth:** JWT + refresh tokens
-- **Calendário:** Google Calendar API + Microsoft Graph (Outlook)
 
 ### Modelo de IA
 
@@ -274,16 +273,6 @@ CREATE TABLE bio_age_scores (
 );
 
 -- Sessões de produtividade
-CREATE TABLE productivity_sessions (
-  id                     BIGSERIAL PRIMARY KEY,
-  user_id                UUID NOT NULL,
-  type                   TEXT NOT NULL,
-  started_at             TIMESTAMPTZ NOT NULL,
-  ended_at               TIMESTAMPTZ,
-  duration_min           INT,
-  energy_score_at_start  FLOAT
-);
-
 -- Hábitos diários
 CREATE TABLE daily_habits (
   id             BIGSERIAL PRIMARY KEY,
@@ -291,7 +280,6 @@ CREATE TABLE daily_habits (
   date           DATE NOT NULL,
   water_ml       INT DEFAULT 0,
   sleep_score    FLOAT,
-  focus_sessions INT DEFAULT 0,
   UNIQUE (user_id, date)
 );
 ```
@@ -318,17 +306,6 @@ CREATE TABLE daily_habits (
 | **Idade biológica**     | Bio age vs. real, breakdown por fator, ação principal, tendência 30d | ✅ mockup |
 
 **Sidebar (menu hamburguer):** acesso a todas as telas com valores ao vivo e badges de avaliação.
-
-### App de produtividade (`assumfit-productivity.html`)
-
-| Tela     | Conteúdo                                                                |
-| -------- | ----------------------------------------------------------------------- |
-| Hoje     | Card hero de ação, linha do tempo do dia, check de humor                |
-| Energia  | Arc gauge 0–100, barras por hora, blocos do dia com justificativa       |
-| Hábitos  | Tracker de água, anéis de progresso, correlações descobertas            |
-| Padrões  | Gráfico semanal energia × HRV, correlações automáticas, ranking de horários |
-
----
 
 ## Design system — minimalismo clínico
 
@@ -458,7 +435,6 @@ assumfit/
 │   │   ├── services/
 │   │   │   ├── ble.service.ts        # Staranb BLE GATT
 │   │   │   ├── healthkit.service.ts  # Apple Health / Health Connect
-│   │   │   ├── calendar.service.ts   # Google + Outlook
 │   │   │   └── api.service.ts        # Backend HTTP
 │   │   ├── store/
 │   │   │   ├── biometric.store.ts    # HRV, FC, SpO₂, temp, BP, stress
@@ -481,7 +457,6 @@ assumfit/
 │   │   ├── services/
 │   │   │   ├── energy.service.ts     # Chama modelo Python
 │   │   │   ├── bioage.service.ts     # Chama modelo Python ← novo
-│   │   │   └── calendar.service.ts
 │   │   └── prisma/schema.prisma
 │   └── package.json
 │
@@ -604,10 +579,6 @@ DATABASE_URL=postgresql://assumfit:assumfit_dev@localhost:5432/assumfit
 JWT_SECRET=
 JWT_EXPIRES_IN=7d
 AI_SERVICE_URL=http://localhost:8000
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-MICROSOFT_CLIENT_ID=
-MICROSOFT_CLIENT_SECRET=
 
 # app/.env
 EXPO_PUBLIC_API_URL=http://localhost:3001
@@ -620,8 +591,6 @@ EXPO_PUBLIC_AI_URL=http://localhost:8000
 
 | Serviço              | Para que                            | Onde configurar          |
 | -------------------- | ----------------------------------- | ------------------------ |
-| Google Calendar API  | Leitura de eventos, bloqueio de agenda | console.cloud.google.com |
-| Microsoft Graph      | Outlook + Teams Calendar            | portal.azure.com         |
 | Apple HealthKit      | Dados de saúde iOS                  | Xcode → Capabilities     |
 | Google Health Connect| Dados de saúde Android              | Google Play Console      |
 
@@ -697,8 +666,6 @@ Abrir para o público.
 - [ ] Modelo Python de score de energia (FastAPI)
 - [ ] Cronótipo individual (7+ dias de dados)
 - [ ] Linha do tempo do dia gerada por IA
-- [ ] Google Calendar API + Microsoft Graph
-- [ ] Labels de energia nos eventos da agenda
 - [ ] Idade biológica com curvas de referência reais e persistência
 - [ ] Tracker de água e hábitos com persistência
 - [ ] Notificações inteligentes (água, pausa, horário de dormir)
@@ -727,7 +694,6 @@ Crescer a base e segurar a retenção.
 Protótipos interativos — usar como referência fiel para o React Native:
 
 - [`mockups/assumfit-app.html`](mockups/assumfit-app.html) — app de leitura biométrica com sidebar e todas as 9 telas de saúde + bio age
-- `mockups/assumfit-productivity.html` — app de produtividade com coach de ações _(pendente)_
 
 **Regra de ouro do design:** qualquer número técnico (HRV em ms, SpO₂ em %) aparece como sub-label. O destaque visual é sempre a avaliação em linguagem humana (Excelente, Bom, Pode melhorar).
 

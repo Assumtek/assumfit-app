@@ -85,23 +85,11 @@ export function HelpScreen() {
         />
         <Explica
           termo="Onde o percurso mora"
-          texto="A trilha de GPS fica só no aparelho em que foi gravada e morre com o registro — para o servidor sobem apenas os totais (tempo, distância, batimento). O story de compartilhar desenha o traçado sem mapa, sem rua e sem endereço."
+          texto="O percurso das sessões com GPS é reduzido no próprio aparelho (menos pontos, precisão de metros) antes de ser guardado no seu histórico — é ele que desenha o mapa da sessão em qualquer aparelho. Apagar a conta apaga os percursos junto. O story de compartilhar desenha o traçado sem mapa, sem rua e sem endereço."
         />
         <Explica
           termo="Sessão em segundo plano"
           texto="Durante uma sessão, o GPS continua medindo com o app atrás ou a tela apagada — no iPhone o sistema mostra o indicador de localização, e no Android uma notificação fixa segura o rastreio; os dois somem quando a sessão termina. Sessões concluídas ficam guardadas no aparelho e sobem sozinhas se a rede faltar. Sessões de menos de um minuto não entram no histórico."
-          last
-        />
-      </Section>
-
-      <Section label="Agenda e janelas de energia">
-        <Explica
-          termo="Janelas de energia"
-          texto="A grade do dia é a sua curva de energia projetada hora a hora a partir da última leitura da pulseira: janela alta para o trabalho difícil, média para reuniões e revisão, baixa para recuperar. A projeção se ajusta ao longo do dia, conforme novas medições chegam — o horário da leitura usada aparece no topo da tela."
-        />
-        <Explica
-          termo="Compromissos"
-          texto="Com Google Agenda ou Outlook conectados, as reuniões entram na mesma régua de horas — a barrinha de cada uma mostra em que janela ela cai. Os eventos são lidos no provedor na hora e nunca guardados; participantes viram contagem, nunca lista de nomes."
           last
         />
       </Section>
@@ -144,7 +132,7 @@ export function HelpScreen() {
 
       <Note
         title="Isto não é um exame"
-        body="O AssumFit é um produto de bem-estar e produtividade, não um dispositivo médico. Nenhum número aqui serve para diagnosticar, monitorar doença ou decidir tratamento. Se alguma coisa te preocupar, leve a um profissional de saúde — e leve a pergunta, não a tela."
+        body="O AssumFit é um produto de esporte, bem-estar e autoconhecimento, não um dispositivo médico. Nenhum número aqui serve para diagnosticar, monitorar doença ou decidir tratamento. Se alguma coisa te preocupar, leve a um profissional de saúde — e leve a pergunta, não a tela."
       />
     </DetailScreen>
   );

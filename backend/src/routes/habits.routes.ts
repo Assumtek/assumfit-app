@@ -13,7 +13,6 @@ const upsertSchema = z.object({
   waterMl: z.number().int().min(0).max(10000).optional(),
   sleepScore: z.number().min(0).max(100).optional(),
   sleepMinutes: z.number().int().min(0).max(1440).optional(),
-  focusSessions: z.number().int().min(0).max(50).optional(),
   mood: z.enum(['great', 'ok', 'tired', 'bad']).optional(),
 });
 

@@ -96,12 +96,13 @@ class TestCalibracao:
 
 class TestAcao:
     def test_a_acao_acompanha_a_faixa(self):
-        assert at(9)[1].action.key == "play"
+        # Reposicionamento: faixa alta manda TREINAR, não focar.
+        assert at(9)[1].action.key == "dumbbell"
         assert at(3, hrv_ms=30, hrv_baseline=65)[1].action.key == "drop"
 
     def test_a_acao_e_uma_das_rotas_que_o_app_conhece(self):
         for hour in range(24):
-            assert at(hour)[1].action.key in {"play", "calendar", "drop"}
+            assert at(hour)[1].action.key in {"dumbbell", "footprints", "drop"}
 
 
 class TestSinalAusente:
@@ -173,7 +174,7 @@ class TestContextoDoDia:
 
     def test_sem_contexto_mantem_a_acao_da_faixa(self):
         insight = self._com_dia(10, None, hrv_ms=70, hrv_baseline=62)
-        assert insight.action.key in {"play", "calendar", "drop"}
+        assert insight.action.key in {"dumbbell", "footprints", "drop"}
 
 
 class TestNotasDoDia:
@@ -186,7 +187,6 @@ class TestNotasDoDia:
                 last_sport=("corrida", 32),
                 meals_count=2,
                 meals_kcal_mid=1150,
-                focus_sessions=1,
                 workout=("Costas e bíceps", False),
             ),
             hour=15,

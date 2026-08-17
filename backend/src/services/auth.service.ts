@@ -238,7 +238,7 @@ export async function updateProfile(
  * de uma vez".
  */
 export async function exportData(userId: string, since: Date, until: Date) {
-  const [user, readings, energyScores, bioAgeScores, habits, sessions] = await Promise.all([
+  const [user, readings, energyScores, bioAgeScores, habits] = await Promise.all([
     profile(userId),
     prisma.biometricReading.findMany({
       where: { userId, recordedAt: { gte: since, lte: until } },
@@ -270,12 +270,7 @@ export async function exportData(userId: string, since: Date, until: Date) {
     prisma.dailyHabit.findMany({
       where: { userId, date: { gte: since, lte: until } },
       orderBy: { date: 'asc' },
-      select: { date: true, waterMl: true, sleepScore: true, focusSessions: true, mood: true },
-    }),
-    prisma.productivitySession.findMany({
-      where: { userId, startedAt: { gte: since, lte: until } },
-      orderBy: { startedAt: 'asc' },
-      select: { type: true, startedAt: true, endedAt: true, durationMin: true, energyScoreAtStart: true },
+      select: { date: true, waterMl: true, sleepScore: true, mood: true },
     }),
   ]);
 
@@ -290,16 +285,11 @@ export async function exportData(userId: string, since: Date, until: Date) {
       energyScores: energyScores.length,
       bioAgeScores: bioAgeScores.length,
       dailyHabits: habits.length,
-      focusSessions: sessions.length,
     },
     biometricReadings: readings,
     energyScores,
     bioAgeScores,
     dailyHabits: habits,
-    focusSessions: sessions,
-    // Evento de calendário nunca é guardado, então não há o que exportar. Dito
-    // explicitamente para o arquivo não parecer incompleto.
-    calendarEvents: 'não armazenados — buscados no provedor a cada consulta e descartados',
   };
 }
 
