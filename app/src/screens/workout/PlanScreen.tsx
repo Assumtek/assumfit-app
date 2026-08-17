@@ -7,7 +7,7 @@ import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
 import { Button, Card, Data, HeroCard, Pill, PillText, SectionTitle } from '../../components/ui';
 import { QuickMenu } from './QuickMenu';
-import { DAY_LABEL, WEEK_ORDER, workoutMeta } from '../../domain/workout';
+import { DAY_LABEL, WEEK_ORDER, isSportDay, modalityMeta, workoutMeta } from '../../domain/workout';
 import { useWorkoutStore } from '../../store/workout.store';
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -169,9 +169,27 @@ export function PlanScreen() {
                         <Text fontSize={15} fontWeight="700" color="$foreground" numberOfLines={1}>
                           {entry!.workout!.name}
                         </Text>
-                        <Data numberOfLines={1}>
-                          {workoutMeta(entry!.workout!.muscleGroups, entry!.workout!.exerciseCount)}
-                        </Data>
+                        {/* Dia de esporte fala a língua do esporte: ícone da
+                            modalidade e blocos, não grupos musculares. */}
+                        {isSportDay(entry!.workout!.modality) ? (
+                          <XStack alignItems="center" gap="$sm">
+                            <Icon
+                              name={modalityMeta(entry!.workout!.modality).icon as never}
+                              size={13}
+                              color={colors.textMuted}
+                            />
+                            <Data numberOfLines={1}>
+                              {modalityMeta(entry!.workout!.modality).label}
+                              {' · '}
+                              {entry!.workout!.exerciseCount}{' '}
+                              {entry!.workout!.exerciseCount === 1 ? 'bloco' : 'blocos'}
+                            </Data>
+                          </XStack>
+                        ) : (
+                          <Data numberOfLines={1}>
+                            {workoutMeta(entry!.workout!.muscleGroups, entry!.workout!.exerciseCount)}
+                          </Data>
+                        )}
                       </>
                     ) : (
                       <XStack alignItems="center" gap="$sm">

@@ -15,7 +15,7 @@
       "buildNumber": "2",
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "O AssumFit usa Bluetooth para ler os dados do seu AssumFit Watch.",
-        "NSLocationWhenInUseUsageDescription": "O AssumFit usa sua localização para a temperatura e a umidade do ambiente e, durante uma sessão de esporte, para medir distância e desenhar o percurso — que fica somente no seu aparelho.",
+        "NSLocationWhenInUseUsageDescription": "O AssumFit usa sua localização para a temperatura e a umidade do ambiente e, durante uma sessão de esporte, para medir distância e desenhar o percurso das suas sessões de esporte.",
         "UIBackgroundModes": [
           "bluetooth-central"
         ],
@@ -43,6 +43,9 @@
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.BLUETOOTH",
         "android.permission.BLUETOOTH_ADMIN"
+      ],
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW"
       ]
     },
     "web": {
@@ -86,7 +89,8 @@
         {
           "photosPermission": "Para salvar o card do seu treino na galeria.",
           "savePhotosPermission": "Para salvar o card do seu treino na galeria.",
-          "isAccessMediaLocationEnabled": false
+          "isAccessMediaLocationEnabled": false,
+          "granularPermissions": ["photo"]
         }
       ],
       "@bacons/apple-targets",
@@ -95,19 +99,24 @@
         {
           "image": "./assets/splash-icon.png",
           "imageWidth": 200,
-          "backgroundColor": "#0E0A22"
+          "backgroundColor": "#ECE7F4",
+          "dark": {
+            "image": "./assets/splash-icon-dark.png",
+            "backgroundColor": "#0E0A22"
+          }
         }
       ],
       [
         "expo-audio",
         {
-          "microphonePermission": "O AssumFit usa o microfone apenas quando você toca no botão de gravar, para ditar mensagens ao personal e à anamnese. O áudio vira texto e é descartado."
+          "microphonePermission": "O AssumFit usa o microfone apenas quando você toca no botão de gravar, para ditar mensagens ao personal e à anamnese. O áudio vira texto e é descartado.",
+          "enableBackgroundPlayback": false
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "O AssumFit usa sua localização para a temperatura e a umidade do ambiente e, durante uma sessão de esporte, para medir distância e desenhar o percurso — que fica somente no seu aparelho.",
+          "locationWhenInUsePermission": "O AssumFit usa sua localização para a temperatura e a umidade do ambiente e, durante uma sessão de esporte, para medir distância e desenhar o percurso das suas sessões de esporte.",
           "isIosBackgroundLocationEnabled": true,
           "isAndroidForegroundServiceEnabled": true
         }

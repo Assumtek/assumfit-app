@@ -1,11 +1,11 @@
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
 
 import { Note, Row, Section } from '../../components/Card';
 import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
-import { Body, Card, Data, Display, Label, SectionTitle } from '../../components/ui';
+import { Body, Button, Card, Data, Display, Label, SectionTitle } from '../../components/ui';
 import { formatDuration } from '../../domain/workout';
 import { fetchExecutionDetail, type ExecutionDetail } from '../../services/api.service';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -24,6 +24,7 @@ import { PHASE_COLOR, PHASE_NAME, type PhaseType } from './PhaseBar';
  */
 export function ExecutionDetailScreen() {
   const { colors } = useTheme();
+  const navigation = useNavigation();
   const { id } = (useRoute().params ?? {}) as { id?: string };
 
   const [detalhe, setDetalhe] = useState<ExecutionDetail | null>(null);
@@ -188,6 +189,43 @@ export function ExecutionDetailScreen() {
           ) : null}
         </Section>
       ) : null}
+
+      {/*
+        Compartilhar do histórico (decisão da fundadora, ago/2026): quem
+        fechou a conclusão sem compartilhar não perde o cartão. Contagem e
+        volume saem do PRÓPRIO detalhe — só séries completas contam, e volume
+        zero vira omissão no cartão, nunca afirmação.
+      */}
+      <YStack marginTop="$xl">
+        <Button
+          title="Compartilhar treino"
+          variant="secondary"
+          onPress={() => {
+            const exercicios = detalhe.phases.reduce((n, f) => n + f.exercises.length, 0);
+            const volume = detalhe.phases.reduce(
+              (soma, f) =>
+                soma +
+                f.exercises.reduce(
+                  (v, e) =>
+                    v +
+                    e.sets.reduce(
+                      (sv, set) =>
+                        sv + (set.completed ? (set.load ?? 0) * (set.repetitions ?? 0) : 0),
+                      0,
+                    ),
+                  0,
+                ),
+              0,
+            );
+            (navigation as any).push('WorkoutShare', {
+              workoutName: detalhe.workoutName,
+              durationSec: detalhe.durationSec,
+              exercises: exercicios > 0 ? exercicios : null,
+              volumeKg: volume > 0 ? Math.round(volume) : null,
+            });
+          }}
+        />
+      </YStack>
     </DetailScreen>
   );
 }

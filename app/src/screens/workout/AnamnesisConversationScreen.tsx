@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -12,18 +12,21 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
 import { VoiceInput } from '../../components/VoiceInput';
 import { Body, Button, Card, Data, Label, SectionTitle } from '../../components/ui';
 import {
   answerInterview,
   editInterviewAnswer,
+  fetchWorkoutConsent,
   finalizeInterview,
   startInterview,
   type InterviewState,
   type InterviewTurn,
 } from '../../services/api.service';
 import { useTheme } from '../../theme/ThemeProvider';
+import { WorkoutConsentGate } from './WorkoutConsentGate';
 
 /**
  * Anamnese conversacional — fluxo portado do MUVX, peça por peça.
@@ -70,7 +73,15 @@ export function AnamnesisConversationScreen() {
   /** Falas que já rodaram o efeito de máquina — anima UMA vez, nunca de novo. */
   const animadas = useRef(new Set<number>());
 
-  useEffect(() => {
+  /**
+   * A permissão vem ANTES da conversa: `verificando` segura a tela,
+   * `pendente` mostra o pedido, `dado` inicia a entrevista. O consentimento
+   * morava só no fluxo de formulário, e este começava direto — a produção
+   * barrava com 403 e a tela culpava a conexão.
+   */
+  const [consentimento, setConsentimento] = useState<'verificando' | 'pendente' | 'dado'>('verificando');
+
+  const iniciar = useCallback(() => {
     startInterview()
       .then((s) => {
         /*
@@ -87,8 +98,43 @@ export function AnamnesisConversationScreen() {
         }
         setEstado(s);
       })
-      .catch(() => setErro('Não foi possível começar a anamnese. Confira a conexão.'));
+      .catch((err) => {
+        /*
+         O motivo VAI para a tela e para o log. O catch mudo tratava sessão
+         vencida, servidor em erro e rede ausente como a mesma frase — e cada
+         um pede uma ação diferente de quem está com o telefone na mão.
+        */
+        const status: number | undefined = err?.response?.status;
+        console.warn('[anamnese] início falhou:', status ?? err?.message ?? String(err));
+        setErro(
+          status === 401
+            ? 'Sua sessão expirou. Entre de novo para começar a anamnese.'
+            : status === 403
+              ? 'Falta o consentimento de dados de saúde. Volte e toque em "Concordo, pode perguntar".'
+              : status != null
+                ? `O servidor não conseguiu iniciar a anamnese (erro ${status}). Tente de novo em instantes.`
+                : 'Não foi possível começar a anamnese. Confira a conexão.',
+        );
+      });
   }, []);
+
+  useEffect(() => {
+    fetchWorkoutConsent()
+      .then((granted) => {
+        if (granted) {
+          setConsentimento('dado');
+          iniciar();
+        } else {
+          setConsentimento('pendente');
+        }
+      })
+      .catch(() => {
+        // Sem resposta na CONSULTA, quem decide é a rota da entrevista: o
+        // servidor continua sendo a autoridade e devolve 403 se faltar.
+        setConsentimento('dado');
+        iniciar();
+      });
+  }, [iniciar]);
 
   const totalAssistente = useMemo(
     () => (estado?.messages ?? []).filter((m) => m.role === 'ASSISTANT').length,
@@ -137,6 +183,20 @@ export function AnamnesisConversationScreen() {
       setEnviando(false);
     }
   };
+
+  if (consentimento === 'pendente') {
+    return (
+      <DetailScreen title="Saúde">
+        <WorkoutConsentGate
+          onGranted={() => {
+            setConsentimento('dado');
+            iniciar();
+          }}
+          onDecline={() => navigation.goBack()}
+        />
+      </DetailScreen>
+    );
+  }
 
   if (erro && !estado) {
     return (

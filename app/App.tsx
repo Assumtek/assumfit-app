@@ -18,6 +18,7 @@ import { useAlertsStore } from './src/store/alerts.store';
 import { useBiometricStore } from './src/store/biometric.store';
 import { ThemeProvider, useTheme } from './src/theme/ThemeProvider';
 
+
 /**
  * A raiz existe só para montar o provedor de tema.
  *

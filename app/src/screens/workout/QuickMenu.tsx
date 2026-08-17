@@ -1,28 +1,25 @@
 import { useNavigation } from '@react-navigation/native';
-import { YStack } from '@tamagui/stacks';
+import { Text } from '@tamagui/core';
+import { XStack, YStack } from '@tamagui/stacks';
 import React from 'react';
-import { Pressable, ScrollView } from 'react-native';
+import { Pressable } from 'react-native';
 
 import { Icon, type IconName } from '../../components/Icon';
-import { ShadowView } from '../../components/ui/ShadowView';
-import { useCardShadow, useSurfaceColor } from '../../components/ui/elevation';
-import { Data } from '../../components/ui';
 import { useTheme } from '../../theme/ThemeProvider';
 
 /**
- * Menu rápido do treino — botões quadrados em carrossel horizontal.
+ * Os quatro destinos do módulo de treino.
  *
- * Quadrado e não linha de lista porque estes quatro são DESTINOS irmãos, sem
- * hierarquia entre si: ninguém abre "Evolução" mais que "Histórico". Uma lista
- * vertical impõe uma ordem de importância que não existe, e ainda empurra o
- * plano da semana para fora da primeira tela.
+ * Eram quatro cartões quadrados de 96 pt em carrossel horizontal — pesados,
+ * com sombra e borda cada um, e um deles sempre cortado na margem. Para
+ * QUATRO destinos fixos, o carrossel não tinha o que revelar: só escondia o
+ * quarto item e cobrava um gesto para nada.
  *
- * Rola de lado de propósito, mesmo cabendo quatro. O carrossel deixa espaço
- * para o quinto sem redesenhar nada — e o cartão cortado na margem direita é o
- * que avisa que há mais, sem precisar de seta.
+ * Agora são quatro colunas fixas de disco e rótulo, a gramática de ação rápida
+ * que o iOS usa em toda parte: alvo redondo, ícone monolinear centrado,
+ * palavra embaixo. Sem cartão, sem sombra, sem corte — mais leve, e todos os
+ * quatro visíveis de uma vez.
  */
-
-const LADO = 96;
 
 type Item = { icone: IconName; rotulo: string; rota: string };
 
@@ -33,63 +30,50 @@ const ITENS: Item[] = [
   { icone: 'up', rotulo: 'Progresso', rota: 'Progress' },
 ];
 
+/** 56 pt: acima do alvo mínimo de 44 da Apple, com folga para o dedo. */
+const DISCO = 56;
+
 export function QuickMenu() {
   const navigation = useNavigation<any>();
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      /*
-       O respiro à direita é do CONTEÚDO, não da tela.
-
-       A `DetailScreen` já tem 24 de margem, e o carrossel precisa furá-la para
-       o último cartão encostar na borda quando rolado. Sem isto ele para 24
-       antes do fim e parece que a lista acabou.
-      */
-      contentContainerStyle={{ gap: 10, paddingRight: 24 }}
-      style={{ marginHorizontal: -24, paddingHorizontal: 24 }}
-    >
+    <XStack justifyContent="space-between">
       {ITENS.map((item) => (
-        <Botao key={item.rota} item={item} onPress={() => (navigation as any).push(item.rota)} />
+        <Botao key={item.rota} item={item} onPress={() => navigation.push(item.rota)} />
       ))}
-    </ScrollView>
+    </XStack>
   );
 }
 
 function Botao({ item, onPress }: { item: Item; onPress: () => void }) {
   const { colors } = useTheme();
-  const shadow = useCardShadow();
-  const surface = useSurfaceColor();
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={item.rotulo}
-      style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
+      style={({ pressed }) => [{ flex: 1 }, pressed && { opacity: 0.6 }]}
     >
-      <ShadowView shadow={shadow} radius={18} backgroundColor={surface}>
+      <YStack alignItems="center" gap="$sm">
         <YStack
-          width={LADO}
-          height={LADO}
-          borderRadius={18}
+          width={DISCO}
+          height={DISCO}
+          borderRadius={DISCO / 2}
           borderWidth={1}
           borderColor="$border"
-          padding="$md"
-          justifyContent="space-between"
-          overflow="hidden"
+          backgroundColor="$card"
+          alignItems="center"
+          justifyContent="center"
         >
-          {/*
-            Ícone acromático, como no resto do sistema: estes botões são
-            navegação, e o acento pertence ao dado.
-          */}
-          <Icon name={item.icone} size={20} color={colors.textMuted} />
-          <Data color="$foreground" numberOfLines={2}>
-            {item.rotulo}
-          </Data>
+          {/* Ícone acromático: estes quatro são navegação, e o acento
+              pertence ao dado — a mesma regra do resto do sistema. */}
+          <Icon name={item.icone} size={21} color={colors.textMuted} strokeWidth={1.5} />
         </YStack>
-      </ShadowView>
+        <Text fontSize={12} color="$mutedForeground" numberOfLines={1}>
+          {item.rotulo}
+        </Text>
+      </YStack>
     </Pressable>
   );
 }

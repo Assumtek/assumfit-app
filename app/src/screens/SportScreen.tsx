@@ -1,18 +1,38 @@
 import { Text } from '@tamagui/core';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Alert, AppState, Pressable } from 'react-native';
+import {
+  AccessibilityInfo,
+  AppState,
+  Pressable,
+  TextInput,
+  useWindowDimensions,
+} from 'react-native';
 import MapView, { Polyline } from 'react-native-maps';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Note, Row, Section } from '../components/Card';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
-import { Icon } from '../components/Icon';
-import { Body, Button, Data, Display, Label, MetricSm, SectionTitle } from '../components/ui';
+import { Icon, type IconName } from '../components/Icon';
+import { HexMosaic, type HexItem } from '../components/HexMosaic';
+import { PhotoViewer } from '../components/PhotoViewer';
+import { MovementWeek } from '../components/MovementWeek';
+import { BarChart } from '../components/charts/BarChart';
+import { Body, Button, Data, Display, HeroCard, Label, MetricSm, SectionTitle } from '../components/ui';
+import { Card } from '../components/ui/Card';
+import { ScalePicker } from '../components/ScalePicker';
+import { ConfirmDialog, Sheet } from '../components/ui/Dialog';
+import { ShadowView } from '../components/ui/ShadowView';
+import { useFabShadow } from '../components/ui/elevation';
+import { buildMovementWeek, movementMinutes, weeklySeries } from '../domain/movement';
+import { isSportDay, modalityMeta, workoutMeta } from '../domain/workout';
+import { QuickMenu } from './workout/QuickMenu';
 import {
   SPORTS,
   kcalFor,
+  simplifyTrack,
   kcalRangeLabel,
   paceMinPerKm,
   sportClock,
@@ -34,6 +54,7 @@ import * as outbox from '../services/sport-outbox';
 import { iniciarRastreio, pararRastreio, useSportTrackStore } from '../services/sport-track';
 import { SportShare } from '../components/SportShare';
 import { useBiometricStore } from '../store/biometric.store';
+import { useWorkoutStore } from '../store/workout.store';
 import { useTheme } from '../theme/ThemeProvider';
 
 /**
@@ -41,12 +62,30 @@ import { useTheme } from '../theme/ThemeProvider';
  * batimento ao vivo da pulseira, distância por GPS e caloria estimada.
  *
  * O tempo é EPOCH, nunca contador: `startedAt` + pausas acumuladas, como todo
- * timer do app. A trilha de GPS fica no aparelho e morre com a sessão — para o
- * servidor sobem só os agregados.
+ * timer do app. A trilha CHEIA fica no aparelho; para o servidor sobem os
+ * agregados e o percurso SIMPLIFICADO (política de ago/2026), que é o que o
+ * histórico usa para desenhar o mapa em qualquer aparelho.
  */
 
 /** Peso para a conta de MET enquanto o cadastro não tem balança: referência adulta. */
 const PESO_PADRAO_KG = 70;
+
+/**
+ * DEMONSTRAÇÃO do favo (pedido da fundadora, ago/2026): fotos de exemplo
+ * ocupam a parede quando não há sessão registrada — SÓ em desenvolvimento,
+ * para ver a peça montada. Sessão real substitui na hora; remover quando não
+ * servir mais. As fotos são do Unsplash (licença livre), não são do produto.
+ */
+const DEMO_MOSAICO = __DEV__;
+
+const FOTOS_DEMO = [
+  require('../../assets/fotos/mosaico/corrida2.jpg'),
+  require('../../assets/fotos/mosaico/bike.jpg'),
+  require('../../assets/fotos/mosaico/natacao.jpg'),
+  require('../../assets/fotos/mosaico/trilha-yoga.jpg'),
+  require('../../assets/fotos/mosaico/montanha.jpg'),
+  require('../../assets/fotos/mosaico/treino.jpg'),
+];
 
 type Sessao = {
   sport: Sport;
@@ -66,10 +105,38 @@ export function SportScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const latest = useBiometricStore((s) => s.latest);
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const fabShadow = useFabShadow();
+
+  const plano = useWorkoutStore((st) => st.plan);
+  const execucaoGuiada = useWorkoutStore((st) => st.execution);
 
   const [sessao, setSessao] = useState<Sessao | null>(null);
   /** Modalidade escolhida, ainda não iniciada — a tela intermediária. */
   const [preparando, setPreparando] = useState<Sport | null>(null);
+  /** A folha de início, aberta pelo botão flutuante. */
+  const [escolhendo, setEscolhendo] = useState(false);
+  /** Segundo passo da folha: a grade de esportes do caminho "Registro". */
+  const [passoRegistro, setPassoRegistro] = useState(false);
+  /** Execuções do plano (90 dias) — alimentam a agenda de movimento. */
+  const [execucoes, setExecucoes] = useState<api.ExecutionHistoryItem[] | null>(null);
+  /** Sessões com trilha guardada no aparelho — o mosaico de percursos. */
+  const [percursos, setPercursos] = useState<{ sessao: api.SportSession; points: GeoPoint[] }[]>([]);
+  /**
+   * O modal do "Finalizar treino": 'fim' confirma o encerramento normal;
+   * 'descarte' avisa que menos de um minuto não entra no histórico — o
+   * descarte mudo fazia o botão parecer quebrado (visto no primeiro teste).
+   */
+  const [confirmando, setConfirmando] = useState<'fim' | 'descarte' | null>(null);
+  /** O "como foi" da tela de conclusão — mesmas perguntas do treino guiado. */
+  const [esforco, setEsforco] = useState<number | null>(null);
+  const [nota, setNota] = useState<number | null>(null);
+  const [comentario, setComentario] = useState('');
+  /** Execução vinculada aguardando o como-foi para ser concluída. */
+  const execucaoDoResumo = useRef<string | null>(null);
+  /** Id da sessão salva no servidor — o lar do como-foi quando avulsa. */
+  const sessaoSalva = useRef<string | null>(null);
   const [posicao, setPosicao] = useState<{ lat: number; lon: number } | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [historico, setHistorico] = useState<api.SportSession[] | null>(null);
@@ -86,6 +153,13 @@ export function SportScreen() {
   const [compartilhando, setCompartilhando] = useState(false);
   /** Sessão antiga aberta do histórico, com o percurso local se existir. */
   const [detalhe, setDetalhe] = useState<{ sessao: api.SportSession; points: GeoPoint[] | null } | null>(null);
+  /** Compartilhar a partir do DETALHE — para quem saiu da conclusão sem compartilhar. */
+  const [compartilhandoDetalhe, setCompartilhandoDetalhe] = useState(false);
+  /** A foto do favo aberta em tela cheia, com salvar e compartilhar. */
+  const [fotoAberta, setFotoAberta] = useState<{
+    foto: number | { uri: string };
+    legenda: string;
+  } | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
   /** Encerramento pedido pelo botão da ilha — o instante do toque. */
@@ -94,6 +168,38 @@ export function SportScreen() {
   const [rastreando, setRastreando] = useState(false);
   /** Quantos pontos do buffer de rastreio já entraram na sessão. */
   const cursorDoRastreio = useRef(0);
+  /*
+   Coexistência com o plano (ago/2026): quando a tela abre a partir do
+   check-in de um dia de esporte, a sessão CUMPRE aquele dia — a execução do
+   plano nasce no iniciar, conclui no encerrar e viaja na sessão como
+   vínculo, para a contagem de movimento não somar o mesmo ato duas vezes.
+   */
+  const vinculo = useRef<{ workoutId: string; planDayId: string } | null>(null);
+  const execucaoVinculada = useRef<string | null>(null);
+  const route = useRoute();
+
+  useEffect(() => {
+    const params = route.params as
+      | {
+          vinculo?: { kind: string; workoutId: string; planDayId: string };
+          /** Sessão do histórico consolidado para abrir direto no detalhe. */
+          abrirSessao?: api.SportSession;
+        }
+      | undefined;
+
+    if (params?.abrirSessao) {
+      void abrirDetalhe(params.abrirSessao);
+      return;
+    }
+
+    const pedido = params?.vinculo;
+    if (!pedido) return;
+    const sport = SPORTS.find((s) => s.kind === pedido.kind);
+    if (!sport) return;
+    vinculo.current = { workoutId: pedido.workoutId, planDayId: pedido.planDayId };
+    void preparar(sport);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route.params]);
 
   /*
    Preparação: pede a localização JÁ na tela intermediária — o mapa centrado
@@ -117,13 +223,48 @@ export function SportScreen() {
   };
 
   const carregar = useCallback(async () => {
-    try {
-      // Primeiro o que ficou no aparelho; a lista do servidor já vem com elas.
-      await outbox.reenviarPendentes();
-      setHistorico(await api.fetchSportSessions(30));
-    } catch {
-      setHistorico([]);
-    }
+    // Primeiro o que ficou no aparelho; a lista do servidor já vem com elas.
+    await outbox.reenviarPendentes().catch(() => undefined);
+    void useWorkoutStore.getState().refresh();
+    const [sessoes, treinos] = await Promise.all([
+      api.fetchSportSessions(90).catch(() => null),
+      // Execuções, não volume: corrida por blocos soma zero kg × reps e o
+      // dia sumia da agenda de movimento.
+      api.fetchExecutionHistory(90).catch(() => null),
+    ]);
+    setHistorico(sessoes ?? []);
+    setExecucoes(treinos);
+
+    // O mosaico: trilha local quando existe (fidelidade cheia); senão a
+    // simplificada do servidor — sessão de outro aparelho também vira mapa.
+    // Só sessões com distância pedem ao servidor: as demais não têm GPS.
+    const candidatas = (sessoes ?? []).slice(0, 12);
+    const resultados = await Promise.all(
+      candidatas.map(async (s) => {
+        try {
+          const f = new File(Paths.document, `percurso-${s.id}.json`);
+          if (f.exists) {
+            const pts = JSON.parse(await f.text()) as GeoPoint[];
+            if (pts.length >= 2) return { sessao: s, points: pts };
+          }
+        } catch {
+          // Trilha local ilegível — tenta o servidor abaixo.
+        }
+        if (!s.distanceM) return null;
+        try {
+          const cheia = await api.fetchSportSession(s.id);
+          if (cheia.track && cheia.track.length >= 2) {
+            return { sessao: s, points: cheia.track.map((p) => ({ ...p, at: 0 })) };
+          }
+        } catch {
+          // Sem rede o mosaico mostra só o que está no aparelho.
+        }
+        return null;
+      }),
+    );
+    setPercursos(
+      resultados.filter((x): x is { sessao: api.SportSession; points: GeoPoint[] } => x !== null),
+    );
   }, []);
 
   useEffect(() => {
@@ -196,6 +337,21 @@ export function SportScreen() {
     // A Dynamic Island conta o tempo sozinha a partir do início — o app só
     // manda distância/batimento de vez em quando.
     iniciarIlhaDeEsporte(sport.label, stamp);
+
+    // Sessão que cumpre um dia do plano: a execução nasce AGORA, para o
+    // servidor medir a duração de verdade. Falhou (outra execução aberta,
+    // rede)? A sessão segue valendo sozinha, sem vínculo.
+    if (vinculo.current && !execucaoVinculada.current) {
+      const v = vinculo.current;
+      api
+        .startExecution(v.workoutId, v.planDayId)
+        .then((e) => {
+          execucaoVinculada.current = e.id;
+        })
+        .catch(() => {
+          vinculo.current = null;
+        });
+    }
   };
 
   const alternarPausa = () => {
@@ -234,16 +390,32 @@ export function SportScreen() {
 
     setSessao(null);
     encerrarIlhaDeEsporte();
+    const execucaoId = execucaoVinculada.current;
+    execucaoVinculada.current = null;
+    vinculo.current = null;
     if (elapsed < 60_000) {
       // Descarte mudo é sumiço aos olhos de quem tocou encerrar na ilha.
+      // A execução vinculada morre junto: dia do plano não se cumpre em 60 s.
+      if (execucaoId) void api.cancelExecution(execucaoId).catch(() => undefined);
       setAviso('Sessões de menos de um minuto não entram no histórico.');
       return;
     }
+
+    // A execução vinculada NÃO se conclui aqui: ela espera o "como foi" da
+    // tela de conclusão, que viaja junto no finish — como no treino guiado.
+    execucaoDoResumo.current = execucaoId;
+    sessaoSalva.current = null;
+    setEsforco(null);
+    setNota(null);
+    setComentario('');
 
     const avgHr = hr.length ? Math.round(hr.reduce((a, b) => a + b, 0) / hr.length) : null;
     const maxHr = hr.length ? Math.max(...hr) : null;
     setResumo({ sport: sessao.sport, elapsed, dist, kcal, avgHr, maxHr, points: sessao.points });
 
+    // O percurso sobe SIMPLIFICADO (política de ago/2026): o histórico
+    // desenha o mapa em qualquer aparelho; a trilha cheia continua local.
+    const trilha = sessao.sport.gps ? simplifyTrack(sessao.points) : [];
     const payload = {
       sport: sessao.sport.kind,
       startedAt: new Date(sessao.startedAt).toISOString(),
@@ -252,6 +424,8 @@ export function SportScreen() {
       kcal,
       avgHr,
       maxHr,
+      workoutExecutionId: execucaoId,
+      track: trilha.length >= 2 ? trilha : null,
     };
     // No APARELHO antes da rede: a partir desta linha a sessão não se perde
     // mais — o percurso viaja junto e vira o mapinha quando o envio confirmar.
@@ -260,6 +434,7 @@ export function SportScreen() {
     setSalvando(true);
     try {
       const registro = await api.saveSportSession(payload);
+      sessaoSalva.current = registro.id;
       outbox.guardarPercurso(registro.id, sessao.points);
       outbox.removerPendente(payload.startedAt);
       setHistorico((atual) => [registro, ...(atual ?? [])]);
@@ -270,21 +445,45 @@ export function SportScreen() {
     }
   };
 
+  /**
+   * Fecha a conclusão levando o "como foi" para o lar certo: execução
+   * vinculada (que só se conclui AGORA, com a resposta dentro, como no treino
+   * guiado) ou a própria sessão, quando avulsa. Sair da tela também passa por
+   * aqui — abandono conta como resposta em branco, nunca como execução órfã.
+   */
+  const concluirResumo = () => {
+    const execucaoId = execucaoDoResumo.current;
+    execucaoDoResumo.current = null;
+    const sessaoId = sessaoSalva.current;
+    sessaoSalva.current = null;
+    const feedback = {
+      perceivedEffort: esforco,
+      rating: nota,
+      comment: comentario.trim() || null,
+    };
+
+    if (execucaoId) {
+      void api
+        .finishExecution(execucaoId, feedback)
+        .catch(() => undefined)
+        .then(() => void useWorkoutStore.getState().refresh());
+    } else if (sessaoId && (feedback.perceivedEffort || feedback.rating || feedback.comment)) {
+      void api.updateSportSession(sessaoId, feedback).catch(() => undefined);
+    }
+
+    setResumo(null);
+    setCompartilhando(false);
+    setAviso(null);
+  };
+
   /*
-   Encerrar de propósito é raro; encerrar por toque acidental no X, comum —
-   e derruba um treino inteiro. O modal cobra a confirmação que o gesto
+   Finalizar de propósito é raro; finalizar por toque acidental, comum — e
+   derruba um treino inteiro. O modal cobra a confirmação que o gesto
    irreversível merece; sessões com menos de um minuto morrem sem cerimônia.
   */
   const confirmarEncerrar = () => {
     if (!sessao) return;
-    if (elapsedOf(sessao, Date.now()) < 60_000) {
-      void encerrar();
-      return;
-    }
-    Alert.alert('Encerrar a sessão?', 'Ela vai para o histórico com o que foi medido até aqui.', [
-      { text: 'Continuar', style: 'cancel' },
-      { text: 'Encerrar', style: 'destructive', onPress: () => void encerrar() },
-    ]);
+    setConfirmando(elapsedOf(sessao, Date.now()) < 60_000 ? 'descarte' : 'fim');
   };
 
   /*
@@ -373,6 +572,18 @@ export function SportScreen() {
     } catch {
       points = null;
     }
+    // Sem trilha local (outro aparelho, reinstalação): o servidor guarda a
+    // versão simplificada — é o suficiente para o mapa do histórico.
+    if (!points || points.length < 2) {
+      try {
+        const cheia = await api.fetchSportSession(s.id);
+        if (cheia.track && cheia.track.length >= 2) {
+          points = cheia.track.map((p) => ({ ...p, at: 0 }));
+        }
+      } catch {
+        // Sem rede o detalhe abre sem mapa — os números não dependem dele.
+      }
+    }
     setDetalhe({ sessao: s, points });
   };
 
@@ -434,7 +645,7 @@ export function SportScreen() {
 
   if (resumo) {
     return (
-      <DetailScreen title="Sessão concluída" onBack={() => setResumo(null)}>
+      <DetailScreen title="Sessão concluída" onBack={concluirResumo}>
         <MapaDePercurso points={resumo.points} accent={colors.accent} />
         <YStack marginTop="$lg" marginBottom="$md">
           <Label>{resumo.sport.label}</Label>
@@ -457,14 +668,63 @@ export function SportScreen() {
         </XStack>
         {salvando ? <Data marginBottom="$md">salvando no histórico…</Data> : null}
         {aviso ? <Data marginBottom="$md">{aviso}</Data> : null}
+
+        {/* O "como foi" do treino guiado, aqui também (decisão da fundadora,
+            ago/2026): mesmas perguntas, mesma escala, nada pré-marcado. */}
+        <YStack gap="$md" marginBottom="$xl">
+          <Card>
+            <Label>esforço percebido</Label>
+            <Text fontSize={15} color="$foreground" marginTop="$sm" marginBottom="$md">
+              Quanto esta sessão puxou?
+            </Text>
+            <ScalePicker values={[2, 4, 6, 8, 10]} value={esforco} onPick={setEsforco} label="Esforço" />
+            <XStack justifyContent="space-between" marginTop="$sm">
+              <Text fontSize={12} color="$mutedForeground">
+                leve
+              </Text>
+              <Text fontSize={12} color="$mutedForeground">
+                no limite
+              </Text>
+            </XStack>
+          </Card>
+
+          <Card>
+            <Label>nota da sessão</Label>
+            <Text fontSize={15} color="$foreground" marginTop="$sm" marginBottom="$md">
+              A sessão de hoje serviu para você?
+            </Text>
+            <ScalePicker values={[1, 2, 3, 4, 5]} value={nota} onPick={setNota} label="Nota" />
+          </Card>
+
+          <Card>
+            <Label>observação</Label>
+            <TextInput
+              style={{
+                color: colors.text,
+                fontSize: 15,
+                minHeight: 64,
+                textAlignVertical: 'top',
+                marginTop: 8,
+              }}
+              value={comentario}
+              onChangeText={setComentario}
+              placeholder="Algo que queira registrar (opcional)"
+              placeholderTextColor={colors.textFaint}
+              multiline
+              accessibilityLabel="Observação sobre a sessão"
+            />
+          </Card>
+        </YStack>
+
         {/* Como no fim de treino da Musculação: compartilhar vem antes e é
-            secundário; "Concluir" fecha — depois dele ninguém volta. */}
+            secundário; "Concluir" fecha levando o como-foi — depois dele
+            ninguém volta. */}
         <YStack gap="$md">
           <Button title="Compartilhar sessão" variant="secondary" onPress={() => setCompartilhando(true)} />
           <Button
             title="Concluir"
             icon={<Icon name="check" size={16} color="#0E0A22" />}
-            onPress={() => { setResumo(null); setCompartilhando(false); setAviso(null); }}
+            onPress={concluirResumo}
           />
         </YStack>
       </DetailScreen>
@@ -472,15 +732,51 @@ export function SportScreen() {
   }
 
   /* Uma sessão antiga, reaberta do histórico — com o percurso se este aparelho o guardou. */
+  /*
+   Compartilhar do DETALHE (decisão da fundadora, ago/2026): quem concluiu,
+   saiu e se arrependeu não perde o cartão — a mesma peça da conclusão, com
+   os dados da sessão guardada.
+  */
+  if (detalhe && compartilhandoDetalhe) {
+    const d = detalhe.sessao;
+    const sport: Sport = SPORTS.find((s) => s.kind === d.sport) ?? {
+      kind: 'corrida',
+      label: rotulo(d.sport),
+      met: 6,
+      gps: !!d.distanceM,
+      icon: 'footprints',
+    };
+    return (
+      <DetailScreen title="Compartilhar" onBack={() => setCompartilhandoDetalhe(false)}>
+        <SportShare
+          sport={sport}
+          elapsed={d.durationS * 1000}
+          dist={d.distanceM}
+          kcalFaixa={faixaKcal(d.sport, d.durationS, d.kcal)}
+          avgHr={d.avgHr}
+          points={detalhe.points ?? []}
+          onClose={() => setCompartilhandoDetalhe(false)}
+        />
+      </DetailScreen>
+    );
+  }
+
   if (detalhe) {
     const d = detalhe.sessao;
     return (
-      <DetailScreen title={rotulo(d.sport)} onBack={() => setDetalhe(null)}>
+      <DetailScreen
+        title={rotulo(d.sport)}
+        onBack={() => {
+          setDetalhe(null);
+          setCompartilhandoDetalhe(false);
+        }}
+      >
         {detalhe.points && detalhe.points.length > 1 ? (
           <MapaDePercurso points={detalhe.points} accent={colors.accent} />
         ) : (
           <Data marginTop="$md">
-            Sem mapa para esta sessão — o percurso fica só no aparelho em que foi gravado.
+            Sem mapa para esta sessão — ela foi gravada sem GPS, ou antes de o percurso passar a
+            ser guardado no histórico.
           </Data>
         )}
         <YStack marginTop="$lg" marginBottom="$md">
@@ -502,6 +798,12 @@ export function SportScreen() {
           />
           <Medida valor={faixaKcal(d.sport, d.durationS, d.kcal)} unidade="kcal" rotulo="estimadas" />
         </XStack>
+
+        <Button
+          title="Compartilhar sessão"
+          variant="secondary"
+          onPress={() => setCompartilhandoDetalhe(true)}
+        />
       </DetailScreen>
     );
   }
@@ -580,24 +882,6 @@ export function SportScreen() {
 
         <XStack justifyContent="center" alignItems="center" gap="$xxl">
           <Pressable
-            onPress={confirmarEncerrar}
-            accessibilityRole="button"
-            accessibilityLabel="Encerrar sessão"
-            style={({ pressed }) => pressed && { opacity: 0.6 }}
-          >
-            <YStack
-              width={52}
-              height={52}
-              borderRadius={26}
-              borderWidth={1}
-              borderColor="$borderStrong"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Icon name="x" size={20} color={colors.textMuted} />
-            </YStack>
-          </Pressable>
-          <Pressable
             onPress={alternarPausa}
             accessibilityRole="button"
             accessibilityLabel={pausado ? 'Retomar' : 'Pausar'}
@@ -616,11 +900,32 @@ export function SportScreen() {
               <Icon name={pausado ? 'play' : 'pause'} size={26} color="#0E0A22" />
             </YStack>
           </Pressable>
-          {/* Espelho do X para o layout equilibrar — sem função ainda. */}
-          <YStack width={52} height={52} />
         </XStack>
 
+        {/* O X virou palavra (decisão da fundadora, ago/2026): "Finalizar
+            treino" diz o que acontece — e o modal cobra a confirmação. */}
+        <YStack marginTop="$xl">
+          <Button title="Finalizar treino" variant="secondary" onPress={confirmarEncerrar} />
+        </YStack>
+
         {aviso ? <Data marginTop="$xl">{aviso}</Data> : null}
+
+        <ConfirmDialog
+          open={confirmando !== null}
+          title={confirmando === 'descarte' ? 'Sessão muito curta' : 'Finalizar o treino?'}
+          body={
+            confirmando === 'descarte'
+              ? 'Menos de um minuto não entra no histórico nem no resumo. Continue mais um pouco para a sessão valer — ou descarte.'
+              : 'Ele vai para o histórico com o que foi medido até aqui.'
+          }
+          confirmLabel={confirmando === 'descarte' ? 'Descartar sessão' : 'Finalizar'}
+          cancelLabel="Continuar treinando"
+          onConfirm={() => {
+            setConfirmando(null);
+            void encerrar();
+          }}
+          onCancel={() => setConfirmando(null)}
+        />
       </DetailScreen>
     );
   }
@@ -687,115 +992,354 @@ export function SportScreen() {
     );
   }
 
+  /*
+   O hub de treino (decisão da fundadora, ago/2026): a tela mostra o que a
+   pessoa CONSTRUIU — sequência, evolução, atalhos do módulo de treino e as
+   últimas sessões — e a escolha de modalidade sai do corpo para a folha que o
+   botão flutuante abre. Antes a grade de esportes era a tela inteira e o
+   retrato ficava escondido embaixo dela.
+  */
+  const hoje = new Date();
+  const semana =
+    historico !== null && (execucoes !== null || historico.length > 0)
+      ? buildMovementWeek(movementMinutes(execucoes ?? [], historico), hoje)
+      : null;
+
+  // O favo ocupa a largura útil do card inteiro — hexágono encaixa sem sobra.
+  const larguraDoFavo = width - 48 - 40;
+
+  /*
+   A CONSTÂNCIA: minutos de movimento por semana, das duas fontes somadas.
+   Eram dois gráficos (esporte e treino, separados) e viraram um — quem quer
+   saber se está mantendo o ritmo não separa corrida de agachamento, e dois
+   gráficos meio vazios diziam menos que um cheio.
+  */
+  const constancia = weeklySeries(
+    [
+      ...(execucoes ?? [])
+        .filter((e) => e.status === 'FINISHED')
+        .map((e) => ({ date: new Date(e.startedAt), value: (e.durationSec ?? 60) / 60 })),
+      ...(historico ?? []).map((se) => ({
+        date: new Date(se.startedAt),
+        value: se.durationS / 60,
+      })),
+    ],
+    6,
+    hoje,
+  );
+  const temConstancia = constancia.some((p) => p.value > 0);
+
+  /*
+   A sessão de HOJE do plano é a peça de destaque da tela (decisão da
+   fundadora, ago/2026): quem abre "Esporte" com treino marcado vê o treino,
+   não um menu. Dia de descanso ou sem plano, o destaque simplesmente não
+   existe — a semana assume o topo, sem cartão vazio pedindo desculpas.
+  */
+  const treinoDeHoje = plano
+    ? (plano.days.find((d) => d.dayOfWeek === plano.today && d.dayType === 'WORKOUT')?.workout ??
+      null)
+    : null;
+  const metaDoTreino = treinoDeHoje
+    ? [
+        isSportDay(treinoDeHoje.modality)
+          ? `${modalityMeta(treinoDeHoje.modality).label} · ${treinoDeHoje.exerciseCount} ${
+              treinoDeHoje.exerciseCount === 1 ? 'bloco' : 'blocos'
+            }`
+          : workoutMeta(treinoDeHoje.muscleGroups, treinoDeHoje.exerciseCount),
+        treinoDeHoje.estimatedDuration ? `~${treinoDeHoje.estimatedDuration} min` : null,
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    : '';
+
   return (
-    <DetailScreen title="Esporte" refreshControl={refresh}>
-      <Body marginTop="$md" marginBottom="$lg" maxWidth="92%">
-        Escolha a modalidade e inicie. Batimento ao vivo da pulseira, distância por GPS e
-        caloria estimada pela intensidade.
-      </Body>
-
-      {/*
-        Musculação é o carro-chefe e abre o MÓDULO de treino inteiro — plano
-        gerado por IA, check-in, progresso. As demais modalidades são o
-        cronômetro desta tela. Cartão largo e com acento: hierarquia, não
-        decoração.
-      */}
-      <Pressable
-        onPress={() => (navigation as any).push('Plan' as never)}
-        accessibilityRole="button"
-        accessibilityLabel="Abrir treino de musculação"
-        style={({ pressed }) => [{ marginBottom: 12 }, pressed && { opacity: 0.7 }]}
-      >
-        <XStack
-          borderRadius={16}
-          borderWidth={1}
-          borderColor="$primary"
-          backgroundColor="$primarySoft"
-          paddingVertical="$lg"
-          paddingHorizontal="$lg"
-          alignItems="center"
-          gap="$md"
-        >
-          {/* A hierarquia do cartão vem da borda e do fundo; os GLIFOS de
-              navegação seguem acromáticos, como manda a regra do acento. */}
-          <Icon name="dumbbell" size={20} color={colors.textMuted} />
-          <YStack flex={1} gap={2}>
-            <SectionTitle fontSize={15}>Musculação</SectionTitle>
-            <Data fontSize={11}>seu plano, check-in e progresso</Data>
-          </YStack>
-          <Icon name="arrowRight" size={16} color={colors.textMuted} />
-        </XStack>
-      </Pressable>
-
-      <XStack flexWrap="wrap" gap="$md" marginBottom="$xxl">
-        {SPORTS.map((sport) => (
-          <Pressable
-            key={sport.kind}
-            onPress={() => void preparar(sport)}
-            accessibilityRole="button"
-            accessibilityLabel={`Preparar ${sport.label}`}
-            style={({ pressed }) => [{ width: '30.5%' }, pressed && { opacity: 0.6 }]}
-          >
-            <YStack
-              borderRadius={16}
-              borderWidth={1}
-              borderColor="$borderStrong"
-              paddingVertical="$lg"
-              alignItems="center"
-              gap="$sm"
+    <YStack flex={1}>
+      <DetailScreen title="Esporte" refreshControl={refresh}>
+        {execucaoGuiada ? (
+          <YStack marginTop="$md" marginBottom="$xl">
+            <HeroCard
+              eyebrow="em andamento"
+              selected
+              onPress={() => (navigation as any).push('Training')}
+              accessibilityLabel={`Treino em andamento: ${execucaoGuiada.workoutName}. Continuar`}
             >
-              <Icon name={sport.icon as never} size={22} color={colors.textMuted} />
-              <Body fontSize={14} color="$foreground">
-                {sport.label}
-              </Body>
-              <Data fontSize={10}>{sport.gps ? 'com GPS' : 'sem GPS'}</Data>
+              <Text fontSize={20} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
+                {execucaoGuiada.workoutName}
+              </Text>
+              <XStack alignItems="center" gap="$sm" marginTop="$xs">
+                <Data flex={1}>Continue de onde parou.</Data>
+                <Icon name="arrowRight" size={16} color={colors.textMuted} />
+              </XStack>
+            </HeroCard>
+          </YStack>
+        ) : treinoDeHoje ? (
+          <YStack marginTop="$md" marginBottom="$xl">
+            <HeroCard
+              eyebrow="hoje"
+              onPress={() => (navigation as any).push('Checkin')}
+              accessibilityLabel={`Treino de hoje: ${treinoDeHoje.name}, ${metaDoTreino}. Abrir check-in`}
+            >
+              <Text fontSize={20} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
+                {treinoDeHoje.name}
+              </Text>
+              <XStack alignItems="center" gap="$sm" marginTop="$xs">
+                <Icon
+                  name={modalityMeta(treinoDeHoje.modality).icon as never}
+                  size={14}
+                  color={colors.textMuted}
+                />
+                <Data flex={1}>{metaDoTreino}</Data>
+                <Icon name="arrowRight" size={16} color={colors.textMuted} />
+              </XStack>
+            </HeroCard>
+          </YStack>
+        ) : null}
+
+        {semana ? (
+          <YStack marginBottom="$xl">
+            <MovementWeek semana={semana} onPress={() => (navigation as any).push('Progress')} />
+          </YStack>
+        ) : null}
+
+        {temConstancia ? (
+          <YStack marginBottom="$xl">
+            <Card>
+              <Label marginBottom="$md">constância · minutos por semana</Label>
+              <BarChart
+                bars={constancia.map((p, i) => ({
+                  label: p.label,
+                  value: Math.round(p.value),
+                  // A semana corrente carrega o acento; as passadas são régua.
+                  color: i === constancia.length - 1 ? colors.accent : colors.textMuted,
+                }))}
+                width={larguraDoFavo}
+                height={120}
+                labelEvery={1}
+                id="constancia"
+              />
+            </Card>
+          </YStack>
+        ) : null}
+
+        {/* Os quatro destinos do módulo de treino, os mesmos do plano. */}
+        <YStack marginBottom="$xl">
+          <QuickMenu />
+        </YStack>
+
+        {aviso ? <Note title="Aviso" body={aviso} /> : null}
+
+        {/* A lista de sessões saiu daqui (decisão da fundadora, ago/2026):
+            o lar dela é o Histórico consolidado, junto do treino guiado. */}
+
+        {/* O favo das sessões: cada peça é a foto do treino, ou o traçado do
+            percurso quando não houver foto. Toque abre a sessão. Sem sessão
+            registrada, o modo demonstração (só em dev) preenche a parede. */}
+        {(() => {
+          const demo = percursos.length === 0 && DEMO_MOSAICO;
+          const itens: HexItem[] = demo
+            ? FOTOS_DEMO.map((foto, i) => ({
+                key: `demo-${i}`,
+                foto,
+                rotulo: `Exemplo de sessão ${i + 1} — abrir foto`,
+                onPress: () =>
+                  setFotoAberta({ foto, legenda: 'Exemplo — a sua foto entra aqui' }),
+              }))
+            : percursos.map((p) => ({
+                key: p.sessao.id,
+                points: p.points,
+                rotulo: `${rotulo(p.sessao.sport)}, ${quando(p.sessao.startedAt)}`,
+                onPress: () => void abrirDetalhe(p.sessao),
+              }));
+          if (itens.length === 0) return null;
+          return (
+            <YStack marginTop="$xl">
+              <Card>
+                <Label marginBottom="$md">suas sessões</Label>
+                {/*
+                  No modo demonstração o favo entra ESMAECIDO e com o convite
+                  por cima: assim a pessoa entende que aquilo é o lugar das
+                  fotos dela, e não uma galeria alheia que o app trouxe.
+                  A primeira sessão registrada troca as peças e devolve a
+                  opacidade cheia.
+                */}
+                <YStack opacity={demo ? 0.35 : 1}>
+                  <HexMosaic itens={itens} width={larguraDoFavo} />
+                </YStack>
+                {demo ? (
+                  <YStack gap="$md" marginTop="$lg" alignItems="center">
+                    <Data textAlign="center" maxWidth="90%">
+                      Aqui ficam as fotos e os percursos dos seus treinos.
+                    </Data>
+                    <Button
+                      title="Começar a registrar"
+                      icon={<Icon name="play" size={16} color={colors.ink} />}
+                      onPress={() => setEscolhendo(true)}
+                    />
+                  </YStack>
+                ) : null}
+              </Card>
             </YStack>
+          );
+        })()}
+
+        {/* Respiro para a última linha da lista nunca ficar sob o botão. */}
+        <YStack height={72} />
+      </DetailScreen>
+
+      <PhotoViewer
+        foto={fotoAberta?.foto ?? null}
+        legenda={fotoAberta?.legenda}
+        onClose={() => setFotoAberta(null)}
+      />
+
+      {/* A ação principal da tela, flutuante: é o único acento aqui. */}
+      <XStack position="absolute" right={24} bottom={insets.bottom + 24}>
+        <ShadowView shadow={fabShadow} radius={28} backgroundColor={colors.accent}>
+          <Pressable
+            onPress={() => setEscolhendo(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Iniciar treino"
+          >
+            {({ pressed }) => (
+              <XStack
+                backgroundColor="$primary"
+                borderRadius={28}
+                paddingVertical={16}
+                paddingHorizontal={22}
+                alignItems="center"
+                gap="$sm"
+                opacity={pressed ? 0.8 : 1}
+              >
+                <Icon name="play" size={18} color={colors.ink} />
+                <Text fontSize={15} fontWeight="700" style={{ color: colors.ink }}>
+                  Iniciar treino
+                </Text>
+              </XStack>
+            )}
           </Pressable>
-        ))}
+        </ShadowView>
       </XStack>
 
-      {aviso ? <Note title="Aviso" body={aviso} /> : null}
-
-      {historico === null ? <Data marginTop="$md">carregando histórico…</Data> : null}
-
-      {historico && historico.length > 0 ? (
-        <Section label="Últimas sessões">
-          {historico.slice(0, 10).map((s, i) => (
-            <Pressable
-              key={s.id}
-              onPress={() => void abrirDetalhe(s)}
-              accessibilityRole="button"
-              accessibilityLabel={
-                `${rotulo(s.sport)}, ${quando(s.startedAt)}, ${sportClock(s.durationS * 1000)}` +
-                (s.distanceM ? `, ${(s.distanceM / 1000).toFixed(2).replace('.', ',')} quilômetros` : '') +
-                (s.avgHr ? `, ${s.avgHr} batimentos por minuto em média` : '')
-              }
-            >
-              <Row last={i === Math.min(historico.length, 10) - 1}>
-                <YStack flex={1} gap={2}>
-                  <Body color="$foreground">{rotulo(s.sport)}</Body>
-                  <Data>
-                    {quando(s.startedAt)} · {sportClock(s.durationS * 1000)}
-                    {s.distanceM ? ` · ${(s.distanceM / 1000).toFixed(2).replace('.', ',')} km` : ''}
-                  </Data>
-                </YStack>
-                <YStack alignItems="flex-end" gap={2} flexShrink={0}>
-                  <Data color="$foreground">{faixaKcal(s.sport, s.durationS, s.kcal)} kcal</Data>
-                  {s.avgHr ? <Data>{s.avgHr} bpm médio</Data> : null}
-                </YStack>
-              </Row>
-            </Pressable>
-          ))}
-        </Section>
-      ) : historico !== null && !salvando ? (
-        <Note
-          title="Nenhuma sessão ainda"
-          body="A primeira sessão registrada aparece aqui, com duração, distância e batimento médio."
-        />
-      ) : null}
-    </DetailScreen>
+      {/*
+        A folha de início, em dois passos (decisão da fundadora, ago/2026):
+        primeiro O JEITO — treino guiado (a interface de treino do plano) ou
+        registro (o cronômetro com GPS) —, e só o registro pede o segundo
+        passo, a modalidade. Quem quer o guiado nunca vê a grade.
+      */}
+      <Sheet
+        open={escolhendo}
+        onClose={() => {
+          setEscolhendo(false);
+          setPassoRegistro(false);
+        }}
+      >
+        {!passoRegistro ? (
+          <>
+            <SectionTitle fontSize={18}>Iniciar treino</SectionTitle>
+            <OpcaoDeInicio
+              icone="dumbbell"
+              titulo="Treino guiado"
+              detalhe="o treino do seu plano, passo a passo na tela"
+              destaque
+              onPress={() => {
+                setEscolhendo(false);
+                (navigation as any).push('Checkin' as never);
+              }}
+            />
+            <OpcaoDeInicio
+              icone="footprints"
+              titulo="Registro"
+              detalhe="cronômetro com GPS, caloria e batimento"
+              onPress={() => setPassoRegistro(true)}
+            />
+          </>
+        ) : (
+          <>
+            <SectionTitle fontSize={18}>Qual esporte?</SectionTitle>
+            <XStack flexWrap="wrap" gap="$md">
+              {SPORTS.map((sport) => (
+                <Pressable
+                  key={sport.kind}
+                  onPress={() => {
+                    setEscolhendo(false);
+                    setPassoRegistro(false);
+                    void preparar(sport);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Preparar ${sport.label}`}
+                  style={({ pressed }) => [{ width: '30.5%' }, pressed && { opacity: 0.6 }]}
+                >
+                  <YStack
+                    borderRadius={16}
+                    borderWidth={1}
+                    borderColor="$borderStrong"
+                    paddingVertical="$lg"
+                    alignItems="center"
+                    gap="$sm"
+                  >
+                    <Icon name={sport.icon as never} size={22} color={colors.textMuted} />
+                    <Body fontSize={14} color="$foreground">
+                      {sport.label}
+                    </Body>
+                    <Data fontSize={10}>{sport.gps ? 'com GPS' : 'sem GPS'}</Data>
+                  </YStack>
+                </Pressable>
+              ))}
+            </XStack>
+          </>
+        )}
+      </Sheet>
+    </YStack>
   );
 }
+
+/**
+ * Uma opção da folha de início: cartão largo com ícone, título e detalhe.
+ * O destaque (borda e fundo de acento) marca o caminho principal — a
+ * hierarquia vem da superfície; os glifos de navegação seguem acromáticos.
+ */
+function OpcaoDeInicio({
+  icone,
+  titulo,
+  detalhe,
+  destaque,
+  onPress,
+}: {
+  icone: IconName;
+  titulo: string;
+  detalhe: string;
+  destaque?: boolean;
+  onPress: () => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={titulo}
+      style={({ pressed }) => pressed && { opacity: 0.7 }}
+    >
+      <XStack
+        borderRadius={16}
+        borderWidth={1}
+        borderColor={destaque ? '$primary' : '$borderStrong'}
+        backgroundColor={destaque ? '$primarySoft' : 'transparent'}
+        paddingVertical="$lg"
+        paddingHorizontal="$lg"
+        alignItems="center"
+        gap="$md"
+      >
+        <Icon name={icone} size={20} color={colors.textMuted} />
+        <YStack flex={1} gap={2}>
+          <SectionTitle fontSize={15}>{titulo}</SectionTitle>
+          <Data fontSize={11}>{detalhe}</Data>
+        </YStack>
+        <Icon name="arrowRight" size={16} color={colors.textMuted} />
+      </XStack>
+    </Pressable>
+  );
+}
+
 
 /**
  * O percurso inteiro, enquadrado — o mapinha do Strava. A região sai do

@@ -56,9 +56,16 @@ export function MeasureButton({ kind, label }: { kind: MeasurableKind; label?: s
   const measureError = useBiometricStore((s) => s.measureError);
   const measureNow = useBiometricStore((s) => s.measureNow);
   const connection = useBiometricStore((s) => s.connection);
+  const bandActivity = useBiometricStore((s) => s.bandActivity);
 
-  const desteBotao = measuring === kind;
-  const ocupado = measuring !== null;
+  /*
+   A medição AUTOMÁTICA (a varredura pós-conexão) ocupa o mesmo sensor que a
+   pedida no botão. Sem contá-la, o botão oferecia um disparo que ia falhar —
+   e a tela dizia traço enquanto a pulseira já media exatamente esta grandeza.
+   */
+  const automatica = bandActivity?.kind === 'measure' ? bandActivity.what : null;
+  const desteBotao = measuring === kind || automatica === kind;
+  const ocupado = measuring !== null || automatica !== null;
   const conectado = connection === 'connected';
 
   return (

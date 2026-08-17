@@ -89,11 +89,18 @@ export function WorkoutShareScreen() {
     // canvas, com arrastar e zoom — igual ao MUVX. Recortar antes jogaria fora
     // as bordas que a pessoa ia usar ao reposicionar.
     const opcoes: ImagePicker.ImagePickerOptions = { quality: 0.9 };
-    const r =
-      origem === 'camera'
-        ? await ImagePicker.launchCameraAsync(opcoes)
-        : await ImagePicker.launchImageLibraryAsync({ ...opcoes, mediaTypes: ['images'] });
-    if (!r.canceled && r.assets[0]) setFoto(r.assets[0].uri);
+    try {
+      const r =
+        origem === 'camera'
+          ? await ImagePicker.launchCameraAsync(opcoes)
+          : await ImagePicker.launchImageLibraryAsync({ ...opcoes, mediaTypes: ['images'] });
+      if (!r.canceled && r.assets[0]) setFoto(r.assets[0].uri);
+    } catch {
+      Alert.alert(
+        origem === 'camera' ? 'Não foi possível abrir a câmera' : 'Não foi possível abrir a galeria',
+        'Tente de novo.',
+      );
+    }
   };
 
   /**
@@ -126,6 +133,8 @@ export function WorkoutShareScreen() {
       if (!uri) return;
       if (!(await Sharing.isAvailableAsync())) return;
       await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png' });
+    } catch {
+      Alert.alert('Não foi possível compartilhar', 'Tente de novo.');
     } finally {
       setOcupado(false);
     }
@@ -134,15 +143,19 @@ export function WorkoutShareScreen() {
   const salvar = async () => {
     setOcupado(true);
     try {
-      const permissao = await MediaLibrary.requestPermissionsAsync();
+      const permissao = await MediaLibrary.requestPermissionsAsync(true);
       if (!permissao.granted) {
         Alert.alert('Permissão necessária', 'Autorize o acesso às fotos para salvar.');
         return;
       }
       const uri = await gerar();
       if (!uri) return;
-      await MediaLibrary.saveToLibraryAsync(uri);
+      // API de classes do expo-media-library 57 — `saveToLibraryAsync` da
+      // raiz virou ERRO em agosto/2026, e era o "crash" do salvar.
+      await MediaLibrary.Asset.create(uri);
       Alert.alert('Salvo', 'O story está na sua galeria.');
+    } catch {
+      Alert.alert('Não foi possível salvar', 'Tente de novo.');
     } finally {
       setOcupado(false);
     }

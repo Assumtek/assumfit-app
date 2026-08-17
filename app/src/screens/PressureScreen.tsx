@@ -3,6 +3,7 @@ import { XStack, YStack } from '@tamagui/stacks';
 import React, { useState } from 'react';
 import { LayoutChangeEvent } from 'react-native';
 
+import { EmptyMetric } from '../components/BandStatus';
 import { Row, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
 import { MeasureButton } from '../components/MeasureButton';
@@ -18,7 +19,12 @@ export function PressureScreen() {
   // quando `latest` alterna entre nulo e presente.
   const [chartWidth, setChartWidth] = useState(0);
 
-  if (!latest) return <DetailScreen title="Pressão" children={null} />;
+  if (!latest)
+    return (
+      <DetailScreen title="Pressão">
+        <EmptyMetric measure="bloodPressure" />
+      </DetailScreen>
+    );
 
   const rating = ratePressure(latest.bpSystolic, latest.bpDiastolic);
 

@@ -1,16 +1,24 @@
 import { useNavigation } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, LayoutChangeEvent, Pressable, ScrollView } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Pressable, RefreshControl, ScrollView, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BandStatusLine } from '../components/BandStatus';
+import { HomeBanners } from '../components/HomeBanners';
+import { HomeCarousel, type HomeCard } from '../components/HomeCarousel';
+import { HomeRings, type RingItem } from '../components/HomeRings';
 import { Icon } from '../components/Icon';
-import { MetricBlock } from '../components/MetricBlock';
-import { Body, Button, Data, Headline, Label, Metric, MetricSm, SectionTitle } from '../components/ui';
-import { LiveChart, LiveDot } from '../components/charts/LiveChart';
-import { Meter } from '../components/charts/Meter';
-import { CALIBRATION_DAYS, ENERGY_BANDS, energyState } from '../domain/energy';
-import { frescor, rateHeartRate, rateHrv, rateSleep, rateSpo2 } from '../domain/ratings';
+import { MovementWeek } from '../components/MovementWeek';
+import { Body, Button, Data, Label, SectionTitle } from '../components/ui';
+import { Card } from '../components/ui/Card';
+import { LineChart } from '../components/charts/LineChart';
+import { LiveDot } from '../components/charts/LiveChart';
+import { energyState } from '../domain/energy';
+import { buildMovementWeek, movementMinutes } from '../domain/movement';
+import { rateSleep, rateStress, shown, stateColor } from '../domain/ratings';
+import { isSportDay, modalityMeta } from '../domain/workout';
+import * as api from '../services/api.service';
 import { supportsGattInspection } from '../services/ble';
 import { useAmbientStore } from '../store/ambient.store';
 import { useInsightStore } from '../store/insight.store';
@@ -19,31 +27,19 @@ import { useUiStore } from '../store/ui.store';
 import { greeting, useUserStore } from '../store/user.store';
 import { useTheme } from '../theme/ThemeProvider';
 
-/**
- * Para onde cada ação do estado leva. O ícone já identifica a ação em
- * `energy.ts`, então ele serve de chave — assim não existe uma terceira lista
- * para manter em sincronia com as outras duas.
- */
-const ACTION_ROUTE = {
-  play: 'Focus',
-  calendar: 'Agenda',
-  drop: 'Habits',
-  dumbbell: 'Plan',
-  footprints: 'Sport',
-  flame: 'Meals',
-} as const;
-
 export function HomeScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const latest = useBiometricStore((s) => s.latest);
+  const stressHistory = useBiometricStore((s) => s.stressHistory);
+  const hrvHistory = useBiometricStore((s) => s.hrvHistory);
   const sleep = useBiometricStore((s) => s.sleep);
   const connection = useBiometricStore((s) => s.connection);
+  const pairedDeviceId = useBiometricStore((s) => s.pairedDeviceId);
   const user = useUserStore((s) => s.user);
   const openSidebar = useUiStore((s) => s.openSidebar);
-  const hrvHistory = useBiometricStore((s) => s.hrvHistory);
-  const [chartWidth, setChartWidth] = useState(0);
+  const batteryPct = useBiometricStore((s) => s.batteryPct);
   const ambient = useAmbientStore((s) => s.ambient);
   const city = useAmbientStore((s) => s.city);
   const refreshAmbient = useAmbientStore((s) => s.refresh);
@@ -51,6 +47,67 @@ export function HomeScreen() {
   const insightStatus = useInsightStore((s) => s.status);
   const refreshInsight = useInsightStore((s) => s.refresh);
   const hour = new Date().getHours();
+  const { width } = useWindowDimensions();
+  // Largura útil do gráfico: tela − margem da home − respiro interno do card.
+  const larguraGrafico = width - 48 - 40;
+  // A média da última hora é a linha de base do gráfico — igual à tela de HRV.
+  const mediaHrv = hrvHistory.length
+    ? hrvHistory.reduce((a, b) => a + b, 0) / hrvHistory.length
+    : 0;
+
+  /**
+   * O que alimenta o carrossel: o plano ativo (card de treino) e as refeições
+   * de hoje (card de nutrição). `'loading'` é estado próprio — "buscando" e
+   * "não há plano" pedem frases diferentes, e `null` sozinho não distingue.
+   */
+  const [plan, setPlan] = useState<api.TrainingPlan | null | 'loading'>('loading');
+  const [mealsToday, setMealsToday] = useState<api.MealRecord[] | null>(null);
+
+  /**
+   * Minutos de movimento por dia (treino do plano concluído ou esporte
+   * registrado), para a agenda de movimento. `null` = ainda não carregou ou
+   * falhou — e aí o card não aparece: semana em branco por falta de rede
+   * viraria mentira ("você não treinou"), e o princípio é medido ou traço.
+   */
+  const [movimento, setMovimento] = useState<Map<string, number> | null>(null);
+
+  const carregarCards = useCallback(async () => {
+    await Promise.all([
+      api
+        .fetchActivePlan()
+        .then(setPlan)
+        .catch(() => setPlan(null)),
+      api
+        .fetchMeals(1)
+        .then((refeicoes) => {
+          const inicio = new Date();
+          inicio.setHours(0, 0, 0, 0);
+          setMealsToday(refeicoes.filter((r) => new Date(r.at) >= inicio));
+        })
+        .catch(() => setMealsToday(null)),
+      /*
+       As duas fontes de movimento juntas: execuções CONCLUÍDAS do plano (o
+       dashboard de volume não serve — corrida por blocos soma zero kg × reps
+       e o dia sumia) e sessões de esporte. 90 dias é a janela: sequência
+       maior aparece como 90 — limite documentado em `buildMovementWeek`.
+       Uma fonte fora do ar não derruba a outra; as DUAS fora derrubam o card.
+       */
+      Promise.all([
+        api.fetchExecutionHistory(90).catch(() => null),
+        api.fetchSportSessions(90).catch(() => null),
+      ]).then(([treinos, esportes]) => {
+        if (treinos === null && esportes === null) {
+          setMovimento(null);
+          return;
+        }
+        setMovimento(movementMinutes(treinos ?? [], esportes ?? []));
+      }),
+    ]);
+  }, []);
+
+  useEffect(() => {
+    void carregarCards();
+  }, [carregarCards]);
 
   useEffect(() => {
     void refreshAmbient();
@@ -60,6 +117,15 @@ export function HomeScreen() {
   useEffect(() => {
     void refreshInsight(hour);
   }, [refreshInsight, hour]);
+
+  // Puxar para atualizar substitui o "atualizar" que morava no bloco de
+  // estado: recarrega o insight à força e os dois cards de dados juntos.
+  const [refreshing, setRefreshing] = useState(false);
+  const aoAtualizar = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([refreshInsight(hour, { force: true }), carregarCards()]);
+    setRefreshing(false);
+  }, [refreshInsight, hour, carregarCards]);
 
   /**
    * Sem leitura ainda — e isso NÃO pode ser um beco sem saída.
@@ -87,11 +153,15 @@ export function HomeScreen() {
             <Label marginBottom="$sm">{greeting()}</Label>
             <SectionTitle>{user.name}</SectionTitle>
 
-            <Body marginTop="$lg" marginBottom="$xxl" maxWidth="92%">
+            {/* O parágrafo é a explicação DURÁVEL; o ao vivo fica na linha de
+                estado abaixo, que narra a etapa em curso e muda sozinha. */}
+            <Body marginTop="$lg" maxWidth="92%">
               {conectado
-                ? 'Pulseira conectada, aguardando a primeira leitura. Ela precisa estar no pulso, firme e com o sensor encostado na pele.'
-                : 'Nenhuma pulseira conectada. Sem leitura não há score — o resto do app continua acessível pelo menu.'}
+                ? 'Pulseira conectada. A primeira leitura entra sozinha — mantenha-a no pulso, firme e com o sensor encostado na pele.'
+                : 'Sem leitura não há score — o resto do app continua acessível pelo menu.'}
             </Body>
+
+            <BandStatusLine marginTop="$lg" />
 
             {/*
              Conectada e sem leitura, a ação útil é DESCOBRIR o que ela expõe
@@ -103,11 +173,31 @@ export function HomeScreen() {
              colorida e pintava a seta com `colors.ink`, que inverte no tema
              claro e sumia sobre o roxo.
             */}
-            <YStack alignSelf="flex-start">
+            <YStack alignSelf="flex-start" marginTop="$xxl">
               <Button
-                title={conectado ? (supportsGattInspection ? 'Diagnosticar pulseira' : 'Ver dispositivo') : 'Parear pulseira'}
+                // Com pulseira pareada e fora do ar, a porta útil é a do
+                // dispositivo — é lá que mora o Reconectar. "Parear" só para
+                // quem nunca pareou; mandar quem já tem para a varredura de
+                // novo é refazer um caminho que ela não precisa.
+                title={
+                  conectado
+                    ? supportsGattInspection
+                      ? 'Diagnosticar pulseira'
+                      : 'Ver dispositivo'
+                    : pairedDeviceId
+                      ? 'Ver dispositivo'
+                      : 'Parear pulseira'
+                }
                 onPress={() =>
-                  (navigation as any).push((conectado ? (supportsGattInspection ? 'Gatt' : 'Device') : 'Connect') as never)
+                  (navigation as any).push(
+                    (conectado
+                      ? supportsGattInspection
+                        ? 'Gatt'
+                        : 'Device'
+                      : pairedDeviceId
+                        ? 'Device'
+                        : 'Connect') as never,
+                  )
                 }
                 // Fixo nos dois temas, como o `primaryForeground` do config e
                 // pelo mesmo motivo (ver Button.tsx): sobre o roxo, só o ink
@@ -131,13 +221,152 @@ export function HomeScreen() {
     score: model?.score ?? local.score,
     level: model?.level ?? local.level,
     calibrating: model?.calibrating ?? local.calibrating,
-    eyebrow: insight?.eyebrow ?? local.eyebrow,
     title: insight?.headline ?? local.title.replace('\n', ' '),
     description: insight?.detail ?? local.description,
-    nextLabel: insight?.nextLabel ?? local.nextLabel,
-    action: insight
-      ? { label: insight.action.label, icon: insight.action.key }
-      : local.action,
+  };
+
+  const abrir = (route: string) => (navigation as any).push(route as never);
+
+  /*
+   Os três indicadores do topo (decisão da fundadora, ago/2026): Sono, Stress
+   e Recuperação. O anel só dá forma — cor e fração continuam decididas por
+   `ratings.ts`, a mesma régua das telas de detalhe. "Recuperação" é o score
+   de prontidão com o nome que a pessoa entende; a tela por trás é a de HRV,
+   que é de onde ele deriva.
+   */
+  const sono = rateSleep(sleep?.score ?? null, sleep?.totalMin ?? null);
+  /*
+   O stress de agora OU o último que a pulseira registrou sozinha hoje. O
+   agendamento grava a cada 30 min na memória do aparelho, e o ciclo de
+   sincronização traz a série — ignorá-la deixava o anel em traço com dado
+   fresco a um braço de distância.
+   */
+  const stressAtual =
+    latest.stressScore ?? (stressHistory.length ? stressHistory[stressHistory.length - 1].value : null);
+  const stress = rateStress(stressAtual);
+  const rings: RingItem[] = [
+    {
+      key: 'sono',
+      label: 'Sono',
+      value: shown(sleep?.score ?? null),
+      fraction: sono.fraction,
+      color: stateColor(sono.state, colors),
+      accessibilityLabel: `Sono: ${sono.label}, ${sono.detail}`,
+      onPress: () => abrir('Sleep'),
+    },
+    {
+      key: 'stress',
+      label: 'Stress',
+      value: shown(stressAtual),
+      fraction: stress.fraction,
+      color: stateColor(stress.state, colors),
+      accessibilityLabel: `Stress: ${stress.label}, ${stress.detail}`,
+      onPress: () => abrir('Stress'),
+    },
+    {
+      key: 'recuperacao',
+      label: 'Recuperação',
+      value: String(energy.score),
+      fraction: energy.score / 100,
+      color: colors.accent,
+      accessibilityLabel: `Recuperação: prontidão ${energy.score} de 100`,
+      onPress: () => abrir('Hrv'),
+    },
+  ];
+
+  /*
+   O carrossel: um card por assunto — treino, nutrição, saúde. Cada card só
+   afirma o que existe: plano sem gerar, refeição sem registrar e insight sem
+   rede têm frase de estado, nunca número inventado.
+   */
+  const treinoHoje =
+    plan !== 'loading' && plan ? plan.days.find((d) => d.dayOfWeek === plan.today) : undefined;
+  const conselhoTreino =
+    energy.level === 'high'
+      ? 'Prontidão alta — bom dia para intensidade.'
+      : energy.level === 'mid'
+        ? 'Prontidão média — mantenha a execução confortável.'
+        : 'Prontidão baixa — reduza o volume ou priorize técnica leve.';
+
+  const cardTreino: HomeCard =
+    plan === 'loading'
+      ? {
+          key: 'treino',
+          title: 'treino',
+          headline: 'Buscando seu plano',
+          body: 'Carregando o treino de hoje.',
+          onPress: () => abrir('Plan'),
+        }
+      : !plan
+        ? {
+            key: 'treino',
+            title: 'treino',
+            headline: 'Sem plano ativo',
+            body: 'Gere um plano com a IA para receber aqui o treino de cada dia.',
+            onPress: () => abrir('Plan'),
+          }
+        : !treinoHoje || treinoHoje.dayType === 'OFF' || !treinoHoje.workout
+          ? {
+              key: 'treino',
+              title: 'treino',
+              headline: 'Hoje é dia de descanso',
+              body: 'O plano reserva hoje para recuperar — movimento leve conta a favor.',
+              onPress: () => abrir('Plan'),
+            }
+          : {
+              key: 'treino',
+              title: 'treino',
+              headline: treinoHoje.workout.name,
+              body: conselhoTreino,
+              // Dia de esporte fala a língua do esporte: "corrida", não
+              // "3 exercícios".
+              fact: `${
+                isSportDay(treinoHoje.workout.modality)
+                  ? `sessão de ${modalityMeta(treinoHoje.workout.modality).label}`
+                  : `${treinoHoje.workout.exerciseCount} exercícios`
+              }${
+                treinoHoje.workout.estimatedDuration
+                  ? ` · ~${treinoHoje.workout.estimatedDuration} min`
+                  : ''
+              }`,
+              onPress: () => abrir('Plan'),
+            };
+
+  const kcalMin = mealsToday?.reduce((soma, r) => soma + r.kcalMin, 0) ?? 0;
+  const kcalMax = mealsToday?.reduce((soma, r) => soma + r.kcalMax, 0) ?? 0;
+  const cardNutricao: HomeCard =
+    mealsToday && mealsToday.length
+      ? {
+          key: 'nutricao',
+          title: 'nutrição',
+          // FAIXA, não número exato: a caloria da foto é estimativa da IA, e
+          // apresentá-la precisa seria mentir precisão (princípio 2).
+          headline: `${kcalMin}–${kcalMax} kcal hoje`,
+          body: 'Estimativa da IA pelas fotos, com as calorias da tabela TACO.',
+          fact: `${mealsToday.length} ${mealsToday.length === 1 ? 'refeição registrada' : 'refeições registradas'}`,
+          onPress: () => abrir('Meals'),
+        }
+      : {
+          key: 'nutricao',
+          title: 'nutrição',
+          headline: 'Nenhuma refeição hoje',
+          body: 'Fotografe o prato e a IA estima as calorias pela tabela TACO.',
+          onPress: () => abrir('Meals'),
+        };
+
+  const cardSaude: HomeCard = {
+    key: 'saude',
+    title: 'saúde',
+    headline: energy.title,
+    body: energy.description,
+    fact: insight
+      ? null
+      : insightStatus === 'loading'
+        ? 'gerando o insight do dia…'
+        : insightStatus === 'offline'
+          ? 'sem rede — texto do cálculo local'
+          : null,
+    onPress: () => abrir('Health'),
   };
 
   return (
@@ -149,6 +378,13 @@ export function HomeScreen() {
         paddingTop: insets.top + 12,
       }}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => void aoAtualizar()}
+          tintColor={colors.textMuted}
+        />
+      }
     >
       <Cabecalho
         conectado={connection === 'connected'}
@@ -162,199 +398,96 @@ export function HomeScreen() {
           <SectionTitle>{user.name}</SectionTitle>
         </YStack>
 
-        {/* Ambiente em número, ao lado do nome. Fica FORA do grid 2×2 de
-            propósito: o grid é o corpo da pessoa, e 25° não é métrica dela. */}
-        {ambient ? (
-          // Um nó só no VoiceOver: sem o agrupamento, o leitor recitava
-          // "São Paulo", "25", "°C", "60", "%" como cinco itens soltos.
-          <YStack
-            alignItems="flex-end"
-            paddingBottom={2}
-            accessible
-            accessibilityLabel={`${city ? `${city}, ` : ''}${Math.round(ambient.temperatureC)} graus, ${Math.round(ambient.humidityPct)} por cento de umidade${ambient.heatStress ? ', calor extremo' : ''}`}
-          >
-            {city ? (
-              <Label marginBottom="$xs" maxWidth={150} textAlign="right" numberOfLines={1}>
-                {city}
-              </Label>
-            ) : null}
-            {/* MetricSm, não 30pt cru: o ambiente é contexto, e a 30 ele
-                disputava com o score — o único número grande da tela é o
-                instrumento. */}
-            <XStack alignItems="baseline" gap="$xs">
-              <MetricSm color={ambient.heatStress ? '$destructive' : '$foreground'}>
-                {Math.round(ambient.temperatureC)}
-              </MetricSm>
-              <Data>°C</Data>
-              <MetricSm color="$mutedForeground" marginLeft="$sm">
-                {Math.round(ambient.humidityPct)}
-              </MetricSm>
-              <Data>%</Data>
-            </XStack>
-            {/* Em PALAVRA, além da cor: só o número terracota exclui quem não
-                separa as cores — e some no modo de alto contraste. */}
-            {ambient.heatStress ? <Data color="$destructive">calor extremo</Data> : null}
-          </YStack>
-        ) : null}
-      </XStack>
-
-      {/* Estado do dia. Alinhado à esquerda, sem caixa, sem ícone decorativo.
-          O Atualizar relê o DIA no servidor — treino, esporte, refeições,
-          passos, água — e rediz a frase; sem ele, o texto só mudaria na virada
-          da hora. */}
-      <YStack paddingTop="$xxxl" paddingBottom="$xl">
-        <XStack alignItems="center" justifyContent="space-between" marginBottom="$md">
-          <Label>{energy.eyebrow}</Label>
+        {/* O canto do nome: ambiente em cima, relógio embaixo. A linha do
+            ambiente é contexto em texto corrido — os números grandes da tela
+            são os anéis. O relógio (com a carga em texto, sem segundo ícone)
+            é porta para a tela do dispositivo. */}
+        <YStack alignItems="flex-end" gap="$sm" paddingBottom={2}>
+          {ambient ? (
+            <Data
+              // Palavra além da cor no calor extremo, como antes: só a cor
+              // exclui quem não separa as cores.
+              color={ambient.heatStress ? '$destructive' : undefined}
+              maxWidth={170}
+              numberOfLines={2}
+              textAlign="right"
+              accessibilityLabel={`${city ? `${city}, ` : ''}${Math.round(ambient.temperatureC)} graus, ${Math.round(ambient.humidityPct)} por cento de umidade${ambient.heatStress ? ', calor extremo' : ''}`}
+            >
+              {city ? `${city} · ` : ''}
+              {Math.round(ambient.temperatureC)} °C · {Math.round(ambient.humidityPct)}%
+              {ambient.heatStress ? ' · calor extremo' : ''}
+            </Data>
+          ) : null}
           <Pressable
-            onPress={() => void refreshInsight(hour, { force: true })}
-            disabled={insightStatus === 'loading'}
-            // 44pt de alvo efetivo: o texto tem ~16pt de altura.
-            hitSlop={{ top: 14, bottom: 14, left: 12, right: 12 }}
+            onPress={() => abrir('Device')}
+            hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel="Atualizar leitura"
-            style={({ pressed }) => pressed && { opacity: 0.5 }}
+            accessibilityLabel={
+              batteryPct != null
+                ? `AssumFit Watch, bateria ${batteryPct} por cento`
+                : 'AssumFit Watch, bateria não lida'
+            }
+            style={({ pressed }) => pressed && { opacity: 0.6 }}
           >
-            <XStack alignItems="center" gap="$xs">
-              {insightStatus === 'loading' ? (
-                <ActivityIndicator size="small" color={colors.textMuted} />
-              ) : (
-                <Icon name="refresh" size={13} color={colors.textMuted} strokeWidth={1.5} />
-              )}
-              {/* Apertou e falhou não pode terminar em silêncio: o rótulo diz
-                  que a releitura não veio e que dá para tentar de novo. */}
-              <Data>
-                {insightStatus === 'loading'
-                  ? 'relendo…'
-                  : insightStatus === 'offline'
-                    ? 'sem rede — tentar de novo'
-                    : 'atualizar'}
-              </Data>
+            <XStack alignItems="center" gap="$sm">
+              <Icon name="watch" size={18} color={colors.textMuted} strokeWidth={1.5} />
+              <Data>{batteryPct != null ? `${batteryPct}%` : '—'}</Data>
             </XStack>
           </Pressable>
-        </XStack>
-        <Headline marginBottom="$md">{energy.title}</Headline>
-        <Body marginBottom="$lg" maxWidth="92%">
-          {energy.description}
-        </Body>
+        </YStack>
+      </XStack>
 
-        {/* Contexto do perfil de rotina. Fica separado do parágrafo fisiológico
-            de propósito: um veio da medição, o outro do que a pessoa contou, e
-            misturar os dois apagaria a diferença. */}
-        {insight?.context ? (
-          <XStack gap="$md" marginBottom="$xl" maxWidth="94%">
-            {/* Fio de acento: marca a frase como vinda do perfil, sem virar caixa. */}
-            <YStack width={2} borderRadius={1} backgroundColor="$primary" opacity={0.6} />
-            <Body flex={1}>{insight.context}</Body>
-          </XStack>
-        ) : null}
+      {/* Os três anéis principais — Sono, Stress, Recuperação. O antigo bloco
+          de estado (manchete + régua + botão de ação) virou o card de saúde do
+          carrossel; o score continua aqui, dentro do anel de Recuperação. */}
+      <YStack paddingTop="$xxxl" paddingBottom="$xxl">
+        <HomeRings items={rings} />
+      </YStack>
 
-        <XStack
-          alignItems="flex-end"
-          gap="$lg"
-          // Um nó só: "72" solto e três palavras de faixa não contam a
-          // história; o rótulo junta score, faixa e a transição calculada.
-          accessible
-          accessibilityLabel={`Energia ${energy.score} de 100, nível ${
-            energy.level === 'low' ? 'baixo' : energy.level === 'mid' ? 'médio' : 'alto'
-          }${energy.nextLabel ? `, ${energy.nextLabel}` : ''}`}
-        >
-          <Metric lineHeight={46}>{energy.score}</Metric>
-          <YStack flex={1} paddingBottom={4}>
-            {/*
-             Sempre no acento. Energia baixa às 22h É a faixa saudável — o
-             corpo funcionando —, e `$destructive` é reservado a valor fora
-             dela (regra 3). Pintar o marcador de alerta toda noite fabricaria
-             achado clínico e contradiria o próprio texto ("reserve o horário
-             para tarefas leves"). A POSIÇÃO na faixa "baixo" já comunica.
-            */}
-            <Meter
-              value={energy.score}
-              color={colors.accent}
-              zones={[
-                { upTo: ENERGY_BANDS.mid, label: 'baixo' },
-                { upTo: ENERGY_BANDS.high, label: 'médio' },
-                { upTo: 100, label: 'alto' },
-              ]}
-            />
-            {energy.nextLabel ? (
-              <Data marginTop="$sm">energia · {energy.nextLabel}</Data>
-            ) : null}
-          </YStack>
-        </XStack>
+      <HomeCarousel cards={[cardTreino, cardNutricao, cardSaude]} />
 
-        {/* Só no modo local: o texto do modelo já explica a calibração dentro
-            do próprio parágrafo, e repetir aqui daria o mesmo aviso duas vezes
-            na mesma tela. */}
-        {energy.calibrating && !insight ? (
-          <Data marginTop="$md">
-            Calibrando — precisão individual após {CALIBRATION_DAYS} dias
-          </Data>
-        ) : null}
-
-        <YStack alignSelf="flex-start" marginTop="$xl">
-          <Button
-            title={energy.action.label}
-            onPress={() => (navigation as any).push(ACTION_ROUTE[energy.action.icon] as never)}
-            icon={<Icon name="arrowRight" size={16} color="#0E0A22" />}
+      {/* A agenda de movimento entre o carrossel e os instrumentos de hoje:
+          o que foi CUMPRIDO, não o que foi planejado — o planejado mora na
+          tela do plano. Não depende de haver plano: esporte avulso também é
+          movimento. O toque abre o progresso, que é onde a história inteira
+          está. */}
+      {movimento ? (
+        <YStack marginTop="$xxl">
+          <MovementWeek
+            semana={buildMovementWeek(movimento, new Date())}
+            onPress={() => abrir('Progress')}
           />
         </YStack>
+      ) : null}
+
+      {/* Os dois instrumentos de hoje, meio a meio: água (entrada) e bateria
+          do corpo (reserva) — a mesma família visual, forma preenchida até a
+          fração. */}
+      {/* O gráfico de HRV, de volta (decisão da fundadora, ago/2026): a curva
+          da última hora contra a faixa da própria média — só quando há
+          medição, nunca decoração vazia. */}
+      {hrvHistory.length >= 2 ? (
+        <YStack marginTop="$xxl">
+          <Card onPress={() => abrir('Hrv')} accessibilityLabel="Variabilidade cardíaca, abrir detalhe">
+            <Label marginBottom="$md">variabilidade (hrv)</Label>
+            <LineChart
+              data={hrvHistory}
+              width={larguraGrafico}
+              height={120}
+              markLast
+              band={{ from: mediaHrv * 0.85, to: mediaHrv * 1.15 }}
+              thresholds={[{ value: mediaHrv, label: 'sua média' }]}
+              xLabels={['1h atrás', '30 min', 'agora']}
+              id="hrv-home"
+            />
+          </Card>
+        </YStack>
+      ) : null}
+
+      {/* Os banners do rodapé, passando sozinhos. */}
+      <YStack marginTop="$xxl">
+        <HomeBanners aoAbrir={abrir} />
       </YStack>
-
-      {/* Série ao vivo: o pulso na ponta é o que diferencia dado corrente de número parado. */}
-      <YStack
-        marginBottom="$xl"
-        onLayout={(e: LayoutChangeEvent) => setChartWidth(e.nativeEvent.layout.width)}
-      >
-        <LiveChart
-          data={hrvHistory}
-          width={chartWidth}
-          height={92}
-          /*
-           A idade do HRV vem do DADO, não de um texto fixo.
-
-           Antes dizia "atualiza a cada 2 s" — cadência do wearable simulado,
-           que emite a cada 1,8 s. Na pulseira real o HRV é medido em janelas
-           agendadas, e a amostra pode ter horas. Prometer segundos ali fazia a
-           tela apresentar dado velho como corrente.
-           */
-          label={
-            latest.hrvMs == null
-              ? `FC · ${Math.round(latest.heartRate)} bpm · ao vivo`
-              : [`HRV · ${Math.round(latest.hrvMs)} ms`, frescor(latest.hrvAt, Date.now())]
-                  .filter(Boolean)
-                  .join(' · ')
-          }
-          id="homeLive"
-        />
-      </YStack>
-
-      <XStack gap="$sm" marginBottom="$sm">
-        <MetricBlock
-          label="HRV"
-          rating={rateHrv(latest.hrvMs)}
-          onPress={() => (navigation as any).push('Hrv' as never)}
-        />
-        <MetricBlock
-          label="Sono"
-          rating={rateSleep(sleep?.score ?? null, sleep?.totalMin ?? null)}
-          onPress={() => (navigation as any).push('Sleep' as never)}
-        />
-      </XStack>
-      <XStack gap="$sm" marginBottom="$sm">
-        <MetricBlock
-          label="Oxigênio"
-          rating={rateSpo2(latest.spo2Pct)}
-          onPress={() => (navigation as any).push('Oxygen' as never)}
-        />
-        {/* Mesmo destino do HRV de propósito: FC de repouso e variabilidade
-            são a mesma tela ("Coração e HRV") — o título de lá assume os dois
-            nomes para o toque não parecer rota errada. */}
-        <MetricBlock
-          label="Coração"
-          rating={rateHeartRate(latest.heartRate)}
-          onPress={() => (navigation as any).push('Hrv' as never)}
-        />
-      </XStack>
 
     </ScrollView>
   );

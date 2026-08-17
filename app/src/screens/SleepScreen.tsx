@@ -4,6 +4,7 @@ import { LayoutChangeEvent } from 'react-native';
 
 import { Note, Row, Section } from '../components/Card';
 import { SyncSleepButton } from '../components/MeasureButton';
+import { SleepPlanner } from '../components/SleepPlanner';
 import { DetailScreen } from '../components/DetailScreen';
 import { Hypnogram } from '../components/charts/Hypnogram';
 import { LineChart } from '../components/charts/LineChart';
@@ -11,6 +12,7 @@ import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
 import { rateSleep } from '../domain/ratings';
 import type { SleepPhase } from '../domain/types';
 import { useBiometricStore } from '../store/biometric.store';
+import { useLifestyleStore } from '../store/lifestyle.store';
 import { useTheme } from '../theme/ThemeProvider';
 
 /**
@@ -30,6 +32,8 @@ export function SleepScreen() {
   const sleep = useBiometricStore((s) => s.sleep);
   const rating = rateSleep(sleep?.score ?? null, sleep?.totalMin ?? null);
   const [chartWidth, setChartWidth] = useState(0);
+  // A hora habitual de dormir vem do perfil de rotina, quando respondida.
+  const bedtime = useLifestyleStore((st) => st.answers.bedtime ?? null);
 
   /*
    Sem noite medida, a tela DIZ isso.
@@ -53,6 +57,11 @@ export function SleepScreen() {
           aqui é buscar de novo o que a pulseira já gravou.
         */}
         <SyncSleepButton />
+
+        {/* O planejador NÃO depende de noite medida: ele é fisiologia, não
+            leitura da pulseira. Quem ainda não dormiu com o aparelho é
+            exatamente quem chega aqui procurando a que horas deitar. */}
+        <SleepPlanner horaDeDormirHabitual={bedtime} />
       </DetailScreen>
     );
   }
@@ -116,6 +125,7 @@ export function SleepScreen() {
         />
       </Section>
 
+      <SleepPlanner horaDeDormirHabitual={bedtime} />
     </DetailScreen>
   );
 }

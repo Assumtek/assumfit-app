@@ -2,6 +2,7 @@ import { XStack, YStack } from '@tamagui/stacks';
 import React, { useState } from 'react';
 import { LayoutChangeEvent, Pressable } from 'react-native';
 
+import { EmptyMetric } from '../components/BandStatus';
 import { Row, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
 import { MeasureButton } from '../components/MeasureButton';
@@ -19,7 +20,12 @@ export function HrvScreen() {
   const [range, setRange] = useState<(typeof RANGES)[number]>('1H');
   const [chartWidth, setChartWidth] = useState(0);
 
-  if (!latest) return <DetailScreen title="Coração e HRV" children={null} />;
+  if (!latest)
+    return (
+      <DetailScreen title="Coração e HRV">
+        <EmptyMetric measure="hrv" />
+      </DetailScreen>
+    );
 
   const rating = rateHrv(latest.hrvMs);
   const baseline = hrvHistory.length

@@ -4,6 +4,7 @@ import { Pressable } from 'react-native';
 
 import { YStack } from '@tamagui/stacks';
 
+import { BandStatusLine } from '../components/BandStatus';
 import { Note, Row, Section } from '../components/Card';
 import { ble } from '../services/ble';
 import { DetailScreen } from '../components/DetailScreen';
@@ -19,6 +20,7 @@ export function DeviceScreen() {
   const disconnect = useBiometricStore((s) => s.disconnect);
   const connect = useBiometricStore((s) => s.connect);
   const connectError = useBiometricStore((s) => s.connectError);
+  const connectionReason = useBiometricStore((s) => s.connectionReason);
   const pairedDeviceId = useBiometricStore((s) => s.pairedDeviceId);
 
   const onDisconnect = async () => {
@@ -106,7 +108,11 @@ export function DeviceScreen() {
         nada ensina a desconfiar dos outros.
       */}
       {connection === 'connected' ? (
-        <YStack marginTop="$xl">
+        <YStack marginTop="$xl" gap="$lg">
+          {/* O que a pulseira está fazendo agora — sincronizando, medindo.
+              É a resposta à pergunta que traz a pessoa a esta tela quando
+              algum número ainda não apareceu. */}
+          <BandStatusLine />
           <Button
             title={localizando ? 'Vibrando…' : 'Localizar pulseira'}
             variant="secondary"
@@ -128,10 +134,16 @@ export function DeviceScreen() {
             disabled={reconectando || conectando || !pairedDeviceId}
             loading={reconectando || conectando}
           />
-          {connectError && !reconectando && !conectando ? (
+          {(connectError || connectionReason) && !reconectando && !conectando ? (
             <Note
               title="Não deu para reconectar"
-              body="Confira se a pulseira está por perto e carregada, e se o Bluetooth do iPhone está ligado — aí tente de novo."
+              // O motivo específico vem do serviço quando ele sabe — "feche o
+              // app do fabricante" pede uma ação que o conselho genérico de
+              // alcance e bateria nunca mencionaria.
+              body={
+                connectionReason ??
+                'Confira se a pulseira está por perto e carregada, e se o Bluetooth do iPhone está ligado — aí tente de novo.'
+              }
             />
           ) : null}
           <Note
@@ -141,7 +153,8 @@ export function DeviceScreen() {
         </YStack>
       )}
 
-      {/* O mesmo componente que Hábitos usa — ver SedentaryReminder.tsx. */}
+      {/* O lar do alerta de sedentarismo desde ago/2026: a tela de Hábitos
+          ficou só com a água. */}
       <SedentaryReminder />
 
       {/*

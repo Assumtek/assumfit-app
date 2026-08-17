@@ -366,57 +366,6 @@ export async function fetchEnergyInsight(hour: number, force = false): Promise<E
   return data;
 }
 
-export type CalendarProvider = 'google' | 'microsoft';
-
-export type CalendarConnections = {
-  /** Provedores configurados NESTE ambiente. Vazio = integração desligada. */
-  available: CalendarProvider[];
-  connected: { provider: CalendarProvider; accountEmail: string; connectedAt: string; lastSyncAt: string | null }[];
-};
-
-export type CalendarEvent = {
-  id: string;
-  title: string;
-  start: string;
-  end: string;
-  allDay: boolean;
-  /** Quantas pessoas, nunca quem — o servidor descarta a lista. */
-  attendeeCount: number;
-  provider: CalendarProvider;
-};
-
-export async function fetchCalendarConnections(): Promise<CalendarConnections> {
-  const { data } = await api.get<CalendarConnections>('/calendar');
-  return data;
-}
-
-/**
- * Devolve a URL de autorização para o app abrir no navegador do sistema.
- *
- * O token do Google nunca chega ao aparelho: quem troca o código e guarda a
- * credencial é o servidor, e o app só recebe o deep link de volta com o
- * resultado.
- */
-export async function calendarAuthUrl(provider: CalendarProvider): Promise<string> {
-  const { data } = await api.get<{ url: string }>(`/calendar/${provider}/connect`);
-  return data.url;
-}
-
-export async function disconnectCalendar(provider: CalendarProvider): Promise<void> {
-  await api.delete(`/calendar/${provider}`);
-}
-
-export async function setCalendarConsent(granted: boolean): Promise<void> {
-  await api.put('/calendar/consent', { granted, version: CONSENT_VERSION });
-}
-
-export async function fetchCalendarEvents(from: Date, to: Date): Promise<CalendarEvent[]> {
-  const { data } = await api.get<{ events: CalendarEvent[] }>('/calendar/events', {
-    params: { from: from.toISOString(), to: to.toISOString() },
-  });
-  return data.events;
-}
-
 export type LifestyleProfile = {
   occupation: string | null;
   workPosture: 'sitting' | 'standing' | 'alternating' | 'moving' | null;
@@ -517,6 +466,8 @@ export type PlanDay = {
   workout: {
     id: string;
     name: string;
+    /** Slug da modalidade do dia; null = plano anterior à fusão (musculação). */
+    modality: string | null;
     muscleGroups: string[];
     estimatedDuration: number | null;
     exerciseCount: number;
@@ -574,6 +525,8 @@ export type WorkoutPhase = {
 export type WorkoutDetail = {
   id: string;
   name: string;
+  /** Slug da modalidade do dia; null = plano anterior à fusão (musculação). */
+  modality: string | null;
   muscleGroups: string[];
   estimatedDuration: number | null;
   phases: WorkoutPhase[];
@@ -954,7 +907,9 @@ export async function getTranscription(
 }
 
 // ============================================================================
-// Esporte — só os agregados sobem; a trilha de GPS morre no aparelho.
+// Esporte — agregados na listagem; o percurso sobe SIMPLIFICADO (≤300 pontos,
+// ~1 m) e só viaja no detalhe — política de ago/2026, para o histórico
+// desenhar o mapa em qualquer aparelho.
 // ============================================================================
 
 export type SportSession = {
@@ -966,7 +921,54 @@ export type SportSession = {
   kcal: number;
   avgHr: number | null;
   maxHr: number | null;
+  /** Execução do plano que esta sessão cumpriu; null = sessão avulsa. */
+  workoutExecutionId?: string | null;
+  /** "Como foi" da sessão avulsa; vinculada guarda na execução. */
+  perceivedEffort?: number | null;
+  rating?: number | null;
+  comment?: string | null;
+  /** O percurso simplificado. Presente só no detalhe (`fetchSportSession`). */
+  track?: { lat: number; lon: number }[] | null;
 };
+
+/** A sessão com o percurso — o que desenha o mapa do histórico. */
+/**
+ * O texto da notificação matinal, redigido pela IA no servidor.
+ *
+ * O aparelho manda a previsão (ele já a consulta para o cartão de ambiente) e
+ * o servidor acrescenta o que só ele sabe: o plano de amanhã e a sequência de
+ * movimento. Quem AGENDA continua sendo o celular — a entrega é local, só a
+ * redação é remota.
+ */
+export type MorningGreeting = { title: string; body: string; source: 'llm' | 'template' };
+
+export async function fetchMorningGreeting(input: {
+  temperature: number;
+  humidity: number;
+  city: string | null;
+}): Promise<MorningGreeting> {
+  const { data } = await api.get<MorningGreeting>('/insights/morning', {
+    params: {
+      temperature: Math.round(input.temperature),
+      humidity: Math.round(input.humidity),
+      city: input.city ?? undefined,
+    },
+  });
+  return data;
+}
+
+export async function fetchSportSession(id: string): Promise<SportSession> {
+  const { data } = await api.get<SportSession>(`/sport/session/${id}`);
+  return data;
+}
+
+/** O "como foi" de uma sessão avulsa — mesma pergunta do treino guiado. */
+export async function updateSportSession(
+  id: string,
+  feedback: { perceivedEffort?: number | null; rating?: number | null; comment?: string | null },
+): Promise<void> {
+  await api.patch(`/sport/session/${id}`, feedback);
+}
 
 export async function saveSportSession(input: {
   sport: string;
@@ -976,6 +978,8 @@ export async function saveSportSession(input: {
   kcal: number;
   avgHr: number | null;
   maxHr: number | null;
+  workoutExecutionId?: string | null;
+  track?: { lat: number; lon: number }[] | null;
 }): Promise<SportSession> {
   const { data } = await api.post<SportSession>('/sport/session', input);
   return data;

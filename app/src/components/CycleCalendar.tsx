@@ -2,9 +2,17 @@ import { XStack, YStack } from '@tamagui/stacks';
 import React, { useMemo, useState } from 'react';
 import { Pressable, type ViewStyle } from 'react-native';
 
+import { COR_DA_FASE } from './CycleRing';
 import { Icon } from './Icon';
 import { Body, Data } from './ui';
-import { PHASE_COPY, phaseOn, phaseProjected, type CyclePhase, type LoggedCycle } from '../domain/cycle';
+import {
+  PHASE_COPY,
+  periodLink,
+  phaseOn,
+  phaseProjected,
+  type CyclePhase,
+  type LoggedCycle,
+} from '../domain/cycle';
 import { useTheme } from '../theme/ThemeProvider';
 
 /**
@@ -30,6 +38,9 @@ const MESES = [
 function chave(ano: number, mes: number, dia: number): string {
   return `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
 }
+
+/** Diâmetro da cápsula do período: o círculo do dia (30) com folga de 2. */
+const CAPSULA = 34;
 
 function hojeChave(): string {
   const d = new Date();
@@ -57,6 +68,15 @@ export function CycleCalendar({
 
   const registrados = useMemo(() => new Set(marcados), [marcados]);
   const hoje = hojeChave();
+
+  /*
+   A largura da grade é MEDIDA porque a cápsula do período precisa de número,
+   não de porcentagem: ela começa no meio de uma célula e termina no meio de
+   outra, atravessando a borda entre as duas — e `50%` de um filho absoluto
+   não sabe de que largura é a metade.
+  */
+  const [larguraGrade, setLarguraGrade] = useState(0);
+  const ladoCelula = larguraGrade / 7;
 
   const primeiroDiaSemana = new Date(ano, mes, 1).getDay();
   const diasNoMes = new Date(ano, mes + 1, 0).getDate();
@@ -109,13 +129,23 @@ export function CycleCalendar({
         ))}
       </XStack>
 
-      <XStack flexWrap="wrap">
+      <XStack flexWrap="wrap" onLayout={(e) => setLarguraGrade(e.nativeEvent.layout.width)}>
         {celulas.map((dia, i) => {
           if (dia === null) return <YStack key={`v${i}`} style={CELULA} />;
 
           const k = chave(ano, mes, dia);
           const registrado = registrados.has(k);
           const futuro = k > hoje;
+
+          /*
+            A CÁPSULA do período (decisão da fundadora, ago/2026): em vez de
+            um anel por dia, um traço contínuo em volta da sequência inteira
+            de menstruação — começa arredondado no primeiro dia, segue reto
+            pelos dias do meio e fecha no último. A quebra na virada de semana
+            é obrigatória: a linha não pode saltar da borda direita da grade
+            para a esquerda da linha de baixo.
+          */
+          const { antes: ligaAntes, depois: ligaDepois } = periodLink(k, registrados, i % 7);
           // A fase de cada dia sai do MESMO cálculo da tela — o passado pela
           // fase real, o futuro E o trecho anterior ao primeiro registro pela
           // PROJEÇÃO: o calendário é a visão principal e pinta o mês INTEIRO.
@@ -141,34 +171,62 @@ export function CycleCalendar({
             >
               <>
                 {/*
-                  O DIA INTEIRO carrega a fase: a mancha no círculo do número.
-                  A tira de 3px que ficava embaixo não diferenciava quatro
-                  intensidades — área pequena demais para rampa de opacidade
-                  ler. No círculo de 30px, lê. O anel marca o HOJE.
+                  A FAIXA do período, preenchida e contínua: ela atravessa a
+                  célula inteira nos dias do meio e só arredonda nas pontas do
+                  trecho. Era um círculo por dia — cinco discos em fila liam
+                  como cinco marcações, não como um período de cinco dias.
+                */}
+                {registrado && ladoCelula > 0 ? (
+                  <YStack
+                    position="absolute"
+                    height={CAPSULA}
+                    top={(ladoCelula - CAPSULA) / 2}
+                    left={ligaAntes ? 0 : (ladoCelula - CAPSULA) / 2}
+                    right={ligaDepois ? 0 : (ladoCelula - CAPSULA) / 2}
+                    borderTopLeftRadius={ligaAntes ? 0 : CAPSULA / 2}
+                    borderBottomLeftRadius={ligaAntes ? 0 : CAPSULA / 2}
+                    borderTopRightRadius={ligaDepois ? 0 : CAPSULA / 2}
+                    borderBottomRightRadius={ligaDepois ? 0 : CAPSULA / 2}
+                    style={{ backgroundColor: corDaFase('menstrual', colors.accent) }}
+                  />
+                ) : null}
+
+                {/*
+                  A mancha de fase segue no círculo do dia — mas só onde NÃO
+                  há registro: no período quem pinta é a faixa acima, e dois
+                  preenchimentos sobrepostos escureceriam as pontas.
                 */}
                 <YStack
                   width={30}
                   height={30}
                   borderRadius={15}
-                  borderWidth={k === hoje ? 1.5 : 0}
-                  borderColor={k === hoje ? '$foreground' : 'transparent'}
                   alignItems="center"
                   justifyContent="center"
-                  style={fase ? { backgroundColor: corDaFase(fase.phase, colors.accent) } : undefined}
+                  style={
+                    fase && !registrado
+                      ? { backgroundColor: corDaFase(fase.phase, colors.accent) }
+                      : undefined
+                  }
                 >
-                  <Data style={{ color: corDoNumero(fase?.phase ?? null, futuro, k === hoje, colors) }}>
+                  <Data
+                    fontWeight={k === hoje ? '700' : '400'}
+                    style={{
+                      color: corDoNumero(
+                        registrado ? 'menstrual' : (fase?.phase ?? null),
+                        futuro,
+                        k === hoje,
+                        colors,
+                      ),
+                    }}
+                  >
                     {dia}
                   </Data>
                 </YStack>
-                {/*
-                  O ponto cheio continua sendo o ÚNICO glifo de registro — a
-                  mancha é fase deduzida (no futuro e antes do primeiro
-                  registro, projetada). Misturar faria previsão virar fato.
-                */}
-                {registrado ? (
-                  <YStack width={5} height={5} borderRadius={3} backgroundColor="$primary" />
+
+                {k === hoje ? (
+                  <YStack width={4} height={4} borderRadius={2} backgroundColor="$foreground" />
                 ) : (
-                  <YStack width={5} height={5} />
+                  <YStack width={4} height={4} />
                 )}
               </>
             </Pressable>
@@ -185,31 +243,37 @@ const CELULA: ViewStyle = {
   aspectRatio: 1,
   alignItems: 'center',
   justifyContent: 'center',
-  gap: 3,
+  gap: 2,
 };
 
 /**
- * Quatro fases, UM acento: o mesmo roxo em quatro intensidades.
+ * A cor da fase no calendário — as MESMAS do anel, em fundo suave.
  *
- * Um acento por tela é regra do sistema — quatro matizes transformariam o
- * calendário em gráfico decorativo. A rampa de opacidade mantém a cor única e
- * ainda ordena as fases por "peso" fisiológico: menstruação mais forte,
- * ovulação em seguida, folicular e lútea como fundo.
+ * A rampa de opacidade do roxo que morava aqui saiu junto com a decisão de
+ * ago/2026 de dar cor própria a cada fase: manter duas linguagens de cor na
+ * mesma tela (anel colorido, calendário roxo) faria a pessoa procurar
+ * significado numa diferença que não existe.
+ *
+ * O dia registrado é o único preenchido forte; os demais recebem a cor da
+ * fase diluída, para o número continuar legível por cima.
  */
-// Sobre a MANCHA do dia inteiro (30px), estes degraus separam as quatro fases
-// de relance — na tira de 3px de antes, nenhum degrau separava.
-const OPACIDADE_DA_FASE: Record<CyclePhase, number> = {
+const ALFA_DA_FASE: Record<CyclePhase, number> = {
   menstrual: 0.9,
-  ovulatory: 0.5,
-  follicular: 0.24,
-  luteal: 0.1,
+  ovulatory: 0.35,
+  follicular: 0.2,
+  luteal: 0.18,
 };
 
-export function corDaFase(fase: CyclePhase, accent: string): string {
-  const r = parseInt(accent.slice(1, 3), 16);
-  const g = parseInt(accent.slice(3, 5), 16);
-  const b = parseInt(accent.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},${OPACIDADE_DA_FASE[fase]})`;
+export function corDaFase(fase: CyclePhase, _accent?: string): string {
+  return comAlfa(COR_DA_FASE[fase], ALFA_DA_FASE[fase]);
+}
+
+/** `#E5484D` + 0,2 → `rgba(229,72,77,0.2)`. */
+function comAlfa(hex: string, alfa: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alfa})`;
 }
 
 /**
@@ -226,7 +290,9 @@ function corDoNumero(
   ehHoje: boolean,
   colors: { text: string; textFaint: string; hairlineStrong: string },
 ): string {
-  if (fase === 'menstrual') return '#0E0A22';
+  // Sobre o vermelho cheio da menstruação, branco é o que alcança contraste
+  // nos dois temas — o ink escuro sumia ali.
+  if (fase === 'menstrual') return '#FFFFFF';
   if (fase === 'ovulatory') return colors.text;
   if (futuro) return colors.hairlineStrong;
   if (ehHoje) return colors.text;

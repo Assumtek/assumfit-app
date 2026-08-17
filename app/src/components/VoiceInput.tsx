@@ -1,7 +1,7 @@
 import { YStack } from '@tamagui/stacks';
 import { AudioModule, RecordingPresets, useAudioRecorder } from 'expo-audio';
 import React, { useRef, useState } from 'react';
-import { ActivityIndicator, Pressable } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Pressable } from 'react-native';
 
 import * as api from '../services/api.service';
 import { useTheme } from '../theme/ThemeProvider';
@@ -27,20 +27,54 @@ export function VoiceInput({
   const [estado, setEstado] = useState<'idle' | 'gravando' | 'transcrevendo'>('idle');
   const cancelado = useRef(false);
 
+  /*
+   Falha NUNCA é silêncio. O `onError` era opcional e nenhuma das três telas
+   que usam o ditado o passava — microfone negado virava "aperto e nada
+   acontece". Sem handler da tela, o próprio componente avisa, em alerta
+   nativo; o motivo sempre vai para o log.
+   */
   const falha = (msg: string) => {
     setEstado('idle');
-    onError?.(msg);
+    console.warn('[ditado]', msg);
+    if (onError) onError(msg);
+    else Alert.alert('Ditado por voz', msg);
   };
 
   const comecar = async () => {
     const perm = await AudioModule.requestRecordingPermissionsAsync();
-    if (!perm.granted) return falha('Sem acesso ao microfone. Conceda em Ajustes.');
+    if (!perm.granted) {
+      setEstado('idle');
+      console.warn('[ditado] microfone negado; canAskAgain =', String(perm.canAskAgain));
+      /*
+       Negada uma vez, o iOS não pergunta de novo — o único caminho é os
+       Ajustes, e o alerta leva até lá. Aqui o alerta vale mesmo com `onError`
+       da tela: é o único caso com uma AÇÃO fora do app.
+      */
+      Alert.alert(
+        'Microfone sem permissão',
+        'Para ditar, o AssumFit precisa do microfone. Conceda em Ajustes e tente de novo.',
+        [
+          { text: 'Agora não', style: 'cancel' },
+          { text: 'Abrir Ajustes', onPress: () => void Linking.openSettings() },
+        ],
+      );
+      return;
+    }
     try {
+      /*
+       A sessão de áudio do iOS precisa ser posta em modo de GRAVAÇÃO antes:
+       sem `allowsRecording`, o `record()` falha com "Calling the 'record'
+       function has failed" — foi exatamente o sintoma em produção de teste
+       (ago/2026). Volta ao normal no fim, porque o modo de gravação muda a
+       rota do som do sistema (campainha ao fone de ouvido, por exemplo).
+      */
+      await AudioModule.setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
       recorder.record();
       cancelado.current = false;
       setEstado('gravando');
-    } catch {
+    } catch (err) {
+      console.warn('[ditado] preparo falhou:', err instanceof Error ? err.message : String(err));
       falha('Não deu para começar a gravação.');
     }
   };
@@ -49,6 +83,9 @@ export function VoiceInput({
     setEstado('transcrevendo');
     try {
       await recorder.stop();
+      // Devolve a sessão ao modo normal assim que a captura termina — o modo
+      // de gravação segue valendo para o app inteiro enquanto ninguém desfaz.
+      void AudioModule.setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
       const uri = recorder.uri;
       if (!uri) return falha('Gravação vazia.');
 
@@ -75,8 +112,17 @@ export function VoiceInput({
         if (r.status === 'FAILED') return falha('A transcrição falhou. Tente de novo.');
       }
       falha('A transcrição demorou demais. Tente um áudio mais curto.');
-    } catch {
-      falha('A transcrição falhou. Confira a conexão.');
+    } catch (err) {
+      const status: number | undefined = (err as { response?: { status?: number } })?.response
+        ?.status;
+      console.warn('[ditado] transcrição falhou:', status ?? (err instanceof Error ? err.message : String(err)));
+      // 503 é o servidor dizendo "não configurado" — culpa da infraestrutura,
+      // não da conexão de quem grava, e a frase precisa apontar para o lado certo.
+      falha(
+        status === 503
+          ? 'O ditado por voz está indisponível no servidor no momento.'
+          : 'A transcrição falhou. Confira a conexão.',
+      );
     }
   };
 

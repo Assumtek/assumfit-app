@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, TextInput } from 'react-native';
 
 import { DetailScreen } from '../../components/DetailScreen';
+import { ScalePicker } from '../../components/ScalePicker';
 import { Icon } from '../../components/Icon';
 import { Button, Card, Data, HeroCard, SectionTitle } from '../../components/ui';
 import { achievementsFor, type Achievement } from '../../domain/achievements';
@@ -203,7 +204,7 @@ export function TrainingFinishedScreen() {
           <Text fontSize={15} color="$foreground" marginTop="$sm" marginBottom="$md">
             Quanto este treino puxou?
           </Text>
-          <Scale values={[2, 4, 6, 8, 10]} value={effort} onPick={setEffort} label="Esforço" />
+          <ScalePicker values={[2, 4, 6, 8, 10]} value={effort} onPick={setEffort} label="Esforço" />
           <XStack justifyContent="space-between" marginTop="$sm">
             <Text fontSize={12} color="$mutedForeground">
               leve
@@ -227,7 +228,7 @@ export function TrainingFinishedScreen() {
           <Text fontSize={15} color="$foreground" marginTop="$sm" marginBottom="$md">
             O treino de hoje serviu para você?
           </Text>
-          <Scale values={[1, 2, 3, 4, 5]} value={rating} onPick={setRating} label="Nota" />
+          <ScalePicker values={[1, 2, 3, 4, 5]} value={rating} onPick={setRating} label="Nota" />
         </Card>
 
         <Card>
@@ -274,47 +275,3 @@ export function TrainingFinishedScreen() {
   );
 }
 
-/** Escala de resposta. Nenhum valor vem marcado — ver o cabeçalho da tela. */
-function Scale({
-  values,
-  value,
-  onPick,
-  label,
-}: {
-  values: number[];
-  value: number | null;
-  onPick: (v: number) => void;
-  label: string;
-}) {
-  return (
-    <XStack gap="$sm">
-      {values.map((v) => (
-        <Pressable
-          key={v}
-          onPress={() => onPick(v)}
-          accessibilityRole="radio"
-          accessibilityState={{ selected: value === v }}
-          accessibilityLabel={`${label} ${v}`}
-          style={{ flex: 1 }}
-        >
-          <YStack
-            alignItems="center"
-            paddingVertical="$md"
-            borderRadius={10}
-            borderWidth={1}
-            borderColor={value === v ? '$primary' : '$border'}
-            backgroundColor={value === v ? 'rgba(135,123,240,0.15)' : 'transparent'}
-          >
-            <Text
-              fontSize={14}
-              fontWeight={value === v ? '700' : '400'}
-              color={value === v ? '$primary' : '$mutedForeground'}
-            >
-              {v}
-            </Text>
-          </YStack>
-        </Pressable>
-      ))}
-    </XStack>
-  );
-}

@@ -21,12 +21,13 @@ import { useTheme } from '../../theme/ThemeProvider';
  *
  * Leva de 50 a 120 segundos — duas chamadas de modelo sobre o catálogo inteiro.
  * Uma tela de espera desse tamanho precisa fazer duas coisas ao mesmo tempo:
- * não mentir sobre o progresso (não há porcentagem real a mostrar) e não
- * parecer travada.
+ * não mentir sobre o progresso e não parecer travada.
  *
- * A saída é dizer o que está acontecendo, em etapas que correspondem ao que o
- * servidor realmente faz. O anel é indeterminado de propósito — uma barra
- * chegando a 90% e parando ali é pior que nenhuma barra.
+ * O servidor não reporta fase, então o anel avança pelo TEMPO, numa curva que
+ * satura em 95% — calibrada para a duração típica — e só a confirmação do
+ * servidor fecha o círculo. Não é uma porcentagem medida, e é por isso que os
+ * últimos 5% são reservados ao desfecho real; mas um anel parado (a versão
+ * anterior, fixa em 22%) dizia algo pior: que nada estava acontecendo.
  */
 const STEPS = [
   'Lendo o que você respondeu',
@@ -40,16 +41,17 @@ const POLL_MS = 2500;
 
 /**
  * Teto de espera. Acima disso a geração não terminou e a tela para de esperar —
- * o registro no servidor continua, e é ele que decide o desfecho.
+ * o registro no servidor continua, e é ele que decide o desfecho. Acompanha o
+ * teto do backend (300 s, que cobre juiz + re-votação) com folga de polling.
  */
-const TIMEOUT_MS = 240_000;
+const TIMEOUT_MS = 330_000;
 
 export function GeneratingScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation<any>();
   const refresh = useWorkoutStore((s) => s.refresh);
 
-  const [step, setStep] = useState(0);
+  const [elapsedS, setElapsedS] = useState(0);
   const [status, setStatus] = useState<GenerationStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const startedAt = useRef(Date.now());
@@ -67,7 +69,9 @@ export function GeneratingScreen() {
         if (current.finished) {
           if (current.status === 'DONE') {
             await refresh();
-            navigation.replace('Plan');
+            // Meio segundo para o anel FECHAR na tela antes de trocar: o
+            // desfecho visível é parte do progresso, não um luxo.
+            setTimeout(() => alive && navigation.replace('Plan'), 600);
           }
           return;
         }
@@ -91,12 +95,19 @@ export function GeneratingScreen() {
     };
   }, [navigation, refresh]);
 
-  // As etapas avançam por tempo, não por sinal do servidor — ele não reporta
-  // fase. Elas são honestas sobre a ORDEM do que acontece, não sobre o instante.
+  // O relógio da tela: anel e etapas derivam os dois do mesmo tempo decorrido.
   useEffect(() => {
-    const id = setInterval(() => setStep((s) => Math.min(STEPS.length - 1, s + 1)), 18_000);
+    const id = setInterval(() => setElapsedS((Date.now() - startedAt.current) / 1000), 250);
     return () => clearInterval(id);
   }, []);
+
+  const done = status?.finished && status.status === 'DONE';
+  /*
+   1 - e^(-t/55): passa por ~65% aos 60 s e ~80% aos 90 s — o meio da faixa
+   real de duração — e nunca alcança o teto de 95% sem o servidor confirmar.
+   */
+  const fraction = done ? 1 : Math.min(0.95, 1 - Math.exp(-elapsedS / 55));
+  const step = Math.min(STEPS.length - 1, Math.floor(elapsedS / 18));
 
   const failed = status?.finished && status.status !== 'DONE';
 
@@ -137,7 +148,7 @@ export function GeneratingScreen() {
             <Note
               title="escopo do AssumFit"
               body={
-                'O AssumFit é um produto de bem-estar e produtividade, não um dispositivo médico. ' +
+                'O AssumFit é um produto de esporte, bem-estar e autoconhecimento, não um dispositivo médico. ' +
                 'Ele não diagnostica nem substitui avaliação profissional — e quando o seu perfil ' +
                 'pede essa avaliação, o certo é dizer isso em vez de gerar um treino mesmo assim.'
               }
@@ -152,7 +163,16 @@ export function GeneratingScreen() {
     <DetailScreen title="Seu treino">
       <YStack gap="$xl" paddingTop="$xl">
         <YStack alignItems="flex-start">
-          <ProgressRing size={132} strokeWidth={2} fraction={0.22} color={colors.accent} />
+          <ProgressRing size={132} strokeWidth={2} fraction={fraction} color={colors.accent}>
+            <Text
+              fontSize={28}
+              fontWeight="300"
+              color="$foreground"
+              fontVariant={['tabular-nums']}
+            >
+              {Math.round(fraction * 100)}%
+            </Text>
+          </ProgressRing>
         </YStack>
 
         <YStack gap="$sm">

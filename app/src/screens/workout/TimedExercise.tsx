@@ -33,15 +33,11 @@ export function TimedExercise({
   seconds,
   description,
   phase,
-  onComplete,
-  onSkip,
 }: {
   name: string;
   seconds: number;
   description?: string | null;
   phase: PhaseType;
-  onComplete: () => void;
-  onSkip: () => void;
 }) {
   const { colors } = useTheme();
   const cor = PHASE_COLOR[phase];
@@ -163,24 +159,16 @@ export function TimedExercise({
         {formatarRelogio(restante)}
       </Text>
 
+      {/* Só o controle do RELÓGIO: concluir, pular e finalizar moram no
+          rodapé de ações da tela, o mesmo dos exercícios de série. */}
       <YStack width="100%" marginTop="$xl" gap="$sm">
-        {concluido ? (
-          <Button
-            title="Concluir exercício"
-            icon={<Icon name="check" size={16} color={colors.ink} />}
-            onPress={onComplete}
-          />
-        ) : (
+        {!concluido ? (
           <Button
             title={rodando ? 'Pausar' : restante === seconds ? 'Iniciar' : 'Retomar'}
             icon={<Icon name={rodando ? 'pause' : 'play'} size={16} color={colors.ink} />}
             onPress={alternar}
           />
-        )}
-
-        <XStack justifyContent="center">
-          <Button title="Pular" variant="ghost" size="md" onPress={onSkip} />
-        </XStack>
+        ) : null}
       </YStack>
 
       {concluido ? (

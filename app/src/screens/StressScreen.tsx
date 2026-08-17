@@ -2,6 +2,7 @@ import { YStack } from '@tamagui/stacks';
 import React, { useState } from 'react';
 import { LayoutChangeEvent } from 'react-native';
 
+import { EmptyMetric } from '../components/BandStatus';
 import { Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
 import { MeasureButton } from '../components/MeasureButton';
@@ -16,7 +17,12 @@ export function StressScreen() {
   const latest = useBiometricStore((s) => s.latest);
   const byHour = useBiometricStore((s) => s.stressByHour);
   const [chartWidth, setChartWidth] = useState(0);
-  if (!latest) return <DetailScreen title="Stress" children={null} />;
+  if (!latest)
+    return (
+      <DetailScreen title="Stress">
+        <EmptyMetric measure="stress" />
+      </DetailScreen>
+    );
 
   const rating = rateStress(latest.stressScore);
 

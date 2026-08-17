@@ -37,7 +37,12 @@ export type EnergyState = {
   nextLabel: string | null;
   /** Score projetado para cada hora do dia, 0 a 23. */
   curve: number[];
-  action: { label: string; icon: 'play' | 'calendar' | 'drop' };
+  /**
+   * `play` e `calendar` seguem no tipo por causa do INSIGHT do servidor, que
+   * pode ter sido gerado antes do reposicionamento e chegar do cache. As
+   * ações locais não os usam mais: a home incentiva movimento, não foco.
+   */
+  action: { label: string; icon: 'play' | 'calendar' | 'drop' | 'dumbbell' | 'footprints' };
 };
 
 /**
@@ -186,26 +191,33 @@ type Copy = Omit<EnergyState, 'score' | 'level' | 'calibrating' | 'curve' | 'nex
  * nomeia o sinal responsável em vez de repetir um parágrafo por faixa — aqui
  * não dá para fazer o mesmo, porque água e sono do dia moram no servidor.
  */
+/*
+ REPOSICIONAMENTO (ago/2026, decisão da fundadora): o score fala PRONTIDÃO
+ para treinar, não energia para produzir. A home incentiva esporte, movimento
+ e recuperação; foco e agenda continuam como telas do menu, mas nunca mais
+ são a ação sugerida. O espelho disto no servidor é `ai/models/insight.py` —
+ mudou aqui, muda lá.
+ */
 const COPY: Record<EnergyLevel, (score: number) => Copy> = {
   high: () => ({
-    eyebrow: 'seu estado agora',
-    title: 'Você está no seu\nmelhor momento',
-    description: 'Corpo descansado e recuperado. Ótima hora para tarefas que exigem concentração e decisões importantes.',
-    levelLabel: 'nível alto',
-    action: { label: 'Iniciar sessão de foco', icon: 'play' },
+    eyebrow: 'pronto para treinar',
+    title: 'Corpo pronto para\ntreinar forte',
+    description: 'Recuperação em dia. Aproveite a janela para treinar ou praticar seu esporte com intensidade.',
+    levelLabel: 'prontidão alta',
+    action: { label: 'Abrir o treino de hoje', icon: 'dumbbell' },
   }),
   mid: () => ({
-    eyebrow: 'hora de tarefas leves',
-    title: 'Aproveite para\nreuniões e revisões',
-    description: 'Pico cognitivo passou. Bom momento para alinhar pendências e responder mensagens.',
-    levelLabel: 'nível médio',
-    action: { label: 'Abrir agenda', icon: 'calendar' },
+    eyebrow: 'bom para se mover',
+    title: 'Bom momento para\nmovimento leve',
+    description: 'Prontidão mediana. Caminhada, mobilidade ou um esporte tranquilo servem bem agora.',
+    levelLabel: 'prontidão média',
+    action: { label: 'Registrar um esporte', icon: 'footprints' },
   }),
   low: () => ({
     eyebrow: 'hora de recuperar',
-    title: 'Seu corpo pede\numa pausa agora',
-    description: 'Evite decisões importantes. Hidrate-se e reserve esse momento para tarefas leves.',
-    levelLabel: 'nível baixo',
+    title: 'Seu corpo pede\nrecuperação',
+    description: 'Deixe a intensidade para amanhã: água, movimento leve e um sono cedo valem mais agora.',
+    levelLabel: 'prontidão baixa',
     action: { label: 'Beber água agora', icon: 'drop' },
   }),
 };

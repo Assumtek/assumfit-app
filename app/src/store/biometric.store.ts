@@ -175,7 +175,7 @@ import { notifyAttention, notifyBreathing, setupAndroidChannel, type MetricaDeAt
 import { syncQueue } from '../services/sync.service';
 import { rateHeartRate, ratePressure, rateSpo2 } from '../domain/ratings';
 import { useWorkoutStore } from './workout.store';
-import type { ConnectionState, DiscoveredDevice, MeasurableKind } from '../services/ble';
+import type { BandActivity, ConnectionState, DiscoveredDevice, MeasurableKind } from '../services/ble';
 
 /**
  * Freio da atualização de sinal, por aparelho.
@@ -191,6 +191,16 @@ const HISTORY_SIZE = 90;
 
 type BiometricState = {
   connection: ConnectionState;
+  /**
+   * Motivo do último `error` de conexão, quando o serviço soube dizer.
+   *
+   * Nascia no módulo nativo ("feche o app do fabricante…") e morria antes da
+   * tela: o `connectError` só cobre rejeição do `connect()`, e a falha da
+   * entrega ao SDK chega DEPOIS, pelo estado. Sem isto ela era só "erro".
+   */
+  connectionReason: string | null;
+  /** Etapa em curso no canal da pulseira — o que preenche a espera com verdade. */
+  bandActivity: BandActivity | null;
   devices: DiscoveredDevice[];
   latest: Reading | null;
   hrvHistory: number[];
@@ -280,6 +290,8 @@ type BiometricState = {
 
 export const useBiometricStore = create<BiometricState>((set, get) => ({
   connection: 'idle',
+  connectionReason: null,
+  bandActivity: null,
   pairedDeviceId: undefined,
   bandSkipped: undefined,
   skipBand: () => {
@@ -631,7 +643,52 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     syncQueue.start();
     void get().hydrate();
     void setupAndroidChannel();
-    const offState = ble.onStateChange((connection) => set({ connection }));
+
+    /*
+     Ciclo de sincronização ENQUANTO conectada — é o que torna a conexão
+     fluida de verdade.
+
+     A varredura da memória rodava uma vez, na conexão, e dali em diante a
+     tela só mudava se chegasse leitura ao vivo: "Lendo agora" piscando e os
+     anéis parados, porque estresse, SpO₂ e passos que a pulseira registra
+     sozinha (agendados a cada 30 min) nunca eram relidos. A bateria idem —
+     o serviço a conhecia e o store nunca perguntava, e a home mostrava "—"
+     com a pulseira conectada do lado.
+
+     Duas cadências: uma leitura inicial ~10 s após conectar (dá tempo de o
+     `afterConnect` do serviço buscar a bateria e ligar os agendamentos) e um
+     ciclo de 4 min depois disso. O canal é serial — cada varredura leva
+     poucos segundos e o intervalo é folgado de propósito.
+     */
+    let cicloSync: ReturnType<typeof setInterval> | null = null;
+    let leituraInicial: ReturnType<typeof setTimeout> | null = null;
+    const pararCiclo = () => {
+      if (cicloSync) clearInterval(cicloSync);
+      if (leituraInicial) clearTimeout(leituraInicial);
+      cicloSync = null;
+      leituraInicial = null;
+    };
+    const puxarDoAparelho = async () => {
+      // Antes e depois: a bateria pode ter chegado ao serviço no meio da
+      // varredura, e a segunda leitura apanha o valor fresco.
+      set({ batteryPct: ble.getBatteryLevel() });
+      await get().syncHistory();
+      set({ batteryPct: ble.getBatteryLevel() });
+    };
+
+    const offState = ble.onStateChange((connection, reason) => {
+      set({ connection, connectionReason: reason ?? null });
+      pararCiclo();
+      if (connection === 'connected') {
+        leituraInicial = setTimeout(() => void puxarDoAparelho(), 10_000);
+        cicloSync = setInterval(() => void puxarDoAparelho(), 4 * 60_000);
+      } else {
+        // Fora do ar o valor congelaria mentindo atualidade; traço é a verdade.
+        set({ batteryPct: null });
+      }
+    });
+    // Serviço sem etapas (mock, GATT próprio) simplesmente não narra nada.
+    const offActivity = ble.onActivity?.((bandActivity) => set({ bandActivity }));
     const offReading = ble.subscribe((reading) => {
       vigiarLeitura(reading);
       // Toda leitura entra na fila de envio. Ela só sai de lá com confirmação
@@ -700,7 +757,9 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     });
     return () => {
       syncQueue.stop();
+      pararCiclo();
       offState();
+      offActivity?.();
       offReading();
     };
   },

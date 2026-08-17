@@ -1,4 +1,13 @@
-import { DEFAULT_LENGTH, averageLength, monthAhead, nextPeriod, phaseOn, type LoggedCycle } from '../cycle';
+import {
+  DEFAULT_LENGTH,
+  averageLength,
+  monthAhead,
+  nextPeriod,
+  periodLink,
+  phaseOn,
+  shiftDay,
+  type LoggedCycle,
+} from '../cycle';
 
 /**
  * O que estes testes travam é a PROPRIEDADE, não o número.
@@ -213,5 +222,55 @@ describe('groupCycles', () => {
       { startedAt: '2026-07-15', durationDays: 1 },
     ]);
     expect(groupCycles([])).toEqual([]);
+  });
+});
+
+describe('periodLink — a faixa contínua do período', () => {
+  const marcados = new Set(['2026-08-10', '2026-08-11', '2026-08-12']);
+
+  it('o primeiro dia abre o trecho: fecha à esquerda, segue à direita', () => {
+    // 10/8 é uma segunda-feira: coluna 1 na grade que começa no domingo.
+    expect(periodLink('2026-08-10', marcados, 1)).toEqual({ antes: false, depois: true });
+  });
+
+  it('o dia do meio não tem ponta nenhuma', () => {
+    expect(periodLink('2026-08-11', marcados, 2)).toEqual({ antes: true, depois: true });
+  });
+
+  it('o último dia fecha o trecho', () => {
+    expect(periodLink('2026-08-12', marcados, 3)).toEqual({ antes: true, depois: false });
+  });
+
+  it('dia solto não liga a nada', () => {
+    expect(periodLink('2026-08-20', new Set(['2026-08-20']), 4)).toEqual({
+      antes: false,
+      depois: false,
+    });
+  });
+
+  it('a faixa QUEBRA na virada de semana, mesmo com os dias consecutivos', () => {
+    const semana = new Set(['2026-08-15', '2026-08-16']);
+    // 15/8 é sábado (coluna 6) e 16/8 é domingo (coluna 0) — linhas diferentes.
+    expect(periodLink('2026-08-15', semana, 6).depois).toBe(false);
+    expect(periodLink('2026-08-16', semana, 0).antes).toBe(false);
+  });
+
+  it('dia não marcado nunca liga', () => {
+    expect(periodLink('2026-08-13', marcados, 4)).toEqual({ antes: false, depois: false });
+  });
+
+  it('o trecho atravessa a virada de mês', () => {
+    const virada = new Set(['2026-07-31', '2026-08-01']);
+    // 31/7 é sexta (coluna 5), 1/8 é sábado (coluna 6) — mesma linha.
+    expect(periodLink('2026-07-31', virada, 5).depois).toBe(true);
+    expect(periodLink('2026-08-01', virada, 6).antes).toBe(true);
+  });
+});
+
+describe('shiftDay', () => {
+  it('atravessa mês e ano', () => {
+    expect(shiftDay('2026-08-01', -1)).toBe('2026-07-31');
+    expect(shiftDay('2026-12-31', 1)).toBe('2027-01-01');
+    expect(shiftDay('2026-03-01', -1)).toBe('2026-02-28');
   });
 });

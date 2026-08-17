@@ -317,3 +317,35 @@ export const PHASE_COPY: Record<CyclePhase, { label: string; body: string; train
     training: 'Volume moderado rende mais que intensidade. Água e sono pesam mais agora.',
   },
 };
+
+/**
+ * Como um dia de menstruação se liga aos vizinhos DENTRO da grade do mês.
+ *
+ * É o que transforma cinco marcações soltas num período único desenhado: o
+ * dia do meio não tem ponta, o primeiro arredonda à esquerda, o último à
+ * direita. A quebra na virada de semana é obrigatória — a faixa não pode
+ * saltar da borda direita da grade para a esquerda da linha de baixo, e é por
+ * isso que a coluna entra na conta junto com o calendário.
+ */
+export type DayLink = { antes: boolean; depois: boolean };
+
+export function periodLink(
+  dia: string,
+  marcados: Set<string>,
+  coluna: number,
+): DayLink {
+  if (!marcados.has(dia)) return { antes: false, depois: false };
+  return {
+    antes: coluna > 0 && marcados.has(shiftDay(dia, -1)),
+    depois: coluna < 6 && marcados.has(shiftDay(dia, 1)),
+  };
+}
+
+/** `2026-08-01` + (-1) → `2026-07-31`. Atravessa mês e ano no fuso LOCAL. */
+export function shiftDay(dia: string, delta: number): string {
+  const [ano, mes, d] = dia.split('-').map(Number);
+  const data = new Date(ano, mes - 1, d + delta);
+  const mm = String(data.getMonth() + 1).padStart(2, '0');
+  const dd = String(data.getDate()).padStart(2, '0');
+  return `${data.getFullYear()}-${mm}-${dd}`;
+}

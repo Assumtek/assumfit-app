@@ -6,35 +6,74 @@ import { Note } from '../../components/Card';
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
 import { Body, Card, Data, Label, SectionTitle } from '../../components/ui';
+import { SPORTS, sportClock } from '../../domain/sport';
 import { formatDuration } from '../../domain/workout';
-import { fetchExecutionHistory, type ExecutionHistoryItem } from '../../services/api.service';
+import {
+  fetchExecutionHistory,
+  fetchSportSessions,
+  type ExecutionHistoryItem,
+  type SportSession,
+} from '../../services/api.service';
 import { useTheme } from '../../theme/ThemeProvider';
 
 const DIAS = 30;
 
 /**
- * Histórico de treinos — o que foi feito, não o que estava planejado.
+ * Histórico CONSOLIDADO — treino guiado e registro de esporte na mesma linha
+ * do tempo (decisão da fundadora, ago/2026): movimento é um só, e quem quer
+ * rever a semana não deveria precisar saber em qual das duas telas cada
+ * sessão nasceu.
  *
- * Saiu de dentro do plano porque respondia uma pergunta de outro momento: quem
- * abre a tela de treino quer saber o que fazer hoje, e a lista dos últimos
- * trinta dias empurrava isso para longe.
+ * Sessão vinculada a uma execução (dia de esporte do plano registrado pelo
+ * cronômetro) aparece UMA vez, como esporte — é o registro mais rico. Mesma
+ * regra da agenda de movimento.
  *
- * Mostra também os ABANDONADOS, e essa é a decisão que define a tela. Listar só
- * os concluídos produziria um retrato lisonjeiro e inútil — a sessão largada no
- * meio é justamente o sinal de que algo no plano não está cabendo na rotina.
+ * Mostra também os ABANDONADOS, e essa é a decisão que define a tela. Listar
+ * só os concluídos produziria um retrato lisonjeiro e inútil — a sessão
+ * largada no meio é justamente o sinal de que algo não está cabendo na
+ * rotina.
  */
+
+type ItemLinha =
+  | { tipo: 'treino'; quando: number; treino: ExecutionHistoryItem }
+  | { tipo: 'esporte'; quando: number; esporte: SportSession };
+
+function consolidar(
+  treinos: ExecutionHistoryItem[],
+  esportes: SportSession[],
+): ItemLinha[] {
+  const vinculadas = new Set(
+    esportes.map((s) => s.workoutExecutionId).filter((id): id is string => !!id),
+  );
+  const linhas: ItemLinha[] = [
+    ...treinos
+      .filter((t) => !vinculadas.has(t.id))
+      .map((t) => ({ tipo: 'treino' as const, quando: Date.parse(t.startedAt), treino: t })),
+    ...esportes.map((s) => ({
+      tipo: 'esporte' as const,
+      quando: Date.parse(s.startedAt),
+      esporte: s,
+    })),
+  ];
+  return linhas.sort((a, b) => b.quando - a.quando);
+}
+
+const esporteMeta = (kind: string) => SPORTS.find((s) => s.kind === kind);
+
 export function WorkoutHistoryScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation<any>();
-  const [itens, setItens] = useState<ExecutionHistoryItem[] | null>(null);
+  const [treinos, setTreinos] = useState<ExecutionHistoryItem[] | null>(null);
+  const [esportes, setEsportes] = useState<SportSession[] | null>(null);
 
-  const carregar = React.useCallback(
-    () =>
-      fetchExecutionHistory(DIAS)
-        .then(setItens)
-        .catch(() => setItens([])),
-    [],
-  );
+  const carregar = React.useCallback(async () => {
+    const [t, e] = await Promise.all([
+      fetchExecutionHistory(DIAS).catch(() => []),
+      fetchSportSessions(DIAS).catch(() => []),
+    ]);
+    setTreinos(t);
+    setEsportes(e);
+  }, []);
 
   useEffect(() => {
     void carregar();
@@ -42,7 +81,7 @@ export function WorkoutHistoryScreen() {
 
   const refresh = usePullRefresh(carregar);
 
-  if (itens === null) {
+  if (treinos === null || esportes === null) {
     return (
       <DetailScreen title="Histórico" refreshControl={refresh}>
         <Body>Carregando…</Body>
@@ -50,45 +89,81 @@ export function WorkoutHistoryScreen() {
     );
   }
 
-  if (itens.length === 0) {
+  const linhas = consolidar(treinos, esportes);
+
+  if (linhas.length === 0) {
     return (
       <DetailScreen title="Histórico" refreshControl={refresh}>
         <Note
-          title="Nenhum treino registrado"
-          body="Cada sessão concluída entra aqui, com duração e data. Os últimos 30 dias são o que a constância usa como janela."
+          title="Nenhuma atividade registrada"
+          body="Treino concluído e sessão de esporte entram aqui, na mesma linha do tempo. Os últimos 30 dias são o que a constância usa como janela."
         />
       </DetailScreen>
     );
   }
 
-  const concluidos = itens.filter((i) => i.status === 'FINISHED');
+  const concluidas =
+    linhas.filter((l) => l.tipo === 'esporte' || l.treino.status === 'FINISHED').length;
 
   return (
     <DetailScreen title="Histórico" refreshControl={refresh}>
       <YStack marginBottom="$xl">
         <Label>últimos {DIAS} dias</Label>
         <XStack alignItems="baseline" gap="$sm" marginTop="$xs">
-          <SectionTitle fontSize={28}>{concluidos.length}</SectionTitle>
-          <Data>{concluidos.length === 1 ? 'treino concluído' : 'treinos concluídos'}</Data>
+          <SectionTitle fontSize={28}>{concluidas}</SectionTitle>
+          <Data>{concluidas === 1 ? 'atividade concluída' : 'atividades concluídas'}</Data>
         </XStack>
       </YStack>
 
       <YStack gap="$md">
-        {itens.map((item) => {
+        {linhas.map((linha) => {
+          const data = new Date(linha.quando).toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+          });
+
+          if (linha.tipo === 'esporte') {
+            const s = linha.esporte;
+            const meta = esporteMeta(s.sport);
+            return (
+              <Card
+                key={`esporte-${s.id}`}
+                onPress={() => navigation.navigate('Sport', { abrirSessao: s })}
+                accessibilityLabel={`${meta?.label ?? s.sport}, ${data}`}
+              >
+                <XStack alignItems="center" gap="$md">
+                  <Data width={52}>{data}</Data>
+                  <Icon
+                    name={(meta?.icon ?? 'footprints') as never}
+                    size={15}
+                    color={colors.textMuted}
+                  />
+                  <YStack flex={1} minWidth={0} gap={2}>
+                    <Body color="$foreground" numberOfLines={1}>
+                      {meta?.label ?? s.sport}
+                    </Body>
+                    {s.distanceM ? (
+                      <Data>{(s.distanceM / 1000).toFixed(2).replace('.', ',')} km</Data>
+                    ) : null}
+                  </YStack>
+                  <Data>{sportClock(s.durationS * 1000)}</Data>
+                  <Icon name="arrowRight" size={14} color={colors.textMuted} />
+                </XStack>
+              </Card>
+            );
+          }
+
+          const item = linha.treino;
           const abandonado = item.status !== 'FINISHED';
           return (
             <Card
-              key={item.id}
-              onPress={() => (navigation as any).push('ExecutionDetail', { id: item.id })}
+              key={`treino-${item.id}`}
+              onPress={() => navigation.push('ExecutionDetail', { id: item.id })}
               accessibilityLabel={item.workoutName}
             >
               <XStack alignItems="center" gap="$md">
-                <Data width={52}>
-                  {new Date(item.startedAt).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                  })}
-                </Data>
+                <Data width={52}>{data}</Data>
+                <Icon name="dumbbell" size={15} color={colors.textMuted} />
                 <YStack flex={1} minWidth={0} gap={2}>
                   <Body color="$foreground" numberOfLines={1}>
                     {item.workoutName}

@@ -29,6 +29,18 @@ export type DiscoveredDevice = {
 
 export type ConnectionState = 'idle' | 'scanning' | 'connecting' | 'connected' | 'error';
 
+/**
+ * O que o serviço está fazendo com a pulseira NESTE momento.
+ *
+ * Existe porque a janela entre "conectou" e "primeira leitura" leva até um
+ * minuto — a pulseira sincroniza memória e mede em série, um sensor só — e
+ * durante ela a tela dizia apenas "aguardando", que é indistinguível de
+ * travado. Quem sabe a etapa é o serviço; isto é o canal que a leva à tela.
+ */
+export type BandActivity =
+  | { kind: 'sync' }
+  | { kind: 'measure'; what: MeasurableKind };
+
 /** Um ponto de série com o instante em que foi medido. */
 export type Sample = { at: number; value: number };
 
@@ -57,7 +69,17 @@ export interface BleService {
   disconnect(): Promise<void>;
   /** Emite cada nova leitura. Devolve a função de cancelamento. */
   subscribe(onReading: (reading: Reading) => void): () => void;
-  onStateChange(listener: (state: ConnectionState) => void): () => void;
+  /**
+   * O `reason` acompanha o estado `error` quando o serviço sabe o motivo — "o
+   * SDK recusou o aparelho", "feche o app do fabricante". Ele nascia no módulo
+   * nativo e morria no caminho; sem ele a tela só sabia dizer "erro".
+   */
+  onStateChange(listener: (state: ConnectionState, reason?: string) => void): () => void;
+  /**
+   * Emite a etapa em curso (sincronizando memória, medindo estresse…) e `null`
+   * ao ficar ocioso. Opcional: o mock não tem etapas, o GATT próprio tampouco.
+   */
+  onActivity?(listener: (activity: BandActivity | null) => void): () => void;
   getBatteryLevel(): number | null;
   /**
    * Enumera o GATT do aparelho conectado.

@@ -5,11 +5,9 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { Sidebar } from '../components/Sidebar';
 import { ActivityScreen } from '../screens/ActivityScreen';
-import { AgendaScreen } from '../screens/AgendaScreen';
 import { BioAgeScreen } from '../screens/BioAgeScreen';
 import { ConnectScreen } from '../screens/ConnectScreen';
 import { DeviceScreen } from '../screens/DeviceScreen';
-import { FocusScreen } from '../screens/FocusScreen';
 import { GattScreen } from '../screens/GattScreen';
 import { HabitsScreen } from '../screens/HabitsScreen';
 import { MealsScreen } from '../screens/MealsScreen';
@@ -86,7 +84,6 @@ const linking = {
       Health: 'saude',
       Sport: 'esporte',
       Meals: 'refeicoes',
-      Focus: 'foco',
       Battery: 'bateria',
       Breathing: 'respirar',
       Alerts: 'avisos',
@@ -101,7 +98,6 @@ const linking = {
       Activity: 'passos',
       Habits: 'habitos',
       WaterReminder: 'lembrete-agua',
-      Agenda: 'agenda',
       Onboarding: 'perfil-rotina',
       Profile: 'perfil',
       Settings: 'configuracoes',
@@ -221,8 +217,6 @@ export function Navigation() {
         <Stack.Screen name="WaterReminder" component={WaterReminderScreen} />
         <Stack.Screen name="Meals" component={MealsScreen} />
         <Stack.Screen name="Sport" component={SportScreen} />
-        <Stack.Screen name="Focus" component={FocusScreen} />
-        <Stack.Screen name="Agenda" component={AgendaScreen} />
         <Stack.Screen name="BioAge" component={BioAgeScreen} />
         <Stack.Screen name="Device" component={DeviceScreen} />
         <Stack.Screen name="Gatt" component={GattScreen} />

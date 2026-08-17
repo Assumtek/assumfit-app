@@ -7,6 +7,7 @@ import { ActivityIndicator, Pressable } from 'react-native';
 import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
 import { Button, Card, HeroCard, Pill, PillText } from '../../components/ui';
+import { sportForModality } from '../../domain/sport';
 import { DAY_LABEL, workoutMeta } from '../../domain/workout';
 import { fetchWorkout, type PlanDay } from '../../services/api.service';
 import { useWorkoutStore } from '../../store/workout.store';
@@ -274,6 +275,30 @@ export function CheckinScreen() {
               loading={busy}
               onPress={handleStart}
             />
+            {/*
+              Coexistência (ago/2026): dia de esporte do plano tem DOIS jeitos
+              válidos de acontecer — o treino guiado (blocos na tela) ou o
+              cronômetro de esporte, que mede GPS, caloria e batimento e
+              CONCLUI o dia do plano junto, vinculado. Um ato, um registro.
+            */}
+            {(() => {
+              const esporte = sportForModality(selected.workout.modality);
+              return esporte ? (
+                <Button
+                  title={esporte.gps ? 'Registrar com GPS' : 'Registrar no cronômetro'}
+                  variant="secondary"
+                  onPress={() =>
+                    (navigation as any).navigate('Sport', {
+                      vinculo: {
+                        kind: esporte.kind,
+                        workoutId: selected.workout!.id,
+                        planDayId: selected.id,
+                      },
+                    })
+                  }
+                />
+              ) : null;
+            })()}
           </YStack>
         ) : null}
       </YStack>

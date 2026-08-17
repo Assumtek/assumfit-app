@@ -2,6 +2,7 @@ import { QCBand, type QCDevice, type QCHrvSeries, type QCState } from '../../../
 import { nightFrom } from '../../domain/sleep';
 import type { Reading, SleepNight, SleepPhase, SleepSegment } from '../../domain/types';
 import type {
+  BandActivity,
   BleService,
   ConnectionState,
   DayHistory,
@@ -26,8 +27,19 @@ import type {
  */
 export class QCBandService implements BleService {
   private state: ConnectionState = 'idle';
-  private stateListeners = new Set<(s: ConnectionState) => void>();
+  /** Motivo do último `error`, para novos assinantes o receberem junto. */
+  private stateReason: string | undefined;
+  private stateListeners = new Set<(s: ConnectionState, reason?: string) => void>();
   private readingListeners = new Set<(r: Reading) => void>();
+  /**
+   * A etapa em curso no canal serial, para a tela narrar a espera.
+   *
+   * É estado do SERVIÇO, não do store: quem sabe que a varredura do dia 4
+   * começou é o laço que a executa, e subir isso por callback é o que evita o
+   * store adivinhar etapas a partir de efeitos colaterais.
+   */
+  private activity: BandActivity | null = null;
+  private activityListeners = new Set<(a: BandActivity | null) => void>();
   private battery: number | null = null;
   private lastHrv: number | null = null;
   /** Instante da amostra de HRV — quase nunca é o da leitura. */
@@ -60,8 +72,12 @@ export class QCBandService implements BleService {
     this.subscriptions.push(
       QCBand.addListener('onState', (event: QCState) => {
         this.state = event.state;
+        this.stateReason = event.reason;
         if (__DEV__) console.log(`[qcband] estado: ${event.state}${event.reason ? ` — ${event.reason}` : ''}`);
-        this.stateListeners.forEach((l) => l(event.state));
+        this.stateListeners.forEach((l) => l(event.state, event.reason));
+        // Saiu de conectado, a etapa morreu junto — sem isto a tela seguiria
+        // dizendo "medindo estresse" com a pulseira já fora do alcance.
+        if (event.state !== 'connected') this.setActivity(null);
         if (event.state === 'connected') void this.afterConnect();
       }),
     );
@@ -90,6 +106,19 @@ export class QCBandService implements BleService {
     this.subscriptions.push(
       QCBand.addListener('onReading', (event) => this.ingest(event)),
     );
+  }
+
+  private setActivity(activity: BandActivity | null) {
+    this.activity = activity;
+    this.activityListeners.forEach((l) => l(activity));
+  }
+
+  onActivity(listener: (activity: BandActivity | null) => void): () => void {
+    this.activityListeners.add(listener);
+    listener(this.activity);
+    return () => {
+      this.activityListeners.delete(listener);
+    };
   }
 
   /**
@@ -228,6 +257,9 @@ export class QCBandService implements BleService {
      */
 
     for (const kind of pedidos) {
+      // Narrada ANTES de começar: cada medição leva dezenas de segundos, e é
+      // exatamente esta espera que a tela precisa explicar.
+      this.setActivity({ kind: 'measure', what: kind as MeasurableKind });
       try {
         await QCBand.measure(kind as Parameters<typeof QCBand.measure>[0]);
         if (__DEV__) console.log(`[qcband] medição concluída: ${kind}`);
@@ -243,6 +275,9 @@ export class QCBandService implements BleService {
     // rodar acrescentou uma amostra a ela.
     if (features['feature.hrv'] === true) await this.refreshHrv();
 
+    // Só limpa a PRÓPRIA etapa: a varredura de memória corre em paralelo no
+    // mesmo canal, e apagar o "sincronizando" dela mentiria um ocioso.
+    if (this.activity?.kind === 'measure') this.setActivity(null);
   }
 
   /**
@@ -395,6 +430,8 @@ export class QCBandService implements BleService {
     const vazio: DayHistory = { heartRate: [], stress: [], spo2: [], pressure: [], steps: [] };
     if (!QCBand) return vazio;
 
+    this.setActivity({ kind: 'sync' });
+
     /*
      Cada leitor registra o PRÓPRIO desfecho.
 
@@ -475,6 +512,7 @@ export class QCBandService implements BleService {
           `spo2=${historico.spo2.length} pressão=${historico.pressure.length} passos=${historico.steps.length}`,
       );
     }
+    if (this.activity?.kind === 'sync') this.setActivity(null);
     return historico;
   }
 
@@ -486,13 +524,18 @@ export class QCBandService implements BleService {
   async fetchSleep(): Promise<SleepNight | null> {
     if (!QCBand) return null;
 
-    for (const dia of [1, 0]) {
-      const bruto = await QCBand.getSleep(dia).catch(() => []);
-      if (__DEV__) console.log(`[qcband] sono do dia ${dia}: ${bruto.length} segmentos`);
-      const noite = montarNoite(bruto);
-      if (noite) return noite;
+    this.setActivity({ kind: 'sync' });
+    try {
+      for (const dia of [1, 0]) {
+        const bruto = await QCBand.getSleep(dia).catch(() => []);
+        if (__DEV__) console.log(`[qcband] sono do dia ${dia}: ${bruto.length} segmentos`);
+        const noite = montarNoite(bruto);
+        if (noite) return noite;
+      }
+      return null;
+    } finally {
+      if (this.activity?.kind === 'sync') this.setActivity(null);
     }
-    return null;
   }
 
   /**
@@ -504,6 +547,7 @@ export class QCBandService implements BleService {
   async fetchSleepHistory(): Promise<SleepNight[]> {
     if (!QCBand) return [];
 
+    this.setActivity({ kind: 'sync' });
     const noites: SleepNight[] = [];
     for (let dia = 6; dia >= 0; dia--) {
       const bruto = await QCBand.getSleep(dia).catch(() => []);
@@ -511,6 +555,7 @@ export class QCBandService implements BleService {
       if (noite) noites.push(noite);
     }
     if (__DEV__) console.log(`[qcband] noites na memória: ${noites.length}`);
+    if (this.activity?.kind === 'sync') this.setActivity(null);
     return noites;
   }
 
@@ -595,9 +640,9 @@ export class QCBandService implements BleService {
     };
   }
 
-  onStateChange(listener: (state: ConnectionState) => void): () => void {
+  onStateChange(listener: (state: ConnectionState, reason?: string) => void): () => void {
     this.stateListeners.add(listener);
-    listener(this.state);
+    listener(this.state, this.stateReason);
     return () => {
       this.stateListeners.delete(listener);
     };

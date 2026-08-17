@@ -37,10 +37,13 @@ import {
   LayoutGrid,
   ListChecks,
   Moon,
+  Music,
   Pause,
   Play,
   Ruler,
+  Swords,
   Thermometer,
+  Watch,
   Waves,
 } from 'lucide-react-native';
 import React from 'react';
@@ -114,7 +117,11 @@ export type IconName =
   | 'trash'
   | 'refresh'
   | 'menu'
-  | 'brain';
+  | 'brain'
+  | 'watch'
+  | 'swim'
+  | 'swords'
+  | 'music';
 
 /**
  * Nome semântico → componente do Lucide.
@@ -147,6 +154,11 @@ const GLYPH = {
   heart: Heart,
   gauge: Gauge,
   wave: Waves,
+  // O mesmo glifo de `wave`, com OUTRO nome: em contexto de esporte a onda é
+  // água de piscina, não pulso — os dois usos não se encontram numa tela.
+  swim: Waves,
+  swords: Swords,
+  music: Music,
   steps: BarChart3,
   age: Hourglass,
   bluetooth: Bluetooth,
@@ -173,6 +185,7 @@ const GLYPH = {
   refresh: RefreshCw,
   menu: Menu,
   brain: Brain,
+  watch: Watch,
 } as const;
 
 type Props = {

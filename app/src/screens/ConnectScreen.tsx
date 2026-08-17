@@ -22,6 +22,7 @@ export function ConnectScreen() {
   const startScan = useBiometricStore((s) => s.startScan);
   const connect = useBiometricStore((s) => s.connect);
   const connectError = useBiometricStore((s) => s.connectError);
+  const connectionReason = useBiometricStore((s) => s.connectionReason);
   const skipBand = useBiometricStore((s) => s.skipBand);
   const loadLifestyle = useLifestyleStore((s) => s.load);
 
@@ -168,8 +169,14 @@ export function ConnectScreen() {
 
         {/* A mensagem do rádio, crua. Não é bonita, mas é a única coisa que
             distingue "fora de alcance" de "ocupado por outro app" — e cada uma
-            pede uma ação diferente de quem está com o relógio na mão. */}
-        {connectError ? <Data color="$destructive">{connectError}</Data> : null}
+            pede uma ação diferente de quem está com o relógio na mão. O
+            `connectionReason` cobre a falha que chega DEPOIS do connect — a
+            entrega ao SDK recusada, o app do fabricante segurando a pulseira. */}
+        {connectError ?? (connection === 'error' ? connectionReason : null) ? (
+          <Data color="$destructive">
+            {connectError ?? connectionReason}
+          </Data>
+        ) : null}
 
         {/* Escapatória: sem ela, uma pulseira que não anuncia o serviço de
             frequência cardíaca ficaria invisível e sem caminho de pareamento. */}

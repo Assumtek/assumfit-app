@@ -4,7 +4,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, Switch } from 'react-native';
 
 import { Note, Row, Section } from '../components/Card';
-import { CycleCalendar, corDaFase } from '../components/CycleCalendar';
+import { CycleCalendar } from '../components/CycleCalendar';
+import { CycleRing, type DiaDoAnel } from '../components/CycleRing';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
 import { Body, Button, Data, Headline } from '../components/ui';
@@ -15,7 +16,7 @@ import {
   monthAhead,
   nextPeriod,
   phaseOn,
-  type CyclePhase,
+  phaseProjected,
   type LoggedCycle,
 } from '../domain/cycle';
 import * as api from '../services/api.service';
@@ -46,8 +47,6 @@ function capitaliza(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-/** Ordem em que as fases acontecem — usada na régua do ciclo. */
-const ORDEM: CyclePhase[] = ['menstrual', 'follicular', 'ovulatory', 'luteal'];
 
 /**
  * A partir de quantos dias de atraso a tela troca de estado.
@@ -139,6 +138,38 @@ export function CycleScreen() {
   const estado = useMemo(() => (cycles ? phaseOn(hoje_, grupos) : null), [cycles, grupos, hoje_]);
   const proxima = useMemo(() => (cycles ? nextPeriod(grupos) : null), [cycles, grupos]);
   const mes = useMemo(() => (cycles ? monthAhead(grupos, hoje_) : null), [cycles, grupos, hoje_]);
+
+  /*
+   O anel é o MÊS CORRENTE, dia a dia (pedido da fundadora, ago/2026): cada
+   traço da volta é uma data real do calendário, com a fase daquele dia. O
+   passado usa a fase apurada; o futuro, a projeção — a mesma regra do
+   calendário logo abaixo, para as duas peças nunca discordarem.
+  */
+  const diasDoAnel = useMemo<DiaDoAnel[]>(() => {
+    const agora = new Date();
+    const ano = agora.getFullYear();
+    const mesIdx = agora.getMonth();
+    const total = new Date(ano, mesIdx + 1, 0).getDate();
+
+    return Array.from({ length: total }, (_, i) => {
+      const dia = i + 1;
+      const k = `${ano}-${String(mesIdx + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+      const futuro = k > hoje_;
+      const real = futuro ? null : phaseOn(k, grupos);
+      const fase = real ?? phaseProjected(k, grupos);
+      return {
+        dia,
+        fase: fase?.phase ?? null,
+        ehHoje: k === hoje_,
+        registrado: diasSet.has(k),
+      };
+    });
+  }, [grupos, hoje_, diasSet]);
+
+  const nomeDoMes = useMemo(
+    () => capitaliza(new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })),
+    [],
+  );
   const descartados = useMemo(() => (cycles ? discardedIntervals(grupos) : 0), [cycles, grupos]);
 
   /*
@@ -277,14 +308,26 @@ export function CycleScreen() {
             "dia 23" é contagem de calendário sobre estimativa; tratá-lo como
             medição de 72pt era herança do template das telas de métrica.
           */}
-          <YStack marginTop="$md" marginBottom="$lg">
-            <Headline>{PHASE_COPY[estado.phase].label}</Headline>
-            <Data marginTop="$xs" color="$mutedForeground">
-              dia {estado.day} de {estado.length}
-              {estado.estimating ? ' · estimado' : ''}
-            </Data>
-          </YStack>
+          {/* Sem manchete de fase: o miolo do anel já a diz, e em cor. O que
+              sobra aqui é a contagem do ciclo, que o anel não cabe. */}
+          <Data marginTop="$md" textAlign="center">
+            dia {estado.day} de {estado.length}
+            {estado.estimating ? ' · estimado' : ''}
+          </Data>
 
+          {/*
+            O ANEL é a volta inteira do ciclo (pedido da fundadora, ago/2026):
+            o calendário mostra o mês em semanas quebradas, e a pergunta que
+            traz alguém aqui — "quanto falta" — se responde melhor numa volta
+            fechada, com o marcador dizendo onde ela está hoje.
+          */}
+          <CycleRing
+            dias={diasDoAnel}
+            diasParaProxima={estado.daysToNext >= 0 ? estado.daysToNext : null}
+            faseDeHoje={estado.phase}
+            estimando={estado.estimating}
+            nomeDoMes={nomeDoMes}
+          />
         </>
       ) : estado && emAtraso ? (
         <>
@@ -338,27 +381,6 @@ export function CycleScreen() {
             <Data marginTop="$md" marginBottom="$sm">Toque nos dias de menstruação.</Data>
           ) : null}
           <CycleCalendar marcados={dias} grupos={grupos} onToggle={alternarDia} busy={salvando} />
-          {/* Legenda: o ponto é REGISTRO; a mancha é fase deduzida — e a
-              rampa de intensidade é a ordem das fases, não quatro cores. */}
-          <XStack flexWrap="wrap" gap="$md" rowGap="$xs" marginTop="$sm" alignItems="center">
-            <XStack alignItems="center" gap="$xs">
-              <YStack width={5} height={5} borderRadius={3} backgroundColor="$primary" />
-              <Data fontSize={11}>dia de menstruação</Data>
-            </XStack>
-            {ORDEM.map((f) => (
-              <XStack key={f} alignItems="center" gap="$xs">
-                <YStack
-                  width={12}
-                  height={12}
-                  borderRadius={6}
-                  style={{ backgroundColor: corDaFase(f, colors.accent) }}
-                />
-                <Data fontSize={11}>
-                  {capitaliza(PHASE_COPY[f].label.replace('Fase ', '').toLowerCase())}
-                </Data>
-              </XStack>
-            ))}
-          </XStack>
           {confirmacao ? (
             <Data marginTop="$sm" color="$foreground">
               {confirmacao}
@@ -395,15 +417,12 @@ export function CycleScreen() {
           {/* UMA Section de previsão — a FÉRTIL é a linha que importa, com o
               aviso ao lado porque previsão de fertilidade sem ele é perigosa. */}
           <Section label="Previsão">
+            {/* A CONTAGEM até a próxima já está no miolo do anel; aqui fica
+                só a data por extenso, que o anel não tem como dizer. */}
             <Row>
               <Body flex={1} color="$foreground">Próxima menstruação</Body>
               <Data flexShrink={0} color="$foreground">
                 {proxima ? porExtenso(proxima) : '—'}
-                {estado.daysToNext === 0
-                  ? ' · é hoje'
-                  : estado.daysToNext > 0
-                    ? ` · em ${estado.daysToNext} ${estado.daysToNext === 1 ? 'dia' : 'dias'}`
-                    : ` · atraso de ${Math.abs(estado.daysToNext)} ${Math.abs(estado.daysToNext) === 1 ? 'dia' : 'dias'}`}
               </Data>
             </Row>
             {mes ? (

@@ -22,9 +22,9 @@ import {
   fetchAnamnesis,
   fetchWorkoutConsent,
   saveAnamnesis,
-  setWorkoutConsent,
 } from '../../services/api.service';
 import { useTheme } from '../../theme/ThemeProvider';
+import { WorkoutConsentGate } from './WorkoutConsentGate';
 
 /**
  * Anamnese de saúde, uma pergunta por vez.
@@ -69,19 +69,6 @@ export function AnamnesisScreen() {
 
   const answer = (value: unknown) => setAnswers((prev) => setAt(prev, question!.id, value));
 
-  const grantConsent = async () => {
-    setSaving(true);
-    setError(null);
-    try {
-      await setWorkoutConsent(true);
-      setConsented(true);
-    } catch {
-      setError('Não foi possível registrar seu consentimento. Tente de novo.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const submit = async () => {
     setSaving(true);
     setError(null);
@@ -114,58 +101,10 @@ export function AnamnesisScreen() {
   if (!consented) {
     return (
       <DetailScreen title="Saúde">
-        <YStack gap="$xl" paddingTop="$lg">
-          <YStack gap="$sm">
-            <Text fontSize={24} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
-              Antes de perguntar sobre você
-            </Text>
-            <Text fontSize={14} color="$mutedForeground">
-              Para montar um treino seguro, precisamos saber do seu histórico de saúde — condições,
-              medicamentos, lesões. Isso é dado sensível, e por isso pedimos permissão separada da
-              leitura da pulseira.
-            </Text>
-          </YStack>
-
-          <Card>
-            <YStack gap="$md">
-              {[
-                'Suas respostas ficam guardadas para montar e remontar seu treino. Só você as vê.',
-                'Não são usadas para nenhuma outra finalidade, e não vão para lugar nenhum além do que monta o seu plano.',
-                'Você pode retirar esta permissão quando quiser. Ao retirar, apagamos suas respostas de saúde e os planos gerados a partir delas.',
-              ].map((line) => (
-                <XStack key={line} gap="$sm" alignItems="flex-start">
-                  <YStack width={5} height={5} borderRadius={3} backgroundColor="$primary" marginTop={7} />
-                  <Text fontSize={14} color="$mutedForeground" flex={1}>
-                    {line}
-                  </Text>
-                </XStack>
-              ))}
-            </YStack>
-          </Card>
-
-          {error ? (
-            <Text fontSize={14} color="$destructive">
-              {error}
-            </Text>
-          ) : null}
-
-          <Button
-            title={saving ? 'Registrando…' : 'Concordo, pode perguntar'}
-            icon={<Icon name="check" size={16} color={colors.ink} />}
-            loading={saving}
-            onPress={grantConsent}
-          />
-          <Button title="Agora não" variant="ghost" onPress={() => navigation.goBack()} />
-
-          <Note
-            title="por que separado"
-            body={
-              'Consentir com a leitura do seu HRV não é consentir com o registro de uma condição ' +
-              'cardíaca. São dados de naturezas diferentes, e por isso a permissão é pedida em ' +
-              'separado e pode ser retirada em separado.'
-            }
-          />
-        </YStack>
+        <WorkoutConsentGate
+          onGranted={() => setConsented(true)}
+          onDecline={() => navigation.goBack()}
+        />
       </DetailScreen>
     );
   }

@@ -1,6 +1,7 @@
 import { YStack } from '@tamagui/stacks';
 import React from 'react';
 
+import { EmptyMetric } from '../components/BandStatus';
 import { HistoryRow, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
 import { MeasureButton } from '../components/MeasureButton';
@@ -13,7 +14,12 @@ import { useTheme } from '../theme/ThemeProvider';
 export function OxygenScreen() {
   const { colors } = useTheme();
   const latest = useBiometricStore((s) => s.latest);
-  if (!latest) return <DetailScreen title="Oxigênio" children={null} />;
+  if (!latest)
+    return (
+      <DetailScreen title="Oxigênio no sangue">
+        <EmptyMetric measure="spo2" />
+      </DetailScreen>
+    );
 
   const rating = rateSpo2(latest.spo2Pct);
   const spo2 = shown(latest.spo2Pct);

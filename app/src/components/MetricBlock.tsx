@@ -1,6 +1,6 @@
-import { XStack, YStack } from '@tamagui/stacks';
+import { XStack } from '@tamagui/stacks';
 import React from 'react';
-import { Pressable } from 'react-native';
+import { ActivityIndicator, Pressable } from 'react-native';
 
 import { stateColor, type Rating } from '../domain/ratings';
 import { useTheme } from '../theme/ThemeProvider';
@@ -11,6 +11,12 @@ import { ProgressRing } from './ProgressRing';
 type Props = {
   label: string;
   rating: Rating;
+  /**
+   * A pulseira está medindo esta grandeza AGORA. Só muda algo enquanto não há
+   * valor: o traço vira "medindo", que é a diferença entre vazio e a caminho.
+   * Com valor na tela, medição em curso não apaga o que já foi medido.
+   */
+  pending?: boolean;
   onPress?: () => void;
 };
 
@@ -21,14 +27,18 @@ type Props = {
  * Antes era a `Surface` de relevo material, que funcionava no escuro e ficava
  * chapada no claro; a sombra resolve os dois.
  */
-export function MetricBlock({ label, rating, onPress }: Props) {
+export function MetricBlock({ label, rating, pending, onPress }: Props) {
   const { colors } = useTheme();
+  const medindo = pending === true && !rating.available;
   return (
     <Pressable
       style={({ pressed }) => [{ flex: 1 }, pressed && { opacity: 0.6 }]}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${label}: ${rating.label}, ${rating.detail}`}
+      accessibilityState={medindo ? { busy: true } : undefined}
+      accessibilityLabel={
+        medindo ? `${label}: medindo agora` : `${label}: ${rating.label}, ${rating.detail}`
+      }
     >
       <Card>
         <Label marginBottom="$sm" numberOfLines={1}>
@@ -45,13 +55,21 @@ export function MetricBlock({ label, rating, onPress }: Props) {
           {rating.label}
         </RatingText>
         <XStack alignItems="center" gap="$sm" marginTop="$md">
-          <ProgressRing
-            fraction={rating.fraction}
-            color={stateColor(rating.state, colors)}
-            size={30}
-            strokeWidth={5}
-          />
-          <Data numberOfLines={1}>{rating.detail}</Data>
+          {medindo ? (
+            // No lugar do anel, com o mesmo diâmetro: a troca não muda a
+            // altura do card nem faz o grid respirar entre estados.
+            <XStack width={30} height={30} alignItems="center" justifyContent="center">
+              <ActivityIndicator size="small" color={colors.textMuted} />
+            </XStack>
+          ) : (
+            <ProgressRing
+              fraction={rating.fraction}
+              color={stateColor(rating.state, colors)}
+              size={30}
+              strokeWidth={5}
+            />
+          )}
+          <Data numberOfLines={1}>{medindo ? 'medindo agora' : rating.detail}</Data>
         </XStack>
       </Card>
     </Pressable>

@@ -1,9 +1,17 @@
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView } from 'react-native';
+import { AppState, Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import {
+  aoTocarNaIlha,
+  atualizarIlhaDeEsporte,
+  consumirAcoesDaIlha,
+  encerrarIlhaDeEsporte,
+  iniciarIlhaDeEsporte,
+} from '../../../modules/widgetbridge';
 
 import { Icon } from '../../components/Icon';
 import { Button } from '../../components/ui';
@@ -92,6 +100,37 @@ export function TrainingScreen() {
     if (!execution || !workout) void refresh();
   }, [execution, workout, refresh]);
 
+  /*
+   Sem sessão viva esta tela não tem o que mostrar — e ficava presa em
+   "Carregando treino…" quando alguém CONCLUÍA o treino e voltava para cá
+   pela seta (a execução já tinha morrido na store). A janela de 1,5 s dá
+   tempo de o `refresh` reencontrar uma sessão real antes de desistir.
+  */
+  const focada = useIsFocused();
+  useEffect(() => {
+    if (!focada || execution) return;
+    const id = setTimeout(() => {
+      if (!useWorkoutStore.getState().execution) navigation.replace('Plan');
+    }, 1500);
+    return () => clearTimeout(id);
+  }, [focada, execution, navigation]);
+
+  /*
+   A Dynamic Island do treino guiado (pedido da fundadora, ago/2026): a mesma
+   Live Activity do esporte, com o nome do treino, o tempo correndo e o
+   exercício corrente como fase. Nasce com a execução e morre com ela — a
+   cleanup roda quando `execution` vira null (concluído/cancelado) ou quando a
+   tela desmonta.
+  */
+  useEffect(() => {
+    if (!execution) return;
+    iniciarIlhaDeEsporte(execution.workoutName, Date.parse(execution.startedAt), {
+      symbol: 'dumbbell',
+    });
+    return () => encerrarIlhaDeEsporte();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [execution?.id]);
+
   // Alinha o cronômetro com o início real da sessão ao montar sobre uma que já
   // existia — voltar do check-in, ou reabrir o app no meio do treino.
   useEffect(() => {
@@ -119,6 +158,39 @@ export function TrainingScreen() {
   );
 
   const current = flat[index];
+
+  // A fase da ilha acompanha o exercício corrente.
+  useEffect(() => {
+    if (!execution || !current) return;
+    atualizarIlhaDeEsporte({
+      startedAtMs: Date.parse(execution.startedAt),
+      phase: current.exercise.name,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [execution?.id, current?.exercise.id]);
+
+  /*
+   Botões da ilha no treino guiado: "encerrar" abre o fim de treino. Pausa não
+   existe aqui — o relógio é de parede — e a ação é DRENADA mesmo assim, para
+   não ficar na fila e vazar para uma sessão de esporte futura.
+  */
+  useEffect(() => {
+    if (!execution) return;
+    const drenar = () => {
+      for (const acao of consumirAcoesDaIlha()) {
+        if (acao.action === 'end') navigation.navigate('TrainingFinished');
+      }
+    };
+    const tirarCampainha = aoTocarNaIlha(drenar);
+    const assinatura = AppState.addEventListener('change', (estado) => {
+      if (estado === 'active') drenar();
+    });
+    return () => {
+      tirarCampainha();
+      assinatura.remove();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [execution?.id]);
 
   const phases: PhaseProgress[] = useMemo(() => {
     const byType = new Map<PhaseType, PhaseProgress>();
@@ -318,8 +390,6 @@ export function TrainingScreen() {
             seconds={tempoAlvo}
             description={exercise.description ?? exercise.notes}
             phase={phase}
-            onComplete={goNext}
-            onSkip={goNext}
           />
         ) : (
         <>
@@ -388,14 +458,11 @@ export function TrainingScreen() {
       </ScrollView>
 
       {/*
-        Rodapé só para exercício de SÉRIES.
-
-        O de tempo tem as ações dentro dele, ligadas ao estado do relógio —
-        "Concluir" antes de o tempo acabar seria pular disfarçado de concluir.
-        Dois conjuntos de ação na mesma tela é o que faz a pessoa tocar no
-        errado.
+        O rodapé de ações vale para TODO exercício (decisão da fundadora,
+        ago/2026): o alongamento também conclui, pula e finaliza por aqui. O
+        exercício por tempo ficou só com o relógio — os botões de ação que ele
+        tinha dentro saíram, para não haver dois conjuntos na mesma tela.
       */}
-      {tempoAlvo === null ? (
       <YStack
         paddingHorizontal="$xl"
         paddingTop="$md"
@@ -439,7 +506,6 @@ export function TrainingScreen() {
           </XStack>
         </YStack>
       </YStack>
-      ) : null}
 
       {restEndsAt ? (
         <RestOverlay
