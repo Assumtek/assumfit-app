@@ -194,3 +194,36 @@ export const PHASE_LABEL: Record<string, string> = {
   TREINO: 'Treino',
   CARDIO: 'Cardio',
 };
+
+/**
+ * Rótulo e ícone por modalidade do treino do dia (fusão musculação +
+ * esportes, ago/2026). O slug vem do servidor em `workout.modality`.
+ */
+export const MODALITY_META: Record<string, { label: string; icon: string }> = {
+  musculacao: { label: 'musculação', icon: 'dumbbell' },
+  corrida: { label: 'corrida', icon: 'footprints' },
+  caminhada: { label: 'caminhada', icon: 'standing' },
+  ciclismo: { label: 'ciclismo', icon: 'bike' },
+  natacao: { label: 'natação', icon: 'swim' },
+  futebol: { label: 'futebol', icon: 'ball' },
+  lutas: { label: 'lutas', icon: 'swords' },
+  crossfit: { label: 'crossfit', icon: 'dumbbell' },
+  'esportes-coletivos': { label: 'quadra e raquete', icon: 'ball' },
+  yoga: { label: 'yoga', icon: 'flower' },
+  danca: { label: 'dança', icon: 'music' },
+};
+
+/** Dia de esporte no plano? Null ou "musculacao" = treino de força clássico. */
+export function isSportDay(modality: string | null | undefined): boolean {
+  return !!modality && modality !== 'musculacao';
+}
+
+/** Meta da modalidade, com queda digna para slug desconhecido. */
+export function modalityMeta(modality: string | null | undefined): { label: string; icon: string } {
+  return (
+    MODALITY_META[modality ?? 'musculacao'] ?? {
+      label: (modality ?? 'treino').replace(/-/g, ' '),
+      icon: 'flame',
+    }
+  );
+}

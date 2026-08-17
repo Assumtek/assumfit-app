@@ -57,6 +57,8 @@ const AnamnesisParse = z
     minutesPerSession: z.number().nullish(),
     daysPerWeek: z.number().nullish(),
     equipment: z.string().nullish(),
+    /** O que o plano cobre (slugs de modalidade), decidido na anamnese. */
+    planModalities: z.array(z.string()).nullish(),
     notes: z.string().nullish(),
   })
   .passthrough();
@@ -173,7 +175,12 @@ export function buildContext(
       objetivo: goal ?? 'saude',
       experiencia: answers.experience ?? (user.exercises === 'regular' ? 'intermediario' : 'iniciante'),
       frequencia_semanal: answers.daysPerWeek ?? user.trainDays?.length ?? 3,
-      modalidades: user.activities ?? [],
+      // O que o plano deve COBRIR — decisão da pessoa na anamnese. Anamnese
+      // antiga não tem a resposta, e aí vale o comportamento de sempre.
+      modalidades: answers.planModalities ?? ['musculacao'],
+      // O que ela pratica por fora: contexto de carga e recuperação, não
+      // ordem de prescrição.
+      esportes_praticados: user.activities ?? [],
       ...biometrics,
     },
     flags: deriveFlags(answers, user),

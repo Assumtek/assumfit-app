@@ -1,4 +1,13 @@
-import { kcalFor, kcalRange, kcalRangeLabel, paceMinPerKm, sportClock, trackDistanceM } from '../sport';
+import {
+  kcalFor,
+  kcalRange,
+  kcalRangeLabel,
+  paceMinPerKm,
+  simplifyTrack,
+  sportClock,
+  trackDistanceM,
+  type GeoPoint,
+} from '../sport';
 
 describe('esporte', () => {
   it('distância acumulada descarta salto de GPS', () => {
@@ -33,5 +42,37 @@ describe('esporte', () => {
   it('relógio muda de forma com hora cheia', () => {
     expect(sportClock(95_000)).toBe('1:35');
     expect(sportClock(3_695_000)).toBe('1:01:35');
+  });
+});
+
+const ponto = (i: number): GeoPoint => ({
+  lat: -25.4 + i * 0.0001,
+  lon: -49.2 + i * 0.0001,
+  at: i * 1000,
+});
+
+describe('simplifyTrack', () => {
+  it('menos de 2 pontos não é percurso', () => {
+    expect(simplifyTrack([])).toEqual([]);
+    expect(simplifyTrack([ponto(0)])).toEqual([]);
+  });
+
+  it('trilha curta passa inteira, sem o instante e com 5 casas', () => {
+    const saida = simplifyTrack([ponto(0), ponto(1)]);
+    expect(saida).toEqual([
+      { lat: -25.4, lon: -49.2 },
+      { lat: -25.3999, lon: -49.1999 },
+    ]);
+    expect(Object.keys(saida[0])).toEqual(['lat', 'lon']);
+  });
+
+  it('trilha longa é reduzida ao teto, preservando o último ponto', () => {
+    const pontos = Array.from({ length: 5000 }, (_, i) => ponto(i));
+    const saida = simplifyTrack(pontos, 300);
+    expect(saida.length).toBeLessThanOrEqual(301);
+    expect(saida[saida.length - 1]).toEqual({
+      lat: Math.round(pontos[4999].lat * 1e5) / 1e5,
+      lon: Math.round(pontos[4999].lon * 1e5) / 1e5,
+    });
   });
 });

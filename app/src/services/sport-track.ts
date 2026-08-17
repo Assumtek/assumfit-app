@@ -57,7 +57,7 @@ export async function iniciarRastreio(): Promise<void> {
     // Android: sem serviço em primeiro plano o SO mata o rastreio em minutos.
     foregroundService: {
       notificationTitle: 'Sessão de esporte em andamento',
-      notificationBody: 'O AssumFit está medindo sua distância. O percurso fica no aparelho.',
+      notificationBody: 'O AssumFit está medindo sua distância e o percurso do treino.',
       notificationColor: '#877BF0',
     },
   });

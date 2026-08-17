@@ -81,15 +81,14 @@ async def complete(
         "system": system,
         "messages": [{"role": "user", "content": user}],
     }
-    # `output_config.effort` e `fallbacks` existem da família 4.6 em diante. O
-    # Haiku 4.5 é anterior e REJEITA os dois com 400 — descoberto na prática:
-    # primeiro o `effort`, e com ele removido a API acusou o `fallbacks`. Como
-    # o Haiku é o padrão por custo, o caminho barato tem que ser o que funciona
-    # sem remendo.
-    # `fallbacks` SAIU de vez. A régua real, medida em produção: Opus aceita,
-    # Sonnet 5 e Haiku rejeitam com 400 — e o 400 derrubou geração E extração
-    # no mesmo dia, porque o parâmetro viajava para qualquer modelo não-Haiku.
-    # Resiliência opcional não pode ser o ponto único de falha de tudo.
+    # `output_config.effort` existe da família 4.6 em diante — Opus 4.6+,
+    # Sonnet 4.6, Sonnet 5, Opus 5, Fable 5. O Haiku 4.5 é anterior e REJEITA
+    # com 400 ("This model does not support the effort parameter").
+    #
+    # CORREÇÃO (ago/2026): a versão anterior deste comentário afirmava que o
+    # Sonnet 5 também rejeitava — está errado, confirmado pela Models API em
+    # produção (`capabilities.effort.supported: true`). O 400 daquele dia veio
+    # do `fallbacks` (que saiu de vez), não do `effort` no Sonnet.
     if not resolved.startswith("claude-haiku"):
         kwargs["output_config"] = {"effort": effort}
     elif max_tokens >= 4096:

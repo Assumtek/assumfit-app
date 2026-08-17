@@ -99,11 +99,23 @@ def _norm(value: str) -> str:
     return value.strip().lower().replace("_", "-").replace(" ", "-")
 
 
-def _modalidades(inp: WorkoutGenerationInput) -> list[str]:
-    raw = inp.profile.get("modalidades") or inp.profile.get("modalidade") or []
+def _lista(raw: object) -> list[str]:
     if isinstance(raw, str):
         raw = [raw]
-    return [_norm(m) for m in raw]
+    if not isinstance(raw, list):
+        return []
+    return [_norm(m) for m in raw if isinstance(m, str)]
+
+
+def _modalidades(inp: WorkoutGenerationInput) -> list[str]:
+    return _lista(inp.profile.get("modalidades") or inp.profile.get("modalidade") or [])
+
+
+def _esportes_praticados(inp: WorkoutGenerationInput) -> list[str]:
+    """Esporte praticado FORA do plano: não vira dia prescrito, mas a
+    referência da modalidade entra — é dela que sai a gestão de carga e
+    recuperação em volta desse esporte."""
+    return _lista(inp.profile.get("esportes_praticados") or [])
 
 
 def select_references(inp: WorkoutGenerationInput) -> list[str]:
@@ -120,13 +132,15 @@ def select_references(inp: WorkoutGenerationInput) -> list[str]:
         refs.append(OBJETIVO_TO_REF[objetivo])
 
     modalidades = _modalidades(inp)
-    for modalidade in modalidades:
+    praticados = _esportes_praticados(inp)
+    for modalidade in modalidades + praticados:
         if modalidade in MODALIDADE_TO_REF:
             refs.append(MODALIDADE_TO_REF[modalidade])
 
-    # Duas ou mais modalidades na semana: treino concorrente tem interferência
-    # própria, e ignorá-la é como prescrever os dois planos separados e somar.
-    if len(modalidades) >= 2:
+    # Duas ou mais modalidades na semana — prescritas OU praticadas por fora:
+    # treino concorrente tem interferência própria, e ignorá-la é como
+    # prescrever os dois planos separados e somar.
+    if len(set(modalidades + praticados)) >= 2:
         refs.append("multiatividade-orquestrador")
 
     seen: set[str] = set()

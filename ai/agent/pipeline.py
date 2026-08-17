@@ -33,6 +33,36 @@ def _catalog_correction(errors: list[str]) -> str:
     )
 
 
+def _plano_com_nomes(plan: str, catalogo) -> str:
+    """A cópia do plano que os JUÍZES leem, com o nome de cada exercício.
+
+    O plano referencia o catálogo por `exerciseId`, e o juiz de clareza dava
+    nota 2 por "exercícios ilegíveis, só UUIDs" — um defeito do NOSSO payload,
+    não do plano: o app resolve os nomes pelo catálogo, o juiz não tinha como.
+    Anota `exerciseName` ao lado de cada id só na cópia julgada; o plano que
+    segue para o banco continua o original.
+    """
+    nomes = {e.id: e.name for e in catalogo}
+    try:
+        data = json.loads(plan)
+    except json.JSONDecodeError:
+        return plan
+
+    def anotar(node: object) -> None:
+        if isinstance(node, dict):
+            ex_id = node.get("exerciseId")
+            if isinstance(ex_id, str) and ex_id in nomes:
+                node["exerciseName"] = nomes[ex_id]
+            for value in node.values():
+                anotar(value)
+        elif isinstance(node, list):
+            for value in node:
+                anotar(value)
+
+    anotar(data)
+    return json.dumps(data, ensure_ascii=False, indent=2)
+
+
 def _juiz_reprovou(breakdown: dict) -> bool:
     return bool(breakdown.get("hard_failures")) or breakdown["score"] < settings.grader_min_score
 
@@ -90,8 +120,9 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
         ensure_ascii=False,
         indent=2,
     )
+    plano_julgado = _plano_com_nomes(plan, inp.allowed_exercises)
     breakdown = await grade(
-        question=request, answer=plan, context=context, latency_ms=latency_ms
+        question=request, answer=plano_julgado, context=context, latency_ms=latency_ms
     )
     blocked = bool(errors) or _juiz_reprovou(breakdown)
 
@@ -104,7 +135,7 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
         contra, a_favor = 1, 0
         while contra < 2 and a_favor < 2:
             revoto = await grade(
-                question=request, answer=plan, context=context, latency_ms=latency_ms
+                question=request, answer=plano_julgado, context=context, latency_ms=latency_ms
             )
             if _juiz_reprovou(revoto):
                 contra += 1

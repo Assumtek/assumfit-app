@@ -42,10 +42,14 @@ export type AgentAdjustResult = {
 
 /**
  * Uma geração faz DUAS chamadas de modelo sobre o catálogo inteiro e leva de 50
- * a 120 segundos. O tempo limite é folgado de propósito: abortar aos 30 mataria
- * gerações válidas em curso e ainda cobraria por elas.
+ * a 120 segundos — e quando o juiz bloqueia, a RE-VOTAÇÃO de maioria soma até
+ * duas avaliações extras. Com 180s um bloqueio legítimo virava "timeout" no
+ * meio do re-voto (visto em produção, ago/2026): o backend desistia, a IA
+ * terminava para ninguém, e a pessoa via a falha errada. O teto cobre o
+ * pipeline inteiro; abortar cedo mataria gerações válidas e ainda cobraria
+ * por elas.
  */
-const TIMEOUT_MS = 180_000;
+const TIMEOUT_MS = 300_000;
 
 const client = axios.create({ baseURL: env.AI_SERVICE_URL, timeout: TIMEOUT_MS });
 

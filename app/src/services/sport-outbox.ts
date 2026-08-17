@@ -23,6 +23,10 @@ export type SessaoPendente = {
   kcal: number;
   avgHr: number | null;
   maxHr: number | null;
+  /** Execução do plano que a sessão cumpriu — viaja junto no reenvio. */
+  workoutExecutionId?: string | null;
+  /** Percurso simplificado — viaja junto no reenvio. */
+  track?: { lat: number; lon: number }[] | null;
   points: GeoPoint[];
 };
 

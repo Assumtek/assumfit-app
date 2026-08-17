@@ -3328,5 +3328,185 @@
     "equipment": "Caixote ou banco + halteres (opcional)",
     "level": "INICIANTE",
     "type": "FORCA"
+  },
+  {
+    "id": "84c73f46-f46f-4857-bbf9-219b91674aff",
+    "name": "Corrida contínua",
+    "description": "Corrida em ritmo constante e confortável — dá para conversar em frases curtas. Base aeróbica.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "69ffb451-4615-44c1-958e-5c6506281bfa",
+    "name": "Corrida intervalada (tiros)",
+    "description": "Blocos de corrida forte intercalados com recuperação em trote ou caminhada. A prescrição define o número de tiros, a duração de cada um e a recuperação.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "aebe3515-f00a-4c1e-ad88-cadb97533653",
+    "name": "Corrida progressiva",
+    "description": "Começa em ritmo leve e termina forte, aumentando o ritmo a cada terço da sessão.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "91a74f45-7fc1-4a26-807e-3fabb3f095a7",
+    "name": "Longão",
+    "description": "Corrida longa em ritmo leve e constante. Constrói volume aeróbico; a conversa deve fluir o tempo todo.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "524e63c4-66e4-434f-abe4-932c05572a01",
+    "name": "Trote regenerativo",
+    "description": "Corrida muito leve, de recuperação ativa. Esforço mínimo, soltando as pernas do estímulo anterior.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "f40cc267-f85c-43da-b351-42ec8c1ded27",
+    "name": "Educativos de corrida",
+    "description": "Skipping alto e baixo, anfersen, dribbling e saltitos — técnica de passada antes ou depois do treino principal.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "27d77898-f5d8-41b8-9744-669f365b8ac8",
+    "name": "Caminhada vigorosa",
+    "description": "Caminhada contínua em passo acelerado, braços participando. Respiração perceptível, mas fala possível.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "db332c80-dda5-4bae-8712-f694bda50d2c",
+    "name": "Pedal contínuo",
+    "description": "Pedalada em ritmo constante e cadência confortável. Base aeróbica sobre a bicicleta.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Bicicleta",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "be145fc6-23b3-4493-9985-8586ae843573",
+    "name": "Pedal intervalado",
+    "description": "Blocos fortes de pedalada intercalados com giro leve de recuperação. A prescrição define blocos e recuperação.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Bicicleta",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "9bb7cff9-61ac-47bc-9269-7334ee31787f",
+    "name": "Pedal longo",
+    "description": "Saída longa em ritmo leve e constante, construindo volume aeróbico.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Bicicleta",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "d6d52f7b-3905-497f-abbe-2d125be9ae2c",
+    "name": "Nado contínuo",
+    "description": "Nado em ritmo constante no estilo mais confortável, priorizando técnica e respiração.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Piscina",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "639eda92-74a3-408e-9562-27def0a5f405",
+    "name": "Séries de nado",
+    "description": "Tiros na piscina com pausa na borda entre as séries. A prescrição define distância ou tempo de cada série.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Piscina",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "62956c05-3c97-445b-86f9-ad42ab6d90f1",
+    "name": "Educativos de nado",
+    "description": "Pernada com prancha, braçada unilateral e exercícios de respiração — técnica de nado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Piscina e prancha",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "4e7a1013-0923-47f4-b56c-2e6ba821964e",
+    "name": "Treino coletivo ou jogo",
+    "description": "A sessão do esporte com bola: treino do time, pelada ou partida. Vale como o estímulo principal do dia.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Bola",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "4103df01-c1f3-489b-af71-b798f21ac82c",
+    "name": "Tiros de velocidade",
+    "description": "Sprints curtos com recuperação completa entre eles. A prescrição define distância e número de tiros.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "04505a75-38c8-49af-8522-955753a6d177",
+    "name": "Agilidade e mudança de direção",
+    "description": "Deslocamentos com cones ou escada de agilidade: laterais, mudanças bruscas de direção e aceleração.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Cones ou escada de agilidade",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "fa8957a1-f2bf-45d7-9b7e-b9215851abd4",
+    "name": "Treino técnico de luta",
+    "description": "Técnica e movimentação da modalidade: entradas, golpes, esquivas e deslocamentos, em ritmo controlado.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "79cbb53a-ddcb-4727-9a15-8e1a2420e678",
+    "name": "Rounds de combate simulado",
+    "description": "Rounds cronometrados com pausa entre eles: sparring leve, saco ou sombra, conforme a estrutura disponível.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "79511523-c667-42af-9322-34711827844a",
+    "name": "Sessão de dança",
+    "description": "Aula ou prática contínua de dança. O ritmo da música dita a intensidade.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum",
+    "level": "INICIANTE",
+    "type": "CARDIO"
+  },
+  {
+    "id": "0ac6f3bc-a658-4106-9710-bf31d3ab0944",
+    "name": "Sessão do esporte praticado",
+    "description": "A prática regular da modalidade da pessoa, quando não há bloco estruturado específico no catálogo.",
+    "muscleGroup": "CORPO_INTEIRO",
+    "equipment": "Nenhum",
+    "level": "INICIANTE",
+    "type": "CARDIO"
   }
 ]

@@ -179,7 +179,22 @@ export async function runGeneration(requestId: string): Promise<void> {
       : context.constraints;
 
     const result = await generate({
-      profile: context.profile,
+      profile: {
+        ...context.profile,
+        /*
+         O juiz de segurança clínica reprovava por "triagem pré-participação
+         ausente" — e a triagem ACONTECE: o PAR-Q é aplicado na anamnese e o
+         tier de risco sai determinístico dele (`classify`, logo acima). O
+         juiz só não era informado, e avaliava o perfil como se ninguém
+         tivesse perguntado. Visto em produção (ago/2026): TIER_0 legítimo
+         bloqueado com "omite triagem obrigatória", 2 votos a 0.
+        */
+        triagem_pre_participacao: {
+          parq_aplicado_na_anamnese: true,
+          risk_tier: tier,
+          sinalizacoes_clinicas: context.flags,
+        },
+      },
       flags: context.flags,
       history_summary: health.historySummary,
       allowed_exercises: catalog,

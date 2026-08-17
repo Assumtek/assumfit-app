@@ -70,6 +70,9 @@ const DayParse = z.object({
   workout: z
     .object({
       name: z.string().min(1),
+      // Slug livre de propósito: modalidade nova não pode quebrar o parse de
+      // um plano que o juiz já aprovou. Normalizada ao persistir.
+      modality: z.string().nullish(),
       muscleGroups: z.array(z.nativeEnum(MuscleGroup)).default([]),
       estimatedDuration: z.number().int().nullish(),
       phases: z.array(PhaseParse).default([]),
@@ -161,6 +164,7 @@ export async function persistPlan(params: PersistParams): Promise<string> {
       const workout = await tx.workout.create({
         data: {
           name: day.workout.name,
+          modality: day.workout.modality?.trim().toLowerCase() || null,
           muscleGroups: day.workout.muscleGroups,
           estimatedDuration: day.workout.estimatedDuration ?? null,
         },

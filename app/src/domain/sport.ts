@@ -15,7 +15,10 @@ export type SportKind =
   | 'funcional'
   | 'futebol'
   | 'yoga'
-  | 'corda';
+  | 'corda'
+  | 'natacao'
+  | 'lutas'
+  | 'danca';
 
 export type Sport = {
   kind: SportKind;
@@ -37,9 +40,61 @@ export const SPORTS: Sport[] = [
   { kind: 'futebol', label: 'Futebol', met: 7.0, gps: true, icon: 'ball' },
   { kind: 'yoga', label: 'Yoga', met: 2.5, gps: false, icon: 'flower' },
   { kind: 'corda', label: 'Pular corda', met: 11.0, gps: false, icon: 'zap' },
+  // As três chegaram com a fusão do plano com esportes (ago/2026): quem tem
+  // plano de natação/luta/dança precisa registrar a sessão no mesmo lugar.
+  { kind: 'natacao', label: 'Natação', met: 8.0, gps: false, icon: 'swim' },
+  { kind: 'lutas', label: 'Lutas', met: 10.0, gps: false, icon: 'swords' },
+  { kind: 'danca', label: 'Dança', met: 7.8, gps: false, icon: 'music' },
 ];
 
+/**
+ * O esporte do CRONÔMETRO que corresponde à modalidade de um treino do plano
+ * — a ponte da coexistência (ago/2026): dia de esporte do plano pode ser
+ * registrado pelo gravador, com GPS, caloria e batimento. Slug sem gravador
+ * correspondente (musculação, mobilidade) devolve null e o dia segue só pelo
+ * treino guiado.
+ */
+const MODALITY_TO_SPORT: Record<string, SportKind> = {
+  corrida: 'corrida',
+  caminhada: 'caminhada',
+  ciclismo: 'ciclismo',
+  natacao: 'natacao',
+  futebol: 'futebol',
+  lutas: 'lutas',
+  danca: 'danca',
+  crossfit: 'funcional',
+  'esportes-coletivos': 'futebol',
+  yoga: 'yoga',
+};
+
+export function sportForModality(modality: string | null | undefined): Sport | null {
+  const kind = modality ? MODALITY_TO_SPORT[modality] : undefined;
+  return kind ? (SPORTS.find((s) => s.kind === kind) ?? null) : null;
+}
+
 export type GeoPoint = { lat: number; lon: number; at: number };
+
+/** Ponto do percurso como sobe ao servidor: só lat/lon, ~1 m de precisão. */
+export type TrackPoint = { lat: number; lon: number };
+
+/**
+ * Minimização da trilha antes do envio (política de ago/2026: o percurso sobe
+ * para o histórico desenhar o mapa em qualquer aparelho — como o Strava — mas
+ * sobe REDUZIDO): amostragem uniforme até `max` pontos, sempre preservando o
+ * último, e coordenadas arredondadas a 5 casas (~1 m). O instante de cada
+ * ponto não viaja: o mapa não precisa de horário.
+ */
+export function simplifyTrack(points: GeoPoint[], max = 300): TrackPoint[] {
+  if (points.length < 2) return [];
+  const passo = Math.max(1, Math.ceil(points.length / max));
+  const escolhidos: GeoPoint[] = [];
+  for (let i = 0; i < points.length; i += passo) escolhidos.push(points[i]);
+  if (escolhidos[escolhidos.length - 1] !== points[points.length - 1]) {
+    escolhidos.push(points[points.length - 1]);
+  }
+  const arredondar = (v: number) => Math.round(v * 1e5) / 1e5;
+  return escolhidos.map((p) => ({ lat: arredondar(p.lat), lon: arredondar(p.lon) }));
+}
 
 const R_TERRA_M = 6_371_000;
 

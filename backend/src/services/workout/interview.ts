@@ -103,6 +103,31 @@ export const QUESTIONS: Question[] = [
     required: false,
     when: (a) => sim(a, 'praticaEsporte'),
   },
+  /*
+   A decisão da fusão (ago/2026) mora AQUI: é a pessoa quem escolhe o que o
+   plano cobre, não o app — e a pergunta é para TODO MUNDO. A primeira versão
+   só perguntava a quem já praticava esporte, e quem queria COMEÇAR a correr
+   respondia "não pratico", nunca via a pergunta e recebia musculação com a
+   vontade de corrida degradada a nota de rodapé. Visto em produção no
+   primeiro dia.
+   */
+  {
+    id: 'planoCobre',
+    ask: 'E o seu plano de treino: você quer que ele seja de quê?',
+    label: 'O plano cobre',
+    type: 'MULTIPLE_CHOICE',
+    options: ['Só musculação', 'Musculação e um esporte', 'Só um esporte'],
+    required: false,
+  },
+  {
+    id: 'esporteDoPlano',
+    ask: 'Qual esporte o plano deve cobrir?',
+    label: 'Esporte do plano',
+    type: 'MULTIPLE_CHOICE',
+    options: ['Corrida', 'Ciclismo', 'Natação', 'Futebol', 'Lutas', 'Crossfit', 'Tênis ou padel', 'Vôlei ou basquete', 'Yoga ou pilates', 'Dança'],
+    required: false,
+    when: (a) => a.planoCobre === 'Musculação e um esporte' || a.planoCobre === 'Só um esporte',
+  },
 
   {
     id: 'conditions',

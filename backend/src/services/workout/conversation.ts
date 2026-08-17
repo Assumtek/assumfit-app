@@ -485,6 +485,46 @@ const MINUTOS: Record<string, number> = {
   'Mais de 1 hora': 75,
 };
 
+/**
+ * Rótulo do `qualEsporte` → slug de modalidade que a IA entende (é a chave do
+ * mapa de referências do serviço de modelo). Rótulo sem slug próprio cai no
+ * texto em minúsculas: o prompt instrui o modelo a tratar modalidade sem
+ * catálogo específico com sessões aeróbias/funcionais genéricas.
+ */
+const ESPORTE_SLUG: Record<string, string> = {
+  Corrida: 'corrida',
+  Ciclismo: 'ciclismo',
+  Natação: 'natacao',
+  Futebol: 'futebol',
+  Lutas: 'lutas',
+  Crossfit: 'crossfit',
+  'Tênis ou padel': 'esportes-coletivos',
+  'Vôlei ou basquete': 'esportes-coletivos',
+  'Yoga ou pilates': 'yoga',
+  Dança: 'danca',
+};
+
+/**
+ * O que o plano deve cobrir, decidido pela pessoa em `planoCobre`.
+ *
+ * O esporte do plano é `esporteDoPlano`; `qualEsporte` (o que ela já pratica)
+ * é só a queda para respostas da primeira versão da pergunta, que era gateada
+ * em "pratica esporte?". Sem resposta ou sem esporte identificável, o padrão
+ * é o comportamento que sempre existiu: plano de musculação.
+ */
+export function modalidadesDoPlano(r: Answers): string[] {
+  const esporte = dito(r.esporteDoPlano) ?? dito(r.qualEsporte);
+  const slug = esporte ? (ESPORTE_SLUG[esporte] ?? esporte.toLowerCase()) : null;
+  if (!slug) return ['musculacao'];
+  // As duas grafias: "meu esporte" é a primeira versão da pergunta, ainda
+  // viva em conversas COMPLETED que semeiam a próxima.
+  if (r.planoCobre === 'Só um esporte' || r.planoCobre === 'Só meu esporte') return [slug];
+  if (r.planoCobre === 'Musculação e um esporte' || r.planoCobre === 'Musculação e meu esporte') {
+    return ['musculacao', slug];
+  }
+  return ['musculacao'];
+}
+
 // Exportada para teste: é pura, e é a fronteira onde "—" e negativa de campo
 // livre precisam morrer antes de virarem flag de risco no deriveFlags.
 export function traduzirParaAnamnese(r: Answers) {
@@ -541,6 +581,9 @@ export function traduzirParaAnamnese(r: Answers) {
     daysPerWeek: r.daysPerWeek ? Number(r.daysPerWeek) : null,
     minutesPerSession: r.minutesPerSession ? (MINUTOS[r.minutesPerSession] ?? null) : null,
     equipment: r.estrutura ?? null,
+    // O que o plano cobre — decisão da pessoa, não inferência. O leitor
+    // (context-builder) repassa à IA como `modalidades` do perfil.
+    planModalities: modalidadesDoPlano(r),
     notes: notas.join(' | ') || null,
   };
 }

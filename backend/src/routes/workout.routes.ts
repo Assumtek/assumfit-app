@@ -89,7 +89,7 @@ async function assertConsent(userId: string): Promise<void> {
 /**
  * Concede ou revoga o consentimento de uso dos dados de saúde para treino.
  *
- * Mesmo desenho do ciclo menstrual e da agenda: separado, revogável, e com
+ * Mesmo desenho do ciclo menstrual: separado, revogável, e com
  * efeito REAL ao revogar — o "não" apaga a anamnese e os planos gerados a
  * partir dela. Guardar a resposta depois da revogação transformaria o
  * consentimento em formalidade, e é justamente este o dado que alguém pode
@@ -661,6 +661,7 @@ workoutRoutes.get(
           ? {
               id: day.workout.id,
               name: day.workout.name,
+              modality: day.workout.modality,
               muscleGroups: day.workout.muscleGroups,
               estimatedDuration: day.workout.estimatedDuration,
               exerciseCount: day.workout.exercises.length,
@@ -680,6 +681,7 @@ workoutRoutes.get(
     res.json({
       id: workout.id,
       name: workout.name,
+      modality: workout.modality,
       muscleGroups: workout.muscleGroups,
       estimatedDuration: workout.estimatedDuration,
       phases: workout.phases.map((phase) => ({

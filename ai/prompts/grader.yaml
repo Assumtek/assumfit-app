@@ -20,17 +20,22 @@ judges:
 
   - name: estrutura_sessao
     description: >
-      Cada dia de treino tem preparo (1 a 2 movimentos de mobilidade), volume principal
-      com no mínimo 3 exercícios de estímulo, e cardio com duração efetiva quando o
-      objetivo pede? Alongamento não foi usado para preencher volume?
+      Cada dia de treino tem preparo (1 a 2 movimentos de mobilidade) e volume principal
+      adequado à MODALIDADE do dia? Dia de musculação: no mínimo 3 exercícios de
+      estímulo, e cardio com duração efetiva quando o objetivo pede. Dia de esporte
+      (corrida, ciclismo, natação, lutas...): 1 a 3 blocos da modalidade com duração e
+      intensidade executáveis, coerentes com o nível — NÃO exija exercícios de força num
+      dia de esporte. Alongamento não foi usado para preencher volume?
     weight: 1.5
     hard_gate: true
     hard_gate_min: 5.0
 
   - name: aderencia_perfil
     description: >
-      O plano respeita objetivo, modalidades praticadas, frequência semanal declarada,
-      equipamento disponível e tempo por sessão?
+      O plano respeita objetivo, frequência semanal declarada, equipamento disponível e
+      tempo por sessão? Cobre exatamente as modalidades que a pessoa escolheu para o
+      plano (campo "modalidades" do perfil) — sem omitir nenhuma e sem inventar dias de
+      modalidade que ela não pediu?
     weight: 1.5
 
   - name: fundamentacao_evidencia

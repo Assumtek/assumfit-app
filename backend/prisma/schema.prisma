@@ -64,11 +64,6 @@ enum ConsentPurpose {
   international_transfer
   /// Comunicações de produto. Nunca obrigatório.
   marketing
-  /// Leitura da agenda de terceiros (Google, Microsoft). Nunca obrigatório, e
-  /// separado dos demais porque o calendário contém dado de OUTRAS pessoas —
-  /// nomes e e-mails de quem participa das reuniões. Consentir com o
-  /// tratamento da própria biometria não autoriza isso.
-  calendar_read
   /// Anamnese de saúde para prescrição de treino: cardiopatia, gestação,
   /// medicação em uso, lesão. É dado de saúde pelo mesmo Art. 5º II que cobre a
   /// biometria, e por isso tem finalidade PRÓPRIA — consentir com a leitura do
@@ -101,11 +96,6 @@ enum ExerciseFrequency {
   regular
   sometimes
   none
-}
-
-enum CalendarProvider {
-  google
-  microsoft
 }
 
 enum DeviceStatus {
@@ -156,8 +146,6 @@ model User {
   dailyHabits     DailyHabit[]
   mealRecords     MealRecord[]
   sportSessions   SportSession[]
-  sessions        ProductivitySession[]
-  calendars       CalendarAccount[]
   lifestyle       LifestyleProfile?
   anamnesis       HealthAnamnesis?
   trainingPlans   TrainingPlan[]
@@ -309,21 +297,6 @@ model BioAgeScore {
   @@map("bio_age_scores")
 }
 
-model ProductivitySession {
-  id                 BigInt    @id @default(autoincrement())
-  userId             String    @map("user_id") @db.Uuid
-  type               String
-  startedAt          DateTime  @map("started_at") @db.Timestamptz(3)
-  endedAt            DateTime? @map("ended_at") @db.Timestamptz(3)
-  durationMin        Int?      @map("duration_min")
-  energyScoreAtStart Float?    @map("energy_score_at_start")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, startedAt])
-  @@map("productivity_sessions")
-}
-
 /// Conta de calendário conectada.
 ///
 /// Guarda CREDENCIAL, não conteúdo: nenhum evento é persistido em lugar nenhum.
@@ -368,26 +341,6 @@ model LifestyleProfile {
   @@map("lifestyle_profiles")
 }
 
-model CalendarAccount {
-  id           String           @id @default(uuid()) @db.Uuid
-  userId       String           @map("user_id") @db.Uuid
-  provider     CalendarProvider
-  /// Qual conta foi conectada, para a pessoa reconhecer na tela.
-  accountEmail String           @map("account_email")
-  /// Cifrados em AES-256-GCM. Ver `lib/crypto.ts`.
-  accessToken  String           @map("access_token")
-  refreshToken String           @map("refresh_token")
-  expiresAt    DateTime         @map("expires_at") @db.Timestamptz(3)
-  scope        String
-  connectedAt  DateTime         @default(now()) @map("connected_at") @db.Timestamptz(3)
-  lastSyncAt   DateTime?        @map("last_sync_at") @db.Timestamptz(3)
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, provider])
-  @@map("calendar_accounts")
-}
-
 model DailyHabit {
   id            BigInt   @id @default(autoincrement())
   userId        String   @map("user_id") @db.Uuid
@@ -397,7 +350,6 @@ model DailyHabit {
   /// Duração da noite em minutos. Sem ela o score não tem avaliação: "82" pode
   /// ser uma noite ótima de 7h ou um cochilo bem pontuado — `ratings.ts` exige os dois.
   sleepMinutes  Int?     @map("sleep_minutes")
-  focusSessions Int      @default(0) @map("focus_sessions")
   mood          String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -436,6 +388,21 @@ model SportSession {
   kcal       Int
   avgHr      Int?     @map("avg_hr")
   maxHr      Int?     @map("max_hr")
+  /// Execução do plano que esta sessão CUMPRIU (fusão ago/2026): o dia de
+  /// esporte do plano pode ser registrado pelo cronômetro de GPS, e aí a
+  /// sessão e a execução são o MESMO ato — a contagem de movimento usa este
+  /// vínculo para não somar duas vezes. Null = sessão avulsa.
+  workoutExecutionId String? @map("workout_execution_id") @db.Uuid
+  /// "Como foi": os mesmos campos do fim de treino guiado, para a sessão
+  /// avulsa. Sessão VINCULADA guarda o como-foi na execução, não aqui.
+  perceivedEffort Int?    @map("perceived_effort")
+  rating          Int?
+  comment         String?
+  /// O percurso, SIMPLIFICADO no aparelho (≤300 pontos, ~1 m de precisão)
+  /// antes de subir — decisão da fundadora (ago/2026) que reverte o
+  /// "trilha morre no aparelho": o histórico mostra o mapa como o Strava.
+  /// Minimização: fora da listagem (só no detalhe), apagado com a conta.
+  track Json?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -724,6 +691,9 @@ model TrainingPlanDay {
 model Workout {
   id                String        @id @default(uuid()) @db.Uuid
   name              String
+  /// Slug da modalidade do dia ("musculacao", "corrida"...). Null = plano
+  /// anterior à fusão com esportes (ago/2026); o app trata como musculação.
+  modality          String?
   muscleGroups      MuscleGroup[] @map("muscle_groups")
   estimatedDuration Int?          @map("estimated_duration")
   observations      String?
