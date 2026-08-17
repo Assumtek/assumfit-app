@@ -13,13 +13,12 @@ import { Body, Data } from './ui';
 import { useTheme } from '../theme/ThemeProvider';
 
 /**
- * O interruptor do alerta de sedentarismo — UM componente, duas telas.
+ * O interruptor do alerta de sedentarismo.
  *
- * Vive em Hábitos (onde a pessoa procura por ele: é um hábito de movimento) e
- * em Dispositivo (onde ele tecnicamente mora: é o firmware quem vibra).
- * Extraído para componente porque duas cópias do mesmo interruptor é onde uma
- * diverge da outra — foi assim com os botões de pill, com os cabeçalhos da
- * home, e não precisa ser de novo.
+ * Vive em Dispositivo, que é onde ele tecnicamente mora: é o firmware quem
+ * conta o tempo parada e vibra. Esteve também em Hábitos até ago/2026, quando
+ * a fundadora tirou — aquela tela é sobre água, e um segundo assunto ali
+ * dividia a atenção do único gesto que ela pede.
  *
  * O lembrete é do FIRMWARE: a pulseira conta o tempo parada e vibra sozinha,
  * com o celular desligado inclusive. Por isso o estado é LIDO do aparelho ao

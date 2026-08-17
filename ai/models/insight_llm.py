@@ -70,8 +70,8 @@ SCHEMA = {
     "additionalProperties": False,
 }
 
-SYSTEM = """Você escreve a frase da tela inicial do AssumFit, um app de bem-estar \
-e produtividade que lê biometria de uma pulseira.
+SYSTEM = """Você escreve a frase da tela inicial do AssumFit, um app de esporte, \
+treino e bem-estar que lê biometria de uma pulseira.
 
 Sua função é REDIGIR, não avaliar. Todos os números já foram calculados e vêm \
 prontos na mensagem.
@@ -82,8 +82,10 @@ Regras, em ordem de importância:
 Se um sinal não aparece na mensagem, ele não foi medido — não fale dele.
 2. NUNCA dê conselho médico, diagnóstico ou alerta clínico. O produto não é \
 dispositivo médico. Nada de "procure um médico", "pode ser sinal de", "risco de".
-3. Fale com a pessoa sobre o dia dela: energia, foco, descanso, momento bom para \
-cada tipo de tarefa. Não sobre saúde.
+3. Fale com a pessoa sobre o dia dela em termos de MOVIMENTO: prontidão para \
+treinar, esporte, recuperação, descanso, sono e hidratação. O app incentiva \
+treino e bem-estar — produtividade no trabalho (reuniões, foco, tarefas) não é \
+o assunto e não deve ser sugerida.
 4. Português do Brasil, segunda pessoa ("você"), tom direto e adulto. Sem \
 exclamação, sem emoji, sem "vamos lá", sem elogio vazio.
 4a. Registro NEUTRO, não coloquial. Escreva "para o", não "pro"; "Aproveite", \
@@ -114,14 +116,17 @@ class Facts:
     hour: int
     #: Contexto de rotina do onboarding, já resolvido. Ex: "hoje é dia de treino".
     routine: str | None
-    #: Fatos do DIA já apurados (treino, esporte, refeições, passos, foco),
+    #: Fatos do DIA já apurados (treino, esporte, refeições, passos),
     #: em frases curtas separadas por "; ". `None` quando não há nada medido.
     day_notes: str | None = None
 
 
 def _prompt(f: Facts) -> str:
     linhas = [
-        f"Score de energia: {f.score} de 100 (faixa: {f.level}).",
+        # "Prontidão", não "energia": é a palavra que a tela usa, e o modelo
+        # repete o vocabulário que recebe — nomear diferente aqui faria a home
+        # falar duas línguas na mesma dobra.
+        f"Prontidão do corpo: {f.score} de 100 (faixa: {f.level}).",
         f"Hora do dia: {f.hour}h.",
     ]
 
@@ -178,17 +183,14 @@ def write(facts: Facts, fallback: HomeInsight) -> HomeInsight | None:
             model=MODEL,
             max_tokens=MAX_TOKENS,
             system=SYSTEM,
-            # Sem thinking, e com esforço baixo.
-            #
-            # Medido: com thinking ligado a saída foi 586 tokens; desligado, 93
-            # — 6,3x menos, com frase equivalente. Faz sentido, porque não há o
-            # que raciocinar: os números já vêm calculados e a tarefa é redigir.
-            #
-            # São US$ 1,40 contra US$ 8,80 por assinante/mês.
-            thinking={"type": "disabled"},
+            # NEM `thinking` NEM `effort`: o Haiku 4.5 é anterior à família que
+            # aceita `output_config.effort` e REJEITA o parâmetro com 400 — em
+            # produção TODA chamada falhava e a frase caía no molde, em
+            # silêncio. Omitir `thinking` já significa "sem thinking" nesta
+            # geração (confirmado na referência da API, ago/2026). O controle
+            # de custo aqui é a escolha do próprio Haiku.
             output_config={
                 "format": {"type": "json_schema", "schema": SCHEMA},
-                "effort": "low",
             },
             messages=[{"role": "user", "content": _prompt(facts)}],
         )

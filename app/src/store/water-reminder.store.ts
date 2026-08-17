@@ -2,6 +2,7 @@ import { File, Paths } from 'expo-file-system';
 import { create } from 'zustand';
 
 import { QCBand } from '../../modules/qcband';
+import { useHabitsStore } from './habits.store';
 import {
   cancelWaterNotifications,
   scheduleWaterNotifications,
@@ -83,8 +84,9 @@ export const useWaterReminderStore = create<WaterReminderState>((set, get) => ({
     gravar({ ligado, horarios: lista });
 
     try {
-      // Celular primeiro — é o canal que sempre existe.
-      if (ligado && lista.length) await scheduleWaterNotifications(lista);
+      // Celular primeiro — é o canal que sempre existe. O consumo de hoje
+      // viaja junto: é ele que faz o texto dizer quanto falta.
+      if (ligado && lista.length) await scheduleWaterNotifications(lista, consumoDeHoje());
       else await cancelWaterNotifications();
 
       // Pulseira em série. Falha aqui NÃO desfaz o celular.
@@ -106,3 +108,22 @@ export const useWaterReminderStore = create<WaterReminderState>((set, get) => ({
 }));
 
 const ordenar = (horarios: string[]) => [...horarios].sort();
+
+/** O estado de hoje que o texto do lembrete precisa. */
+function consumoDeHoje() {
+  const { today, goalMl, containers } = useHabitsStore.getState();
+  return { waterMl: today.waterMl, goalMl, copoMl: containers[0].ml };
+}
+
+/**
+ * Reagenda os lembretes de HOJE com o texto novo — chamado a cada gole.
+ *
+ * Sem isto o texto envelhece dentro da fila do sistema: a pessoa bebe dois
+ * litros e às 19h ainda ouve "você não bebeu água hoje", que é pior que
+ * lembrete genérico.
+ */
+export async function reagendarLembreteDeAgua() {
+  const { ligado, horarios } = useWaterReminderStore.getState();
+  if (!ligado || horarios.length === 0) return;
+  await scheduleWaterNotifications(horarios, consumoDeHoje()).catch(() => undefined);
+}

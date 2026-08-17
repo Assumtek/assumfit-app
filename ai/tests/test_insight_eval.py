@@ -98,7 +98,9 @@ class TestPropriedades:
 
     def test_a_acao_e_uma_rota_que_o_app_conhece(self, name, hour):
         _, insight = evaluate(name, hour)
-        assert insight.action.key in {"play", "calendar", "drop"}
+        # O conjunto completo de rotas do `ACTION_ROUTE` do app; os padrões por
+        # faixa usam só dumbbell/footprints/drop desde o reposicionamento.
+        assert insight.action.key in {"play", "calendar", "drop", "dumbbell", "footprints", "flame"}
 
     def test_a_acao_corresponde_a_faixa(self, name, hour):
         energy, insight = evaluate(name, hour)
@@ -142,9 +144,9 @@ class TestCobertura:
         assert movimentou >= len(PERSONAS) // 2
 
     def test_alguma_combinacao_produz_cada_acao_possivel(self):
-        """As três ações precisam ser alcançáveis, ou uma tela está morta."""
+        """As três ações padrão precisam ser alcançáveis, ou uma tela está morta."""
         acoes = {evaluate(name, hour)[1].action.key for name, hour in CASES}
-        assert acoes == {"play", "calendar", "drop"}
+        assert acoes == {"dumbbell", "footprints", "drop"}
 
     def test_cada_sinal_medido_chega_a_ser_o_fator_nomeado(self):
         """Um sinal que nunca é nomeado indica limiar inalcançável.
@@ -156,13 +158,14 @@ class TestCobertura:
         drivers = {evaluate(name, hour)[1].driver_key for name, hour in CASES}
         assert {"hrv", "hydration", "temp"} <= drivers
 
-    def test_ninguem_recebe_recomendacao_de_foco_de_madrugada_estando_mal(self):
+    def test_ninguem_e_mandado_treinar_estando_mal(self):
         """Propriedade de produto, não de código.
 
-        Mandar quem está em faixa baixa "iniciar sessão de foco" às 3h seria o
-        app contradizendo o próprio propósito.
+        Mandar quem está em faixa baixa "abrir o treino" às 3h seria o app
+        contradizendo o próprio propósito: prontidão baixa pede recuperação —
+        água ou, no máximo, registrar uma refeição.
         """
         for name, hour in CASES:
             energy, insight = evaluate(name, hour)
             if energy.level == "low":
-                assert insight.action.key != "play"
+                assert insight.action.key in {"drop", "flame"}

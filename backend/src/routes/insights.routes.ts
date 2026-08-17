@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { Router } from 'express';
 import { z } from 'zod';
 
@@ -6,6 +7,8 @@ import { asyncRoute } from '../middleware/error';
 import { prisma } from '../lib/prisma';
 import { hrvBaseline } from '../services/biometric.service';
 import { energyNow } from '../services/scoring.service';
+import { localDayOfWeek } from '../services/workout/execution';
+import { env } from '../lib/env';
 
 export const insightsRoutes = Router();
 insightsRoutes.use(requireAuth);
@@ -51,6 +54,70 @@ insightsRoutes.get(
   }),
 );
 
+/**
+ * O texto da notificação matinal — redigido pelo modelo, não por molde.
+ *
+ * O app manda a PREVISÃO (ele já consulta o Open-Meteo para o cartão de
+ * ambiente) e o servidor acrescenta o que só ele sabe: se amanhã é dia de
+ * treino no plano e qual é a sessão. O aparelho agenda a notificação local
+ * com o texto que voltar — a entrega é do celular, a redação é da IA.
+ *
+ * Falhou o modelo? O serviço de IA já devolve o molde com `source:
+ * "template"`. Se a rede inteira falhar, esta rota devolve 503 e o app mantém
+ * o texto que já tinha agendado, que é melhor que apagar a notificação.
+ */
+insightsRoutes.get(
+  '/morning',
+  asyncRoute<AuthedRequest>(async (req, res) => {
+    const { temperature, humidity, city } = z
+      .object({
+        temperature: z.coerce.number().min(-30).max(60),
+        humidity: z.coerce.number().min(0).max(100),
+        city: z.string().max(80).optional(),
+      })
+      .parse(req.query);
+
+    // O dia da notificação é AMANHÃ, no fuso de quem vai acordar.
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { id: req.userId },
+      select: { tzOffsetMin: true },
+    });
+    const amanha = new Date(Date.now() + 86_400_000);
+    const diaDaSemana = localDayOfWeek(user.tzOffsetMin, amanha);
+
+    const plano = await prisma.trainingPlan.findFirst({
+      where: { userId: req.userId, status: 'ACTIVE' },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        days: {
+          where: { dayOfWeek: diaDaSemana },
+          select: { dayType: true, workout: { select: { name: true } } },
+        },
+      },
+    });
+    const diaDoPlano = plano?.days[0];
+    const treina = diaDoPlano?.dayType === 'WORKOUT' && Boolean(diaDoPlano.workout);
+
+    try {
+      const { data } = await axios.post(
+        `${env.AI_SERVICE_URL}/insights/morning`,
+        {
+          temperature_c: Math.round(temperature),
+          humidity_pct: Math.round(humidity),
+          trains_tomorrow: treina,
+          workout_name: diaDoPlano?.workout?.name ?? null,
+          streak_days: await sequenciaDeMovimento(req.userId, user.tzOffsetMin),
+          city: city ?? null,
+        },
+        { timeout: 15_000 },
+      );
+      return res.json(data);
+    } catch {
+      return res.status(503).json({ error: 'Serviço de modelo indisponível' });
+    }
+  }),
+);
+
 insightsRoutes.get(
   '/bioage',
   asyncRoute<AuthedRequest>(async (req, res) => {
@@ -64,3 +131,43 @@ insightsRoutes.get(
     );
   }),
 );
+
+/**
+ * Dias consecutivos com movimento, terminando hoje ou ontem.
+ *
+ * O dia de HOJE ainda em branco não zera a sequência — ele é uma chance, não
+ * uma falta, e é a mesma regra que a agenda de movimento do app aplica. As
+ * duas fontes contam: treino do plano CONCLUÍDO e sessão de esporte.
+ *
+ * Trinta dias de janela: é o suficiente para uma saudação, e a sequência que
+ * o app mostra tem a própria janela — se um dia divergirem em número, quem
+ * manda é a tela, que a pessoa consegue conferir.
+ */
+async function sequenciaDeMovimento(userId: string, tzOffsetMin: number): Promise<number> {
+  const desde = new Date(Date.now() - 30 * 86_400_000);
+  const [execucoes, sessoes] = await Promise.all([
+    prisma.workoutExecution.findMany({
+      where: { userId, status: 'FINISHED', startedAt: { gte: desde } },
+      select: { startedAt: true },
+    }),
+    prisma.sportSession.findMany({
+      where: { userId, startedAt: { gte: desde } },
+      select: { startedAt: true },
+    }),
+  ]);
+
+  // A chave é a data LOCAL de quem treinou: uma corrida às 23h no Brasil é do
+  // dia 14, não do 15 que o UTC diria.
+  const chave = (d: Date) => new Date(d.getTime() + tzOffsetMin * 60_000).toISOString().slice(0, 10);
+  const dias = new Set([...execucoes, ...sessoes].map((r) => chave(r.startedAt)));
+
+  const cursor = new Date(Date.now() + tzOffsetMin * 60_000);
+  if (!dias.has(cursor.toISOString().slice(0, 10))) cursor.setUTCDate(cursor.getUTCDate() - 1);
+
+  let sequencia = 0;
+  while (dias.has(cursor.toISOString().slice(0, 10))) {
+    sequencia += 1;
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+  return sequencia;
+}

@@ -1,4 +1,6 @@
 import * as Notifications from 'expo-notifications';
+
+import { WATER_NUDGE_PADRAO, waterNudge } from '../domain/water';
 import { Platform } from 'react-native';
 
 import { useAlertsStore } from '../store/alerts.store';
@@ -132,32 +134,67 @@ const TREINO_15H = 'treino-15h';
 const BOM_DIA = 'bom-dia';
 
 /**
+ * Quantos dias à frente o lembrete de água é agendado.
+ *
+ * Notificação repetida guarda o texto do dia em que foi criada — era isso que
+ * fazia "um copo agora conta para a meta" chegar igual todo dia, inclusive
+ * depois da meta batida. Aqui cada disparo é agendado com data e texto
+ * próprios, e o app reagenda a cada gole. Três dias é o compromisso: cobre o
+ * fim de semana sem abrir o app e cabe no teto de 64 notificações do iOS,
+ * dividido com treino, ciclo e sono.
+ */
+const AGUA_DIAS = 3;
+
+/**
  * Água no CELULAR, espelhando os horários da pulseira.
  *
  * Os dois canais juntos são deliberados: a pulseira vibra no pulso de quem a
  * está usando; a notificação alcança quem a deixou carregando — que é
  * exatamente o dia em que ninguém lembra da água.
+ *
+ * O `estado` é o consumo de HOJE: com ele, o lembrete de hoje diz quanto
+ * falta (ou some, se a meta já foi batida) e o dos próximos dias fica no
+ * texto genérico, porque o consumo deles ainda não aconteceu.
  */
-export async function scheduleWaterNotifications(times: string[]) {
+export async function scheduleWaterNotifications(
+  times: string[],
+  estado?: { waterMl: number; goalMl: number; copoMl: number },
+) {
   if (!(await ensurePermission())) return;
   await cancelWaterNotifications();
-  for (let i = 0; i < times.length; i++) {
-    const [hour, minute] = times[i].split(':').map(Number);
-    await Notifications.scheduleNotificationAsync({
-      identifier: `${AGUA_PREFIXO}${i}`,
-      content: { title: 'Hora da água', body: 'Um copo agora conta para a meta de hoje.', sound: false },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-        hour,
-        minute,
-        repeats: true,
-      },
-    });
+
+  const agora = new Date();
+  const hojeTexto = estado
+    ? waterNudge(estado.waterMl, estado.goalMl, estado.copoMl)
+    : WATER_NUDGE_PADRAO;
+
+  let slot = 0;
+  for (let dia = 0; dia < AGUA_DIAS; dia++) {
+    for (const hhmm of times) {
+      const [hour, minute] = hhmm.split(':').map(Number);
+      const quando = new Date(agora);
+      quando.setDate(quando.getDate() + dia);
+      quando.setHours(hour, minute, 0, 0);
+      // Horário que já passou hoje não vira notificação imediata.
+      if (quando <= agora) continue;
+
+      const conteudo = dia === 0 ? hojeTexto : WATER_NUDGE_PADRAO;
+      // Meta batida silencia o RESTO do dia — e só o de hoje.
+      if (!conteudo) continue;
+
+      await Notifications.scheduleNotificationAsync({
+        identifier: `${AGUA_PREFIXO}${slot++}`,
+        content: { title: conteudo.title, body: conteudo.body, sound: false },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: quando },
+      });
+    }
   }
 }
 
 export async function cancelWaterNotifications() {
-  for (let i = 0; i < 8; i++) {
+  // O teto acompanha AGUA_DIAS × MAX_HORARIOS do lembrete (8), com folga:
+  // cancelar id inexistente é no-op, deixar um vivo é notificação fantasma.
+  for (let i = 0; i < AGUA_DIAS * 8 + 8; i++) {
     await Notifications.cancelScheduledNotificationAsync(`${AGUA_PREFIXO}${i}`).catch(() => undefined);
   }
 }
@@ -232,43 +269,23 @@ export async function armTrainingNudge(fromTomorrow = false) {
 }
 
 /**
- * O "bom dia" com a PREVISÃO de amanhã cedo, não o clima de agora.
+ * O "bom dia" das 7h30 — o TEXTO vem pronto de quem o redigiu.
  *
- * Agendada hoje para as 7h30 de amanhã, com a temperatura que o Open-Meteo
- * prevê para as 7h — usar a leitura atual escreveria "bom dia com 28°" numa
- * manhã de 12. Rearmada a cada abertura do app, então a previsão nunca tem
- * mais de um dia.
+ * Era um molde de seis frases decidido aqui por faixa de temperatura, e
+ * chegava igual todo dia. Agora a redação é da IA (rota `/insights/morning`,
+ * que conhece a previsão E o plano de amanhã) e este arquivo volta ao que
+ * sabe fazer: entregar no horário certo. Rearmada a cada abertura do app, e
+ * por isso a previsão nunca tem mais de um dia.
  */
-export async function scheduleMorningGreeting(temperatureC: number, humidityPct: number, treina: boolean) {
+export async function scheduleMorningGreeting(texto: { title: string; body: string }) {
   if (!(await ensurePermission())) return;
   const alvo = new Date(Date.now() + 86_400_000);
   alvo.setHours(7, 30, 0, 0);
 
-  const t = Math.round(temperatureC);
-  const frio = t < 15;
-  const calor = t >= 27;
-  const abafado = humidityPct >= 80;
-
-  let corpo: string;
-  if (frio) {
-    corpo = treina
-      ? `${t}° lá fora — tá frio, eu sei, mas o treino de hoje conta em dobro.`
-      : `${t}° lá fora — dia de descanso com café passa rápido.`;
-  } else if (calor) {
-    corpo = treina
-      ? `Solzão de ${t}° — bora garantir o treino antes do calor apertar?`
-      : `Solzão de ${t}° — hidrate bem mesmo no descanso.`;
-  } else {
-    corpo = treina
-      ? `${t}° e céu tranquilo — ótimo pra dar aquele treino.`
-      : `${t}° e céu tranquilo — bom dia pro corpo descansar direito.`;
-  }
-  if (abafado) corpo += ' Ar abafado: capriche na água.';
-
   await Notifications.cancelScheduledNotificationAsync(BOM_DIA).catch(() => undefined);
   await Notifications.scheduleNotificationAsync({
     identifier: BOM_DIA,
-    content: { title: 'Bom dia!', body: corpo, sound: false, data: { route: 'Main' } },
+    content: { title: texto.title, body: texto.body, sound: false, data: { route: 'Main' } },
     trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: alvo },
   });
 }

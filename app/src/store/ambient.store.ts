@@ -1,9 +1,8 @@
 import { requireOptionalNativeModule } from 'expo-modules-core';
 import { create } from 'zustand';
 
-import { api, fetchMorningForecast, isAuthenticated } from '../services/api.service';
+import { api, fetchMorningForecast, fetchMorningGreeting, isAuthenticated } from '../services/api.service';
 import { scheduleMorningGreeting } from '../services/notifications.service';
-import { useWorkoutStore } from './workout.store';
 
 /**
  * Checa o lado NATIVO antes de tocar no pacote JS.
@@ -53,7 +52,7 @@ type AmbientState = {
  * estado fica nulo e a interface simplesmente não mostra a linha de contexto.
  * Clima é enriquecimento; nada no produto depende dele para funcionar.
  */
-export const useAmbientStore = create<AmbientState>((set) => ({
+export const useAmbientStore = create<AmbientState>((set, get) => ({
   ambient: null,
   city: null,
   permission: 'unknown',
@@ -125,15 +124,21 @@ export const useAmbientStore = create<AmbientState>((set) => ({
             position.coords.latitude,
             position.coords.longitude,
           );
-          const plano = useWorkoutStore.getState().plan;
-          const amanha = new Date(Date.now() + 86_400_000)
-            .toLocaleDateString('en-US', { weekday: 'long' })
-            .toUpperCase();
-          const treinaAmanha =
-            plano?.days.some((d) => d.dayOfWeek === amanha && d.dayType === 'WORKOUT') ?? false;
-          await scheduleMorningGreeting(previsao.temperatureC, previsao.humidityPct, treinaAmanha);
+          /*
+           Quem REDIGE é a IA, no servidor: ela cruza esta previsão com o
+           plano de amanhã e a sequência de movimento. O aparelho continua
+           dono da entrega — agenda local, funciona offline depois de armada.
+           Sem rede, a notificação de ontem segue valendo: apagá-la para não
+           errar o texto deixaria a manhã em silêncio, que é pior.
+          */
+          const texto = await fetchMorningGreeting({
+            temperature: previsao.temperatureC,
+            humidity: previsao.humidityPct,
+            city: get().city,
+          });
+          await scheduleMorningGreeting(texto);
         } catch {
-          // sem previsão, sem bom dia — nunca um bom dia errado
+          // sem previsão ou sem servidor, mantém o que já estava agendado
         }
       })();
     } catch {
