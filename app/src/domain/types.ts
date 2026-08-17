@@ -70,13 +70,13 @@ export type Activity = {
 };
 
 export type BioAgeFactor = {
-  key: 'hrv' | 'sleep' | 'hr' | 'spo2' | 'temp';
+  key: 'fitness' | 'hrv' | 'sleep' | 'activity';
   label: string;
   /** Valor do usuário já formatado para exibição. */
   value: string;
-  /** Referência da faixa etária, formatada. */
+  /** O típico da idade da pessoa, formatado — a régua contra a qual ela é lida. */
   reference: string;
-  /** Anos somados ou subtraídos da idade real. Negativo rejuvenesce. */
+  /** Quanto este marcador desloca a idade estimada. Negativo rejuvenesce. */
   years: number;
 };
 
@@ -86,6 +86,8 @@ export type BioAge = {
   /** realAge − bioAge. Positivo = mais jovem que a idade cronológica. */
   delta: number;
   factors: BioAgeFactor[];
+  /** VO₂máx estimado (mL/kg/min) — o intermediário que mais explica o número. */
+  vo2max?: number;
 };
 
 export type Sex = 'f' | 'm';

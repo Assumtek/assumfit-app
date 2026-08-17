@@ -11,11 +11,11 @@ import { calcBioAge, type BioAgeInput } from '../../app/src/domain/bioAge';
 type PyCase = {
   real_age: number;
   sex: 'f' | 'm';
-  hrv_ms: number;
+  hrv_ms: number | null;
   resting_hr: number;
-  spo2_pct: number;
-  deep_sleep_pct: number;
-  temp_range_c: number;
+  deep_sleep_pct: number | null;
+  bmi?: number | null;
+  weekly_active_min?: number | null;
 };
 
 const cases: PyCase[] = JSON.parse(process.argv[2]);
@@ -26,12 +26,15 @@ const results = cases.map((c) => {
     sex: c.sex,
     hrvMs: c.hrv_ms,
     restingHr: c.resting_hr,
-    spo2Pct: c.spo2_pct,
     deepSleepPct: c.deep_sleep_pct,
-    tempRangeC: c.temp_range_c,
+    bmi: c.bmi ?? null,
+    weeklyActiveMin: c.weekly_active_min ?? null,
   };
-  const { bioAge, delta } = calcBioAge(input);
-  return { bioAge, delta };
+  // O VO₂máx entra na comparação: é o intermediário que carrega a equação
+  // inteira, e uma divergência nele apareceria no número final já diluída
+  // pela média ponderada.
+  const { bioAge, delta, vo2max } = calcBioAge(input);
+  return { bioAge, delta, vo2max };
 });
 
 process.stdout.write(JSON.stringify(results));

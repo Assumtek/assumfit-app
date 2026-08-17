@@ -24,36 +24,12 @@ from models.energy_score import calc_energy, circadian_factor
 BASE = dict(real_age=32, sex="m", hrv_ms=54, resting_hr=68, spo2_pct=96, deep_sleep_pct=0.20, temp_range_c=0.7)
 
 
-class TestBioAge:
-    def test_mediana_devolve_a_idade_real(self):
-        assert calc_bio_age(**BASE).bio_age == 32
-
-    def test_direcao_do_sinal(self):
-        assert calc_bio_age(**{**BASE, "hrv_ms": 74}).bio_age < 32
-        assert calc_bio_age(**{**BASE, "hrv_ms": 38}).bio_age > 32
-        assert calc_bio_age(**{**BASE, "resting_hr": 52}).bio_age < calc_bio_age(**{**BASE, "resting_hr": 82}).bio_age
-        assert calc_bio_age(**{**BASE, "deep_sleep_pct": 0.45}).bio_age < 32
-
-    def test_usa_a_faixa_etaria_certa(self):
-        # 58 anos com HRV de 37 está na mediana da faixa dele.
-        result = calc_bio_age(real_age=58, sex="m", hrv_ms=37, resting_hr=70, spo2_pct=95, deep_sleep_pct=0.15)
-        assert abs(result.delta) <= 1
-
-    @pytest.mark.parametrize(
-        "ruim",
-        [
-            dict(hrv_ms=3, resting_hr=190, spo2_pct=60, deep_sleep_pct=0.0, temp_range_c=6),
-            dict(hrv_ms=390, resting_hr=25, spo2_pct=100, deep_sleep_pct=1.0, temp_range_c=0.0),
-        ],
-    )
-    def test_dado_absurdo_nao_produz_idade_absurda(self, ruim):
-        result = calc_bio_age(**{**BASE, **ruim})
-        assert 18 <= result.bio_age <= BASE["real_age"] + 15
-        assert abs(result.delta) <= 15
-
-    def test_sempre_devolve_os_cinco_fatores(self):
-        keys = [f.key for f in calc_bio_age(**BASE).factors]
-        assert keys == ["hrv", "sleep", "hr", "spo2", "temp"]
+# Os testes de idade biológica moram em `test_bio_age.py` desde a reescrita
+# de ago/2026: o cálculo passou a ser fundamentado em literatura (Jurca 2005,
+# FRIEND 2015, Natarajan 2020, Ohayon 2004) e cada função é verificada contra
+# o ponto publicado do estudo que a originou. O que fica aqui é a PARIDADE
+# com o TypeScript do app, que é sobre outra coisa: as duas implementações
+# darem o mesmo número.
 
 
 class TestEnergy:
@@ -135,10 +111,15 @@ class TestParidadeComTypeScript:
     de dar o mesmo número, ou o usuário vê um valor com rede e outro sem."""
 
     CASES = [
-        dict(real_age=32, sex="m", hrv_ms=54, resting_hr=68, spo2_pct=96, deep_sleep_pct=0.20, temp_range_c=0.7),
-        dict(real_age=32, sex="m", hrv_ms=74, resting_hr=55, spo2_pct=98, deep_sleep_pct=0.45, temp_range_c=0.8),
-        dict(real_age=58, sex="f", hrv_ms=30, resting_hr=78, spo2_pct=94, deep_sleep_pct=0.10, temp_range_c=1.2),
-        dict(real_age=24, sex="f", hrv_ms=90, resting_hr=48, spo2_pct=99, deep_sleep_pct=0.30, temp_range_c=0.6),
+        # Casos escolhidos para percorrer os quatro caminhos que divergiriam:
+        # medianas, extremos (que batem no clamp), ausência de sinal e
+        # ausência de IMC/atividade — cada um exercita um ramo diferente.
+        dict(real_age=32, sex="m", hrv_ms=54, resting_hr=68, deep_sleep_pct=0.20, bmi=25, weekly_active_min=60),
+        dict(real_age=32, sex="m", hrv_ms=74, resting_hr=55, deep_sleep_pct=0.45, bmi=22, weekly_active_min=300),
+        dict(real_age=58, sex="f", hrv_ms=30, resting_hr=78, deep_sleep_pct=0.10, bmi=31, weekly_active_min=0),
+        dict(real_age=24, sex="f", hrv_ms=90, resting_hr=48, deep_sleep_pct=0.30, bmi=20, weekly_active_min=400),
+        dict(real_age=45, sex="m", hrv_ms=None, resting_hr=64, deep_sleep_pct=None, bmi=None, weekly_active_min=None),
+        dict(real_age=70, sex="f", hrv_ms=22, resting_hr=70, deep_sleep_pct=0.12, bmi=27, weekly_active_min=120),
     ]
 
     def test_bio_age_bate_com_a_implementacao_do_app(self):
@@ -160,3 +141,4 @@ class TestParidadeComTypeScript:
             py = calc_bio_age(**case)
             assert py.bio_age == ts["bioAge"], f"divergência em {case}"
             assert py.delta == ts["delta"]
+            assert py.vo2max == pytest.approx(ts["vo2max"], abs=0.1), f"VO2máx divergente em {case}"

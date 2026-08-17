@@ -103,15 +103,14 @@ function hourStart(now = new Date()): Date {
 async function habitsToday(
   userId: string,
   tzOffsetMin: number,
-): Promise<{ waterMl: number | null; sleepScore: number | null; focusSessions: number }> {
+): Promise<{ waterMl: number | null; sleepScore: number | null }> {
   const habit = await prisma.dailyHabit.findUnique({
     where: { userId_date: { userId, date: startOfLocalDay(tzOffsetMin) } },
-    select: { waterMl: true, sleepScore: true, focusSessions: true },
+    select: { waterMl: true, sleepScore: true },
   });
   return {
     waterMl: habit?.waterMl ?? null,
     sleepScore: habit?.sleepScore ?? null,
-    focusSessions: habit?.focusSessions ?? 0,
   };
 }
 
@@ -211,7 +210,6 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
         today.sport_count,
         today.meals_count,
         today.workout?.done ?? null,
-        habits.focusSessions,
         today.steps === null ? null : Math.floor(today.steps / 500),
       ]),
     )
@@ -257,7 +255,7 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
         train_period: lifestyle.trainPeriod,
         goal: lifestyle.goal,
       },
-      today: { ...today, focus_sessions: habits.focusSessions },
+      today,
     },
     { timeout: 8000 },
   );
@@ -315,6 +313,8 @@ export type BioAgeResponse = {
   bio_age: number;
   delta: number;
   factors: { key: string; label: string; value: string; reference: string; years: number }[];
+  /** VO₂máx estimado (mL/kg/min) — o eixo principal do cálculo. */
+  vo2max: number | null;
 };
 
 /** Idade biológica de hoje, gravada uma vez por execução do job. */
@@ -344,17 +344,21 @@ export async function bioAgeNow(userId: string): Promise<BioAgeResponse | null> 
       sex: user.sex,
       hrv_ms: reading.hrvMs,
       resting_hr: reading.heartRate,
-      spo2_pct: reading.spo2Pct,
       /*
        `null`, e NÃO a mediana da faixa.
 
        Aqui havia `deep_sleep_pct: 0.2` fixo, com um comentário explicando que
        era "neutro". Não era neutro: era um número inventado entrando num
        cálculo de saúde, e o fator "Sono profundo" aparecia na tela com 20% para
-       quem nunca teve o sono medido. Ausente o modelo contribui zero ano e a
-       tela mostra traço, que é a informação correta.
+       quem nunca teve o sono medido. Ausente, o marcador sai da média e a tela
+       mostra traço, que é a informação correta.
        */
       deep_sleep_pct: null,
+      // Os dois que o cálculo fundamentado passou a exigir (ago/2026): o IMC
+      // sai do peso e da altura declarados na anamnese, e os minutos ativos,
+      // do que foi de fato registrado nos últimos sete dias.
+      bmi: await imcDaAnamnese(userId),
+      weekly_active_min: await minutosAtivosNaSemana(userId),
     },
     { timeout: 8000 },
   );
@@ -378,4 +382,58 @@ export async function bioAgeNow(userId: string): Promise<BioAgeResponse | null> 
     .catch((err: unknown) => logError('scoring:bio_age_score', err));
 
   return data;
+}
+
+/**
+ * IMC a partir do peso e da altura declarados na anamnese.
+ *
+ * `null` quando a pessoa ainda não respondeu — o modelo usa o meio da faixa
+ * saudável nesse caso, e a tela diz que o dado melhora com a anamnese
+ * preenchida. Inventar um peso aqui seria o mesmo erro do sono fixo em 20%.
+ */
+async function imcDaAnamnese(userId: string): Promise<number | null> {
+  const anamnese = await prisma.healthAnamnesis.findUnique({
+    where: { userId },
+    select: { answers: true },
+  });
+  const respostas = anamnese?.answers as { weightKg?: number; heightCm?: number } | null;
+  const peso = respostas?.weightKg;
+  const altura = respostas?.heightCm;
+  if (!peso || !altura || altura < 100) return null;
+  return peso / (altura / 100) ** 2;
+}
+
+/**
+ * Minutos de movimento dos últimos sete dias — treino do plano CONCLUÍDO mais
+ * sessão de esporte.
+ *
+ * É o que alimenta a categoria de atividade física da equação de Jurca. O
+ * artigo original pergunta por autorrelato; aqui o número é medido, o que
+ * torna a estimativa melhor que a do próprio estudo nesse ponto.
+ */
+async function minutosAtivosNaSemana(userId: string): Promise<number> {
+  const desde = new Date(Date.now() - 7 * 86_400_000);
+  const [execucoes, sessoes] = await Promise.all([
+    prisma.workoutExecution.findMany({
+      where: { userId, status: 'FINISHED', startedAt: { gte: desde } },
+      select: { id: true, durationSec: true },
+    }),
+    prisma.sportSession.findMany({
+      where: { userId, startedAt: { gte: desde } },
+      select: { durationS: true, workoutExecutionId: true },
+    }),
+  ]);
+
+  // Sessão VINCULADA a uma execução é o mesmo ato contado por dois sistemas:
+  // vale a sessão, que é o registro mais rico, e a execução sai da soma. Mesma
+  // regra da agenda de movimento do app — sem ela, o dia de corrida do plano
+  // registrado por GPS contaria em dobro e inflaria a aptidão.
+  const vinculadas = new Set(
+    sessoes.map((s) => s.workoutExecutionId).filter((id): id is string => !!id),
+  );
+  const minutosDeTreino = execucoes
+    .filter((e) => !vinculadas.has(e.id))
+    .reduce((soma, e) => soma + (e.durationSec ?? 0) / 60, 0);
+  const minutosDeEsporte = sessoes.reduce((soma, s) => soma + s.durationS / 60, 0);
+  return Math.round(minutosDeTreino + minutosDeEsporte);
 }

@@ -1,64 +1,130 @@
 {
-  "_aviso": "VALORES PROVISÓRIOS. São estimativas de trabalho para a estrutura do cálculo funcionar, NÃO curvas de meta-análise. Antes de qualquer uso com usuário real, substituir por percentis de literatura revisada (ex.: Umetani et al. para HRV por idade; estudos populacionais de FC de repouso). Enquanto este aviso existir, a idade biológica é indicativa e assim deve ser apresentada na interface.",
-  "_unidades": {
-    "hrv": "RMSSD em ms",
-    "hr": "bpm em repouso",
-    "spo2": "% de saturação",
-    "deep_pct": "fração da noite em sono profundo"
-  },
-  "_pesos_anos": {
-    "comentario": "Quantos anos de idade biológica cada fator pode mover, no máximo, antes do clamp global.",
-    "hrv": 4.0,
-    "hr": 2.5,
-    "spo2": 0.8,
-    "sleep": 2.5,
-    "temp": 0.5
-  },
-  "_limites": {
-    "clamp_por_fator": { "hrv": 6.0, "hr": 4.0, "spo2": 2.0, "sleep": 4.0, "temp": 1.0 },
-    "clamp_total_anos": 15.0,
-    "idade_minima": 18
-  },
-  "faixas": [
-    {
-      "max_idade": 29,
-      "hrv": { "p10": 45, "p50": 64, "p90": 88 },
-      "hr": { "p10": 50, "p50": 66, "p90": 80 },
-      "spo2": { "p50": 97, "p90": 99 },
-      "deep_pct": 0.22
-    },
-    {
-      "max_idade": 39,
-      "hrv": { "p10": 38, "p50": 54, "p90": 74 },
-      "hr": { "p10": 52, "p50": 68, "p90": 82 },
-      "spo2": { "p50": 96, "p90": 98 },
-      "deep_pct": 0.2
-    },
-    {
-      "max_idade": 49,
-      "hrv": { "p10": 31, "p50": 45, "p90": 62 },
-      "hr": { "p10": 53, "p50": 69, "p90": 83 },
-      "spo2": { "p50": 96, "p90": 98 },
-      "deep_pct": 0.17
-    },
-    {
-      "max_idade": 59,
-      "hrv": { "p10": 26, "p50": 37, "p90": 52 },
-      "hr": { "p10": 54, "p50": 70, "p90": 84 },
-      "spo2": { "p50": 95, "p90": 97 },
-      "deep_pct": 0.15
-    },
-    {
-      "max_idade": 200,
-      "hrv": { "p10": 21, "p50": 30, "p90": 43 },
-      "hr": { "p10": 55, "p50": 70, "p90": 85 },
-      "spo2": { "p50": 95, "p90": 97 },
-      "deep_pct": 0.13
-    }
+  "_o_que_e": "Constantes do cálculo de idade biológica do AssumFit, TODAS extraídas de literatura revisada por pares. Cada bloco declara a fonte de onde o número saiu. Trocar um valor aqui sem trocar a citação junto é o que este arquivo existe para impedir.",
+  "_metodo": [
+    "A idade biológica do AssumFit é uma IDADE FISIOLÓGICA ESTIMADA, não um relógio epigenético: é a idade em que os marcadores medidos seriam a mediana da população.",
+    "Passo 1 — aptidão cardiorrespiratória: estima-se o VO2max por equação de não-exercício (Jurca 2005), que usa sexo, idade, IMC, FC de repouso e nível de atividade física.",
+    "Passo 2 — idade da aptidão: procura-se a idade cuja mediana populacional de VO2max (FRIEND, Kaminsky 2015) iguala o VO2max estimado.",
+    "Passo 3 — idade equivalente do HRV: a relação do RMSSD com a idade é uma lei de potência medida por PPG de pulseira (Natarajan 2020), analiticamente invertível.",
+    "Passo 4 — idade equivalente do sono profundo: o N3 cai ~2 pontos percentuais por década até os 60 anos (Ohayon 2004).",
+    "Passo 5 — combinação: média ponderada das idades equivalentes disponíveis, com limite por fator e no total."
   ],
-  "ajuste_sexo": {
-    "_comentario": "Deslocamento aplicado sobre os percentis da faixa etária.",
-    "f": { "hrv": 2, "hr": 3 },
-    "m": { "hrv": 0, "hr": 0 }
+  "vo2max_nao_exercicio": {
+    "_fonte": "Jurca R, Jackson AS, LaMonte MJ, et al. Assessing cardiorespiratory fitness without performing exercise testing. Am J Prev Med. 2005;29(3):185-193. doi:10.1016/j.amepre.2005.06.004",
+    "_tabela": "Tabela 5, coluna NASA (R=0,81; SEE=1,45 MET) — o modelo com melhor ajuste dos três e o que originou o score sheet do artigo.",
+    "_saida": "METs. 1 MET = 3,5 mL O2 · kg-1 · min-1 (definição do próprio artigo).",
+    "intercepto": 18.07,
+    "sexo_masculino": 2.77,
+    "por_ano_de_idade": -0.1,
+    "por_ponto_de_imc": -0.17,
+    "por_bpm_de_fc_repouso": -0.03,
+    "_atividade_fisica": "Categorias SR-PA da Tabela 1 (coluna NASA). O AssumFit as deriva dos MINUTOS SEMANAIS REGISTRADOS (treino do plano concluído + sessões de esporte), não de autorrelato — dado medido no lugar de lembrança.",
+    "atividade": [
+      {
+        "nivel": 0,
+        "coef": 0.0,
+        "min_semanais": 0,
+        "descricao": "pouca atividade além de caminhar"
+      },
+      {
+        "nivel": 1,
+        "coef": 0.32,
+        "min_semanais": 1,
+        "descricao": "alguma prática regular de esporte ou recreação"
+      },
+      {
+        "nivel": 2,
+        "coef": 1.06,
+        "min_semanais": 20,
+        "descricao": "20 a 60 minutos de aeróbio por semana"
+      },
+      {
+        "nivel": 3,
+        "coef": 1.76,
+        "min_semanais": 60,
+        "descricao": "1 a 3 horas de aeróbio por semana"
+      },
+      {
+        "nivel": 4,
+        "coef": 3.03,
+        "min_semanais": 180,
+        "descricao": "mais de 3 horas de aeróbio por semana"
+      }
+    ]
+  },
+  "vo2max_mediana_por_idade": {
+    "_fonte": "Kaminsky LA, Arena R, Myers J. Reference standards for cardiorespiratory fitness measured with cardiopulmonary exercise testing: data from the Fitness Registry and the Importance of Exercise National Database. Mayo Clin Proc. 2015;90(11):1515-1523. doi:10.1016/j.mayocp.2015.07.026",
+    "_tabela": "Percentil 50 de VO2max medido em teste MÁXIMO de esteira (RER >= 1,00), n=7.783 adultos sem doença cardiovascular.",
+    "_unidade": "mL O2 · kg-1 · min-1, no ponto médio de cada década.",
+    "idade_central": [
+      24.5,
+      34.5,
+      44.5,
+      54.5,
+      64.5,
+      74.5
+    ],
+    "m": [
+      48.0,
+      42.4,
+      37.8,
+      32.6,
+      28.2,
+      24.4
+    ],
+    "f": [
+      37.6,
+      30.2,
+      26.7,
+      23.4,
+      20.0,
+      18.3
+    ],
+    "_dominio": "Os dados cobrem 20 a 79 anos. Fora dessa faixa a curva não é extrapolada: afirmar idade de aptidão de 12 ou de 95 anos seria ler o estudo onde ele não olhou.",
+    "idade_minima_afirmavel": 20,
+    "idade_maxima_afirmavel": 79
+  },
+  "hrv_por_idade": {
+    "_fonte": "Natarajan A, Pantelopoulos A, Emir-Farinas H, Natarajan P. Heart rate variability with photoplethysmography in 8 million individuals: a cross-sectional study. Lancet Digit Health. 2020;2(12):e650-e657. doi:10.1016/S2589-7500(20)30246-6",
+    "_tabela": "Tabela 1 (parâmetros de escala). Modelo: HRV(idade) = HRV30 x (idade/30)^alfa.",
+    "_por_que_esta_fonte": "É RMSSD medido por PPG de pulseira em 8 milhões de pessoas — a mesma tecnologia do AssumFit. Normas de ECG hospitalar (ex.: Umetani 1998) descrevem outra medição e não são intercambiáveis.",
+    "idade_de_referencia": 30,
+    "m": {
+      "rmssd_aos_30": 44.8,
+      "alfa": -0.804
+    },
+    "f": {
+      "rmssd_aos_30": 43.7,
+      "alfa": -0.666
+    },
+    "_dominio": "Amostra de adultos; a lei de potência é aplicada apenas entre 20 e 79 anos, o mesmo intervalo em que a curva de aptidão é afirmável.",
+    "idade_minima_afirmavel": 20,
+    "idade_maxima_afirmavel": 79
+  },
+  "sono_profundo_por_idade": {
+    "_fonte": "Ohayon MM, Carskadon MA, Guilleminault C, Vitiello MV. Meta-analysis of quantitative sleep parameters from childhood to old age in healthy individuals: developing normative sleep values across the human lifespan. Sleep. 2004;27(7):1255-1273.",
+    "_relacao": "Em adultos, o percentual de sono N3 cai de forma linear, cerca de 2 pontos percentuais por década, até os 60 anos; depois disso estabiliza.",
+    "fracao_aos_30": 0.2,
+    "queda_por_ano": 0.002,
+    "idade_de_platô": 60
+  },
+  "combinacao": {
+    "_o_que_e": "Peso de cada idade equivalente na média final. É CALIBRAÇÃO declarada, não resultado de estudo — e por isso está separado dos blocos acima.",
+    "_por_que_a_aptidao_pesa_mais": "A aptidão cardiorrespiratória tem a associação mais forte com mortalidade entre os marcadores usados: o próprio Jurca (2005) cita que 9-10 METs em homens e 7-8 em mulheres se associam a redução >= 50% no risco de morte.",
+    "pesos": {
+      "aptidao": 0.6,
+      "hrv": 0.25,
+      "sono": 0.15
+    },
+    "_ausencia": "Fator ausente sai da média e os pesos se renormalizam entre os presentes — nunca vira zero, que empurraria a idade para a média."
+  },
+  "limites": {
+    "_por_que": "RMSSD de 8 ms é quase sempre artefato de movimento, não fisiologia. Sem teto, um dado ruim produz idade absurda e destrói a confiança no número inteiro.",
+    "desvio_maximo_por_fator_anos": 20.0,
+    "desvio_maximo_total_anos": 15.0,
+    "idade_minima": 18,
+    "imc_minimo": 15.0,
+    "imc_maximo": 50.0,
+    "imc_padrao": 24.0,
+    "_imc_padrao": "Usado quando peso e altura não foram declarados na anamnese: é o meio da faixa saudável da OMS, o palpite que menos move o resultado em qualquer direção."
   }
 }
