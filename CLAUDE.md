@@ -207,6 +207,54 @@ Frameworks com `ExpoModulesJSI` e `grep api.assumfit.com.br` no `main.jsbundle`
 (o env de produção entra no ARCHIVE via `EXPO_PUBLIC_API_URL=...` na linha do
 xcodebuild).
 
+### O caminho que funcionou em ago/2026 (versão 1.0.1, build 13)
+
+A cota de iOS do EAS renovou e o build na nuvem **rodou** — e ainda assim o
+`.ipa` dele saiu QUEBRADO, pela mesma falha silenciosa de sempre: 12
+frameworks, sem `ExpoModulesJSI`, com o binário carregando
+`@rpath/ExpoModulesJSI.framework`. Conferir o artefato antes de submeter não é
+zelo excessivo; é o que separou um envio bom de um app que morre na abertura.
+
+O que funciona é o **archive local** (que embarca os 13) mais re-assinatura. E
+a re-assinatura tem uma saída melhor que garimpar o p12 no log do EAS: **criar
+o perfil pela API do App Store Connect** com o certificado que ESTA máquina
+tem. A chave ASC de `~/.credenciais/assumfit/` tem permissão para isso —
+`GET /v1/certificates`, `GET /v1/bundleIds` e `POST /v1/profiles` respondem.
+
+O conflito de certificados que travava tudo tem nome: o perfil que o EAS
+embute contém `iPhone Distribution` (legado, `R9ZUQBW29U`), e o keychain daqui
+tem `Apple Distribution` (moderno, `2NX4NGCJ96`). Assinar com um e apresentar o
+perfil do outro faz a Apple recusar CADA framework na validação. Criando um
+perfil `IOS_APP_STORE` que aponte para o certificado local, o conflito
+desaparece.
+
+Receita, do archive ao envio:
+
+```bash
+npx expo prebuild -p ios --clean
+grep -c ExpoModulesJSI "ios/Pods/Target Support Files/Pods-AssumFit/Pods-AssumFit-frameworks.sh"  # precisa ser > 0
+cd ios && EXPO_PUBLIC_API_URL=https://api.assumfit.com.br xcodebuild \
+  -workspace AssumFit.xcworkspace -scheme AssumFit -configuration Release \
+  -destination 'generic/platform=iOS' -archivePath /tmp/assumfit-archive.xcarchive \
+  -allowProvisioningUpdates -authenticationKeyPath ~/.credenciais/assumfit/AuthKey_HL24V96G29.p8 \
+  -authenticationKeyID HL24V96G29 -authenticationKeyIssuerID <issuer> archive
+```
+
+Depois: perfis novos pela API, `Payload/` a partir do `.xcarchive`, versão nos
+DOIS `Info.plist` (app e `PlugIns/Treino.appex` — a Apple exige iguais),
+entitlements extraídos do próprio perfil **menos `healthkit.access`** e com
+`get-task-allow: false`, `codesign` de dentro para fora (frameworks → appex →
+app) com `--timestamp`, zip do `Payload/` e `eas submit -p ios --path`.
+
+Duas recusas que custam uma rodada cada:
+
+- **"You've already submitted this version"** — é a `expo.version`
+  (`CFBundleShortVersionString`), não o build. Versão já enviada não aceita
+  binário novo: suba a versão.
+- **"must be signed with the certificate that is contained in the
+  provisioning profile"** repetido em todo framework — é o conflito de
+  certificado acima, não um problema de cada framework.
+
 ### Testar com o relógio real
 
 **O simulador não tem Bluetooth.** O CoreBluetooth reporta `unsupported` e não
