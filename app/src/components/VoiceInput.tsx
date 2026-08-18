@@ -1,10 +1,11 @@
 import { YStack } from '@tamagui/stacks';
 import { AudioModule, RecordingPresets, useAudioRecorder } from 'expo-audio';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable } from 'react-native';
 
 import * as api from '../services/api.service';
 import { useTheme } from '../theme/ThemeProvider';
+import { Data } from './ui';
 import { Icon } from './Icon';
 
 /**
@@ -24,6 +25,16 @@ export function VoiceInput({
 }) {
   const { colors } = useTheme();
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  /*
+   Nível do microfone e tempo decorrido — a prova de que está OUVINDO.
+
+   Antes o botão só trocava a cor da borda enquanto gravava, e o retorno da
+   fundadora foi exato: "não parece que está capturando minha fala". Cor estática
+   não distingue "gravando" de "travado". O que convence é a barra reagindo à
+   voz, porque ela só se mexe quando entra som.
+  */
+  const [nivel, setNivel] = useState(0);
+  const [segundos, setSegundos] = useState(0);
   const [estado, setEstado] = useState<'idle' | 'gravando' | 'transcrevendo'>('idle');
   const cancelado = useRef(false);
 
@@ -39,6 +50,28 @@ export function VoiceInput({
     if (onError) onError(msg);
     else Alert.alert('Ditado por voz', msg);
   };
+
+  /*
+   `metering` chega em dBFS: 0 é o máximo e -160 o silêncio. A faixa útil da voz
+   fica entre -50 e -10, e é ela que vira 0..1 — mapear os 160 dB inteiros
+   deixaria a barra praticamente parada.
+  */
+  useEffect(() => {
+    if (estado !== 'gravando') {
+      setNivel(0);
+      setSegundos(0);
+      return;
+    }
+    const inicio = Date.now();
+    const t = setInterval(() => {
+      setSegundos(Math.floor((Date.now() - inicio) / 1000));
+      const db = recorder.getStatus?.()?.metering;
+      if (typeof db === 'number' && Number.isFinite(db)) {
+        setNivel(Math.max(0, Math.min(1, (db + 50) / 40)));
+      }
+    }, 120);
+    return () => clearInterval(t);
+  }, [estado, recorder]);
 
   const comecar = async () => {
     const perm = await AudioModule.requestRecordingPermissionsAsync();
@@ -69,7 +102,7 @@ export function VoiceInput({
        rota do som do sistema (campainha ao fone de ouvido, por exemplo).
       */
       await AudioModule.setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
-      await recorder.prepareToRecordAsync();
+      await recorder.prepareToRecordAsync({ isMeteringEnabled: true });
       recorder.record();
       cancelado.current = false;
       setEstado('gravando');
@@ -151,12 +184,43 @@ export function VoiceInput({
         borderColor={estado === 'gravando' ? '$destructive' : '$borderStrong'}
         backgroundColor={estado === 'gravando' ? '$destructiveSoft' : 'transparent'}
       >
+        {/*
+          O halo que respira com a voz.
+
+          Fica ATRÁS do ícone e cresce com o nível do microfone. É o elemento que
+          responde "está me ouvindo?" sem ninguém ter que ler nada — e some
+          sozinho no silêncio, que é a informação honesta quando o microfone não
+          está captando.
+        */}
+        {estado === 'gravando' ? (
+          <YStack
+            position="absolute"
+            width={20 + nivel * 26}
+            height={20 + nivel * 26}
+            borderRadius={999}
+            backgroundColor="$destructive"
+            opacity={0.14 + nivel * 0.3}
+          />
+        ) : null}
         <Icon
           name="mic"
           size={17}
           color={estado === 'gravando' ? colors.alert : colors.textMuted}
         />
       </YStack>
+
+      {/*
+        O tempo decorrido, embaixo do botão. Complementa o halo em vez de
+        repeti-lo: o halo prova que há SOM, o cronômetro prova que a gravação
+        está CORRENDO — e um pode estar certo com o outro errado. Num ambiente
+        silencioso o halo fica parado, e é o cronômetro que sustenta a confiança.
+      */}
+      {estado === 'gravando' ? (
+        <Data marginTop="$xs" textAlign="center" color="$destructive">
+          {String(Math.floor(segundos / 60)).padStart(2, '0')}:
+          {String(segundos % 60).padStart(2, '0')}
+        </Data>
+      ) : null}
     </Pressable>
   );
 }

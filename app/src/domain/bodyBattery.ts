@@ -106,12 +106,43 @@ const clamp = (v: number) => Math.max(0, Math.min(100, v));
  * existe — é o que permite dizer quanto a noite devolveu. Sem ele, `gain` fica
  * `null` em vez de virar um número inventado.
  */
+/**
+ * A noite serve ao dia pedido?
+ *
+ * `SleepNight.date` é o dia em que a pessoa DEITOU — quem dormiu dia 28 às 23h e
+ * acordou dia 29 tem uma noite datada em 28. Então a noite que sustenta o dia D
+ * é a de D−1 (o normal) ou a do próprio D (quem foi dormir depois da meia-noite).
+ */
+export function noiteSustentaODia(sleep: SleepNight, dia: string): boolean {
+  const [ano, mes, d] = dia.split('-').map(Number);
+  if (!ano || !mes || !d) return false;
+  const vespera = new Date(ano, mes - 1, d - 1);
+  const iso = `${vespera.getFullYear()}-${String(vespera.getMonth() + 1).padStart(2, '0')}-${String(
+    vespera.getDate(),
+  ).padStart(2, '0')}`;
+  return sleep.date === dia || sleep.date === iso;
+}
+
+/**
+ * A bateria é DIÁRIA, e por isso recebe o dia.
+ *
+ * Antes bastava existir uma noite — qualquer uma. Com a última noite conhecida
+ * sendo de quatro dias atrás e o estresse de hoje, a tela mostrava uma reserva
+ * de recuperação de HOJE calculada sobre uma noite que não era a de hoje. Cada
+ * pedaço era real e o resultado, inventado. Aconteceu com uma testadora cujo
+ * sono mais recente era de quatro dias antes.
+ *
+ * `dia` opcional preserva quem só quer a conta a partir de uma noite explícita
+ * (o cálculo do histórico, por exemplo), mas toda TELA precisa passar o dia.
+ */
 export function calcBodyBattery(
   sleep: SleepNight | null,
   stress: StressSample[],
   bedtimeLevel: number | null = null,
+  dia?: string,
 ): BodyBattery | null {
   if (!sleep) return null;
+  if (dia && !noiteSustentaODia(sleep, dia)) return null;
 
   const morning = morningLevel(sleep);
 

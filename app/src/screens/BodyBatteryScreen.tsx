@@ -4,7 +4,8 @@ import React from 'react';
 import { Note, Row, Section } from '../components/Card';
 import { LineChart } from '../components/charts/LineChart';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
-import { MeasuredAt } from '../components/MeasuredAt';
+import { DayPickerRow, useHistoricoDoDia } from '../components/DayPicker';
+import { formatDateBR } from '../domain/birthDate';
 import { Body, Data, Display, Label, MetricSm, RatingText } from '../components/ui';
 import { calcBodyBattery, recoveryEfficiency } from '../domain/bodyBattery';
 import { rateBodyBattery, ratingTextColor } from '../domain/ratings';
@@ -38,14 +39,43 @@ export function BodyBatteryScreen() {
   */
   const refresh = usePullRefresh(syncHistory);
 
-  const bateria = calcBodyBattery(sleep, stressHistory);
+  /*
+   A bateria é DIÁRIA, e o dia escolhido decide tudo nesta tela.
+
+   O estresse do dia vem da série do servidor quando o dia é passado, e da
+   memória da pulseira quando é hoje — a mesma regra das outras telas de saúde.
+  */
+  const historico = useHistoricoDoDia((p) => p.stress_score, stressHistory);
+  const bateria = calcBodyBattery(sleep, historico.pontos, null, historico.dia);
+
+  const tira = (
+    <DayPickerRow
+      selecionado={historico.dia}
+      onSelecionar={historico.setDia}
+      comDado={historico.comDado}
+    />
+  );
 
   if (!bateria) {
+    /*
+     Duas ausências diferentes, duas frases diferentes.
+
+     Antes as duas caíam em "falta a noite" — e o caso mais comum não é falta de
+     sono nenhum: é ter uma noite de dias atrás. Dizer "assim que houver uma
+     noite" a quem TEM noite medida, só que de terça, manda a pessoa esperar por
+     algo que já aconteceu.
+    */
+    const temNoiteDeOutroDia = sleep != null;
     return (
       <DetailScreen title="Bateria" refreshControl={refresh}>
+        {tira}
         <Note
-          title="Falta a noite"
-          body="A bateria parte do sono: é ele que diz com quanto você começou o dia. Assim que houver uma noite medida pela pulseira, esta tela se preenche."
+          title={temNoiteDeOutroDia ? 'Sem sono medido nesta noite' : 'Falta a noite'}
+          body={
+            temNoiteDeOutroDia
+              ? `A bateria parte do sono da noite anterior, e não há medição para este dia — a sua noite mais recente é de ${formatDateBR(sleep!.date)}. Um número montado com o sono de um dia e o estresse de outro não descreveria nem um nem outro.`
+              : 'A bateria parte do sono: é ele que diz com quanto você começou o dia. Assim que houver uma noite medida pela pulseira, esta tela se preenche.'
+          }
         />
       </DetailScreen>
     );
@@ -56,15 +86,15 @@ export function BodyBatteryScreen() {
 
   return (
     <DetailScreen title="Bateria" refreshControl={refresh}>
+      {tira}
+
       <YStack marginBottom="$lg">
         <Display>{bateria.current}</Display>
         <Data marginTop="$xs">de 100 · reserva agora</Data>
-        {/* Calculada a partir do sono e do estresse: a idade dela é a da
-            amostra de estresse mais nova que entrou na conta. */}
-        <MeasuredAt
-          at={stressHistory.length ? stressHistory[stressHistory.length - 1].at : undefined}
-          prefixo="com dados de"
-        />
+        {/* O carimbo é a NOITE, não a última amostra de estresse. A noite é o
+            ponto de partida da conta, e datar pelo estresse dava ao número uma
+            atualidade que ele não tem. */}
+        <Data marginTop="$xs">a partir do sono de {formatDateBR(sleep!.date)}</Data>
         <RatingText marginTop="$sm" style={{ color: ratingTextColor(rating.state, colors) }}>
           {rating.label}
         </RatingText>

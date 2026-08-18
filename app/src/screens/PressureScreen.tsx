@@ -23,7 +23,14 @@ export function PressureScreen() {
   if (!latest)
     return (
       <DetailScreen title="Pressão">
-        <EmptyMetric measure="bloodPressure" />
+        {/*
+          `oneKey`, igual ao botão do rodapé — as duas entradas da tela pediam
+          grandezas DIFERENTES: o vazio pedia `bloodPressure` e o rodapé pedia a
+          medição de um toque. A de um toque é a que este firmware entrega, e a
+          pressão vem dentro dela; a porta dedicada responde vazio (documentado
+          em CLAUDE.md, sondado nas quatro variantes do SDK).
+        */}
+        <EmptyMetric measure="oneKey" />
       </DetailScreen>
     );
 

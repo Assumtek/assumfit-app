@@ -1,4 +1,4 @@
-import { calcBodyBattery, morningLevel, recoveryEfficiency } from '../bodyBattery';
+import { calcBodyBattery, morningLevel, recoveryEfficiency, noiteSustentaODia } from '../bodyBattery';
 import type { SleepNight } from '../types';
 
 const noite = (score: number): SleepNight => ({
@@ -147,5 +147,51 @@ describe('recoveryEfficiency', () => {
 
   it('quem foi dormir cheio não é punido por não ter o que recuperar', () => {
     expect(recoveryEfficiency(100, 100)).toBe(100);
+  });
+});
+
+describe('a bateria é DIÁRIA', () => {
+  /*
+   O defeito que isto tranca: a tela usava a última noite CONHECIDA junto do
+   estresse de hoje. Com uma noite de quatro dias atrás — o estado real de uma
+   testadora — a reserva de "hoje" era montada com pedaços de dias diferentes.
+   Cada pedaço real, o resultado inventado.
+  */
+  const noite = (date: string): SleepNight => ({
+    date,
+    score: 80,
+    totalMin: 420,
+    deepContinuity: 70,
+    phases: { awake: 20, light: 240, deep: 90, rem: 70 },
+    segments: [],
+    spo2Night: [],
+  });
+
+  it('a noite da véspera sustenta o dia', () => {
+    expect(noiteSustentaODia(noite('2026-08-17'), '2026-08-18')).toBe(true);
+  });
+
+  it('quem dormiu depois da meia-noite também conta', () => {
+    expect(noiteSustentaODia(noite('2026-08-18'), '2026-08-18')).toBe(true);
+  });
+
+  it('noite de dias atrás NÃO sustenta', () => {
+    expect(noiteSustentaODia(noite('2026-08-14'), '2026-08-18')).toBe(false);
+  });
+
+  it('atravessa a virada do mês', () => {
+    expect(noiteSustentaODia(noite('2026-07-31'), '2026-08-01')).toBe(true);
+  });
+
+  it('sem noite do dia, a bateria é traço — não um número de outro dia', () => {
+    const estresseDeHoje = [{ at: Date.now(), value: 40 }];
+    expect(calcBodyBattery(noite('2026-08-14'), estresseDeHoje, null, '2026-08-18')).toBeNull();
+    // E com a noite certa ela volta a existir.
+    expect(calcBodyBattery(noite('2026-08-17'), estresseDeHoje, null, '2026-08-18')).not.toBeNull();
+  });
+
+  it('sem dia informado o comportamento antigo é preservado', () => {
+    // Quem calcula a partir de uma noite explícita (histórico) não passa dia.
+    expect(calcBodyBattery(noite('2026-08-14'), [], null)).not.toBeNull();
   });
 });

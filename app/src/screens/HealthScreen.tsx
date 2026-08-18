@@ -12,6 +12,7 @@ import { SyncProgress } from '../components/SyncProgress';
 import { Card, Data, HeroCard, Label, Metric, MetricSm, RatingText, SectionTitle } from '../components/ui';
 import { calcBioAge } from '../domain/bioAge';
 import { calcBodyBattery } from '../domain/bodyBattery';
+import { isoHoje } from '../domain/water';
 import {
   rateActivity,
   rateBioAge,
@@ -130,7 +131,10 @@ export function HealthScreen() {
    carga de estresse ao longo do dia, e devolve `null` sem noite: sem ponto de
    partida, qualquer curva seria invenção.
   */
-  const bateria = calcBodyBattery(sleep, stressHistory);
+  // O card da visão geral é do DIA de hoje, como a tela de detalhe: sem noite
+  // desta noite ele mostra traço, em vez de um número montado com dias
+  // diferentes.
+  const bateria = calcBodyBattery(sleep, stressHistory, null, isoHoje());
 
   /*
    Sem NENHUMA medição a tela não desenha nove cards vazios.
