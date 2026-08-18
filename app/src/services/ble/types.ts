@@ -38,8 +38,24 @@ export type ConnectionState = 'idle' | 'scanning' | 'connecting' | 'connected' |
  * travado. Quem sabe a etapa é o serviço; isto é o canal que a leva à tela.
  */
 export type BandActivity =
-  | { kind: 'sync' }
+  | { kind: 'sync'; step: SyncStep; done: number; total: number }
   | { kind: 'measure'; what: MeasurableKind };
+
+/**
+ * A etapa da sincronização, em vez de um "sincronizando" opaco.
+ *
+ * A leitura da memória são seis consultas em série pelo canal serial, cada uma
+ * com suas tentativas — de meio minuto a um minuto no total. Sem dizer qual
+ * delas está correndo, a espera inteira parece uma tela travada, e foi
+ * exatamente assim que uma pessoa em teste (ago/2026) concluiu que o app estava
+ * quebrado e o desinstalou. Nomear a etapa custa uma linha e transforma espera
+ * em progresso.
+ */
+export type SyncStep =
+  'heartRate' | 'hrv' | 'stress' | 'spo2' | 'pressure' | 'steps' | 'sleep' | 'memory';
+
+/** Quantas consultas a leitura da memória do dia faz, para a barra de progresso. */
+export const SYNC_TOTAL_STEPS = 6;
 
 /** Um ponto de série com o instante em que foi medido. */
 export type Sample = { at: number; value: number };
@@ -52,6 +68,15 @@ export type Sample = { at: number; value: number };
  */
 export type DayHistory = {
   heartRate: Sample[];
+  /**
+   * A série de HRV do dia, medida nas janelas agendadas do firmware.
+   *
+   * Ela sempre existiu no aparelho e era descartada: só a ÚLTIMA amostra era
+   * lida, para acompanhar o score. A curva na tela, enquanto isso, se montava
+   * repetindo essa mesma amostra a cada batimento — noventa cópias de um número
+   * só, desenhadas como se fossem noventa medições.
+   */
+  hrv: Sample[];
   stress: Sample[];
   spo2: Sample[];
   pressure: { at: number; systolic: number; diastolic: number }[];
@@ -101,6 +126,19 @@ export interface BleService {
   fetchSleepHistory?(): Promise<SleepNight[]>;
   /** Vibra a pulseira para a pessoa achá-la. Resolve `false` se não alcançou. */
   findDevice?(): Promise<boolean>;
+  /**
+   * Uma vibração curta no pulso, para um aviso NOSSO.
+   *
+   * Separada de `findDevice` pelo propósito, ainda que hoje as duas usem o
+   * mesmo comando do firmware. Só vale com o app vivo e conectado — o aviso
+   * que chega com o app suspenso depende do ANCS, que é do sistema.
+   */
+  vibrate?(): Promise<boolean>;
+  /** Liga o ANCS, sem o qual notificação nenhuma chega ao pulso com o app fechado. */
+  enableAncs?(): Promise<boolean>;
+  /** O filtro de avisos por categoria. Ver `domain/bandNotifications.ts`. */
+  getNotificationFilter?(): Promise<{ type: number; enabled: boolean }[]>;
+  setNotificationFilter?(entries: { type: number; enabled: boolean }[]): Promise<boolean>;
   /**
    * As séries que a PULSEIRA guardou hoje, não as que o app acumulou.
    *

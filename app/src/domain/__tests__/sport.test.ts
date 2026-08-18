@@ -1,12 +1,18 @@
+import { movementMinutes } from '../movement';
 import {
+  SPORTS,
   kcalFor,
   kcalRange,
   kcalRangeLabel,
   paceMinPerKm,
+  searchSports,
   simplifyTrack,
   sportClock,
+  sportForModality,
+  sportSections,
   trackDistanceM,
   type GeoPoint,
+  type SportKind,
 } from '../sport';
 
 describe('esporte', () => {
@@ -42,6 +48,87 @@ describe('esporte', () => {
   it('relógio muda de forma com hora cheia', () => {
     expect(sportClock(95_000)).toBe('1:35');
     expect(sportClock(3_695_000)).toBe('1:01:35');
+  });
+});
+
+describe('catálogo de modalidades', () => {
+  it('nenhum slug repetido, e todo esporte tem MET, rótulo e ícone', () => {
+    const kinds = SPORTS.map((s) => s.kind);
+    expect(new Set(kinds).size).toBe(kinds.length);
+    for (const s of SPORTS) {
+      expect(s.met).toBeGreaterThan(0);
+      expect(s.label.length).toBeGreaterThan(0);
+      expect(s.icon.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('toda modalidade cai em exatamente uma prateleira da grade', () => {
+    const nasPrateleiras = sportSections().flatMap((sec) => sec.sports.map((s) => s.kind));
+    expect(nasPrateleiras.sort()).toEqual(SPORTS.map((s) => s.kind).sort());
+    expect(new Set(nasPrateleiras).size).toBe(nasPrateleiras.length);
+  });
+
+  it('GPS só para quem se desloca ao ar livre', () => {
+    const comGps = SPORTS.filter((s) => s.gps).map((s) => s.kind);
+    expect(comGps.sort()).toEqual(['caminhada', 'ciclismo', 'corrida', 'futebol', 'trilha']);
+  });
+});
+
+describe('musculação avulsa', () => {
+  const musculacao = SPORTS.find((s) => s.kind === 'musculacao')!;
+
+  it('existe no gravador e não pede GPS', () => {
+    expect(musculacao).toBeDefined();
+    expect(musculacao.gps).toBe(false);
+    expect(musculacao.met).toBe(5.0);
+  });
+
+  it('uma hora de sessão vira faixa de caloria, não número cravado', () => {
+    // 5,0 MET × 1 h: 60 kg → 300, 85 kg → 425.
+    expect(kcalRangeLabel(musculacao.met, 3_600_000)).toBe('300–425');
+  });
+
+  it('dia de musculação DO PLANO continua sem gravador — a série é do treino guiado', () => {
+    expect(sportForModality('musculacao')).toBeNull();
+    expect(sportForModality('mobilidade')).toBeNull();
+    expect(sportForModality('corrida')?.kind).toBe('corrida');
+  });
+
+  it('a sessão sem plano entra na agenda de movimento', () => {
+    const minutos = movementMinutes(
+      [],
+      [
+        {
+          startedAt: new Date(2026, 7, 12, 19, 0).toISOString(),
+          durationS: 50 * 60,
+          workoutExecutionId: null,
+        },
+      ],
+    );
+    expect(minutos.get('2026-08-12')).toBe(50);
+  });
+});
+
+describe('busca de modalidade', () => {
+  const kinds = (q: string): SportKind[] => searchSports(q).map((s) => s.kind);
+
+  it('acha sem acento e sem caixa — o teclado corrido não digita "ç"', () => {
+    expect(kinds('musculacao')).toContain('musculacao');
+    expect(kinds('MUSCULAÇÃO')).toContain('musculacao');
+    expect(kinds('natacao')).toContain('natacao');
+  });
+
+  it('acha pelo nome que a pessoa usa, não pelo rótulo', () => {
+    expect(kinds('crossfit')).toContain('hiit');
+    expect(kinds('padel')).toContain('tenis');
+    expect(kinds('muay thai')).toContain('lutas');
+    expect(kinds('bike')).toContain('ciclismo');
+  });
+
+  it('busca vazia é o catálogo inteiro; nome que não existe não devolve nada', () => {
+    expect(searchSports('')).toHaveLength(SPORTS.length);
+    expect(searchSports('   ')).toHaveLength(SPORTS.length);
+    expect(searchSports('curling')).toEqual([]);
   });
 });
 

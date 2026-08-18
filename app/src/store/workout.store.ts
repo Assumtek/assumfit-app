@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { publicarTreinoDeHoje, type TreinoDoWidget } from '../../modules/widgetbridge';
 import { workoutMeta } from '../domain/workout';
 
+import { ble } from '../services/ble';
 import { armTrainingNudge, cancelRestEnd, scheduleRestEnd } from '../services/notifications.service';
 
 import {
@@ -17,6 +18,40 @@ import {
   type TrainingPlan,
   type WorkoutDetail,
 } from '../services/api.service';
+
+/**
+ * A vibração no pulso quando o descanso acaba.
+ *
+ * É o caso em que vibrar vale mais que notificar: durante a série o celular
+ * está no chão ou no banco, e o pulso é o único lugar em que o aviso chega sem
+ * ter de procurar a tela. Some-se a isso que a notificação do sistema pode
+ * estar bloqueada — e a pulseira vibra do mesmo jeito.
+ *
+ * Um `setTimeout` do JavaScript, e não agendamento do sistema, porque isto só
+ * pode acontecer com o app VIVO: quem manda vibrar é o rádio pelo nosso
+ * processo. Com o app em segundo plano o iOS congela o temporizador, e aí quem
+ * avisa é a notificação agendada — as duas cobrem metades diferentes do mesmo
+ * problema, e por isso as duas existem.
+ *
+ * Fica FORA do estado de propósito: é bookkeeping de temporizador, e guardá-lo
+ * no store provocaria re-render a cada descanso sem nada mudar na tela.
+ */
+let vibracaoDoDescanso: ReturnType<typeof setTimeout> | null = null;
+
+function armarVibracaoDoDescanso(seconds: number) {
+  cancelarVibracaoDoDescanso();
+  vibracaoDoDescanso = setTimeout(() => {
+    vibracaoDoDescanso = null;
+    // Falha muda: a pulseira pode estar carregando, e um erro no meio do treino
+    // por causa de um reforço de aviso seria pior que não vibrar.
+    void ble.vibrate?.().catch(() => undefined);
+  }, Math.max(0, seconds) * 1000);
+}
+
+function cancelarVibracaoDoDescanso() {
+  if (vibracaoDoDescanso) clearTimeout(vibracaoDoDescanso);
+  vibracaoDoDescanso = null;
+}
 
 /**
  * Estado de treino do app.
@@ -239,10 +274,12 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
      negada: a barra na tela continua sendo o aviso principal.
     */
     void scheduleRestEnd(endsAt).catch(() => undefined);
+    armarVibracaoDoDescanso(seconds);
   },
   clearRest: () => {
     set({ restEndsAt: null });
     void cancelRestEnd().catch(() => undefined);
+    cancelarVibracaoDoDescanso();
   },
 
   toggleTimer: () => {

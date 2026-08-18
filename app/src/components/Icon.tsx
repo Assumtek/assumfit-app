@@ -7,7 +7,21 @@ import {
   PersonStanding,
   Footprints,
   Mountain,
+  MountainSnow,
   Bike,
+  Accessibility,
+  CircleDot,
+  Hand,
+  MoveVertical,
+  Orbit,
+  RollerCoaster,
+  Sailboat,
+  Search,
+  Target,
+  Timer,
+  TreePalm,
+  WavesLadder,
+  Weight,
   Mic,
   Pencil,
   RefreshCw,
@@ -121,7 +135,21 @@ export type IconName =
   | 'watch'
   | 'swim'
   | 'swords'
-  | 'music';
+  | 'music'
+  | 'search'
+  | 'kettlebell'
+  | 'timer'
+  | 'orbit'
+  | 'boat'
+  | 'pool'
+  | 'palm'
+  | 'climb'
+  | 'ramp'
+  | 'target'
+  | 'circleDot'
+  | 'hand'
+  | 'body'
+  | 'stretch';
 
 /**
  * Nome semântico → componente do Lucide.
@@ -135,6 +163,13 @@ export type IconName =
  *   memória de quem usa.
  * - `wave` → `Waves` para pressão arterial: a onda é a forma do pulso.
  * - `pulse` → `Activity`, o traço de eletrocardiograma, que é o que HRV evoca.
+ *
+ * As modalidades de esporte esgotam o vocabulário do Lucide, que não tem
+ * raquete nem prancha. Onde falta o objeto, o glifo é o LUGAR ou o gesto —
+ * `pool` é a escada da piscina, `palm` é o coqueiro do surfe, `ramp` é a pista
+ * do skate, `hand` é o toque do vôlei, `target` é a cesta vista de cima. Cada
+ * um chega ao usuário com o rótulo embaixo; nenhum precisa carregar o nome
+ * sozinho.
  */
 const GLYPH = {
   grid: LayoutGrid,
@@ -186,6 +221,20 @@ const GLYPH = {
   menu: Menu,
   brain: Brain,
   watch: Watch,
+  search: Search,
+  kettlebell: Weight,
+  timer: Timer,
+  orbit: Orbit,
+  boat: Sailboat,
+  pool: WavesLadder,
+  palm: TreePalm,
+  climb: MountainSnow,
+  ramp: RollerCoaster,
+  target: Target,
+  circleDot: CircleDot,
+  hand: Hand,
+  body: Accessibility,
+  stretch: MoveVertical,
 } as const;
 
 type Props = {

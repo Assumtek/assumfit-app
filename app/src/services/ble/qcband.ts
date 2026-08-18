@@ -1,14 +1,17 @@
 import { QCBand, type QCDevice, type QCHrvSeries, type QCState } from '../../../modules/qcband';
 import { nightFrom } from '../../domain/sleep';
 import type { Reading, SleepNight, SleepPhase, SleepSegment } from '../../domain/types';
-import type {
-  BandActivity,
-  BleService,
-  ConnectionState,
-  DayHistory,
-  DiscoveredDevice,
-  MeasurableKind,
-  Sample,
+import { comTeto, eTempoEsgotado, TETO_CONSULTA_MS } from './timeout';
+import {
+  SYNC_TOTAL_STEPS,
+  type BandActivity,
+  type BleService,
+  type ConnectionState,
+  type DayHistory,
+  type DiscoveredDevice,
+  type MeasurableKind,
+  type Sample,
+  type SyncStep,
 } from './types';
 
 /**
@@ -73,7 +76,8 @@ export class QCBandService implements BleService {
       QCBand.addListener('onState', (event: QCState) => {
         this.state = event.state;
         this.stateReason = event.reason;
-        if (__DEV__) console.log(`[qcband] estado: ${event.state}${event.reason ? ` — ${event.reason}` : ''}`);
+        if (__DEV__)
+          console.log(`[qcband] estado: ${event.state}${event.reason ? ` — ${event.reason}` : ''}`);
         this.stateListeners.forEach((l) => l(event.state, event.reason));
         // Saiu de conectado, a etapa morreu junto — sem isto a tela seguiria
         // dizendo "medindo estresse" com a pulseira já fora do alcance.
@@ -103,9 +107,7 @@ export class QCBandService implements BleService {
       }),
     );
 
-    this.subscriptions.push(
-      QCBand.addListener('onReading', (event) => this.ingest(event)),
-    );
+    this.subscriptions.push(QCBand.addListener('onReading', (event) => this.ingest(event)));
   }
 
   private setActivity(activity: BandActivity | null) {
@@ -246,7 +248,6 @@ export class QCBandService implements BleService {
     if (features['feature.stress'] === true) pedidos.push('stress');
     if (features['feature.hrv'] === true) pedidos.push('hrv');
 
-
     /*
      Temperatura NÃO entra: este hardware não tem o sensor.
 
@@ -302,7 +303,8 @@ export class QCBandService implements BleService {
        */
       const ultima = series[series.length - 1];
       const passos = ultima.values.length - 1;
-      this.lastHrvAt = new Date(`${ultima.date}T00:00:00`).getTime() + passos * ultima.secondInterval * 1000;
+      this.lastHrvAt =
+        new Date(`${ultima.date}T00:00:00`).getTime() + passos * ultima.secondInterval * 1000;
     }
   }
 
@@ -433,10 +435,21 @@ export class QCBandService implements BleService {
    * seria trocar quatro séries boas por nenhuma.
    */
   async fetchHistory(dayIndex = 0): Promise<DayHistory> {
-    const vazio: DayHistory = { heartRate: [], stress: [], spo2: [], pressure: [], steps: [] };
+    const vazio: DayHistory = {
+      heartRate: [],
+      hrv: [],
+      stress: [],
+      spo2: [],
+      pressure: [],
+      steps: [],
+    };
     if (!QCBand) return vazio;
 
-    this.setActivity({ kind: 'sync' });
+    let passo = 0;
+    const anunciar = (step: SyncStep) => {
+      passo += 1;
+      this.setActivity({ kind: 'sync', step, done: passo, total: SYNC_TOTAL_STEPS });
+    };
 
     /*
      Cada leitor registra o PRÓPRIO desfecho.
@@ -462,10 +475,26 @@ export class QCBandService implements BleService {
       */
       for (let tentativa = 0; tentativa < 4; tentativa++) {
         try {
-          const r = await fn();
+          /*
+           Teto por consulta, não só por sincronização inteira.
+
+           Uma consulta que pendura para sempre travava as outras quatro atrás
+           dela: o `catch` abaixo nunca era alcançado, porque não havia rejeição
+           — havia ausência de resposta. Com teto, a que pendurou vira uma série
+           vazia e as seguintes ainda acontecem, que é a diferença entre perder
+           uma grandeza e perder a sincronização toda.
+          */
+          const r = await comTeto(fn(), TETO_CONSULTA_MS, nome);
           if (__DEV__) console.log(`[qcband] ${nome}: ${r.length} bruto`);
           return r;
         } catch (err) {
+          // Teto estourado não merece nova tentativa: a consulta anterior segue
+          // pendente lá dentro, e insistir por cima dela só empilha espera no
+          // canal serial. Falhou por tempo, esta grandeza fica para a próxima.
+          if (eTempoEsgotado(err)) {
+            console.warn(`[qcband] ${nome} não respondeu em ${TETO_CONSULTA_MS / 1000}s`);
+            return [];
+          }
           if (tentativa === 3) {
             console.warn(`[qcband] ${nome} indisponível após 4 tentativas:`, err);
             return [];
@@ -476,24 +505,44 @@ export class QCBandService implements BleService {
       return [];
     };
 
-    const fc = await ler('fc', () => QCBand!.getHeartRateHistory(dayIndex));
-    const estresse = await ler('estresse', () => QCBand!.getStressHistory(dayIndex));
-    const oxigenio = await ler('spo2', () => QCBand!.getSpo2History(dayIndex));
-    // A porta de pressão não aceita dia — só existe a leitura corrente.
-    const pressao = dayIndex === 0 ? await ler('pressão', () => QCBand!.getPressureHistory()) : [];
-    const passos = await ler('passos', () => QCBand!.getStepsHistory(dayIndex));
+    /*
+     `try/finally` para a etapa SEMPRE ser apagada.
 
-    const hoje = new Date();
-    const inicioDoDia = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()).getTime();
+     A limpeza estava só no caminho de sucesso, e uma exceção aqui deixaria o
+     canal declarando "sincronizando" para sempre — o painel de progresso ficaria
+     na tela indefinidamente, que é exatamente o sintoma que ele existe para
+     eliminar.
+    */
+    try {
+      anunciar('heartRate');
+      const fc = await ler('fc', () => QCBand!.getHeartRateHistory(dayIndex));
+      anunciar('hrv');
+      const hrv = await ler('hrv', () => QCBand!.getHrv(dayIndex));
+      anunciar('stress');
+      const estresse = await ler('estresse', () => QCBand!.getStressHistory(dayIndex));
+      anunciar('spo2');
+      const oxigenio = await ler('spo2', () => QCBand!.getSpo2History(dayIndex));
+      anunciar('pressure');
+      // A porta de pressão não aceita dia — só existe a leitura corrente.
+      const pressao =
+        dayIndex === 0 ? await ler('pressão', () => QCBand!.getPressureHistory()) : [];
+      anunciar('steps');
+      const passos = await ler('passos', () => QCBand!.getStepsHistory(dayIndex));
 
-    const historico: DayHistory = {
-      heartRate: amostrasDeSerie(fc),
-      stress: amostrasDeSerie(estresse),
-      // A medição pedida na mão fica de fora da série do dia: ela costuma ser
-      // feita parado e de propósito, e misturá-la com a agendada distorce a
-      // mínima — que é justamente o número que importa em oxigenação.
-      spo2: oxigenio.filter((p) => !p.manual && p.value > 0).map((p) => ({ at: p.at, value: p.value })),
-      /*
+      const hoje = new Date();
+      const inicioDoDia = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()).getTime();
+
+      const historico: DayHistory = {
+        heartRate: amostrasDeSerie(fc),
+        hrv: amostrasDeSerie(hrv),
+        stress: amostrasDeSerie(estresse),
+        // A medição pedida na mão fica de fora da série do dia: ela costuma ser
+        // feita parado e de propósito, e misturá-la com a agendada distorce a
+        // mínima — que é justamente o número que importa em oxigenação.
+        spo2: oxigenio
+          .filter((p) => !p.manual && p.value > 0)
+          .map((p) => ({ at: p.at, value: p.value })),
+        /*
        Pressão vem vazia NESTE firmware, e isso está medido.
 
        As quatro portas do SDK foram sondadas no aparelho: a agendada responde
@@ -506,20 +555,22 @@ export class QCBandService implements BleService {
        responder, e o custo de tentar é uma consulta que falha rápido. Quem
        preenche a série de pressão hoje é a leitura ao vivo.
       */
-      pressure: pressao.filter((p) => p.at >= inicioDoDia && p.systolic > 0),
-      steps: passos
-        .map((p) => ({ at: instanteDoFirmware(p.at), steps: p.steps }))
-        .filter((p) => p.at > 0 && p.steps > 0),
-    };
+        pressure: pressao.filter((p) => p.at >= inicioDoDia && p.systolic > 0),
+        steps: passos
+          .map((p) => ({ at: instanteDoFirmware(p.at), steps: p.steps }))
+          .filter((p) => p.at > 0 && p.steps > 0),
+      };
 
-    if (__DEV__) {
-      console.log(
-        `[qcband] histórico do dia: fc=${historico.heartRate.length} estresse=${historico.stress.length} ` +
-          `spo2=${historico.spo2.length} pressão=${historico.pressure.length} passos=${historico.steps.length}`,
-      );
+      if (__DEV__) {
+        console.log(
+          `[qcband] histórico do dia: fc=${historico.heartRate.length} estresse=${historico.stress.length} ` +
+            `spo2=${historico.spo2.length} pressão=${historico.pressure.length} passos=${historico.steps.length}`,
+        );
+      }
+      return historico;
+    } finally {
+      if (this.activity?.kind === 'sync') this.setActivity(null);
     }
-    if (this.activity?.kind === 'sync') this.setActivity(null);
-    return historico;
   }
 
   async findDevice(): Promise<boolean> {
@@ -527,13 +578,53 @@ export class QCBandService implements BleService {
     return QCBand.findBand().catch(() => false);
   }
 
+  async vibrate(): Promise<boolean> {
+    if (!QCBand) return false;
+    /*
+     Falha em silêncio, e de propósito: vibrar é um REFORÇO de um aviso que já
+     está sendo dado na tela e na notificação do sistema. Pulseira fora de
+     alcance no fim do descanso não é motivo para interromper o treino com uma
+     mensagem de erro.
+    */
+    return comTeto(QCBand.vibrate(), TETO_CONSULTA_MS, 'vibração').catch(() => false);
+  }
+
+  async enableAncs(): Promise<boolean> {
+    if (!QCBand) return false;
+    return comTeto(QCBand.enableAncs(), TETO_CONSULTA_MS, 'ANCS').catch(() => false);
+  }
+
+  async getNotificationFilter(): Promise<{ type: number; enabled: boolean }[]> {
+    if (!QCBand) return [];
+    const filtro = await comTeto(
+      QCBand.getNotificationFilter(),
+      TETO_CONSULTA_MS,
+      'filtro de avisos',
+    ).catch(() => [] as { type: number; enabled: boolean }[]);
+    if (__DEV__) {
+      // A SONDAGEM: o cabeçalho documenta um vocabulário fixo sem identificador
+      // de app, e é aqui que se vê o que ESTE firmware devolve de fato.
+      console.log(`[qcband] filtro de avisos: ${JSON.stringify(filtro)}`);
+    }
+    return filtro;
+  }
+
+  async setNotificationFilter(entries: { type: number; enabled: boolean }[]): Promise<boolean> {
+    if (!QCBand) return false;
+    return comTeto(
+      QCBand.setNotificationFilter(entries),
+      TETO_CONSULTA_MS,
+      'filtro de avisos',
+    ).catch(() => false);
+  }
+
   async fetchSleep(): Promise<SleepNight | null> {
     if (!QCBand) return null;
 
-    this.setActivity({ kind: 'sync' });
+    this.setActivity({ kind: 'sync', step: 'sleep', done: 1, total: 1 });
     try {
       for (const dia of [1, 0]) {
-        const bruto = await QCBand.getSleep(dia).catch(() => []);
+        const bruto = await comTeto(QCBand.getSleep(dia), TETO_CONSULTA_MS, 'sono').catch(() => []);
         if (__DEV__) console.log(`[qcband] sono do dia ${dia}: ${bruto.length} segmentos`);
         const noite = montarNoite(bruto);
         if (noite) return noite;
@@ -553,10 +644,10 @@ export class QCBandService implements BleService {
   async fetchSleepHistory(): Promise<SleepNight[]> {
     if (!QCBand) return [];
 
-    this.setActivity({ kind: 'sync' });
     const noites: SleepNight[] = [];
     for (let dia = 6; dia >= 0; dia--) {
-      const bruto = await QCBand.getSleep(dia).catch(() => []);
+      this.setActivity({ kind: 'sync', step: 'memory', done: 7 - dia, total: 7 });
+      const bruto = await comTeto(QCBand.getSleep(dia), TETO_CONSULTA_MS, 'sono').catch(() => []);
       const noite = montarNoite(bruto);
       if (noite) noites.push(noite);
     }

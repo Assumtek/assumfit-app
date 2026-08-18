@@ -39,6 +39,7 @@ export function SettingsScreen() {
   const latest = useBiometricStore((s) => s.latest);
   const sleep = useBiometricStore((s) => s.sleep);
   const connectHealth = useBiometricStore((s) => s.connectHealth);
+  const [buscandoSono, setBuscandoSono] = React.useState(false);
   const [busy, setBusy] = useState(false);
 
 
@@ -106,9 +107,24 @@ export function SettingsScreen() {
         {/* Só no iOS: HealthKit não existe no Android, que usa Health Connect —
             outra API, outras permissões, outros tipos de registro. */}
         {isHealthAvailable() ? (
+          /*
+           A busca leva segundos e a linha não dizia nada enquanto corria —
+           tocar e não ver reação é indistinguível de toque que não pegou, e a
+           pessoa toca de novo, disparando outra busca por cima da primeira.
+          */
           <LinkRow
-            label={sleep ? 'Atualizar sono do app Saúde' : 'Conectar app Saúde'}
-            onPress={() => void connectHealth()}
+            label={
+              buscandoSono
+                ? 'Buscando…'
+                : sleep
+                  ? 'Atualizar sono do app Saúde'
+                  : 'Conectar app Saúde'
+            }
+            onPress={() => {
+              if (buscandoSono) return;
+              setBuscandoSono(true);
+              void connectHealth().finally(() => setBuscandoSono(false));
+            }}
           />
         ) : null}
         {/* Só onde há GATT para inspecionar: é ferramenta de mapeamento de

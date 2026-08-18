@@ -7,6 +7,7 @@ import {
   AccessibilityInfo,
   AppState,
   Pressable,
+  ScrollView,
   TextInput,
   useWindowDimensions,
 } from 'react-native';
@@ -32,7 +33,9 @@ import { QuickMenu } from './workout/QuickMenu';
 import {
   SPORTS,
   kcalFor,
+  searchSports,
   simplifyTrack,
+  sportSections,
   kcalRangeLabel,
   paceMinPerKm,
   sportClock,
@@ -745,6 +748,7 @@ export function SportScreen() {
       met: 6,
       gps: !!d.distanceM,
       icon: 'footprints',
+      group: 'ar-livre',
     };
     return (
       <DetailScreen title="Compartilhar" onBack={() => setCompartilhandoDetalhe(false)}>
@@ -1009,6 +1013,18 @@ export function SportScreen() {
   const larguraDoFavo = width - 48 - 40;
 
   /*
+   As modalidades que ESTA pessoa registra, mais recente primeiro. Com 26 na
+   grade, a prateleira de cima costuma bastar: quem treina musculação toda
+   semana não deveria caçar musculação toda semana.
+  */
+  const recentes: Sport[] = [];
+  for (const s of historico ?? []) {
+    if (recentes.length === 3) break;
+    const sport = SPORTS.find((x) => x.kind === s.sport);
+    if (sport && !recentes.some((r) => r.kind === sport.kind)) recentes.push(sport);
+  }
+
+  /*
    A CONSTÂNCIA: minutos de movimento por semana, das duas fontes somadas.
    Eram dois gráficos (esporte e treino, separados) e viraram um — quem quer
    saber se está mantendo o ritmo não separa corrida de agachamento, e dois
@@ -1249,47 +1265,136 @@ export function SportScreen() {
             <OpcaoDeInicio
               icone="footprints"
               titulo="Registro"
-              detalhe="cronômetro com GPS, caloria e batimento"
+              detalhe="cronômetro, batimento e caloria — GPS onde faz sentido"
               onPress={() => setPassoRegistro(true)}
             />
           </>
         ) : (
-          <>
-            <SectionTitle fontSize={18}>Qual esporte?</SectionTitle>
-            <XStack flexWrap="wrap" gap="$md">
-              {SPORTS.map((sport) => (
-                <Pressable
-                  key={sport.kind}
-                  onPress={() => {
-                    setEscolhendo(false);
-                    setPassoRegistro(false);
-                    void preparar(sport);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Preparar ${sport.label}`}
-                  style={({ pressed }) => [{ width: '30.5%' }, pressed && { opacity: 0.6 }]}
-                >
-                  <YStack
-                    borderRadius={16}
-                    borderWidth={1}
-                    borderColor="$borderStrong"
-                    paddingVertical="$lg"
-                    alignItems="center"
-                    gap="$sm"
-                  >
-                    <Icon name={sport.icon as never} size={22} color={colors.textMuted} />
-                    <Body fontSize={14} color="$foreground">
-                      {sport.label}
-                    </Body>
-                    <Data fontSize={10}>{sport.gps ? 'com GPS' : 'sem GPS'}</Data>
-                  </YStack>
-                </Pressable>
-              ))}
-            </XStack>
-          </>
+          <EscolhaDeEsporte
+            recentes={recentes}
+            onPick={(sport) => {
+              setEscolhendo(false);
+              setPassoRegistro(false);
+              void preparar(sport);
+            }}
+          />
         )}
       </Sheet>
     </YStack>
+  );
+}
+
+/**
+ * A grade de modalidades — busca em cima, prateleiras embaixo.
+ *
+ * Com 26 esportes, a parede de ícones que a lista curta permitia deixa de
+ * funcionar: ninguém varre 26 alvos para achar um. A hierarquia tem três
+ * degraus, e cada um resolve um caso diferente — quem já sabe o nome digita
+ * (a busca aceita sinônimo e texto sem acento), quem repete a rotina acha na
+ * primeira prateleira, e quem está explorando lê por prateleira temática em
+ * vez de percorrer uma lista alfabética sem grupo.
+ */
+function EscolhaDeEsporte({
+  recentes,
+  onPick,
+}: {
+  recentes: Sport[];
+  onPick: (sport: Sport) => void;
+}) {
+  const { colors } = useTheme();
+  const { height } = useWindowDimensions();
+  const [busca, setBusca] = useState('');
+
+  const buscando = busca.trim().length > 0;
+  const achados = buscando ? searchSports(busca) : [];
+  const prateleiras = buscando
+    ? achados.length > 0
+      ? [{ chave: 'busca', label: 'resultados', sports: achados }]
+      : []
+    : [
+        ...(recentes.length > 0
+          ? [{ chave: 'recentes', label: 'recentes', sports: recentes }]
+          : []),
+        ...sportSections().map((sec) => ({
+          chave: sec.group,
+          label: sec.label,
+          sports: sec.sports,
+        })),
+      ];
+
+  return (
+    <>
+      <SectionTitle fontSize={18}>Qual esporte?</SectionTitle>
+
+      <XStack
+        alignItems="center"
+        gap="$sm"
+        borderRadius={12}
+        borderWidth={1}
+        borderColor="$borderStrong"
+        paddingHorizontal="$md"
+      >
+        <Icon name="search" size={16} color={colors.textMuted} />
+        <TextInput
+          style={{ flex: 1, color: colors.text, fontSize: 15, paddingVertical: 10 }}
+          value={busca}
+          onChangeText={setBusca}
+          placeholder="Buscar modalidade"
+          placeholderTextColor={colors.textFaint}
+          autoCorrect={false}
+          autoCapitalize="none"
+          returnKeyType="search"
+          accessibilityLabel="Buscar modalidade"
+        />
+      </XStack>
+
+      {/* A folha para de crescer aqui: metade da tela é o que sobra acima do
+          teclado, e o resto rola. */}
+      <ScrollView
+        style={{ maxHeight: height * 0.46 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <YStack gap="$xl">
+          {prateleiras.map((prateleira) => (
+            <YStack key={prateleira.chave} gap="$md">
+              <Label>{prateleira.label}</Label>
+              <XStack flexWrap="wrap" gap="$md">
+                {prateleira.sports.map((sport) => (
+                  <Pressable
+                    key={`${prateleira.chave}-${sport.kind}`}
+                    onPress={() => onPick(sport)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Preparar ${sport.label}`}
+                    style={({ pressed }) => [{ width: '30.5%' }, pressed && { opacity: 0.6 }]}
+                  >
+                    <YStack
+                      borderRadius={16}
+                      borderWidth={1}
+                      borderColor="$borderStrong"
+                      paddingVertical="$lg"
+                      paddingHorizontal="$xs"
+                      alignItems="center"
+                      gap="$sm"
+                    >
+                      <Icon name={sport.icon} size={22} color={colors.textMuted} />
+                      <Body fontSize={13} color="$foreground" numberOfLines={1}>
+                        {sport.label}
+                      </Body>
+                      <Data fontSize={10}>{sport.gps ? 'com GPS' : 'sem GPS'}</Data>
+                    </YStack>
+                  </Pressable>
+                ))}
+              </XStack>
+            </YStack>
+          ))}
+
+          {buscando && achados.length === 0 ? (
+            <Data>Nenhuma modalidade com esse nome. Apague a busca para ver todas.</Data>
+          ) : null}
+        </YStack>
+      </ScrollView>
+    </>
   );
 }
 

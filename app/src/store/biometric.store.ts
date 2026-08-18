@@ -64,6 +64,16 @@ function gravarSemPulseira() {
 /** Uma varredura de noites por sessão: a memória da pulseira não muda durante o dia. */
 let sonoRetroativoEnviado = false;
 
+/**
+ * A leitura de memória em curso, para que pedidos simultâneos a compartilhem.
+ *
+ * Fora do estado de propósito: é controle de concorrência, e o `syncing` do
+ * store é o que a tela observa. Guardar a promessa aqui evita que dois gestos
+ * de "puxar para atualizar" disputem o canal serial da pulseira, que não
+ * suporta leitura simultânea.
+ */
+let sincronizacaoEmCurso: Promise<void> | null = null;
+
 function gravarAparelhoPareado(id: string | null) {
   try {
     const f = new File(Paths.document, ARQUIVO_APARELHO);
@@ -103,6 +113,19 @@ type Derivado = {
   pressureHistory: PressureReading[];
   stepsByHour: number[];
   activity: Activity;
+  /**
+   * Coração e variabilidade também sobrevivem ao fechamento do app.
+   *
+   * Ficavam de fora, e o efeito era invisível para quem escreveu e óbvio para
+   * quem usa: abrir o app zerava as duas curvas, e elas só voltavam depois de
+   * uma sincronização inteira. Quem abrisse sem a pulseira por perto via "sem
+   * série ainda" sobre dados que existiam.
+   *
+   * Opcionais porque um arquivo gravado por uma versão anterior não os tem — e
+   * hidratar com `undefined` é melhor que descartar o arquivo todo.
+   */
+  hrvHistory?: Sample[];
+  hrHistory?: Sample[];
 };
 
 async function lerDerivado(): Promise<Derivado | null> {
@@ -130,6 +153,8 @@ function persistirDerivado(e: {
   pressureHistory: PressureReading[];
   stepsByHour: number[];
   activity: Activity;
+  hrvHistory: Sample[];
+  hrHistory: Sample[];
 }) {
   gravarDerivado({
     sleep: e.sleep,
@@ -139,6 +164,8 @@ function persistirDerivado(e: {
     pressureHistory: e.pressureHistory,
     stepsByHour: e.stepsByHour,
     activity: e.activity,
+    hrvHistory: e.hrvHistory,
+    hrHistory: e.hrHistory,
   });
 }
 
@@ -171,11 +198,31 @@ import type { Activity, PressureReading, Reading, SleepNight, SleepSegment } fro
 import { ble } from '../services/ble';
 import * as api from '../services/api.service';
 import { fetchLastNight, isHealthAvailable, requestSleepAccess } from '../services/health.service';
-import { notifyAttention, notifyBreathing, setupAndroidChannel, type MetricaDeAtencao } from '../services/notifications.service';
+import {
+  notifyAttention,
+  notifyBreathing,
+  setupAndroidChannel,
+  type MetricaDeAtencao,
+} from '../services/notifications.service';
 import { syncQueue } from '../services/sync.service';
 import { rateHeartRate, ratePressure, rateSpo2 } from '../domain/ratings';
+import { comAmostraDeHrv } from '../domain/series';
 import { useWorkoutStore } from './workout.store';
-import type { BandActivity, ConnectionState, DiscoveredDevice, MeasurableKind } from '../services/ble';
+import type {
+  BandActivity,
+  ConnectionState,
+  DayHistory,
+  DiscoveredDevice,
+  MeasurableKind,
+  Sample,
+} from '../services/ble';
+import {
+  comTeto,
+  eTempoEsgotado,
+  TETO_CONSULTA_MS,
+  TETO_MEDICAO_MS,
+  TETO_SINCRONIA_MS,
+} from '../services/ble/timeout';
 
 /**
  * Freio da atualização de sinal, por aparelho.
@@ -203,8 +250,17 @@ type BiometricState = {
   bandActivity: BandActivity | null;
   devices: DiscoveredDevice[];
   latest: Reading | null;
-  hrvHistory: number[];
-  hrHistory: number[];
+  /**
+   * A série de HRV, com o instante de cada amostra.
+   *
+   * Eram números soltos, e isso escondia dois defeitos que só o carimbo de hora
+   * revela: a mesma amostra entrava de novo a cada batimento (a curva era uma
+   * reta feita de noventa cópias) e as abas de período não tinham como filtrar
+   * nada, porque não havia tempo no dado. Num produto de saúde, uma curva que
+   * não corresponde a medições é pior que curva nenhuma.
+   */
+  hrvHistory: Sample[];
+  hrHistory: Sample[];
   /** `null` até haver uma noite medida. Não se inventa sono. */
   sleep: SleepNight | null;
   activity: Activity;
@@ -259,6 +315,10 @@ type BiometricState = {
    * atualizar" faria.
    */
   syncHistory: () => Promise<void>;
+  /** Há uma leitura de memória em curso — a tela usa para não disparar duas. */
+  syncing: boolean;
+  /** Por que a última sincronização não trouxe nada, em linguagem de gente. */
+  syncError: string | null;
   recoverBandMemory: () => Promise<void>;
   /** Grandeza sendo medida agora, `null` quando não há medição em curso. */
   measuring: MeasurableKind | null;
@@ -291,14 +351,106 @@ type BiometricState = {
  há medição, `ratings.ts` devolve `available: false` e a tela mostra traço.
  */
 
+/*
+ Os tetos vivem em `services/ble/timeout.ts`, junto do porquê de existirem.
+ Estavam aqui como um `Promise.race` escrito à mão só para a medição, enquanto
+ sincronizar e buscar a noite — mesmo SDK, mesmo modo de falhar — não tinham
+ nenhum.
+*/
+
 /**
- * Teto de uma medição sob demanda.
+ * Traz do APARELHO as séries do dia, em vez de esperar acumular ao vivo.
  *
- * SpO₂ e pressão levam de 30 a 60 segundos quando tudo vai bem; 90 dá folga
- * para a leitura difícil e ainda devolve a tela a quem está esperando. Sem
- * teto, o botão girava para sempre.
+ * Era o buraco entre a nossa tela e a do fabricante. As séries se construíam
+ * para a frente, uma leitura por vez, o que só preenche o gráfico se o app
+ * ficar aberto e conectado o dia inteiro — na prática, quase nunca. A pulseira
+ * registrava tudo sozinha nas janelas agendadas, e essa memória nunca era lida.
+ *
+ * O que vem do aparelho SUBSTITUI o acumulado, não se soma: são as mesmas
+ * medições vistas de dois jeitos, e concatenar produziria pontos repetidos na
+ * mesma hora. A memória do aparelho é a versão mais completa das duas.
+ *
+ * Fora do objeto do store porque `syncHistory` passou a ser só o porteiro da
+ * concorrência: aninhar trinta linhas dentro de um IIFE ali dentro escondia
+ * qual das duas coisas estava sendo lida.
  */
-const MEASURE_TIMEOUT_MS = 90_000;
+type Set = (parcial: Partial<BiometricState>) => void;
+type Get = () => BiometricState;
+
+async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
+  set({ syncing: true, syncError: null });
+  /*
+     Teto na sincronização INTEIRA, além do teto por consulta que a ponte já
+     aplica. São duas redes com propósitos diferentes: a de baixo impede que uma
+     grandeza pendurada leve as outras junto; esta impede que a soma das cinco
+     — com tentativas e esperas crescentes — passe do que alguém aceita esperar
+     olhando para um indicador girando.
+    */
+  let historico: DayHistory | null = null;
+  try {
+    historico = (await comTeto(
+      ble.fetchHistory?.() ?? Promise.resolve(null),
+      TETO_SINCRONIA_MS,
+      'sincronização',
+    )) as DayHistory | null;
+  } catch (err) {
+    set({
+      syncError: eTempoEsgotado(err)
+        ? 'A pulseira parou de responder no meio da leitura. Aproxime o pulso do celular e puxe para atualizar de novo.'
+        : 'Não deu para ler a memória da pulseira agora. Tente de novo em instantes.',
+    });
+  } finally {
+    set({ syncing: false });
+  }
+  if (!historico) return;
+
+  const porHora = (amostras: { at: number; value: number }[]) => {
+    // Uma amostra por hora, a última de cada — doze pontos legíveis no lugar
+    // de duzentos empilhados no mesmo rótulo.
+    const mapa = new Map<string, number>();
+    for (const a of amostras) mapa.set(`${new Date(a.at).getHours()}h`, a.value);
+    return [...mapa.entries()].map(([hour, value]) => ({ hour, value })).slice(-12);
+  };
+
+  const estresse = historico.stress.length ? porHora(historico.stress) : get().stressByHour;
+  const estresseCru = historico.stress.length ? historico.stress : get().stressHistory;
+  const pressao = historico.pressure.length
+    ? historico.pressure
+        .map((p) => ({
+          systolic: p.systolic,
+          diastolic: p.diastolic,
+          at: `${new Date(p.at).getHours()}h`,
+        }))
+        .slice(-14)
+    : get().pressureHistory;
+  const passos = historico.steps.length
+    ? historico.steps.map((p) => p.steps).slice(-17)
+    : get().stepsByHour;
+  const fc = historico.heartRate.length ? historico.heartRate.slice(-90) : get().hrHistory;
+  /*
+     A curva de HRV vem da MEMÓRIA, como todas as outras.
+
+     Ela se construía sozinha, para a frente, a partir do que passava ao vivo —
+     e como a leitura contínua carrega sempre a última amostra conhecida, o que
+     se acumulava era a mesma medição repetida. A pulseira já guardava a série
+     de verdade, com os instantes das janelas agendadas; era só perguntar.
+    */
+  const variabilidade = historico.hrv.length ? historico.hrv.slice(-90) : get().hrvHistory;
+  const oxigenio = historico.spo2.length ? historico.spo2 : get().spo2History;
+
+  set({
+    stressByHour: estresse,
+    stressHistory: estresseCru,
+    pressureHistory: pressao,
+    stepsByHour: passos,
+    hrHistory: fc,
+    hrvHistory: variabilidade,
+    spo2History: oxigenio,
+  });
+
+  const e = get();
+  persistirDerivado(get());
+}
 
 export const useBiometricStore = create<BiometricState>((set, get) => ({
   connection: 'idle',
@@ -311,11 +463,19 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     gravarSemPulseira();
   },
   devices: [],
+  syncing: false,
+  syncError: null,
   latest: null,
   hrvHistory: [],
   hrHistory: [],
   sleep: null,
-  activity: { steps: 0, goal: 10000, distanceKm: 0, activeKcal: 0, activeMin: 0 },
+  activity: {
+    steps: 0,
+    goal: 10000,
+    distanceKm: 0,
+    activeKcal: 0,
+    activeMin: 0,
+  },
   stepsByHour: [],
   stressByHour: [],
   spo2History: [],
@@ -368,13 +528,19 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     try {
       await ble.connect(deviceId);
       gravarAparelhoPareado(deviceId);
-      set({ pairedDeviceId: deviceId, batteryPct: ble.getBatteryLevel(), connectError: null });
+      set({
+        pairedDeviceId: deviceId,
+        batteryPct: ble.getBatteryLevel(),
+        connectError: null,
+      });
       // A memória da pulseira guarda uma SEMANA — quem passou dias longe do
       // celular tem os dias presos lá. A varredura espera o arranque da
       // conexão assentar (o canal é serial e o dia de hoje tem prioridade).
       setTimeout(() => void get().recoverBandMemory(), 20_000);
     } catch (err) {
-      set({ connectError: err instanceof Error ? err.message : 'Falha ao conectar' });
+      set({
+        connectError: err instanceof Error ? err.message : 'Falha ao conectar',
+      });
     }
   },
 
@@ -389,7 +555,13 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
      o comportamento certo.
     */
     gravarAparelhoPareado(null);
-    set({ pairedDeviceId: null, latest: null, hrvHistory: [], hrHistory: [], batteryPct: null });
+    set({
+      pairedDeviceId: null,
+      latest: null,
+      hrvHistory: [],
+      hrHistory: [],
+      batteryPct: null,
+    });
   },
 
   /**
@@ -445,6 +617,8 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
         stressHistory: derivado.stressHistory ?? [],
         pressureHistory: derivado.pressureHistory ?? [],
         stepsByHour: derivado.stepsByHour ?? [],
+        hrvHistory: derivado.hrvHistory ?? [],
+        hrHistory: derivado.hrHistory ?? [],
         activity: derivado.activity ?? get().activity,
       });
     }
@@ -461,8 +635,16 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
      reporta RMSSD, e misturar os dois na mesma linha de base produziria um
      denominador que não corresponde a nenhum dos métodos.
      */
-    const daPulseira = await ble.fetchSleep?.().catch(() => null);
-    const noite = daPulseira ?? (isHealthAvailable() ? await fetchLastNight().catch(() => null) : null);
+    const daPulseira = await comTeto(
+      ble.fetchSleep?.() ?? Promise.resolve(null),
+      TETO_CONSULTA_MS,
+      'sono da pulseira',
+    ).catch(() => null);
+    const noite =
+      daPulseira ??
+      (isHealthAvailable()
+        ? await comTeto(fetchLastNight(), TETO_CONSULTA_MS, 'sono do app Saúde').catch(() => null)
+        : null);
     if (noite) {
       set({ sleep: noite });
       api.pushSleepNight(noite);
@@ -477,7 +659,11 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
      paralelo: o canal da pulseira é serial e leitura simultânea colide.
     */
     if (!sonoRetroativoEnviado && ble.fetchSleepHistory) {
-      const noites = await ble.fetchSleepHistory().catch(() => [] as const);
+      const noites = await comTeto(
+        ble.fetchSleepHistory(),
+        TETO_SINCRONIA_MS,
+        'memória de sono',
+      ).catch(() => [] as const);
       for (const n of noites) api.pushSleepNight(n);
       // O flag só queima com noite na mão: zero tanto pode ser memória vazia
       // quanto o SDK mudo naquele instante — visto em produção — e neste caso
@@ -543,12 +729,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
        resolve nem rejeita, e o botão girava até o app ser fechado. Visto em
        campo (ago/2026).
       */
-      await Promise.race([
-        ble.measure(kind),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('TEMPO')), MEASURE_TIMEOUT_MS),
-        ),
-      ]);
+      await comTeto(ble.measure(kind), TETO_MEDICAO_MS, kind);
 
       /*
        Terminou — mas mediu?
@@ -571,7 +752,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
       // Falha de medição é rotina, não erro de programa: pulseira frouxa,
       // braço em movimento, sensor sem contato com a pele. A frase precisa
       // dizer o que fazer, não o que quebrou.
-      const foiTempo = err instanceof Error && err.message === 'TEMPO';
+      const foiTempo = eTempoEsgotado(err);
       // Tempo esgotado deixa o sensor LIGADO no aparelho: desligar é parte de
       // desistir, senão a próxima medição disputa um sensor já ocupado.
       if (foiTempo) await ble.stopMeasure?.(kind).catch(() => undefined);
@@ -595,60 +776,22 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     await ble.stopMeasure?.(kind).catch(() => undefined);
   },
 
-  /**
-   * Traz do APARELHO as séries do dia, em vez de esperar acumular ao vivo.
-   *
-   * Era o buraco entre a nossa tela e a do fabricante. As séries se construíam
-   * para a frente, uma leitura por vez, o que só preenche o gráfico se o app
-   * ficar aberto e conectado o dia inteiro — na prática, quase nunca. A pulseira
-   * registrava tudo sozinha nas janelas agendadas, e essa memória nunca era lida.
-   *
-   * O que vem do aparelho SUBSTITUI o acumulado, não se soma: são as mesmas
-   * medições vistas de dois jeitos, e concatenar produziria pontos repetidos na
-   * mesma hora. A memória do aparelho é a versão mais completa das duas.
-   */
-  syncHistory: async () => {
-    const historico = await ble.fetchHistory?.().catch(() => null);
-    if (!historico) return;
+  syncHistory: () => {
+    /*
+     Quem chega no meio ESPERA a leitura em curso, em vez de desistir.
 
-    const porHora = (amostras: { at: number; value: number }[]) => {
-      // Uma amostra por hora, a última de cada — doze pontos legíveis no lugar
-      // de duzentos empilhados no mesmo rótulo.
-      const mapa = new Map<string, number>();
-      for (const a of amostras) mapa.set(`${new Date(a.at).getHours()}h`, a.value);
-      return [...mapa.entries()].map(([hour, value]) => ({ hour, value })).slice(-12);
-    };
-
-    const estresse = historico.stress.length ? porHora(historico.stress) : get().stressByHour;
-    const estresseCru = historico.stress.length ? historico.stress : get().stressHistory;
-    const pressao = historico.pressure.length
-      ? historico.pressure
-          .map((p) => ({
-            systolic: p.systolic,
-            diastolic: p.diastolic,
-            at: `${new Date(p.at).getHours()}h`,
-          }))
-          .slice(-14)
-      : get().pressureHistory;
-    const passos = historico.steps.length
-      ? historico.steps.map((p) => p.steps).slice(-17)
-      : get().stepsByHour;
-    const fc = historico.heartRate.length
-      ? historico.heartRate.map((a) => a.value).slice(-90)
-      : get().hrHistory;
-    const oxigenio = historico.spo2.length ? historico.spo2 : get().spo2History;
-
-    set({
-      stressByHour: estresse,
-      stressHistory: estresseCru,
-      pressureHistory: pressao,
-      stepsByHour: passos,
-      hrHistory: fc,
-      spo2History: oxigenio,
+     Desistir devolvia o controle na hora, e o efeito na tela era o contrário
+     do pretendido: o indicador de "puxar para atualizar" parava enquanto a
+     pulseira ainda estava respondendo, como se a atualização tivesse
+     terminado sem trazer nada. Compartilhando a mesma promessa, todos os
+     pedidos terminam junto com o trabalho real — e o canal serial da pulseira,
+     que não suporta leitura simultânea, continua com uma só.
+    */
+    if (sincronizacaoEmCurso) return sincronizacaoEmCurso;
+    sincronizacaoEmCurso = lerMemoriaDoDia(set, get).finally(() => {
+      sincronizacaoEmCurso = null;
     });
-
-    const e = get();
-    persistirDerivado(get());
+    return sincronizacaoEmCurso;
   },
 
   /**
@@ -671,14 +814,19 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
         ...h.steps.map((p) => ({ recordedAt: p.at, steps: p.steps })),
       ];
       if (amostras.length) await api.ingestMemory(amostras).catch(() => undefined);
-      if (__DEV__ && amostras.length) console.log(`[memória] dia -${dia}: ${amostras.length} amostras`);
+      if (__DEV__ && amostras.length)
+        console.log(`[memória] dia -${dia}: ${amostras.length} amostras`);
     }
   },
 
   connectHealth: async () => {
     // A pulseira tem precedência aqui também: se ela já mediu, não há por que
     // pedir permissão de dado de saúde a quem não precisa conceder.
-    const daPulseira = await ble.fetchSleep?.().catch(() => null);
+    const daPulseira = await comTeto(
+      ble.fetchSleep?.() ?? Promise.resolve(null),
+      TETO_CONSULTA_MS,
+      'sono da pulseira',
+    ).catch(() => null);
     if (daPulseira) {
       set({ sleep: daPulseira });
       api.pushSleepNight(daPulseira);
@@ -693,8 +841,12 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
       console.warn('[health] não foi possível pedir acesso — ver aviso acima');
       return false;
     }
-    const noite = await fetchLastNight().catch(() => null);
-    console.log(`[health] noite encontrada: ${noite ? `${noite.totalMin} min, score ${noite.score}` : 'nenhuma'}`);
+    const noite = await comTeto(fetchLastNight(), TETO_CONSULTA_MS, 'sono do app Saúde').catch(
+      () => null,
+    );
+    console.log(
+      `[health] noite encontrada: ${noite ? `${noite.totalMin} min, score ${noite.score}` : 'nenhuma'}`,
+    );
     if (noite) {
       set({ sleep: noite });
       api.pushSleepNight(noite);
@@ -744,7 +896,15 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     };
 
     const offState = ble.onStateChange((connection, reason) => {
-      set({ connection, connectionReason: reason ?? null });
+      /*
+       Mudou o estado do rádio, a falha anterior de leitura deixou de valer.
+
+       Sem isto o aviso "a leitura não terminou" ficaria na tela até alguém
+       sincronizar de novo — inclusive depois de reconectar, e inclusive
+       tomando o lugar da linha que narra o que a pulseira está fazendo agora.
+       Erro que sobrevive à sua própria causa é ruído.
+      */
+      set({ connection, connectionReason: reason ?? null, syncError: null });
       pararCiclo();
       if (connection === 'connected') {
         leituraInicial = setTimeout(() => void puxarDoAparelho(), 10_000);
@@ -789,13 +949,22 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
           ? pressureHistory
           : [
               ...pressureHistory,
-              { systolic: reading.bpSystolic, diastolic: reading.bpDiastolic, at: rotulo },
+              {
+                systolic: reading.bpSystolic,
+                diastolic: reading.bpDiastolic,
+                at: rotulo,
+              },
             ].slice(-14);
 
       const passos =
         reading.steps == null
           ? stepsByHour
           : [...stepsByHour.filter((_, i) => i < stepsByHour.length), reading.steps].slice(-17);
+
+      const variabilidade = comAmostraDeHrv(hrvHistory, reading, HISTORY_SIZE);
+      const coracao = [...hrHistory, { at: reading.recordedAt, value: reading.heartRate }].slice(
+        -HISTORY_SIZE,
+      );
 
       gravarDerivado({
         sleep: get().sleep,
@@ -807,6 +976,8 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
         pressureHistory: pressao,
         stepsByHour: passos,
         activity: reading.steps == null ? activity : { ...activity, steps: reading.steps },
+        hrvHistory: variabilidade,
+        hrHistory: coracao,
       });
 
       set({
@@ -816,9 +987,8 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
         stepsByHour: passos,
         // Só o que foi medido entra na série. Um `null` virando ponto no
         // gráfico desenharia uma queda a zero que nunca aconteceu.
-        hrvHistory:
-          reading.hrvMs == null ? hrvHistory : [...hrvHistory, reading.hrvMs].slice(-HISTORY_SIZE),
-        hrHistory: [...hrHistory, reading.heartRate].slice(-HISTORY_SIZE),
+        hrvHistory: variabilidade,
+        hrHistory: coracao,
         activity: reading.steps == null ? activity : { ...activity, steps: reading.steps },
       });
     });

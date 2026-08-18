@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import { api, isAuthenticated } from '../services/api.service';
+import { diaCorrente, isoHoje } from '../domain/water';
 import { waterGoalMl } from '../domain/waterGoal';
 import type { Sex } from '../domain/types';
 import {
@@ -37,20 +38,16 @@ type HabitsState = {
   week: Day[];
   addWater: (ml: number) => void;
   undoLastPour: () => void;
+  /**
+   * Vira o dia se o relógio passou da meia-noite desde o último registro.
+   *
+   * Chamado na volta ao primeiro plano: a sessão dura dias no iOS, e sem isto
+   * a tela abre mostrando o total de ontem até alguém remontá-la.
+   */
+  rolarDia: () => void;
   /** Recarrega semana e dia do servidor — é o que sobrevive ao app fechar. */
   hydrate: () => Promise<void>;
 };
-
-/**
- * Data de HOJE no calendário de quem está segurando o celular.
- *
- * `toISOString().slice(0,10)` parece a forma óbvia e está errada: ele converte
- * para UTC antes de cortar, então às 22h no Brasil já devolve a data de amanhã.
- * Na prática, a água registrada depois das 21h entrava no dia seguinte, e o
- * gráfico da semana mostrava alguém bebendo de madrugada.
- */
-const isoToday = (d = new Date()) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 const ROTULO_DIA = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 
@@ -83,7 +80,7 @@ function semanaVazia(): Day[] {
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
-    return { label: ROTULO_DIA[d.getDay()], waterMl: 0, date: isoToday(d) };
+    return { label: ROTULO_DIA[d.getDay()], waterMl: 0, date: isoHoje(d) };
   });
 }
 
@@ -144,10 +141,27 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
     set({ containers });
     prefs?.setItemAsync(CHAVE_RECIPIENTES, serializeContainers(containers)).catch(() => undefined);
   },
-  today: { date: isoToday(), waterMl: 0, pours: [] },
+  today: { date: isoHoje(), waterMl: 0, pours: [] },
   week: semanaVazia(),
 
+  rolarDia: () => {
+    const today = diaCorrente(get().today);
+    if (today === get().today) return;
+    // A semana também é remontada: ontem saiu de "hoje" e virou uma coluna do
+    // histórico, e o molde de sete dias termina noutro dia.
+    set({ today, week: comHoje(semanaVazia(), today) });
+  },
+
   addWater: (ml) => {
+    /*
+     O dia é conferido a cada gole, não só na abertura da tela.
+
+     Sem isto, um gole registrado depois da meia-noite ia para a data de ONTEM
+     — o número na tela seguia somando ao total do dia anterior e o `persist`
+     gravava no registro errado. Errar a data corrompe o histórico, que é pior
+     que mostrar o número errado.
+    */
+    get().rolarDia();
     const today = get().today;
     const next = { ...today, waterMl: today.waterMl + ml, pours: [...today.pours, ml] };
     set({ today: next, week: comHoje(get().week, next) });
@@ -156,6 +170,7 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
   },
 
   undoLastPour: () => {
+    get().rolarDia();
     const today = get().today;
     if (today.pours.length === 0) return;
     const pours = today.pours.slice(0, -1);
@@ -168,6 +183,15 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
 
 
   hydrate: async () => {
+    /*
+     A virada do dia vem PRIMEIRO, e sem depender de nada.
+
+     Abaixo há duas saídas antes de qualquer `set` — sem sessão e falha de rede
+     — e nas duas o total de ontem sobreviveria na tela. A data é uma conta de
+     relógio local; ela não tem por que esperar o servidor.
+    */
+    get().rolarDia();
+
     prefs
       ?.getItemAsync(CHAVE_RECIPIENTES)
       .then((raw) => set({ containers: parseContainers(raw) }))
@@ -188,15 +212,19 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
         waterMl: porDia.get(d.date)?.waterMl ?? 0,
       }));
 
-      // O dia de hoje volta do servidor — sem isto, fechar o app zerava a
-      // água na tela mesmo com o registro salvo. `pours` fica vazio: o
-      // desfazer só vale para goles registrados nesta sessão.
-      const hoje = porDia.get(isoToday());
-      const atual = get().today;
+      /*
+       O dia de hoje volta do servidor — sem isto, fechar o app zerava a água
+       na tela mesmo com o registro salvo. `pours` fica vazio: o desfazer só
+       vale para goles registrados nesta sessão.
+
+       O `rolarDia` no topo é o que conserta a manhã: sem registro para hoje,
+       o ramo de baixo devolve `atual`, e um `atual` de ontem faria o total do
+       dia anterior sobreviver à virada — que era exatamente o defeito.
+      */
+      const hoje = porDia.get(isoHoje());
+      const atual = diaCorrente(get().today);
       const today =
-        hoje && atual.pours.length === 0
-          ? { ...atual, waterMl: hoje.waterMl }
-          : atual;
+        hoje && atual.pours.length === 0 ? { ...atual, waterMl: hoje.waterMl } : atual;
 
       set({ week, today });
     } catch {

@@ -10,6 +10,8 @@ import { HomeCarousel, type HomeCard } from '../components/HomeCarousel';
 import { HomeRings, type RingItem } from '../components/HomeRings';
 import { Icon } from '../components/Icon';
 import { MovementWeek } from '../components/MovementWeek';
+import { PermissionGate, permissaoNegadaEm } from '../components/PermissionGate';
+import { SyncProgress } from '../components/SyncProgress';
 import { Body, Button, Data, Label, SectionTitle } from '../components/ui';
 import { Card } from '../components/ui/Card';
 import { LineChart } from '../components/charts/LineChart';
@@ -17,6 +19,7 @@ import { LiveDot } from '../components/charts/LiveChart';
 import { energyState } from '../domain/energy';
 import { buildMovementWeek, movementMinutes } from '../domain/movement';
 import { rateSleep, rateStress, shown, stateColor } from '../domain/ratings';
+import { faixaInicial, noPeriodo, rotulosDoPeriodo } from '../domain/series';
 import { isSportDay, modalityMeta } from '../domain/workout';
 import * as api from '../services/api.service';
 import { supportsGattInspection } from '../services/ble';
@@ -34,9 +37,13 @@ export function HomeScreen() {
   const latest = useBiometricStore((s) => s.latest);
   const stressHistory = useBiometricStore((s) => s.stressHistory);
   const hrvHistory = useBiometricStore((s) => s.hrvHistory);
+  const sincronizando = useBiometricStore((s) => s.syncing);
+  const syncError = useBiometricStore((s) => s.syncError);
   const sleep = useBiometricStore((s) => s.sleep);
   const connection = useBiometricStore((s) => s.connection);
   const pairedDeviceId = useBiometricStore((s) => s.pairedDeviceId);
+  const connectionReason = useBiometricStore((s) => s.connectionReason);
+  const connect = useBiometricStore((s) => s.connect);
   const user = useUserStore((s) => s.user);
   const openSidebar = useUiStore((s) => s.openSidebar);
   const batteryPct = useBiometricStore((s) => s.batteryPct);
@@ -50,9 +57,16 @@ export function HomeScreen() {
   const { width } = useWindowDimensions();
   // Largura útil do gráfico: tela − margem da home − respiro interno do card.
   const larguraGrafico = width - 48 - 40;
-  // A média da última hora é a linha de base do gráfico — igual à tela de HRV.
-  const mediaHrv = hrvHistory.length
-    ? hrvHistory.reduce((a, b) => a + b, 0) / hrvHistory.length
+  /*
+   A home mostra a faixa mais estreita que tenha curva, como a tela de HRV.
+
+   Fixar "última hora" aqui deixava o card sumir quase sempre: a pulseira mede
+   HRV em janelas agendadas, e é comum a última hora não ter nenhuma amostra.
+  */
+  const faixaHrv = faixaInicial(hrvHistory);
+  const serieHrv = noPeriodo(hrvHistory, faixaHrv);
+  const mediaHrv = serieHrv.length
+    ? serieHrv.reduce((soma, p) => soma + p.value, 0) / serieHrv.length
     : 0;
 
   /**
@@ -70,6 +84,13 @@ export function HomeScreen() {
    * viraria mentira ("você não treinou"), e o princípio é medido ou traço.
    */
   const [movimento, setMovimento] = useState<Map<string, number> | null>(null);
+  /*
+   `movimento === null` tinha dois significados — "ainda carregando" e "as duas
+   fontes falharam" — e os dois faziam o card sumir. Sumir é a resposta errada
+   para a segunda: a peça que convida a se mexer desaparecia justamente no dia
+   em que a rede estava ruim, e a home ficava só com instrumentos de medição.
+  */
+  const [movimentoFalhou, setMovimentoFalhou] = useState(false);
 
   const carregarCards = useCallback(async () => {
     await Promise.all([
@@ -98,8 +119,10 @@ export function HomeScreen() {
       ]).then(([treinos, esportes]) => {
         if (treinos === null && esportes === null) {
           setMovimento(null);
+          setMovimentoFalhou(true);
           return;
         }
+        setMovimentoFalhou(false);
         setMovimento(movementMinutes(treinos ?? [], esportes ?? []));
       }),
     ]);
@@ -119,13 +142,19 @@ export function HomeScreen() {
   }, [refreshInsight, hour]);
 
   // Puxar para atualizar substitui o "atualizar" que morava no bloco de
-  // estado: recarrega o insight à força e os dois cards de dados juntos.
+  // estado: recarrega o insight à força, os dois cards de dados e o ambiente.
+  // O clima entra aqui porque ele é o único dado da tela preso à POSIÇÃO — e
+  // quem viajou puxa a tela justamente para ver o lugar onde está agora.
   const [refreshing, setRefreshing] = useState(false);
   const aoAtualizar = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([refreshInsight(hour, { force: true }), carregarCards()]);
+    await Promise.all([
+      refreshInsight(hour, { force: true }),
+      carregarCards(),
+      refreshAmbient(),
+    ]);
     setRefreshing(false);
-  }, [refreshInsight, hour, carregarCards]);
+  }, [refreshInsight, hour, carregarCards, refreshAmbient]);
 
   /**
    * Sem leitura ainda — e isso NÃO pode ser um beco sem saída.
@@ -161,7 +190,38 @@ export function HomeScreen() {
                 : 'Sem leitura não há score — o resto do app continua acessível pelo menu.'}
             </Body>
 
-            <BandStatusLine marginTop="$lg" />
+            {/*
+              A lista de etapas ENTRA NO LUGAR da linha de estado durante a
+              sincronização — é a primeira meia hora de uso de quem acabou de
+              parear, e é onde a espera precisa se explicar sozinha. Fora dela,
+              a linha compacta basta.
+            */}
+            {sincronizando || syncError ? (
+              <YStack marginTop="$lg">
+                <Card>
+                  <SyncProgress />
+                </Card>
+              </YStack>
+            ) : (
+              <BandStatusLine marginTop="$lg" />
+            )}
+
+            {/*
+              A home é onde a pessoa está quando percebe que "não funciona".
+              Se o motivo for permissão negada, é aqui que o caminho de volta
+              precisa aparecer — e não só na tela de conexão, que quem já
+              pareou não visita mais.
+            */}
+            {permissaoNegadaEm(connectionReason) ? (
+              <YStack marginTop="$lg">
+                <PermissionGate
+                  permissao={permissaoNegadaEm(connectionReason)!}
+                  onTentarDeNovo={() => {
+                    if (typeof pairedDeviceId === 'string') void connect(pairedDeviceId);
+                  }}
+                />
+              </YStack>
+            ) : null}
 
             {/*
              Conectada e sem leitura, a ação útil é DESCOBRIR o que ela expõe
@@ -406,8 +466,10 @@ export function HomeScreen() {
           {ambient ? (
             <Data
               // Palavra além da cor no calor extremo, como antes: só a cor
-              // exclui quem não separa as cores.
-              color={ambient.heatStress ? '$destructive' : undefined}
+              // exclui quem não separa as cores. Token nos DOIS ramos: com
+              // `undefined` o padrão do `styled` não vale — ele é ANULADO, e o
+              // `Text` do React Native cai no preto, invisível no tema escuro.
+              color={ambient.heatStress ? '$destructive' : '$mutedForeground'}
               maxWidth={170}
               numberOfLines={2}
               textAlign="right"
@@ -458,6 +520,19 @@ export function HomeScreen() {
             onPress={() => abrir('Progress')}
           />
         </YStack>
+      ) : movimentoFalhou ? (
+        // Sem o histórico, o convite continua de pé — o que não se pode fazer é
+        // desenhar barras vazias, que diriam "você não se moveu" sobre algo que
+        // o app não conseguiu ler.
+        <YStack marginTop="$xxl">
+          <Card onPress={() => abrir('Sport')} accessibilityLabel="Começar um treino">
+            <Label marginBottom="$sm">movimento</Label>
+            <Body>
+              Não deu para carregar sua sequência agora. O treino de hoje não depende disso — toque
+              para começar.
+            </Body>
+          </Card>
+        </YStack>
       ) : null}
 
       {/* Os dois instrumentos de hoje, meio a meio: água (entrada) e bateria
@@ -466,18 +541,18 @@ export function HomeScreen() {
       {/* O gráfico de HRV, de volta (decisão da fundadora, ago/2026): a curva
           da última hora contra a faixa da própria média — só quando há
           medição, nunca decoração vazia. */}
-      {hrvHistory.length >= 2 ? (
+      {serieHrv.length >= 2 ? (
         <YStack marginTop="$xxl">
           <Card onPress={() => abrir('Hrv')} accessibilityLabel="Variabilidade cardíaca, abrir detalhe">
             <Label marginBottom="$md">variabilidade (hrv)</Label>
             <LineChart
-              data={hrvHistory}
+              data={serieHrv.map((p) => p.value)}
               width={larguraGrafico}
               height={120}
               markLast
               band={{ from: mediaHrv * 0.85, to: mediaHrv * 1.15 }}
               thresholds={[{ value: mediaHrv, label: 'sua média' }]}
-              xLabels={['1h atrás', '30 min', 'agora']}
+              xLabels={rotulosDoPeriodo(serieHrv)}
               id="hrv-home"
             />
           </Card>

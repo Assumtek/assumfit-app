@@ -4,6 +4,7 @@ import {
   rateBioAge,
   rateHeartRate,
   rateHrv,
+  rateMovement,
   ratePressure,
   rateSleep,
   rateSpo2,
@@ -37,6 +38,7 @@ const todas: Rating[] = [
   rateTemperature(36.6),
   ratePressure(118, 76),
   rateActivity({ steps: 7842, goal: 10000 }),
+  rateMovement({ minutes: 210, days: 7 }),
   rateBioAge(5),
 ];
 
@@ -88,6 +90,10 @@ describe('alerta é reservado para fora da faixa saudável', () => {
 
   it('não sinaliza atividade — meta não batida não é achado clínico', () => {
     expect(rateActivity({ steps: 100, goal: 10000 }).state).toBe('normal');
+  });
+
+  it('não sinaliza movimento — semana parada é rotina, não achado clínico', () => {
+    expect(rateMovement({ minutes: 0, days: 7 }).state).toBe('normal');
   });
 
   it('usa a cor de acento no normal e a de alerta fora da faixa', () => {
@@ -146,6 +152,19 @@ describe('rótulos por faixa', () => {
   it('sono formata a duração em horas e minutos', () => {
     expect(rateSleep(82, 432).detail).toBe('7h 12m');
     expect(rateSleep(82, 60).detail).toBe('1h 00m');
+  });
+
+  it('movimento mede contra a régua proporcional ao período', () => {
+    // 150 min por semana: a mesma pessoa em 30 dias precisa de ~643 min.
+    expect(rateMovement({ minutes: 150, days: 7 }).label).toBe('No ritmo');
+    expect(rateMovement({ minutes: 110, days: 7 }).label).toBe('Bom');
+    expect(rateMovement({ minutes: 30, days: 7 }).label).toBe('Pode melhorar');
+    expect(rateMovement({ minutes: 150, days: 30 }).label).toBe('Pode melhorar');
+  });
+
+  it('movimento mostra a duração como dado técnico, não o número de minutos cru', () => {
+    expect(rateMovement({ minutes: 45, days: 7 }).detail).toBe('45 min');
+    expect(rateMovement({ minutes: 620, days: 30 }).detail).toBe('10h20');
   });
 
   it('idade biológica descreve a diferença, não o número', () => {

@@ -1,39 +1,70 @@
+import { useNavigation } from '@react-navigation/native';
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable } from 'react-native';
 
 import { Note } from '../../components/Card';
 import { BarChart } from '../../components/charts/BarChart';
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon, type IconName } from '../../components/Icon';
-import { Body, Card, Data, Label, MetricSm, SectionTitle } from '../../components/ui';
+import {
+  Body,
+  Card,
+  Data,
+  Label,
+  Metric,
+  MetricSm,
+  RatingText,
+  SectionTitle,
+} from '../../components/ui';
+import {
+  consolidateMovement,
+  movementSeries,
+  movementTotals,
+  sportBreakdown,
+  weekdayTally,
+  type MovementEntry,
+} from '../../domain/movement';
+import { DASH, rateMovement } from '../../domain/ratings';
+import { SPORTS } from '../../domain/sport';
 import { formatDuration } from '../../domain/workout';
 import {
   fetchDashboard,
   fetchExecutionHistory,
+  fetchSportSessions,
   type ExecutionHistoryItem,
+  type SportSession,
   type WorkoutDashboard,
 } from '../../services/api.service';
 import { useTheme } from '../../theme/ThemeProvider';
 
 /**
- * Progresso — o relatório completo do que foi treinado.
+ * Progresso — o relatório completo do que foi MOVIMENTO, não só do que foi
+ * musculação.
  *
- * Estrutura portada do `StudentProgressReport` do MUVX: quatro números no topo,
- * volume por grupo muscular, evolução do volume e o detalhe exercício por
- * exercício. O seletor de período (hoje / 7 / 30 / 90) também é de lá.
+ * Estrutura portada do `StudentProgressReport` do MUVX: números no topo, volume
+ * por grupo muscular, evolução e o detalhe exercício por exercício. O seletor de
+ * período (hoje / 7 / 30 / 90) também é de lá.
+ *
+ * ## As duas naturezas não se somam em tudo
+ *
+ * Treino guiado e sessão de esporte entram juntos no que é COMUM às duas —
+ * atividades, minutos, caloria, constância, check-ins —, pela mesma regra de
+ * `domain/movement.ts` que a agenda de movimento usa (sessão vinculada a uma
+ * execução é um ato só). Já volume load (carga × repetições) fica na seção de
+ * musculação: uma corrida soma zero ali, e um total misturado diria que a
+ * semana de corrida foi uma semana fraca.
  *
  * ## Volume load é o número que faltava no app
  *
  * `carga × repetições`, somado. É a única métrica que responde "estou
- * progredindo?" — contagem de treinos responde "estou aparecendo", que é outra
- * pergunta. Duas sessões de peito com as mesmas séries podem ter volumes muito
- * diferentes, e é essa diferença que move adaptação.
+ * progredindo?" na musculação — contagem de treinos responde "estou
+ * aparecendo", que é outra pergunta.
  *
- * A agregação é toda do servidor. Trazer as séries cruas de 90 dias para o app
- * somar significaria trafegar tudo por causa de um gráfico de barras, e
- * recalcular a cada troca de período.
+ * A agregação de musculação é toda do servidor. Trazer as séries cruas de 90
+ * dias para o app somar significaria trafegar tudo por causa de um gráfico de
+ * barras, e recalcular a cada troca de período.
  */
 
 const PERIODOS = [
@@ -43,21 +74,30 @@ const PERIODOS = [
   { dias: 90 as const, rotulo: '90 dias' },
 ];
 
+type Linha = MovementEntry<ExecutionHistoryItem, SportSession>;
+
 export function ProgressScreen() {
-  const [aba, setAba] = useState<'treinos' | 'evolucao'>('treinos');
+  const [aba, setAba] = useState<'movimento' | 'evolucao'>('movimento');
   const [dias, setDias] = useState<1 | 7 | 30 | 90>(30);
   const [dados, setDados] = useState<WorkoutDashboard | null>(null);
   const [historico, setHistorico] = useState<ExecutionHistoryItem[]>([]);
+  const [esportes, setEsportes] = useState<SportSession[]>([]);
   const [carregando, setCarregando] = useState(true);
 
-  const carregar = React.useCallback(
-    () =>
-      Promise.all([
-        fetchDashboard(dias).then(setDados),
-        fetchExecutionHistory(dias).then(setHistorico),
-      ]).catch(() => setDados(null)),
-    [dias],
-  );
+  /*
+   Cada fonte falha por si. O esporte fora do ar não pode apagar o relatório de
+   musculação inteiro — nem o contrário.
+  */
+  const carregar = React.useCallback(async () => {
+    const [d, h, e] = await Promise.all([
+      fetchDashboard(dias).catch(() => null),
+      fetchExecutionHistory(dias).catch(() => []),
+      fetchSportSessions(dias).catch(() => []),
+    ]);
+    setDados(d);
+    setHistorico(h);
+    setEsportes(e);
+  }, [dias]);
 
   useEffect(() => {
     setCarregando(true);
@@ -66,12 +106,20 @@ export function ProgressScreen() {
 
   const refresh = usePullRefresh(carregar);
 
-  const vazio = !dados || dados.summary.totalWorkouts === 0;
+  const linhas = useMemo(() => consolidateMovement(historico, esportes), [historico, esportes]);
+  const totais = useMemo(() => movementTotals(linhas), [linhas]);
+  const modalidades = useMemo(() => sportBreakdown(esportes), [esportes]);
+  const movimento = rateMovement({ minutes: totais.minutos, days: dias });
+  const maiorModalidade = Math.max(...modalidades.map((m) => m.minutos), 1);
+  const maiorGrupo = Math.max(...(dados?.muscleDistribution ?? []).map((g) => g.volume), 1);
+
+  const musculacao = dados && dados.summary.totalWorkouts > 0 ? dados : null;
+  const vazio = linhas.length === 0 && !musculacao;
 
   return (
     <DetailScreen title="Progresso" refreshControl={refresh}>
       {/*
-        Treinos e Evolução são ABAS da mesma tela, como no MUVX.
+        Movimento e Evolução são ABAS da mesma tela, como no MUVX.
 
         A Evolução era uma tela própria no menu rápido, e a separação obrigava a
         escolher a porta certa antes de saber o que havia atrás de cada uma. As
@@ -81,7 +129,7 @@ export function ProgressScreen() {
       <XStack borderRadius={10} borderWidth={1} borderColor="$border" overflow="hidden" marginBottom="$md">
         {(
           [
-            ['treinos', 'Treinos'],
+            ['movimento', 'Movimento'],
             ['evolucao', 'Evolução'],
           ] as const
         ).map(([chave, rotulo]) => (
@@ -115,93 +163,79 @@ export function ProgressScreen() {
         <Body marginTop="$xl">Carregando…</Body>
       ) : vazio ? (
         <Note
-          title="Nada treinado neste período"
-          body="Séries, repetições e volume aparecem aqui depois da primeira sessão concluída. Troque o período acima para olhar mais para trás."
+          title="Nada registrado neste período"
+          body="Treino concluído e sessão de esporte aparecem aqui, com minutos, calorias e volume. Troque o período acima para olhar mais para trás."
         />
       ) : aba === 'evolucao' ? (
-        <Evolucao dados={dados} historico={historico} />
+        <Evolucao dados={musculacao} linhas={linhas} dias={dias} />
       ) : (
         <>
-          <YStack gap="$md" marginTop="$xl">
+          <YStack marginTop="$xl" gap="$md">
+            <SectionTitle>Movimento</SectionTitle>
+            <Card>
+              <Label>tempo em movimento</Label>
+              <XStack alignItems="baseline" gap="$sm" marginTop="$xs">
+                <Metric numberOfLines={1}>{movimento.detail}</Metric>
+                <Data>treino guiado e esporte</Data>
+              </XStack>
+              <RatingText marginTop="$sm">{movimento.label}</RatingText>
+              {/* Barra de PREENCHIMENTO: minutos acumulam rumo a uma régua, e a
+                  régua é o fim do trilho. */}
+              <YStack height={6} borderRadius={3} backgroundColor="$track" marginTop="$md" overflow="hidden">
+                <YStack
+                  height={6}
+                  borderRadius={3}
+                  backgroundColor="$primary"
+                  width={`${movimento.fraction * 100}%`}
+                />
+              </YStack>
+              {/* "Ritmo", e não "meta": a régua é proporcional ao período
+                  escolhido, e num dia ela vale um sétimo. */}
+              <Data marginTop="$sm">
+                {Math.round(movimento.fraction * 100)}% do ritmo de 150 min por semana
+              </Data>
+            </Card>
+
             <XStack gap="$md">
-              <Numero icone="dumbbell" valor={String(dados.summary.totalWorkouts)} rotulo="treinos" />
-              <Numero icone="checklist" valor={String(dados.summary.totalSeries)} rotulo="séries" />
-            </XStack>
-            <XStack gap="$md">
-              <Numero icone="skip" valor={String(dados.summary.totalReps)} rotulo="repetições" />
               <Numero
-                icone="clock"
-                valor={formatDuration(dados.summary.totalDuration)}
-                rotulo="tempo total"
+                icone="checklist"
+                valor={String(totais.atividades)}
+                rotulo={totais.atividades === 1 ? 'atividade' : 'atividades'}
+              />
+              {/*
+                Caloria é estimativa por MET do cronômetro de esporte. Sem
+                sessão cronometrada não há estimativa nenhuma — e "0 kcal"
+                depois de cinco treinos afirmaria que a pessoa não gastou nada.
+              */}
+              <Numero
+                icone="flame"
+                valor={totais.esportes > 0 ? totais.kcal.toLocaleString('pt-BR') : DASH}
+                rotulo="kcal estimadas"
               />
             </XStack>
           </YStack>
 
-          {/*
-            Volume load em destaque, sozinho e maior.
-
-            É o número que responde progressão, e enfileirá-lo com os outros
-            quatro o faria parecer um a mais. Em toneladas quando passa de mil:
-            "12.480 kg" é difícil de ler de relance, "12,5 t" não.
-          */}
-          <YStack marginTop="$md">
-            <Card>
-            <Label>volume total</Label>
-            <XStack alignItems="baseline" gap="$sm" marginTop="$xs">
-              <Text fontSize={38} fontWeight="200" letterSpacing={-1.6} color="$foreground" fontVariant={['tabular-nums']}>
-                {formatarVolume(dados.summary.volumeLoad)}
-              </Text>
-              <Data>carga × repetições</Data>
-            </XStack>
-            </Card>
-          </YStack>
-
-          {dados.volumeEvolution.length > 1 ? (
+          {modalidades.length > 0 ? (
             <YStack marginTop="$xxl" gap="$md">
-              <SectionTitle>Volume por dia</SectionTitle>
-              <Card>
-                <Medido>
-                  {(largura) => (
-                    <BarChart
-                      bars={dados.volumeEvolution.map((d) => ({
-                        label: d.day.slice(8),
-                        value: d.volume,
-                      }))}
-                      width={largura}
-                      height={150}
-                      labelEvery={Math.max(1, Math.ceil(dados.volumeEvolution.length / 6))}
-                    />
-                  )}
-                </Medido>
-              </Card>
-            </YStack>
-          ) : null}
-
-          {dados.muscleDistribution.length > 0 ? (
-            <YStack marginTop="$xxl" gap="$md">
-              <SectionTitle>Por grupo muscular</SectionTitle>
-              {dados.muscleDistribution.map((grupo) => (
-                <Card key={grupo.muscleGroup}>
+              <SectionTitle>Por modalidade</SectionTitle>
+              {modalidades.map((modalidade) => (
+                <Card key={modalidade.sport}>
                   <XStack alignItems="center" gap="$md">
                     <YStack flex={1} minWidth={0}>
-                      <Body color="$foreground">{nomeDoMusculo(grupo.muscleGroup)}</Body>
+                      <Body color="$foreground">{nomeDoEsporte(modalidade.sport)}</Body>
                       <Data>
-                        {grupo.series} {grupo.series === 1 ? 'série' : 'séries'}
+                        {modalidade.sessoes} {modalidade.sessoes === 1 ? 'sessão' : 'sessões'}
+                        {modalidade.metros > 0 ? ` · ${emKm(modalidade.metros)}` : ''}
                       </Data>
                     </YStack>
-                    <Data flexShrink={0}>{formatarVolume(grupo.volume)}</Data>
+                    <Data flexShrink={0}>{formatDuration(modalidade.minutos * 60)}</Data>
                   </XStack>
-                  {/*
-                    A barra é relativa ao MAIOR grupo do período, não a um teto
-                    fixo: aqui a pergunta é a proporção entre grupos — se o
-                    treino está desequilibrado —, e não o valor absoluto.
-                  */}
                   <YStack height={4} borderRadius={2} backgroundColor="$track" marginTop="$sm" overflow="hidden">
                     <YStack
                       height={4}
                       borderRadius={2}
                       backgroundColor="$primary"
-                      width={`${fracaoDoMaior(grupo.volume, dados.muscleDistribution) * 100}%`}
+                      width={`${fracaoDe(modalidade.minutos, maiorModalidade) * 100}%`}
                     />
                   </YStack>
                 </Card>
@@ -209,33 +243,127 @@ export function ProgressScreen() {
             </YStack>
           ) : null}
 
-          <YStack marginTop="$xxl" gap="$md">
-            <SectionTitle>Exercícios realizados</SectionTitle>
-            {dados.exercisesDetail.map((exercicio) => (
-              <Card key={exercicio.name}>
-                <YStack gap="$xs">
-                  <Body color="$foreground" numberOfLines={2}>
-                    {exercicio.name}
-                  </Body>
-                  <Data>{nomeDoMusculo(exercicio.muscleGroup)}</Data>
-                  <XStack gap="$xl" marginTop="$sm" flexWrap="wrap">
-                    <Miudo valor={String(exercicio.series)} rotulo="séries" />
-                    <Miudo valor={String(exercicio.reps)} rotulo="reps" />
-                    <Miudo valor={formatarVolume(exercicio.volume)} rotulo="volume" />
-                    {/*
-                      Carga máxima só aparece quando houve peso externo. Flexão e
-                      prancha entram com carga nula, e "0 kg" ali afirmaria que a
-                      pessoa levantou zero em vez de que o exercício é de peso
-                      corporal.
-                    */}
-                    {exercicio.maxLoad != null ? (
-                      <Miudo valor={`${exercicio.maxLoad} kg`} rotulo="carga máx." />
-                    ) : null}
+          {musculacao ? (
+            <>
+              <YStack marginTop="$xxl" gap="$md">
+                <SectionTitle>Musculação</SectionTitle>
+                <Body>Séries, repetições e carga vêm só do treino guiado.</Body>
+                <XStack gap="$md">
+                  <Numero
+                    icone="dumbbell"
+                    valor={String(musculacao.summary.totalWorkouts)}
+                    rotulo="treinos"
+                  />
+                  <Numero
+                    icone="checklist"
+                    valor={String(musculacao.summary.totalSeries)}
+                    rotulo="séries"
+                  />
+                </XStack>
+                <XStack gap="$md">
+                  <Numero icone="skip" valor={String(musculacao.summary.totalReps)} rotulo="repetições" />
+                  <Numero
+                    icone="clock"
+                    valor={formatDuration(musculacao.summary.totalDuration)}
+                    rotulo="tempo de treino"
+                  />
+                </XStack>
+
+                {/*
+                  Volume load em destaque, sozinho e maior.
+
+                  É o número que responde progressão, e enfileirá-lo com os
+                  outros quatro o faria parecer um a mais. Em toneladas quando
+                  passa de mil: "12.480 kg" é difícil de ler de relance,
+                  "12,5 t" não.
+                */}
+                <Card>
+                  <Label>volume total</Label>
+                  <XStack alignItems="baseline" gap="$sm" marginTop="$xs">
+                    <Metric numberOfLines={1}>{formatarVolume(musculacao.summary.volumeLoad)}</Metric>
+                    <Data>carga × repetições</Data>
                   </XStack>
+                </Card>
+              </YStack>
+
+              {musculacao.volumeEvolution.length > 1 ? (
+                <YStack marginTop="$xxl" gap="$md">
+                  <SectionTitle>Volume por dia</SectionTitle>
+                  <Card>
+                    <Medido>
+                      {(largura) => (
+                        <BarChart
+                          bars={musculacao.volumeEvolution.map((d) => ({
+                            label: d.day.slice(8),
+                            value: d.volume,
+                          }))}
+                          width={largura}
+                          height={150}
+                          labelEvery={Math.max(1, Math.ceil(musculacao.volumeEvolution.length / 6))}
+                          id="volume-dia"
+                        />
+                      )}
+                    </Medido>
+                  </Card>
                 </YStack>
-              </Card>
-            ))}
-          </YStack>
+              ) : null}
+
+              {musculacao.muscleDistribution.length > 0 ? (
+                <YStack marginTop="$xxl" gap="$md">
+                  <SectionTitle>Por grupo muscular</SectionTitle>
+                  {musculacao.muscleDistribution.map((grupo) => (
+                    <Card key={grupo.muscleGroup}>
+                      <XStack alignItems="center" gap="$md">
+                        <YStack flex={1} minWidth={0}>
+                          <Body color="$foreground">{nomeDoMusculo(grupo.muscleGroup)}</Body>
+                          <Data>
+                            {grupo.series} {grupo.series === 1 ? 'série' : 'séries'}
+                          </Data>
+                        </YStack>
+                        <Data flexShrink={0}>{formatarVolume(grupo.volume)}</Data>
+                      </XStack>
+                      <YStack height={4} borderRadius={2} backgroundColor="$track" marginTop="$sm" overflow="hidden">
+                        <YStack
+                          height={4}
+                          borderRadius={2}
+                          backgroundColor="$primary"
+                          width={`${fracaoDe(grupo.volume, maiorGrupo) * 100}%`}
+                        />
+                      </YStack>
+                    </Card>
+                  ))}
+                </YStack>
+              ) : null}
+
+              <YStack marginTop="$xxl" gap="$md">
+                <SectionTitle>Exercícios realizados</SectionTitle>
+                {musculacao.exercisesDetail.map((exercicio) => (
+                  <Card key={exercicio.name}>
+                    <YStack gap="$xs">
+                      <Body color="$foreground" numberOfLines={2}>
+                        {exercicio.name}
+                      </Body>
+                      <Data>{nomeDoMusculo(exercicio.muscleGroup)}</Data>
+                      <XStack gap="$xl" marginTop="$sm" flexWrap="wrap">
+                        <Miudo valor={String(exercicio.series)} rotulo="séries" />
+                        <Miudo valor={String(exercicio.reps)} rotulo="reps" />
+                        <Miudo valor={formatarVolume(exercicio.volume)} rotulo="volume" />
+                        {/*
+                          Carga máxima só aparece quando houve peso externo.
+                          Flexão e prancha entram com carga nula, e "0 kg" ali
+                          afirmaria que a pessoa levantou zero em vez de que o
+                          exercício é de peso corporal.
+                        */}
+                        {exercicio.maxLoad != null ? (
+                          <Miudo valor={`${exercicio.maxLoad} kg`} rotulo="carga máx." />
+                        ) : null}
+                      </XStack>
+                    </YStack>
+                  </Card>
+                ))}
+              </YStack>
+            </>
+          ) : null}
         </>
       )}
     </DetailScreen>
@@ -282,7 +410,7 @@ function SeletorDePeriodo({
   );
 }
 
-/** Um dos quatro números do topo. */
+/** Um dos números do topo. */
 function Numero({ icone, valor, rotulo }: { icone: IconName; valor: string; rotulo: string }) {
   const { colors } = useTheme();
   return (
@@ -332,10 +460,13 @@ function formatarVolume(kg: number): string {
   return `${kg} kg`;
 }
 
-function fracaoDoMaior(volume: number, todos: { volume: number }[]): number {
-  const maior = Math.max(...todos.map((t) => t.volume), 1);
-  return Math.max(volume / maior, 0.02);
-}
+const emKm = (metros: number) => `${(metros / 1000).toFixed(2).replace('.', ',')} km`;
+
+/**
+ * Largura da barra relativa ao MAIOR do conjunto, com um piso visível: aqui a
+ * pergunta é a proporção entre as linhas, não o valor absoluto.
+ */
+const fracaoDe = (valor: number, maior: number) => Math.max(valor / Math.max(maior, 1), 0.02);
 
 /** O enum do banco em português. `PEITO` não é o que se mostra numa tela. */
 const MUSCULO: Record<string, string> = {
@@ -361,21 +492,31 @@ const MUSCULO: Record<string, string> = {
 const nomeDoMusculo = (chave: string) =>
   MUSCULO[chave] ?? chave.charAt(0) + chave.slice(1).toLowerCase().replace(/_/g, ' ');
 
+const esporteMeta = (kind: string) => SPORTS.find((s) => s.kind === kind);
+
+const nomeDoEsporte = (kind: string) => esporteMeta(kind)?.label ?? kind;
+
 /**
  * A aba Evolução — tendência, não inventário.
  *
- * Três blocos, como no MUVX: a evolução do volume no período, a constância por
- * dia da semana e os últimos check-ins. O que era a tela "Evolução" (treinos
- * por semana) está coberto pelos dois primeiros.
+ * O movimento por dia vem das duas fontes; a evolução de volume, só da
+ * musculação. Os check-ins são a linha do tempo consolidada, e cada um abre o
+ * detalhe de onde nasceu.
  */
 function Evolucao({
   dados,
-  historico,
+  linhas,
+  dias,
 }: {
-  dados: WorkoutDashboard;
-  historico: ExecutionHistoryItem[];
+  dados: WorkoutDashboard | null;
+  linhas: Linha[];
+  dias: number;
 }) {
   const { colors } = useTheme();
+  const navigation = useNavigation<any>();
+
+  const serie = useMemo(() => movementSeries(linhas, dias, new Date()), [linhas, dias]);
+  const volume = dados?.volumeEvolution ?? [];
 
   /*
    Constância por dia da SEMANA, não por data.
@@ -385,37 +526,57 @@ function Evolucao({
    geração. Uma barra por data responderia outra pergunta, que a evolução de
    volume já responde.
   */
-  const porDiaDaSemana = new Array(7).fill(0);
-  for (const item of historico) {
-    if (item.status === 'FINISHED') porDiaDaSemana[new Date(item.startedAt).getDay()] += 1;
-  }
+  const porDiaDaSemana = useMemo(() => weekdayTally(linhas), [linhas]);
   const rotulos = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
   return (
     <YStack marginTop="$xl" gap="$xxl">
-      <YStack gap="$md">
-        <SectionTitle>Evolução de volume</SectionTitle>
-        {dados.volumeEvolution.length > 1 ? (
+      {serie.length > 1 ? (
+        <YStack gap="$md">
+          <SectionTitle>Movimento por dia</SectionTitle>
           <Card>
+            <Label>minutos</Label>
             <Medido>
               {(largura) => (
                 <BarChart
-                  bars={dados.volumeEvolution.map((d) => ({ label: d.day.slice(8), value: d.volume }))}
+                  bars={serie}
                   width={largura}
                   height={150}
-                  labelEvery={Math.max(1, Math.ceil(dados.volumeEvolution.length / 6))}
+                  labelEvery={Math.max(1, Math.ceil(serie.length / 6))}
+                  id="movimento-dia"
+                />
+              )}
+            </Medido>
+          </Card>
+        </YStack>
+      ) : null}
+
+      <YStack gap="$md">
+        <SectionTitle>Evolução de volume</SectionTitle>
+        {volume.length > 1 ? (
+          <Card>
+            <Label>musculação</Label>
+            <Medido>
+              {(largura) => (
+                <BarChart
+                  bars={volume.map((d) => ({ label: d.day.slice(8), value: d.volume }))}
+                  width={largura}
+                  height={150}
+                  labelEvery={Math.max(1, Math.ceil(volume.length / 6))}
+                  id="volume-evolucao"
                 />
               )}
             </Medido>
           </Card>
         ) : (
-          <Body>Com mais de um dia treinado no período, a curva aparece aqui.</Body>
+          <Body>Com mais de um dia de musculação no período, a curva aparece aqui.</Body>
         )}
       </YStack>
 
       <YStack gap="$md">
         <SectionTitle>Constância por dia da semana</SectionTitle>
         <Card>
+          <Label>atividades</Label>
           <Medido>
             {(largura) => (
               <BarChart
@@ -423,6 +584,7 @@ function Evolucao({
                 width={largura}
                 height={120}
                 labelEvery={1}
+                id="constancia-semana"
               />
             )}
           </Medido>
@@ -431,28 +593,68 @@ function Evolucao({
 
       <YStack gap="$md">
         <SectionTitle>Últimos check-ins</SectionTitle>
-        {historico.slice(0, 6).map((item) => (
-          <Card key={item.id}>
-            <XStack alignItems="center" gap="$md">
-              <YStack flex={1} minWidth={0} gap={2}>
-                <Body color="$foreground" numberOfLines={1}>
-                  {item.workoutName}
-                </Body>
-                <Data>
-                  {new Date(item.startedAt).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                  })}
-                  {item.durationSec ? ` · ${formatDuration(item.durationSec)}` : ''}
-                </Data>
-              </YStack>
-              <Data color={item.status === 'FINISHED' ? '$primary' : '$faint'}>
-                {item.status === 'FINISHED' ? 'Concluído' : 'Interrompido'}
-              </Data>
-              <Icon name="arrowRight" size={14} color={colors.textMuted} />
-            </XStack>
-          </Card>
-        ))}
+        {linhas.slice(0, 6).map((linha) => {
+          const data = new Date(linha.quando).toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+          });
+
+          if (linha.tipo === 'esporte') {
+            const sessao = linha.esporte;
+            const meta = esporteMeta(sessao.sport);
+            return (
+              <Card
+                key={`esporte-${sessao.id}`}
+                onPress={() => navigation.navigate('Sport', { abrirSessao: sessao })}
+                accessibilityLabel={`${nomeDoEsporte(sessao.sport)}, ${data}`}
+              >
+                <XStack alignItems="center" gap="$md">
+                  <Icon name={meta?.icon ?? 'footprints'} size={15} color={colors.textMuted} />
+                  <YStack flex={1} minWidth={0} gap={2}>
+                    <Body color="$foreground" numberOfLines={1}>
+                      {nomeDoEsporte(sessao.sport)}
+                    </Body>
+                    <Data>
+                      {data} · {formatDuration(sessao.durationS)}
+                      {sessao.distanceM ? ` · ${emKm(sessao.distanceM)}` : ''}
+                    </Data>
+                  </YStack>
+                  <Icon name="arrowRight" size={14} color={colors.textMuted} />
+                </XStack>
+              </Card>
+            );
+          }
+
+          const item = linha.treino;
+          return (
+            <Card
+              key={`treino-${item.id}`}
+              onPress={() => navigation.push('ExecutionDetail', { id: item.id })}
+              accessibilityLabel={`${item.workoutName}, ${data}`}
+            >
+              <XStack alignItems="center" gap="$md">
+                <Icon name="dumbbell" size={15} color={colors.textMuted} />
+                <YStack flex={1} minWidth={0} gap={2}>
+                  <Body color="$foreground" numberOfLines={1}>
+                    {item.workoutName}
+                  </Body>
+                  <Data>
+                    {data}
+                    {item.durationSec ? ` · ${formatDuration(item.durationSec)}` : ''}
+                  </Data>
+                </YStack>
+                {/*
+                  O abandono é dito em palavra, não em cor: `$destructive` é
+                  reservado a valor fora da faixa saudável, e pintar de vermelho
+                  um treino interrompido transformaria uma escolha de rotina em
+                  falha clínica.
+                */}
+                {item.status !== 'FINISHED' ? <Data flexShrink={0}>interrompido</Data> : null}
+                <Icon name="arrowRight" size={14} color={colors.textMuted} />
+              </XStack>
+            </Card>
+          );
+        })}
       </YStack>
     </YStack>
   );

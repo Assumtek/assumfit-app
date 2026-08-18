@@ -13,6 +13,41 @@
 
 export type WaterNudge = { title: string; body: string };
 
+/** O consumo de um dia, com a data a que ele pertence. */
+export type DiaDeAgua = { date: string; waterMl: number; pours: number[] };
+
+/**
+ * Data de HOJE no calendário de quem está segurando o celular.
+ *
+ * `toISOString().slice(0,10)` parece a forma óbvia e está errada: converte para
+ * UTC antes de cortar, e às 22h no Brasil já devolve a data de amanhã.
+ */
+export function isoHoje(d = new Date()): string {
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const dia = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mes}-${dia}`;
+}
+
+/**
+ * O dia corrente — zerado quando o relógio virou desde o último registro.
+ *
+ * Existe por um defeito relatado em campo (ago/2026): a água não zerava de um
+ * dia para o outro. O estado do dia nascia com a data do instante em que o app
+ * abria e NUNCA rolava. Como o iOS mantém o app suspenso por dias, quem não
+ * fechava o app à força continuava vendo o total de ontem na manhã seguinte —
+ * e, pior, cada gole novo era gravado NA DATA DE ONTEM, corrompendo o
+ * histórico junto.
+ *
+ * A recarga do servidor não salvava: ela só substituía o total quando havia
+ * registro para hoje, e no começo do dia não há — então o valor velho
+ * sobrevivia justamente na hora em que precisava sumir. Zerar tem de ser o
+ * padrão, e não a consequência de encontrar um registro.
+ */
+export function diaCorrente(dia: DiaDeAgua, hoje = isoHoje()): DiaDeAgua {
+  if (dia.date === hoje) return dia;
+  return { date: hoje, waterMl: 0, pours: [] };
+}
+
 /** `1500` → `1,5`. Vírgula, porque a tela é em português. */
 const litros = (ml: number) => (ml / 1000).toFixed(1).replace('.', ',');
 

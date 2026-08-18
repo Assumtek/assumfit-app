@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import { YStack } from '@tamagui/stacks';
 import React, { useCallback, useEffect, useState } from 'react';
 import { LayoutChangeEvent } from 'react-native';
@@ -28,6 +29,7 @@ import { useUserStore } from '../store/user.store';
  * decomposição por marcador e as fontes de onde cada número saiu.
  */
 export function BioAgeScreen() {
+  const navigation = useNavigation<any>();
   const latest = useBiometricStore((s) => s.latest);
   const sleep = useBiometricStore((s) => s.sleep);
   const user = useUserStore((s) => s.user);
@@ -159,8 +161,9 @@ export function BioAgeScreen() {
 
       {imc == null ? (
         <Note
-          title="Responda a anamnese para afinar o número"
-          body="Sem peso e altura, o cálculo usa um IMC médio no lugar do seu — o resto continua sendo medida sua."
+          title="Falta o seu peso e a sua altura"
+          body="Sem eles, o cálculo usa um IMC médio no lugar do seu — o resto continua sendo medida sua. Os dois são perguntas da anamnese."
+          action={{ label: 'Responder anamnese', onPress: () => navigation.push('Anamnesis') }}
         />
       ) : null}
 

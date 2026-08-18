@@ -1,4 +1,14 @@
-import { buildMovementWeek, dayKey, movementMinutes, weeklySeries } from '../movement';
+import {
+  buildMovementWeek,
+  consolidateMovement,
+  dayKey,
+  movementMinutes,
+  movementSeries,
+  movementTotals,
+  sportBreakdown,
+  weekdayTally,
+  weeklySeries,
+} from '../movement';
 
 // Quarta-feira, 12 de agosto de 2026, meio-dia local.
 const QUARTA = new Date(2026, 7, 12, 12, 0, 0);
@@ -137,5 +147,123 @@ describe('weeklySeries', () => {
   it('sem pontos, devolve as semanas zeradas com os rótulos certos', () => {
     const serie = weeklySeries([], 2, QUARTA);
     expect(serie.map((s) => s.label)).toEqual(['3/8', '10/8']);
+  });
+});
+
+describe('consolidateMovement', () => {
+  it('junta as duas fontes numa linha do tempo, do mais recente ao mais antigo', () => {
+    const linhas = consolidateMovement(
+      [exec(new Date(2026, 7, 10, 8, 0), 40)],
+      [sessao(new Date(2026, 7, 11, 19, 0), 25)],
+    );
+    expect(linhas.map((l) => l.tipo)).toEqual(['esporte', 'treino']);
+  });
+
+  it('sessão vinculada substitui a execução: o ato aparece uma vez só', () => {
+    const linhas = consolidateMovement(
+      [{ ...exec(new Date(2026, 7, 12, 8, 0), 40), id: 'exec-1' }],
+      [{ ...sessao(new Date(2026, 7, 12, 8, 5), 42), workoutExecutionId: 'exec-1' }],
+    );
+    expect(linhas).toHaveLength(1);
+    expect(linhas[0].tipo).toBe('esporte');
+  });
+
+  it('não filtra por estado — o interrompido continua na lista', () => {
+    const linhas = consolidateMovement(
+      [exec(new Date(2026, 7, 12, 8, 0), 12, 'CANCELLED')],
+      [],
+    );
+    expect(linhas).toHaveLength(1);
+  });
+});
+
+describe('movementTotals', () => {
+  it('soma minutos e calorias das duas fontes, contando só o que valeu', () => {
+    const totais = movementTotals(
+      consolidateMovement(
+        [
+          exec(new Date(2026, 7, 10, 8, 0), 40),
+          exec(new Date(2026, 7, 11, 8, 0), 30, 'CANCELLED'),
+        ],
+        [{ ...sessao(new Date(2026, 7, 11, 19, 0), 25), kcal: 260 }],
+      ),
+    );
+    expect(totais).toEqual({ atividades: 2, minutos: 65, esportes: 1, kcal: 260 });
+  });
+
+  it('sem sessão de esporte não há caloria estimada', () => {
+    const totais = movementTotals(consolidateMovement([exec(new Date(2026, 7, 10, 8, 0), 50)], []));
+    expect(totais.kcal).toBe(0);
+    expect(totais.esportes).toBe(0);
+  });
+
+  it('o ato vinculado conta uma vez, com os números da sessão', () => {
+    const totais = movementTotals(
+      consolidateMovement(
+        [{ ...exec(new Date(2026, 7, 12, 8, 0), 40), id: 'exec-1' }],
+        [
+          {
+            ...sessao(new Date(2026, 7, 12, 8, 5), 42),
+            kcal: 400,
+            workoutExecutionId: 'exec-1',
+          },
+        ],
+      ),
+    );
+    expect(totais).toEqual({ atividades: 1, minutos: 42, esportes: 1, kcal: 400 });
+  });
+});
+
+describe('sportBreakdown', () => {
+  it('agrupa por modalidade, da mais praticada para a menos', () => {
+    const tally = sportBreakdown([
+      { sport: 'corrida', durationS: 1800, kcal: 300, distanceM: 5000 },
+      { sport: 'yoga', durationS: 3600, kcal: 150, distanceM: null },
+      { sport: 'corrida', durationS: 2400, kcal: 380, distanceM: 7000 },
+    ]);
+    expect(tally.map((t) => t.sport)).toEqual(['corrida', 'yoga']);
+    expect(tally[0]).toEqual({
+      sport: 'corrida',
+      sessoes: 2,
+      minutos: 70,
+      kcal: 680,
+      metros: 12000,
+    });
+    expect(tally[1].metros).toBe(0);
+  });
+});
+
+describe('weekdayTally', () => {
+  it('conta atividades por dia da semana, domingo na posição zero', () => {
+    const linhas = consolidateMovement(
+      [
+        exec(new Date(2026, 7, 10, 8, 0), 40), // segunda
+        exec(new Date(2026, 7, 11, 8, 0), 40, 'CANCELLED'), // terça, não conta
+      ],
+      [sessao(new Date(2026, 7, 9, 8, 0), 30)], // domingo
+    );
+    expect(weekdayTally(linhas)).toEqual([1, 1, 0, 0, 0, 0, 0]);
+  });
+});
+
+describe('movementSeries', () => {
+  it('devolve um balde por dia do período, terminando hoje', () => {
+    const serie = movementSeries(
+      consolidateMovement(
+        [exec(new Date(2026, 7, 10, 8, 0), 40)],
+        [sessao(new Date(2026, 7, 12, 7, 0), 20)],
+      ),
+      7,
+      QUARTA,
+    );
+    expect(serie).toHaveLength(7);
+    expect(serie[serie.length - 1]).toEqual({ label: '12', value: 20 });
+    expect(serie[serie.length - 3]).toEqual({ label: '10', value: 40 });
+  });
+
+  it('dia sem movimento vale zero, não some da série', () => {
+    const serie = movementSeries([], 3, QUARTA);
+    expect(serie.map((p) => p.value)).toEqual([0, 0, 0]);
+    expect(serie.map((p) => p.label)).toEqual(['10', '11', '12']);
   });
 });

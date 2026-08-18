@@ -1,9 +1,10 @@
+import { useNavigation } from '@react-navigation/native';
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
 import { LayoutChangeEvent, Pressable } from 'react-native';
 
-import { Row, Section } from '../components/Card';
+import { Note, Row, Section } from '../components/Card';
 import { WaterReminder } from '../components/SedentaryReminder';
 import { DetailScreen } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
@@ -35,6 +36,7 @@ function remainingLabel(remainingMl: number, copoMl: number): string {
 
 export function HabitsScreen() {
   const { colors } = useTheme();
+  const navigation = useNavigation<any>();
   const today = useHabitsStore((s) => s.today);
   const week = useHabitsStore((s) => s.week);
   const goalMl = useHabitsStore((s) => s.goalMl);
@@ -45,6 +47,8 @@ export function HabitsScreen() {
   const setContainerMl = useHabitsStore((s) => s.setContainerMl);
   const [chartWidth, setChartWidth] = useState(0);
   const [ajustando, setAjustando] = useState(false);
+  /** `null` enquanto a anamnese não respondeu — só depois dá para dizer o que falta. */
+  const [pesoDeclarado, setPesoDeclarado] = useState<boolean | null>(null);
   const refreshGoal = useHabitsStore((s) => s.refreshGoal);
   const goalReason = useHabitsStore((s) => s.goalReason);
   const user = useUserStore((s) => s.user);
@@ -74,6 +78,7 @@ export function HabitsScreen() {
 
       const respostas = anamnese?.answers as { weightKg?: number } | undefined;
       const peso = typeof respostas?.weightKg === 'number' ? respostas.weightKg : null;
+      setPesoDeclarado(peso != null);
 
       const vinculadas = new Set(
         sessoes.map((se) => se.workoutExecutionId).filter((id): id is string => !!id),
@@ -219,6 +224,14 @@ export function HabitsScreen() {
           <MetricSm fontSize={17}>{today.pours.length}</MetricSm>
         </Row>
       </Section>
+
+      {pesoDeclarado === false ? (
+        <Note
+          title="A meta ainda não usa o seu peso"
+          body="Sem ele, ela cai numa referência por sexo. O peso é uma das perguntas da anamnese, e responder passa a meta a ser calculada para você."
+          action={{ label: 'Responder anamnese', onPress: () => navigation.push('Anamnesis') }}
+        />
+      ) : null}
 
       {/* O ajuste dos recipientes: uma folha, porque é tarefa fechada e rara —
           entra, corrige o volume, sai. */}

@@ -163,6 +163,23 @@ declare class QCBandNativeModule extends NativeModule<QCBandEvents> {
   getBattery(): Promise<{ level: number; charging: boolean }>;
   /** Vibra a pulseira — o "localizar" de quem não lembra onde a deixou. */
   findBand(): Promise<boolean>;
+  /** Uma vibração curta agora, para um aviso nosso. Exige app vivo e conectado. */
+  vibrate(): Promise<boolean>;
+  /**
+   * Liga o ANCS na pulseira — o que faz o iOS oferecer o emparelhamento de
+   * sistema, sem o qual nenhuma notificação chega ao pulso com o app fechado.
+   */
+  enableAncs(): Promise<boolean>;
+  /**
+   * O filtro de avisos por CATEGORIA, o vocabulário fixo do firmware.
+   *
+   * `type` é o índice de `QC_FILTER_APP_TYPE`: 0 telefone, 1 SMS, 5 WhatsApp,
+   * 16 "outros"… Não existe identificador de app em lugar nenhum do comando —
+   * é por isso que um app fora da lista só pode ser notificado como "outros".
+   */
+  getNotificationFilter(): Promise<{ type: number; enabled: boolean }[]>;
+  /** Substitui o conjunto INTEIRO: mandar só o que mudou apaga o resto. */
+  setNotificationFilter(entries: { type: number; enabled: boolean }[]): Promise<boolean>;
 }
 
 export const QCBand = requireOptionalNativeModule<QCBandNativeModule>('QCBand');

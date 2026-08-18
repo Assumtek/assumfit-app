@@ -2,7 +2,7 @@ import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 
-import type { MeasurableKind } from '../services/ble';
+import type { MeasurableKind, SyncStep } from '../services/ble';
 import { useBiometricStore } from '../store/biometric.store';
 import { useTheme } from '../theme/ThemeProvider';
 import { Body, Data } from './ui';
@@ -10,6 +10,26 @@ import { MeasureButton } from './MeasureButton';
 
 /** Depois de quanto tempo "conectando" merece uma explicação melhor. */
 const CONNECTING_SLOW_MS = 12_000;
+
+/**
+ * O nome de cada etapa, na língua de quem usa.
+ *
+ * Não é o nome da consulta do SDK: `getSpo2History` não diz nada a ninguém, e
+ * "oxigenação" diz tudo. A ordem é a mesma em que a ponte pergunta.
+ */
+export const SYNC_LABEL: Record<SyncStep, string> = {
+  heartRate: 'Batimentos do dia',
+  hrv: 'Variabilidade cardíaca',
+  stress: 'Estresse',
+  spo2: 'Oxigenação',
+  pressure: 'Pressão',
+  steps: 'Passos',
+  sleep: 'Sono da noite',
+  memory: 'Noites guardadas na pulseira',
+};
+
+/** As grandezas da leitura do dia, na ordem — a lista que a tela mostra. */
+export const SYNC_ORDER: SyncStep[] = ['heartRate', 'hrv', 'stress', 'spo2', 'pressure', 'steps'];
 
 const MEASURE_LABEL: Record<MeasurableKind, string> = {
   oneKey: 'Medindo batimento, oxigênio e pressão…',
@@ -52,21 +72,35 @@ export function useBandStatus(): { text: string | null; busy: boolean } {
 
   if (connection === 'connecting') {
     return lenta
-      ? { text: 'A pulseira está demorando a responder — aproxime-a do celular.', busy: true }
+      ? {
+          text: 'A pulseira está demorando a responder — aproxime-a do celular.',
+          busy: true,
+        }
       : { text: 'Conectando à pulseira…', busy: true };
   }
 
   if (connection === 'error') {
     // O motivo vem do serviço quando ele sabe ("feche o app do fabricante…");
     // sem motivo, a frase genérica ainda diz o que fazer.
-    return { text: reason ?? 'A conexão falhou. Tente reconectar.', busy: false };
+    return {
+      text: reason ?? 'A conexão falhou. Tente reconectar.',
+      busy: false,
+    };
   }
 
   if (connection !== 'connected') return { text: null, busy: false };
 
   if (measuring) return { text: MEASURE_LABEL[measuring], busy: true };
-  if (bandActivity?.kind === 'measure') return { text: MEASURE_LABEL[bandActivity.what], busy: true };
-  if (bandActivity?.kind === 'sync') return { text: 'Lendo a memória da pulseira…', busy: true };
+  if (bandActivity?.kind === 'measure')
+    return { text: MEASURE_LABEL[bandActivity.what], busy: true };
+  if (bandActivity?.kind === 'sync') {
+    // "Lendo a memória da pulseira…" durante quarenta segundos é a mesma frase
+    // parada — e frase parada lê como travado. Nomear a grandeza que está
+    // chegando transforma a mesma espera em progresso visível.
+    const { step, done, total } = bandActivity;
+    const sufixo = total > 1 ? ` · ${done} de ${total}` : '';
+    return { text: `${SYNC_LABEL[step]}${sufixo}`, busy: true };
+  }
 
   return {
     text: 'Conectada — esperando a primeira leitura do sensor.',

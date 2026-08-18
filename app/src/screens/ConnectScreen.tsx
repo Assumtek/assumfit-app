@@ -6,6 +6,7 @@ import { Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '../components/Icon';
+import { PermissionGate, permissaoNegadaEm } from '../components/PermissionGate';
 import { LogoType } from '../components/Logo';
 import { Body, Data, Label } from '../components/ui';
 import type { DiscoveredDevice } from '../services/ble';
@@ -172,7 +173,21 @@ export function ConnectScreen() {
             pede uma ação diferente de quem está com o relógio na mão. O
             `connectionReason` cobre a falha que chega DEPOIS do connect — a
             entrega ao SDK recusada, o app do fabricante segurando a pulseira. */}
-        {connectError ?? (connection === 'error' ? connectionReason : null) ? (
+        {/*
+          Permissão NEGADA não é mensagem de erro: é um beco sem saída, e a
+          saída fica em outro app. Alguém recusou o acesso na abertura e
+          acabou apagando e reinstalando o AssumFit para voltar a funcionar
+          (ago/2026) — este bloco existe para que ninguém precise disso de
+          novo.
+        */}
+        {permissaoNegadaEm(connectionReason) ? (
+          <YStack marginTop="$md">
+            <PermissionGate
+              permissao={permissaoNegadaEm(connectionReason)!}
+              onTentarDeNovo={() => startScan()}
+            />
+          </YStack>
+        ) : connectError ?? (connection === 'error' ? connectionReason : null) ? (
           <Data color="$destructive">
             {connectError ?? connectionReason}
           </Data>

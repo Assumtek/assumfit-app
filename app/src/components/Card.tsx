@@ -2,7 +2,7 @@ import { XStack, YStack } from '@tamagui/stacks';
 import React from 'react';
 
 import { useTheme } from '../theme/ThemeProvider';
-import { Body, Data, Label, SectionTitle } from './ui';
+import { Body, Button, Data, Label, SectionTitle } from './ui';
 
 /**
  * Agrupamento de conteúdo, separado por um fio.
@@ -74,11 +74,29 @@ export function Row({
 }
 
 /** Nota explicativa de fim de tela. Sem caixa, sem ícone — só texto contido. */
-export function Note({ title, body }: { title: string; body: string }) {
+export function Note({
+  title,
+  body,
+  action,
+}: {
+  title: string;
+  body: string;
+  /**
+   * Saída para o estado descrito. Uma nota que pede uma providência sem
+   * oferecer o caminho até ela é um beco: quem lê fica sabendo o que falta e
+   * não tem como resolver.
+   */
+  action?: { label: string; onPress: () => void };
+}) {
   return (
     <YStack paddingVertical="$xl" borderTopWidth={1} borderTopColor="$border">
       <Label marginBottom="$md">{title}</Label>
       <Body>{body}</Body>
+      {action ? (
+        <YStack alignSelf="flex-start" marginTop="$lg">
+          <Button title={action.label} variant="secondary" size="md" onPress={action.onPress} />
+        </YStack>
+      ) : null}
     </YStack>
   );
 }

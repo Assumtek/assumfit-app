@@ -80,6 +80,35 @@ class OpenMeteoProvider implements WeatherProvider {
 export type MorningForecast = { temperatureC: number; humidityPct: number; hour: string };
 
 /**
+ * O carimbo `YYYY-MM-DDT07:00` da manhã de amanhã NO FUSO DO PONTO consultado.
+ *
+ * O servidor roda em UTC e o Open-Meteo escreve `hourly.time` em hora LOCAL
+ * (`timezone: 'auto'`). Tirar a data de `toISOString()` adianta o dia para quem
+ * está a oeste de Greenwich: das 21h em diante, no Brasil, o alvo virava
+ * depois-de-amanhã — dia que `forecast_days: 2` nem devolve. O resultado era
+ * 503 e o "bom dia" sem reagendamento justamente para quem abre o app à noite.
+ *
+ * `utc_offset_seconds` vem na mesma resposta e é o fuso em que a série foi
+ * escrita. Sem ele, a âncora é o primeiro carimbo dela, que é 00:00 de hoje no
+ * mesmo fuso.
+ */
+export function tomorrowMorningKey(
+  utcOffsetSeconds: unknown,
+  hours: string[],
+  now: number = Date.now(),
+): string {
+  const today =
+    typeof utcOffsetSeconds === 'number' && Number.isFinite(utcOffsetSeconds)
+      ? new Date(now + utcOffsetSeconds * 1000).toISOString().slice(0, 10)
+      : (hours[0] ?? '').slice(0, 10);
+
+  const dia = new Date(`${today}T00:00:00Z`);
+  if (Number.isNaN(dia.getTime())) throw new Error('previsão sem série horária');
+  dia.setUTCDate(dia.getUTCDate() + 1);
+  return `${dia.toISOString().slice(0, 10)}T07:00`;
+}
+
+/**
  * A previsão de AMANHÃ às 7h — o insumo do "bom dia" agendado.
  *
  * Previsão, e não leitura atual: a notificação é agendada hoje para tocar
@@ -98,8 +127,7 @@ export async function fetchMorningForecast(lat: number, lon: number): Promise<Mo
     timeout: 6000,
   });
   const horas: string[] = data?.hourly?.time ?? [];
-  const amanha = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
-  const alvo = `${amanha}T07:00`;
+  const alvo = tomorrowMorningKey(data?.utc_offset_seconds, horas);
   const i = horas.indexOf(alvo);
   if (i === -1) throw new Error('previsão sem a manhã de amanhã');
   return {

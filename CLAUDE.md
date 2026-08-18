@@ -334,6 +334,29 @@ SDK porque ele descreve a família inteira de aparelhos do fabricante.
 `getSchedualHRV` dizem se ela ESTÁ medindo. Chegam desligados — e desligados, a
 medição sob demanda conclui com sucesso e devolve vazio.
 
+**Toda chamada ao SDK passa por `services/ble/timeout.ts`.** O bloco de
+conclusão do fabricante pode simplesmente não ser chamado — pulseira que saiu de
+alcance, sensor que não converge, pacote que não volta pelo canal serial — e a
+promessa fica **pendente para sempre**. `.catch()` não cobre isso: ele trata
+rejeição, e aqui não há rejeição, há ausência. O sintoma é sempre o mesmo, um
+indicador girando até o app ser fechado, e ele apareceu em três lugares
+independentes (medir, sincronizar, buscar a noite) antes de virar regra. `comTeto`
+é obrigatório; o teto por consulta e o teto da sincronização inteira são duas
+redes distintas e as duas precisam existir.
+
+**Espera longa se conta por etapa.** A leitura da memória são seis consultas em
+série e leva perto de um minuto. Uma pessoa em teste (ago/2026) tocou em
+sincronizar, viu um indicador mudo, concluiu que o app estava quebrado e o
+desinstalou. `BandActivity` carrega `step`/`done`/`total`, e `SyncProgress`
+transforma isso na lista de etapas — o que já chegou, o que está chegando, o que
+falta.
+
+**Série na tela vem da MEMÓRIA do aparelho, nunca do acúmulo ao vivo.** A leitura
+contínua carrega sempre a última amostra conhecida de HRV (o score precisa dela a
+cada batimento), então empilhá-la a cada evento produzia noventa cópias do mesmo
+número desenhadas como noventa medições. Quem separa amostra nova de repetida é o
+CARIMBO, não o valor — `domain/series.ts::comAmostraDeHrv`.
+
 O framework é **arm64 puro, sem fatia de simulador**. A saída NÃO é excluir o
 alvo de simulador no podspec: `EXCLUDED_ARCHS` em `user_target_xcconfig` vaza
 para o alvo do APP e o projeto inteiro fica sem destino de simulador — o app
@@ -356,6 +379,26 @@ basta — é preciso perguntar se há rádio.
 do app; uma versão que limpava o singleton e ligava os blocos ali fez o app
 fechar sozinho ao abrir. O primeiro contato é em `connect`, quando alguém já
 escolheu um aparelho.
+
+**Vibrar no pulso com aviso do app: o iOS entrega, não nós.** A notificação vai
+do sistema direto para a pulseira pelo **ANCS** (`setANCSFlag` no SDK), e é por
+isso que funciona com o app fechado — mas exige o emparelhamento de SISTEMA
+(o diálogo "deseja emparelhar?"), que a conexão pelo nosso app não substitui.
+
+O filtro do firmware é por **categoria**, de um vocabulário fixo
+(`QC_FILTER_APP_TYPE`: telefone, SMS, WhatsApp, Instagram, Telegram…), e o
+comando **não aceita identificador de app**. O AssumFit não tem categoria: só
+existe pelo balde de "outros", e ligá-lo faz a pulseira vibrar com todo app que
+o firmware não reconhece. Isso é limitação do hardware, e a tela diz.
+
+São três baldes (`Other1`, `Other2`, `Others`) e o cabeçalho não diz qual recebe
+app desconhecido — ligamos os três. `getNotificationFilter` mostra o que ESTE
+firmware devolve; com a pulseira na mão, dá para reduzir a um.
+
+Com o app VIVO existe o caminho curto: `vibrate()` (o mesmo
+`alertBindingSuccess` do "localizar"). É o que avisa o fim do descanso entre
+séries, quando o celular está no chão. Temporizador de JS, que o iOS congela em
+segundo plano — por isso os dois caminhos existem, e cobrem metades diferentes.
 
 **A pergunta em aberto:** o cabeçalho marca HRV como "Only Ring Support", mas
 existem as flags `QCBandFeatureHRV` e `QCBandFeatureHRVInterval`, devolvidas

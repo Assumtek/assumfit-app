@@ -9,15 +9,20 @@ import { MeasureButton } from '../components/MeasureButton';
 import { LineChart } from '../components/charts/LineChart';
 import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
 import { rateHrv, shown } from '../domain/ratings';
+import { faixaInicial, FAIXAS, noPeriodo, rotulosDoPeriodo, type Faixa } from '../domain/series';
 import { useBiometricStore } from '../store/biometric.store';
-
-const RANGES = ['1H', '6H', '24H', '7D'] as const;
 
 export function HrvScreen() {
   const latest = useBiometricStore((s) => s.latest);
   const hrvHistory = useBiometricStore((s) => s.hrvHistory);
   const hrHistory = useBiometricStore((s) => s.hrHistory);
-  const [range, setRange] = useState<(typeof RANGES)[number]>('1H');
+  /*
+   A aba inicial é decidida pelo DADO, uma vez.
+
+   Num `useState` com inicializador preguiçoso de propósito: recalcular a cada
+   render arrancaria a aba da mão de quem acabou de tocar em outra.
+  */
+  const [range, setRange] = useState<Faixa>(() => faixaInicial(hrvHistory));
   const [chartWidth, setChartWidth] = useState(0);
 
   if (!latest)
@@ -28,10 +33,18 @@ export function HrvScreen() {
     );
 
   const rating = rateHrv(latest.hrvMs);
-  const baseline = hrvHistory.length
-    ? hrvHistory.reduce((a, b) => a + b, 0) / hrvHistory.length
+  const serie = noPeriodo(hrvHistory, range);
+  /*
+   A linha de base é da JANELA em vista, não da série inteira.
+
+   É o que dá sentido a trocar de aba: a média de sete dias comparada com as
+   últimas seis horas responde "hoje está diferente do meu normal?", e uma
+   média fixa responderia sempre a mesma coisa em qualquer aba.
+  */
+  const baseline = serie.length
+    ? serie.reduce((soma, p) => soma + p.value, 0) / serie.length
     : latest.hrvMs;
-  const recent = hrHistory.slice(-30);
+  const recent = hrHistory.slice(-30).map((p) => p.value);
   const min = recent.length ? Math.round(Math.min(...recent)) : '—';
   const max = recent.length ? Math.round(Math.max(...recent)) : '—';
 
@@ -52,13 +65,27 @@ export function HrvScreen() {
       </YStack>
 
       <XStack gap="$xl" marginBottom="$lg">
-        {RANGES.map((r) => (
-          <Pressable key={r} onPress={() => setRange(r)} hitSlop={10} accessibilityRole="tab">
-            <Data letterSpacing={1} color={range === r ? '$foreground' : '$faint'}>
-              {r}
-            </Data>
-          </Pressable>
-        ))}
+        {FAIXAS.map((r) => {
+          // Faixa sem curva fica visivelmente indisponível em vez de levar a um
+          // vazio: o controle passa a informar onde há dado antes do toque.
+          const vazia = noPeriodo(hrvHistory, r).length < 2;
+          return (
+            <Pressable
+              key={r}
+              onPress={() => setRange(r)}
+              hitSlop={10}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: range === r, disabled: vazia }}
+            >
+              <Data
+                letterSpacing={1}
+                color={range === r ? '$foreground' : vazia ? '$faint' : '$mutedForeground'}
+              >
+                {r}
+              </Data>
+            </Pressable>
+          );
+        })}
       </XStack>
 
       <YStack
@@ -72,9 +99,9 @@ export function HrvScreen() {
           sabia se o app estava carregando, quebrado ou sem dado. Agora a
           ausência é dita, com o caminho para resolvê-la logo abaixo.
         */}
-        {hrvHistory.length >= 2 ? (
+        {serie.length >= 2 ? (
           <LineChart
-            data={hrvHistory}
+            data={serie.map((p) => p.value)}
             width={chartWidth}
             height={150}
             markLast
@@ -82,21 +109,21 @@ export function HrvScreen() {
             // desenhada sobre nada seria decoração enganosa.
             band={baseline == null ? undefined : { from: baseline * 0.85, to: baseline * 1.15 }}
             thresholds={baseline == null ? [] : [{ value: baseline, label: 'sua média' }]}
-            xLabels={['1h atrás', '30 min', 'agora']}
+            xLabels={rotulosDoPeriodo(serie)}
             id="hrv"
           />
         ) : (
           <Note
-            title={hrvHistory.length === 1 ? 'Uma medição só' : 'Sem série ainda'}
+            title={serie.length === 1 ? 'Uma medição nesta faixa' : 'Sem série nesta faixa'}
             body={
-              hrvHistory.length === 1
-                ? 'A curva aparece a partir da segunda medição — uma medida é um valor, não uma tendência.'
-                : 'A pulseira registra HRV nas medições agendadas e quando você mede aqui. A curva das últimas horas aparece quando houver duas leituras.'
+              hrvHistory.length >= 2
+                ? 'Há medições fora deste período. Toque numa faixa mais larga para ver a curva.'
+                : 'A pulseira registra HRV nas medições agendadas e quando você mede aqui. A curva aparece a partir da segunda leitura.'
             }
           />
         )}
       </YStack>
-      {hrvHistory.length >= 2 ? (
+      {serie.length >= 2 ? (
         <Data marginBottom="$sm" lineHeight={17}>
           A faixa é a sua linha de base — HRV só significa alguma coisa contra ela, nunca em valor
           absoluto.

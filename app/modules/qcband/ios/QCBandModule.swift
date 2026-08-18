@@ -1258,15 +1258,100 @@ public class QCBandModule: Module {
     /**
      Faz a pulseira vibrar — o "localizar" de quem não lembra onde a deixou.
 
-     O comando é o mesmo que o firmware usa para confirmar vínculo
-     (`alertBindingSuccess`): não existe um "find my band" dedicado no SDK, mas
-     a vibração de vínculo serve exatamente ao propósito.
+     Usa `alertBindingSuccess`, a vibração de confirmação de vínculo. Existe
+     também `lookupDeviceSuccess` ("Find watch" no cabeçalho), que provavelmente
+     é a vibração longa e repetida própria para localizar; nunca foi provada no
+     aparelho, e trocar às cegas um comando que funciona por outro que talvez
+     funcione custa uma rodada de teste com a pulseira na mão para descobrir.
      */
     AsyncFunction("findBand") { (promise: Promise) in
       QCSDKCmdCreator.alertBindingSuccess({
         promise.resolve(true)
       }, fail: {
         promise.reject("indisponivel", "pulseira não respondeu")
+      })
+    }
+
+    /**
+     Uma vibração curta AGORA, para um aviso nosso.
+
+     Mesmo comando do `findBand` — é o único pulso de vibração que o SDK expõe
+     e que está provado neste firmware. Os dois nomes existem porque os
+     PROPÓSITOS são diferentes, e é o propósito que decide o que muda quando
+     descobrirmos um comando melhor para cada um.
+
+     Só serve com o app vivo e conectado. O aviso que chega com o app suspenso
+     depende do ANCS, abaixo.
+     */
+    AsyncFunction("vibrate") { (promise: Promise) in
+      QCSDKCmdCreator.alertBindingSuccess({
+        promise.resolve(true)
+      }, fail: {
+        promise.reject("indisponivel", "pulseira não respondeu")
+      })
+    }
+
+    /**
+     Liga a bandeira de ANCS — o passo que faz o iOS oferecer o emparelhamento.
+
+     Sem emparelhamento no nível do SISTEMA (o diálogo "deseja emparelhar?"), a
+     pulseira não tem acesso ao Apple Notification Center Service e nenhuma
+     notificação chega até ela, por mais que o filtro esteja ligado. Conexão
+     pelo nosso app não substitui isso: são duas camadas diferentes.
+     */
+    AsyncFunction("enableAncs") { (promise: Promise) in
+      QCSDKCmdCreator.setANCSFlagSuccess({
+        promise.resolve(true)
+      }, fail: {
+        promise.reject("indisponivel", "a pulseira recusou a ativação do ANCS")
+      })
+    }
+
+    /**
+     O que a pulseira aceita notificar hoje, por categoria.
+
+     Serve a dois propósitos: mostrar o estado na tela e SONDAR o firmware. O
+     cabeçalho do SDK documenta um vocabulário fixo de categorias (telefone,
+     SMS, WhatsApp, Instagram…) sem nenhum identificador de app, e é por isso
+     que o AssumFit cai em `Others`. Se este firmware devolver algo fora do
+     vocabulário, é aqui que aparece.
+     */
+    AsyncFunction("getNotificationFilter") { (promise: Promise) in
+      QCSDKCmdCreator.getAppNotiFilterSuccess({ filtros in
+        guard let filtros else {
+          promise.resolve([])
+          return
+        }
+        let lista: [[String: Any]] = filtros.map { f in
+          ["type": f.appType.rawValue, "enabled": f.isOn]
+        }
+        promise.resolve(lista)
+      }, failed: {
+        promise.reject("indisponivel", "a pulseira não respondeu ao filtro de avisos")
+      })
+    }
+
+    /**
+     Liga ou desliga categorias no filtro.
+
+     Recebe a lista INTEIRA, não um delta: o comando do firmware substitui o
+     conjunto, e mandar só a categoria alterada apagaria as outras.
+     */
+    AsyncFunction("setNotificationFilter") { (entradas: [[String: Any]], promise: Promise) in
+      let filtros: [QCFilterModel] = entradas.compactMap { entrada in
+        guard
+          let bruto = entrada["type"] as? Int,
+          let tipo = QC_FILTER_APP_TYPE(rawValue: bruto)
+        else { return nil }
+        let modelo = QCFilterModel()
+        modelo.appType = tipo
+        modelo.isOn = (entrada["enabled"] as? Bool) ?? false
+        return modelo
+      }
+      QCSDKCmdCreator.setAppNotiFilter(filtros, success: {
+        promise.resolve(true)
+      }, failed: {
+        promise.reject("indisponivel", "a pulseira recusou o filtro de avisos")
       })
     }
   }
@@ -1354,6 +1439,18 @@ public class QCBandModule: Module {
       promise.resolve(nil)
     }
     AsyncFunction("findBand") { (promise: Promise) in
+      promise.reject("indisponivel", "sem radio no simulador")
+    }
+    AsyncFunction("vibrate") { (promise: Promise) in
+      promise.reject("indisponivel", "sem radio no simulador")
+    }
+    AsyncFunction("enableAncs") { (promise: Promise) in
+      promise.reject("indisponivel", "sem radio no simulador")
+    }
+    AsyncFunction("getNotificationFilter") { (promise: Promise) in
+      promise.resolve([[String: Any]]())
+    }
+    AsyncFunction("setNotificationFilter") { (_: [[String: Any]], promise: Promise) in
       promise.reject("indisponivel", "sem radio no simulador")
     }
     AsyncFunction("getSleep") { (_: Int, promise: Promise) in

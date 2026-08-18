@@ -15,6 +15,8 @@ import { Navigation } from './src/navigation';
 import { navigate } from './src/navigation/ref';
 import { IntroScreen } from './src/screens/IntroScreen';
 import { useAlertsStore } from './src/store/alerts.store';
+import { useAmbientStore } from './src/store/ambient.store';
+import { useHabitsStore } from './src/store/habits.store';
 import { useBiometricStore } from './src/store/biometric.store';
 import { ThemeProvider, useTheme } from './src/theme/ThemeProvider';
 
@@ -64,6 +66,24 @@ function Root() {
       ) {
         void connect(pairedDeviceId).catch(() => undefined);
       }
+
+      /*
+       O clima é o único dado do app preso à POSIÇÃO, e a sessão pode durar
+       dias: buscado só na montagem da home, ele mostra a cidade de onde a
+       pessoa saiu. A própria loja corta por idade — foco rápido não refaz
+       fix de GPS nem consulta.
+      */
+      void useAmbientStore.getState().refreshIfStale();
+
+      /*
+       A mesma sessão de dias atravessa a meia-noite, e o dia precisa virar.
+
+       A água do dia nascia com a data da abertura do app e nunca rolava: quem
+       não fechava o app à força encontrava o total de ontem na manhã seguinte,
+       e cada gole novo era gravado na data errada. É barato e não toca a rede,
+       então roda a cada volta ao primeiro plano.
+      */
+      useHabitsStore.getState().rolarDia();
     });
     return () => sub.remove();
   }, []);

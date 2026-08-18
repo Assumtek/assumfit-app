@@ -8,6 +8,7 @@ import { DetailScreen } from '../components/DetailScreen';
 import { Hypnogram } from '../components/charts/Hypnogram';
 import { Icon, type IconName } from '../components/Icon';
 import { Note } from '../components/Card';
+import { SyncProgress } from '../components/SyncProgress';
 import { Card, Data, HeroCard, Label, Metric, MetricSm, RatingText, SectionTitle } from '../components/ui';
 import { calcBioAge } from '../domain/bioAge';
 import { calcBodyBattery } from '../domain/bodyBattery';
@@ -61,6 +62,8 @@ export function HealthScreen() {
   const connection = useBiometricStore((s) => s.connection);
   const syncHistory = useBiometricStore((s) => s.syncHistory);
   const [syncing, setSyncing] = React.useState(false);
+  const sincronizando = useBiometricStore((s) => s.syncing);
+  const syncError = useBiometricStore((s) => s.syncError);
 
   const user = useUserStore((s) => s.user);
   const age = useUserStore((s) => s.age());
@@ -140,6 +143,21 @@ export function HealthScreen() {
         <RefreshControl refreshing={syncing} onRefresh={puxar} tintColor={colors.textMuted} />
       }
     >
+      {/*
+        A leitura da pulseira contada enquanto corre.
+
+        Fica ACIMA do conteúdo e aparece sozinha só quando há sincronização em
+        curso — é o que responde "cadê meus dados?" no exato momento em que a
+        pergunta surge, sem ocupar espaço no resto do tempo.
+      */}
+      {sincronizando || syncError ? (
+        <YStack marginBottom="$lg">
+          <Card>
+            <SyncProgress />
+          </Card>
+        </YStack>
+      ) : null}
+
       {semDado ? (
         <Note
           title="Nada medido ainda"
@@ -245,14 +263,14 @@ export function HealthScreen() {
             <Celula
               label="HRV"
               icone="pulse"
-              serie={hrvHistory}
+              serie={hrvHistory.map((p) => p.value)}
               rating={latest ? rateHrv(latest.hrvMs) : null}
               onPress={() => (navigation as any).push('Hrv' as never)}
             />
             <Celula
               label="coração"
               icone="heart"
-              serie={hrHistory}
+              serie={hrHistory.map((p) => p.value)}
               rating={latest ? rateHeartRate(latest.heartRate) : null}
               onPress={() => (navigation as any).push('Hrv' as never)}
             />

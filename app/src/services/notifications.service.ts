@@ -52,6 +52,20 @@ let permissaoPedida = false;
  * rápido de ser negado para sempre — o iOS só apresenta o diálogo uma vez, e
  * "não" ali é definitivo até alguém ir nas Configurações do sistema.
  */
+/**
+ * A permissão foi negada e o sistema não vai perguntar de novo.
+ *
+ * Distinto de "ainda não pedimos": negado é um beco silencioso — nenhum aviso
+ * chega, nada na tela explica, e a pessoa conclui que o app não notifica. Só as
+ * Ajustes do sistema revertem, e para oferecer esse caminho é preciso primeiro
+ * saber que se está nele.
+ */
+export async function notificacoesBloqueadas(): Promise<boolean> {
+  const atual = await Notifications.getPermissionsAsync().catch(() => null);
+  if (!atual) return false;
+  return !atual.granted && !atual.canAskAgain;
+}
+
 export async function ensurePermission(): Promise<boolean> {
   const atual = await Notifications.getPermissionsAsync();
   if (atual.granted) return true;

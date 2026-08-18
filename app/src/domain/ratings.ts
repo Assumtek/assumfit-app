@@ -14,6 +14,7 @@
  */
 
 import type { Palette } from '../theme/palette';
+import { formatDuration } from './workout';
 
 export type RatingState = 'normal' | 'alert';
 
@@ -220,6 +221,29 @@ export function rateActivity({ steps, goal }: { steps: number | null; goal: numb
     available: true,
     label: fraction >= 1 ? 'Meta batida' : fraction >= 0.7 ? 'Bom' : 'Pode melhorar',
     detail: `${steps.toLocaleString('pt-BR')} passos`,
+    fraction,
+    state: 'normal',
+  };
+}
+
+/**
+ * O tempo em movimento de um período — treino guiado e esporte somados.
+ *
+ * A régua é a recomendação de 150 min semanais de atividade moderada da OMS
+ * (WHO Guidelines on physical activity and sedentary behaviour, 2020), aplicada
+ * proporcionalmente à janela escolhida: sem ela, "10h20" é um número sem
+ * tamanho. É recomendação de bem-estar, não critério clínico. Por ser
+ * proporcional, o rótulo fala de RITMO — em um dia a régua vale um sétimo, e
+ * "meta batida" prometeria mais do que 21 minutos entregam. Nunca vira alerta:
+ * semana parada é rotina, não achado clínico.
+ */
+export function rateMovement({ minutes, days }: { minutes: number; days: number }): Rating {
+  const goal = (150 * Math.max(1, days)) / 7;
+  const fraction = clamp01(minutes / goal);
+  return {
+    available: true,
+    label: fraction >= 1 ? 'No ritmo' : fraction >= 0.7 ? 'Bom' : 'Pode melhorar',
+    detail: formatDuration(minutes * 60),
     fraction,
     state: 'normal',
   };

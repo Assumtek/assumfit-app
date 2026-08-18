@@ -6,6 +6,7 @@ import { Note } from '../../components/Card';
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
 import { Body, Card, Data, Label, SectionTitle } from '../../components/ui';
+import { consolidateMovement } from '../../domain/movement';
 import { SPORTS, sportClock } from '../../domain/sport';
 import { formatDuration } from '../../domain/workout';
 import {
@@ -25,38 +26,14 @@ const DIAS = 30;
  * sessão nasceu.
  *
  * Sessão vinculada a uma execução (dia de esporte do plano registrado pelo
- * cronômetro) aparece UMA vez, como esporte — é o registro mais rico. Mesma
- * regra da agenda de movimento.
+ * cronômetro) aparece UMA vez, como esporte — é o registro mais rico. A regra
+ * é a de `domain/movement.ts`, a mesma da agenda de movimento e do progresso.
  *
  * Mostra também os ABANDONADOS, e essa é a decisão que define a tela. Listar
  * só os concluídos produziria um retrato lisonjeiro e inútil — a sessão
  * largada no meio é justamente o sinal de que algo não está cabendo na
  * rotina.
  */
-
-type ItemLinha =
-  | { tipo: 'treino'; quando: number; treino: ExecutionHistoryItem }
-  | { tipo: 'esporte'; quando: number; esporte: SportSession };
-
-function consolidar(
-  treinos: ExecutionHistoryItem[],
-  esportes: SportSession[],
-): ItemLinha[] {
-  const vinculadas = new Set(
-    esportes.map((s) => s.workoutExecutionId).filter((id): id is string => !!id),
-  );
-  const linhas: ItemLinha[] = [
-    ...treinos
-      .filter((t) => !vinculadas.has(t.id))
-      .map((t) => ({ tipo: 'treino' as const, quando: Date.parse(t.startedAt), treino: t })),
-    ...esportes.map((s) => ({
-      tipo: 'esporte' as const,
-      quando: Date.parse(s.startedAt),
-      esporte: s,
-    })),
-  ];
-  return linhas.sort((a, b) => b.quando - a.quando);
-}
 
 const esporteMeta = (kind: string) => SPORTS.find((s) => s.kind === kind);
 
@@ -89,7 +66,7 @@ export function WorkoutHistoryScreen() {
     );
   }
 
-  const linhas = consolidar(treinos, esportes);
+  const linhas = consolidateMovement(treinos, esportes);
 
   if (linhas.length === 0) {
     return (
@@ -133,11 +110,7 @@ export function WorkoutHistoryScreen() {
               >
                 <XStack alignItems="center" gap="$md">
                   <Data width={52}>{data}</Data>
-                  <Icon
-                    name={(meta?.icon ?? 'footprints') as never}
-                    size={15}
-                    color={colors.textMuted}
-                  />
+                  <Icon name={meta?.icon ?? 'footprints'} size={15} color={colors.textMuted} />
                   <YStack flex={1} minWidth={0} gap={2}>
                     <Body color="$foreground" numberOfLines={1}>
                       {meta?.label ?? s.sport}

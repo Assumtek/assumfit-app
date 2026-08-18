@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
 import { File, Paths } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
@@ -33,6 +34,7 @@ import { useTheme } from '../theme/ThemeProvider';
  */
 export function MealsScreen() {
   const { colors } = useTheme();
+  const navigation = useNavigation<any>();
   const [meals, setMeals] = useState<api.MealRecord[] | null>(null);
   const [analisando, setAnalisando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -785,9 +787,19 @@ export function MealsScreen() {
               <Data color="$mutedForeground">{metaLinha(meta, (kcalMin + kcalMax) / 2)}</Data>
             </YStack>
           ) : (
-            <Data color="$mutedForeground">
-              Responda peso, altura e objetivo na anamnese para ganhar uma meta diária.
-            </Data>
+            <YStack gap="$md">
+              <Data color="$mutedForeground">
+                Com peso, altura e objetivo na anamnese, esta caixa ganha uma meta diária.
+              </Data>
+              <YStack alignSelf="flex-start">
+                <Button
+                  title="Responder anamnese"
+                  variant="secondary"
+                  size="md"
+                  onPress={() => navigation.push('Anamnesis')}
+                />
+              </YStack>
+            </YStack>
           )}
           {mHoje ? <MacroColunas m={mHoje} /> : null}
           <Data color="$mutedForeground">

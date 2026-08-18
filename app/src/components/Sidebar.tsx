@@ -199,12 +199,22 @@ export function Sidebar() {
           ) : null}
 
           {/*
-            Esporte, refeições e água: o que o reposicionamento de ago/2026
-            deixou na rotina. Sessão de foco e agenda de terceiros SAÍRAM do
-            produto (ago/2026) — o app é de esporte, bem-estar e recuperação,
-            e produtividade não era o assunto nem no menu.
+            Treino, esporte, refeições e água: o que o reposicionamento de
+            ago/2026 deixou na rotina. Sessão de foco e agenda de terceiros
+            SAÍRAM do produto (ago/2026) — o app é de esporte, bem-estar e
+            recuperação, e produtividade não era o assunto nem no menu.
           */}
           <SectionLabel>Rotina</SectionLabel>
+          {/*
+            O detalhe cita a anamnese porque ela não é destino próprio: mora
+            dentro do módulo de treino, e é por aqui que se chega até ela.
+          */}
+          <Entry
+            name="Treino"
+            detail="plano da semana e anamnese"
+            active={current === 'Plan'}
+            onPress={() => go('Plan')}
+          />
           <Entry
             name="Esporte"
             detail="musculação, corrida e mais"

@@ -1,12 +1,14 @@
 import { useNavigation } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable } from 'react-native';
 
 import { Note, Row, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
 import { Icon, type IconName } from '../components/Icon';
+import { PermissionGate } from '../components/PermissionGate';
 import { Body, Card, Data, Label, SectionTitle } from '../components/ui';
+import { notificacoesBloqueadas } from '../services/notifications.service';
 import { useAlertsStore } from '../store/alerts.store';
 import { useBiometricStore } from '../store/biometric.store';
 import { useLifestyleStore } from '../store/lifestyle.store';
@@ -54,6 +56,15 @@ export function AlertsScreen() {
   useEffect(() => {
     void sincronizar();
   }, [sincronizar]);
+
+  /*
+   Consultado a cada montagem, e não uma vez: quem sai daqui para os Ajustes,
+   autoriza e volta precisa encontrar a tela já corrigida.
+  */
+  const [notificacoesNegadas, setNotificacoesNegadas] = useState(false);
+  useEffect(() => {
+    void notificacoesBloqueadas().then(setNotificacoesNegadas);
+  }, []);
 
   const avisos: Aviso[] = [];
 
@@ -111,6 +122,20 @@ export function AlertsScreen() {
 
   return (
     <DetailScreen title="Avisos">
+      {/*
+        Esta é a tela em que alguém entra quando não está recebendo nada — e ela
+        não sabia dizer que o motivo era a permissão negada. Fica acima da lista
+        porque, bloqueada, nenhum dos avisos abaixo chega ao celular.
+      */}
+      {notificacoesNegadas ? (
+        <YStack marginBottom="$lg">
+          <PermissionGate
+            permissao="notificacoes"
+            onTentarDeNovo={() => void notificacoesBloqueadas().then((b) => setNotificacoesNegadas(b))}
+          />
+        </YStack>
+      ) : null}
+
       {avisos.length === 0 ? (
         <Note
           title="Nada pendente"

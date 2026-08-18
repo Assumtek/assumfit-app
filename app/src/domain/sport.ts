@@ -7,52 +7,198 @@
  * a mesma conta do compêndio de atividades físicas que todo mundo usa.
  */
 
+// Só o TIPO do glifo: o import é apagado na compilação, e o módulo segue sem
+// dependência de árvore React — o que o mantém rodável em teste puro.
+import type { IconName } from '../components/Icon';
+
 export type SportKind =
   | 'corrida'
   | 'caminhada'
   | 'ciclismo'
   | 'trilha'
+  | 'escalada'
+  | 'skate'
+  | 'musculacao'
   | 'funcional'
-  | 'futebol'
-  | 'yoga'
+  | 'hiit'
+  | 'spinning'
+  | 'esteira'
+  | 'eliptico'
+  | 'remo'
   | 'corda'
   | 'natacao'
+  | 'hidroginastica'
+  | 'surfe'
+  | 'futebol'
+  | 'volei'
+  | 'basquete'
+  | 'tenis'
   | 'lutas'
-  | 'danca';
+  | 'danca'
+  | 'yoga'
+  | 'pilates'
+  | 'alongamento';
+
+/** Prateleira da grade de escolha — sem ela, 26 ícones viram uma parede. */
+export type SportGroup = 'ar-livre' | 'academia' | 'agua' | 'quadra' | 'ritmo' | 'corpo';
 
 export type Sport = {
   kind: SportKind;
   label: string;
   /** Metabolic Equivalent of Task — kcal/kg/h da modalidade. */
   met: number;
-  /** Faz sentido medir distância? Funcional e yoga, não. */
+  /** Faz sentido medir distância? Só o que se desloca ao ar livre. */
   gps: boolean;
   /** Glifo do conjunto do app (outline monolinear) — a pessoa praticando. */
-  icon: string;
+  icon: IconName;
+  group: SportGroup;
 };
 
+/**
+ * As modalidades e o MET de cada uma.
+ *
+ * Os valores são do **Compendium of Physical Activities** (Ainsworth et al.,
+ * 2011) — o código do compêndio vai no fim da linha, porque número de saúde
+ * sem procedência é chute com cara de dado. Onde o compêndio separa por
+ * intensidade vale a linha MODERADA: o cronômetro mede a sessão inteira,
+ * descanso entre séries incluído, e é ela que a conta de caloria multiplica.
+ */
 export const SPORTS: Sport[] = [
-  { kind: 'corrida', label: 'Corrida', met: 9.8, gps: true, icon: 'footprints' },
-  { kind: 'caminhada', label: 'Caminhada', met: 3.5, gps: true, icon: 'standing' },
-  { kind: 'ciclismo', label: 'Ciclismo', met: 7.5, gps: true, icon: 'bike' },
-  { kind: 'trilha', label: 'Trilha', met: 6.0, gps: true, icon: 'mountain' },
-  { kind: 'funcional', label: 'Funcional', met: 8.0, gps: false, icon: 'dumbbell' },
-  { kind: 'futebol', label: 'Futebol', met: 7.0, gps: true, icon: 'ball' },
-  { kind: 'yoga', label: 'Yoga', met: 2.5, gps: false, icon: 'flower' },
-  { kind: 'corda', label: 'Pular corda', met: 11.0, gps: false, icon: 'zap' },
-  // As três chegaram com a fusão do plano com esportes (ago/2026): quem tem
-  // plano de natação/luta/dança precisa registrar a sessão no mesmo lugar.
-  { kind: 'natacao', label: 'Natação', met: 8.0, gps: false, icon: 'swim' },
-  { kind: 'lutas', label: 'Lutas', met: 10.0, gps: false, icon: 'swords' },
-  { kind: 'danca', label: 'Dança', met: 7.8, gps: false, icon: 'music' },
+  { kind: 'corrida', label: 'Corrida', met: 9.8, gps: true, icon: 'footprints', group: 'ar-livre' }, // 12050 · 9,7 km/h
+  { kind: 'caminhada', label: 'Caminhada', met: 3.5, gps: true, icon: 'standing', group: 'ar-livre' }, // 17190 · 5 km/h
+  { kind: 'ciclismo', label: 'Ciclismo', met: 7.5, gps: true, icon: 'bike', group: 'ar-livre' }, // 01015
+  { kind: 'trilha', label: 'Trilha', met: 6.0, gps: true, icon: 'mountain', group: 'ar-livre' }, // 17080
+  { kind: 'escalada', label: 'Escalada', met: 8.0, gps: false, icon: 'climb', group: 'ar-livre' }, // 15533
+  { kind: 'skate', label: 'Skate', met: 5.0, gps: false, icon: 'ramp', group: 'ar-livre' }, // 15580
+
+  { kind: 'musculacao', label: 'Musculação', met: 5.0, gps: false, icon: 'dumbbell', group: 'academia' }, // 02061
+  { kind: 'funcional', label: 'Funcional', met: 8.0, gps: false, icon: 'kettlebell', group: 'academia' }, // 02020
+  { kind: 'hiit', label: 'HIIT', met: 8.0, gps: false, icon: 'timer', group: 'academia' }, // 02040
+  { kind: 'spinning', label: 'Spinning', met: 8.5, gps: false, icon: 'bike', group: 'academia' }, // 02019
+  { kind: 'esteira', label: 'Esteira', met: 8.3, gps: false, icon: 'gauge', group: 'academia' }, // 12030 · 8 km/h
+  { kind: 'eliptico', label: 'Elíptico', met: 5.0, gps: false, icon: 'orbit', group: 'academia' }, // 02048
+  { kind: 'remo', label: 'Remo', met: 6.0, gps: false, icon: 'boat', group: 'academia' }, // 02070
+  { kind: 'corda', label: 'Pular corda', met: 11.8, gps: false, icon: 'zap', group: 'academia' }, // 15551
+
+  { kind: 'natacao', label: 'Natação', met: 5.8, gps: false, icon: 'swim', group: 'agua' }, // 18240
+  { kind: 'hidroginastica', label: 'Hidro', met: 5.5, gps: false, icon: 'pool', group: 'agua' }, // 18355
+  { kind: 'surfe', label: 'Surfe', met: 3.0, gps: false, icon: 'palm', group: 'agua' }, // 18220
+
+  { kind: 'futebol', label: 'Futebol', met: 7.0, gps: true, icon: 'ball', group: 'quadra' }, // 15610
+  { kind: 'volei', label: 'Vôlei', met: 6.0, gps: false, icon: 'hand', group: 'quadra' }, // 15711
+  { kind: 'basquete', label: 'Basquete', met: 6.5, gps: false, icon: 'target', group: 'quadra' }, // 15055
+  { kind: 'tenis', label: 'Tênis', met: 7.3, gps: false, icon: 'circleDot', group: 'quadra' }, // 15675
+
+  { kind: 'lutas', label: 'Lutas', met: 10.3, gps: false, icon: 'swords', group: 'ritmo' }, // 15430
+  { kind: 'danca', label: 'Dança', met: 7.8, gps: false, icon: 'music', group: 'ritmo' }, // 03031
+
+  { kind: 'yoga', label: 'Yoga', met: 2.5, gps: false, icon: 'flower', group: 'corpo' }, // 02150
+  { kind: 'pilates', label: 'Pilates', met: 3.0, gps: false, icon: 'body', group: 'corpo' }, // 02105
+  { kind: 'alongamento', label: 'Alongamento', met: 2.3, gps: false, icon: 'stretch', group: 'corpo' }, // 02101
 ];
+
+const GROUP_LABEL: Record<SportGroup, string> = {
+  'ar-livre': 'ar livre',
+  academia: 'academia',
+  agua: 'água',
+  quadra: 'quadra e raquete',
+  ritmo: 'luta e dança',
+  corpo: 'corpo e mente',
+};
+
+const GROUP_ORDER: SportGroup[] = ['ar-livre', 'academia', 'agua', 'quadra', 'ritmo', 'corpo'];
+
+export type SportSection = { group: SportGroup; label: string; sports: Sport[] };
+
+/** As modalidades em prateleiras, na ordem em que a grade as mostra. */
+export function sportSections(): SportSection[] {
+  return GROUP_ORDER.map((group) => ({
+    group,
+    label: GROUP_LABEL[group],
+    sports: SPORTS.filter((s) => s.group === group),
+  })).filter((sec) => sec.sports.length > 0);
+}
+
+/**
+ * O que a pessoa DIGITA e não é o rótulo: apelido ("bike"), o nome da luta que
+ * ela pratica ("muay thai") e a modalidade vizinha que o compêndio mede na
+ * mesma linha — padel e beach tennis são tênis para efeito de MET.
+ *
+ * Sem isso, uma lista de 26 obriga a adivinhar como o app chamou o esporte.
+ */
+const SYNONYMS: Partial<Record<SportKind, string[]>> = {
+  corrida: ['rua', 'run'],
+  caminhada: ['andar'],
+  ciclismo: ['bike', 'bicicleta', 'pedal'],
+  trilha: ['trekking', 'montanha'],
+  escalada: ['boulder'],
+  skate: ['patins', 'longboard'],
+  musculacao: ['academia', 'peso', 'forca', 'hipertrofia'],
+  funcional: ['calistenia', 'peso do corpo'],
+  hiit: ['crossfit', 'circuito', 'intervalado', 'tabata'],
+  spinning: ['bike indoor', 'ciclismo indoor'],
+  esteira: ['corrida indoor', 'indoor'],
+  eliptico: ['transport', 'cardio'],
+  remo: ['ergometro', 'caiaque'],
+  corda: ['pular'],
+  natacao: ['piscina', 'nado'],
+  hidroginastica: ['hidroginastica', 'agua'],
+  surfe: ['bodyboard', 'stand up', 'prancha'],
+  futebol: ['futsal', 'society', 'pelada'],
+  volei: ['volei de praia', 'futevolei'],
+  basquete: ['basket'],
+  tenis: ['raquete', 'padel', 'beach tennis', 'squash', 'badminton', 'frescobol'],
+  lutas: ['boxe', 'muay thai', 'jiu-jitsu', 'judo', 'karate', 'mma', 'taekwondo'],
+  danca: ['zumba', 'ritmos', 'forro', 'samba'],
+  yoga: ['hatha'],
+  pilates: ['solo', 'reformer'],
+  alongamento: ['mobilidade', 'flexibilidade'],
+};
+
+/*
+ Acento não pode ser barreira de busca: quem digita "musculacao" no teclado
+ corrido tem de achar "Musculação". A tabela é escrita à mão porque o Hermes
+ não garante `String.prototype.normalize`, e uma busca que só funciona no
+ simulador é pior que nenhuma.
+*/
+const SEM_ACENTO: Record<string, string> = {
+  á: 'a', à: 'a', ã: 'a', â: 'a', ä: 'a',
+  é: 'e', ê: 'e', è: 'e',
+  í: 'i', î: 'i',
+  ó: 'o', ô: 'o', õ: 'o', ò: 'o',
+  ú: 'u', ü: 'u',
+  ç: 'c',
+};
+
+export function normalizeTerm(texto: string): string {
+  return texto
+    .toLowerCase()
+    .replace(/[áàãâäéêèíîóôõòúüç]/g, (c) => SEM_ACENTO[c] ?? c)
+    .trim();
+}
+
+/** As modalidades que casam com o que foi digitado — rótulo, slug ou sinônimo. */
+export function searchSports(query: string): Sport[] {
+  const alvo = normalizeTerm(query);
+  if (!alvo) return SPORTS;
+  return SPORTS.filter(
+    (s) =>
+      normalizeTerm(s.label).includes(alvo) ||
+      s.kind.includes(alvo) ||
+      (SYNONYMS[s.kind] ?? []).some((t) => normalizeTerm(t).includes(alvo)),
+  );
+}
 
 /**
  * O esporte do CRONÔMETRO que corresponde à modalidade de um treino do plano
  * — a ponte da coexistência (ago/2026): dia de esporte do plano pode ser
- * registrado pelo gravador, com GPS, caloria e batimento. Slug sem gravador
- * correspondente (musculação, mobilidade) devolve null e o dia segue só pelo
- * treino guiado.
+ * registrado pelo gravador, com GPS, caloria e batimento.
+ *
+ * **Musculação continua fora, e agora é escolha, não falta:** ela existe no
+ * gravador para a sessão AVULSA, mas um dia de musculação do plano tem série,
+ * carga e repetição, e só a tela guiada registra isso. Oferecer o cronômetro
+ * ali concluiria o dia jogando o treino inteiro no lixo, com um número de
+ * caloria no lugar. Mobilidade segue pela mesma razão.
  */
 const MODALITY_TO_SPORT: Record<string, SportKind> = {
   corrida: 'corrida',
@@ -65,6 +211,7 @@ const MODALITY_TO_SPORT: Record<string, SportKind> = {
   crossfit: 'funcional',
   'esportes-coletivos': 'futebol',
   yoga: 'yoga',
+  pilates: 'pilates',
 };
 
 export function sportForModality(modality: string | null | undefined): Sport | null {

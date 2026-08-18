@@ -35,8 +35,35 @@ type AmbientState = {
   city: string | null;
   permission: Permission;
   loading: boolean;
+  /** Instante da última busca concluída — é ele que define o que é dado velho. */
+  fetchedAt: number | null;
   refresh: () => Promise<void>;
+  refreshIfStale: () => Promise<void>;
 };
+
+/**
+ * Idade máxima da posição guardada pelo sistema.
+ *
+ * Sem limite, `getLastKnownPositionAsync` aceita QUALQUER posição em cache,
+ * de qualquer idade — quem viajou ontem recebe o clima da cidade de ontem, com
+ * cara de leitura de agora. Meia hora é o mesmo horizonte do cache do servidor;
+ * acima disso vale pagar um fix novo.
+ */
+const POSITION_MAX_AGE_MS = 30 * 60 * 1000;
+
+/**
+ * Raio de incerteza aceitável na posição em cache, em metros. Casa com a
+ * `Accuracy.Low` pedida no fix novo — o servidor arredonda a coordenada para
+ * ~11 km antes de consultar o provedor, então nada mais fino muda a resposta.
+ */
+const POSITION_MAX_ACCURACY_M = 5000;
+
+/**
+ * Enquanto a leitura for mais nova que isto, voltar ao app não refaz a busca.
+ * Clima não muda em minutos, e cada refresh custa um fix de GPS e uma consulta;
+ * puxar para atualizar continua forçando, sem esperar o prazo.
+ */
+const STALE_AFTER_MS = 15 * 60 * 1000;
 
 /**
  * Clima ambiente.
@@ -57,6 +84,7 @@ export const useAmbientStore = create<AmbientState>((set, get) => ({
   city: null,
   permission: 'unknown',
   loading: false,
+  fetchedAt: null,
 
   refresh: async () => {
     if (!isAuthenticated()) return;
@@ -79,7 +107,10 @@ export const useAmbientStore = create<AmbientState>((set, get) => ({
         return;
       }
 
-      const position = await Location.getLastKnownPositionAsync({})
+      const position = await Location.getLastKnownPositionAsync({
+        maxAge: POSITION_MAX_AGE_MS,
+        requiredAccuracy: POSITION_MAX_ACCURACY_M,
+      })
         .then((last) => last ?? Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low }))
         .catch(() => null);
 
@@ -107,6 +138,7 @@ export const useAmbientStore = create<AmbientState>((set, get) => ({
         city: first?.city ?? first?.subregion ?? first?.region ?? null,
         permission: 'granted',
         loading: false,
+        fetchedAt: Date.now(),
       });
 
       /*
@@ -144,5 +176,21 @@ export const useAmbientStore = create<AmbientState>((set, get) => ({
     } catch {
       set({ loading: false });
     }
+  },
+
+  /**
+   * Reatualiza só quando o dado já envelheceu.
+   *
+   * É o que a volta ao primeiro plano chama: sem o corte por idade, alternar
+   * de app duas vezes seguidas dispararia um fix de GPS e uma consulta a cada
+   * troca. Sem leitura nenhuma (ou com a permissão ainda negada) não há idade
+   * a respeitar e a busca acontece — quem concedeu a permissão nas
+   * Configurações do sistema volta com a linha de clima já preenchida.
+   */
+  refreshIfStale: async () => {
+    const { loading, fetchedAt, refresh } = get();
+    if (loading) return;
+    if (fetchedAt !== null && Date.now() - fetchedAt < STALE_AFTER_MS) return;
+    await refresh();
   },
 }));

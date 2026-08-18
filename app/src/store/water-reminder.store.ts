@@ -109,8 +109,15 @@ export const useWaterReminderStore = create<WaterReminderState>((set, get) => ({
 
 const ordenar = (horarios: string[]) => [...horarios].sort();
 
-/** O estado de hoje que o texto do lembrete precisa. */
+/**
+ * O estado de hoje que o texto do lembrete precisa.
+ *
+ * Vira o dia antes de ler: os lembretes de amanhã são agendados hoje, e um
+ * total de ontem vazando para cá produziria "faltam 0,5 L" às 8h da manhã
+ * sobre uma meta que ainda não começou.
+ */
 function consumoDeHoje() {
+  useHabitsStore.getState().rolarDia();
   const { today, goalMl, containers } = useHabitsStore.getState();
   return { waterMl: today.waterMl, goalMl, copoMl: containers[0].ml };
 }

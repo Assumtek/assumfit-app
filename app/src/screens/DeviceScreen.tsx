@@ -5,16 +5,25 @@ import { Pressable } from 'react-native';
 import { YStack } from '@tamagui/stacks';
 
 import { BandStatusLine } from '../components/BandStatus';
+import { BandVibration } from '../components/BandVibration';
 import { Note, Row, Section } from '../components/Card';
 import { ble } from '../services/ble';
 import { DetailScreen } from '../components/DetailScreen';
+import { Icon } from '../components/Icon';
 import { SedentaryReminder } from '../components/SedentaryReminder';
+import { SyncProgress } from '../components/SyncProgress';
 import { Body, Button, Data } from '../components/ui';
+import { Card } from '../components/ui/Card';
 import { useBiometricStore } from '../store/biometric.store';
+import { useTheme } from '../theme/ThemeProvider';
 
 export function DeviceScreen() {
   const navigation = useNavigation();
+  const { colors } = useTheme();
   const connection = useBiometricStore((s) => s.connection);
+  const syncHistory = useBiometricStore((s) => s.syncHistory);
+  const sincronizando = useBiometricStore((s) => s.syncing);
+  const syncError = useBiometricStore((s) => s.syncError);
   const battery = useBiometricStore((s) => s.batteryPct);
   const latest = useBiometricStore((s) => s.latest);
   const disconnect = useBiometricStore((s) => s.disconnect);
@@ -113,12 +122,41 @@ export function DeviceScreen() {
               É a resposta à pergunta que traz a pessoa a esta tela quando
               algum número ainda não apareceu. */}
           <BandStatusLine />
+
+          {/*
+            Sincronizar tem lugar PRÓPRIO, com a lista de etapas do lado.
+
+            Antes só existia como puxar-para-atualizar dentro das telas de
+            métrica: invisível para quem não conhece o gesto, e mudo enquanto
+            corria. Aqui é um botão nomeado, e o painel ao lado conta o que está
+            sendo lido — foi a falta exata disso que fez uma pessoa em teste
+            achar o app quebrado.
+          */}
+          {sincronizando || syncError ? (
+            <Card>
+              <SyncProgress />
+            </Card>
+          ) : null}
+          <Button
+            title={sincronizando ? 'Lendo a pulseira…' : 'Sincronizar agora'}
+            variant="secondary"
+            icon={<Icon name="refresh" size={16} color={colors.text} />}
+            onPress={() => void syncHistory()}
+            disabled={sincronizando}
+            loading={sincronizando}
+          />
           <Button
             title={localizando ? 'Vibrando…' : 'Localizar pulseira'}
             variant="secondary"
             onPress={() => void localizar()}
             disabled={localizando}
           />
+
+          {/*
+            Mora aqui, e não em Configurações, porque só faz sentido com a
+            pulseira conectada: o filtro é lido dela e escrito nela.
+          */}
+          <BandVibration />
         </YStack>
       ) : (
         /*
