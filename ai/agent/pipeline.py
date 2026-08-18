@@ -13,7 +13,14 @@ import uuid
 from agent.generate import generate_plan
 from agent.knowledge import gather_knowledge
 from agent.models import AgentResult, WorkoutGenerationInput
-from agent.validate import catalog_errors, json_errors, mechanical_errors, validate_plan
+from agent.validate import (
+    catalog_errors,
+    json_errors,
+    mechanical_errors,
+    substituir_fora_do_catalogo,
+    truncation_errors,
+    validate_plan,
+)
 from core.logging import get_logger
 from core.settings import settings
 from grader.grade import grade
@@ -30,6 +37,41 @@ def _catalog_correction(errors: list[str]) -> str:
         f"A tentativa anterior prescreveu exercicios FORA do catalogo permitido: {listed}.\n"
         "Gere o plano novamente usando SOMENTE exerciseId presentes no catalogo permitido. "
         "Nunca invente ids nem use exercicios fora da lista."
+    )
+
+
+def _plano_minimo() -> str:
+    """A instrução de desespero: o menor plano que ainda é um plano.
+
+    Vale na última tentativa mecânica, quando as correções específicas já
+    falharam. Um plano curto cabe no limite de saída e parseia — e a regra do
+    produto é entregar treino, não perfeição. Conservador de propósito: quem
+    recebe menos volume treina; quem não recebe nada, não.
+    """
+    return (
+        "# Correcao obrigatoria — ultima tentativa\n"
+        "As tentativas anteriores falharam na FORMA da resposta.\n"
+        "Gere agora um plano MINIMO e conservador: no maximo 3 exercicios por "
+        "sessao, sem acessorios, descricoes de uma linha. Use SOMENTE "
+        "exerciseId do catalogo permitido. O JSON precisa estar completo e "
+        "valido — isso vale mais que a riqueza do plano."
+    )
+
+
+def _truncation_correction() -> str:
+    """A saída foi CORTADA — falta espaço, não vírgula.
+
+    Pedir "corrija o JSON" aqui produz outro plano do mesmo tamanho e outro
+    corte. O que resolve é o plano caber: menos exercícios acessórios por dia,
+    descrições curtas, sem repetir o que já está no catálogo.
+    """
+    return (
+        "# Correcao obrigatoria\n"
+        "A saida anterior foi CORTADA antes do fim: o plano nao coube no limite "
+        "de resposta.\n"
+        "Gere um plano MAIS ENXUTO — menos exercicios acessorios por dia, "
+        "descricoes curtas e sem repetir informacao que ja esta no catalogo. "
+        "Prefira 4 a 6 exercicios por sessao. O JSON precisa terminar completo."
     )
 
 
@@ -50,6 +92,8 @@ def _json_correction(errors: list[str]) -> str:
 
 def _correcao(errors: list[str]) -> str:
     """A instrução da nova tentativa, específica para o que quebrou."""
+    if truncation_errors(errors):
+        return _truncation_correction()
     do_json = json_errors(errors)
     if do_json:
         return _json_correction(do_json)
@@ -182,15 +226,42 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
     retries = 0
     while mechanical_errors(errors) and retries < settings.max_catalog_retries:
         retries += 1
+        # A ÚLTIMA tentativa pede o plano mínimo.
+        #
+        # Insistir na mesma instrução que já falhou duas vezes tende a falhar a
+        # terceira. Um plano curto — três exercícios por dia, sem acessório —
+        # cabe no limite de saída e parseia, e é infinitamente melhor que nada:
+        # a regra é sempre entregar um treino.
+        ultima = retries == settings.max_catalog_retries
+        instrucao = _plano_minimo() if ultima else _correcao(errors)
         log.info(
             "agent.mechanical_retry",
             trace_id=trace_id,
             attempt=retries,
+            ultima=ultima,
             errors=len(mechanical_errors(errors)),
             kinds=sorted({e.split(":", 1)[0] for e in mechanical_errors(errors)}),
         )
-        plan = await generate_plan(inp, correction=_correcao(errors))
+        plan = await generate_plan(inp, correction=instrucao)
         errors = validate_plan(plan, inp)
+
+    # ÚLTIMO RECURSO do catálogo: substituir em vez de desistir.
+    #
+    # Regenerar o plano inteiro por um id errado custa ~150 s, e quando o modelo
+    # insiste no mesmo erro custa isso duas vezes para nada. O resto do plano
+    # costuma estar certo — dia, volume, progressão. Aqui o id inválido vira um
+    # exercício real do mesmo tipo, ou some, e a troca fica registrada para
+    # virar ressalva na tela. Trocar em silêncio seria pior que bloquear.
+    trocas: list[str] = []
+    if catalog_errors(errors):
+        plan, trocas = substituir_fora_do_catalogo(plan, inp.allowed_exercises)
+        errors = validate_plan(plan, inp)
+        log.info(
+            "agent.catalogo_substituido",
+            trace_id=trace_id,
+            trocas=len(trocas),
+            restaram=len(errors),
+        )
 
     latency_ms = int((time.perf_counter() - started) * 1000)
 
@@ -299,9 +370,9 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
     # Esgotadas as revisões, o plano SAI com as ressalvas. Só continua bloqueado
     # o que não tem plano para entregar: erro determinístico significa que não
     # há JSON válido, e não existe "melhor esforço" de um plano que não parseia.
-    notas: list[str] = []
+    notas: list[str] = list(trocas)
     if blocked and not errors:
-        notas = _ressalvas(breakdown)
+        notas += _ressalvas(breakdown)
         blocked = False
         log.info("agent.entregue_com_ressalvas", trace_id=trace_id, notas=len(notas))
 

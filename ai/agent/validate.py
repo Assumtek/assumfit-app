@@ -31,7 +31,7 @@ CATALOG_ERROR_PREFIXES = ("exercicio_fora_do_catalogo", "used_id_fora_do_catalog
 # com um delimitador faltando na linha 61, o plano foi descartado inteiro e a
 # pessoa recebeu "não deu para gerar" por um erro de vírgula. Uma falha de
 # formatação é o exemplo mais puro do que se resolve pedindo de novo.
-MECHANICAL_ERROR_PREFIXES = CATALOG_ERROR_PREFIXES + ("json_invalido",)
+MECHANICAL_ERROR_PREFIXES = CATALOG_ERROR_PREFIXES + ("json_invalido", "json_truncado")
 
 
 def validate_plan(plan_json: str, inp: WorkoutGenerationInput) -> list[str]:
@@ -41,6 +41,20 @@ def validate_plan(plan_json: str, inp: WorkoutGenerationInput) -> list[str]:
     try:
         plan = json.loads(plan_json)
     except json.JSONDecodeError as exc:
+        # Truncado ou malformado? A diferença decide a correção.
+        #
+        # Truncado é o que COMEÇOU como JSON e não terminou: o modelo estava no
+        # meio de um objeto quando a cota de saída acabou. Pedir "arrume a
+        # vírgula" nesse caso é inútil — o que falta é ESPAÇO, e a correção certa
+        # é pedir um plano mais enxuto. Foi a causa real do bloqueio de um plano
+        # de seis dias em produção (ago/2026).
+        #
+        # As duas condições importam: texto que nunca foi JSON também não termina
+        # em `}`, e tratá-lo como truncado mandaria encurtar um plano que não
+        # existe.
+        cru = plan_json.strip()
+        if cru.startswith("{") and not cru.endswith("}"):
+            return [f"json_truncado: a saída foi cortada antes do fim ({exc})"]
         return [f"json_invalido: {exc}"]
 
     if not isinstance(plan, dict):
@@ -127,4 +141,89 @@ def mechanical_errors(errors: list[str]) -> list[str]:
 
 def json_errors(errors: list[str]) -> list[str]:
     """Só as falhas de parse, para a instrução de correção ser específica."""
-    return [e for e in errors if e.startswith("json_invalido")]
+    return [e for e in errors if e.startswith(("json_invalido", "json_truncado"))]
+
+
+def truncation_errors(errors: list[str]) -> list[str]:
+    """Saída cortada por falta de espaço — pede plano mais enxuto, não vírgula."""
+    return [e for e in errors if e.startswith("json_truncado")]
+
+
+def substituir_fora_do_catalogo(
+    plan_json: str, allowed: list
+) -> tuple[str, list[str]]:
+    """Troca ids inválidos por exercícios reais do catálogo. Último recurso.
+
+    Existe porque regenerar o plano inteiro por causa de um id errado custa uma
+    geração completa (~150 s) e, quando o modelo insiste no mesmo erro, custa
+    isso duas vezes para nada. O resto do plano costuma estar correto — o dia, o
+    volume, a progressão. Descartar tudo por um identificador é jogar fora o
+    trabalho bom.
+
+    A substituição é conservadora e RASTREÁVEL: escolhe pelo `subtype` do
+    exercício (força, cardio, mobilidade), nunca repete o que a sessão já tem, e
+    devolve o que trocou para virar ressalva na tela. Trocar em silêncio seria
+    pior que bloquear.
+
+    Sem candidato do mesmo tipo, o exercício é REMOVIDO em vez de substituído
+    por qualquer coisa: um dia com um exercício a menos é honesto; um dia com um
+    exercício que ninguém prescreveu, não.
+    """
+    try:
+        plan = json.loads(plan_json)
+    except json.JSONDecodeError:
+        return plan_json, []
+
+    def _campo(e, nome):
+        return getattr(e, nome, None) if not isinstance(e, dict) else e.get(nome)
+
+    validos = {_campo(e, "id"): e for e in allowed}
+    por_tipo: dict[str, list] = {}
+    for e in allowed:
+        por_tipo.setdefault(str(_campo(e, "type") or "").upper(), []).append(e)
+
+    trocas: list[str] = []
+    for day in plan.get("days", []):
+        if not isinstance(day, dict):
+            continue
+        dia = day.get("dayOfWeek", "?")
+        workout = day.get("workout") or {}
+        usados = {
+            x.get("exerciseId")
+            for fase in workout.get("phases") or []
+            for x in fase.get("exercises") or []
+            if x.get("exerciseId") in validos
+        }
+
+        for fase in workout.get("phases") or []:
+            exercicios = fase.get("exercises")
+            if not isinstance(exercicios, list):
+                continue
+            restantes = []
+            for ex in exercicios:
+                eid = ex.get("exerciseId")
+                if eid in validos:
+                    restantes.append(ex)
+                    continue
+
+                subtipo = str(ex.get("subtype") or "").upper()
+                candidatos = [
+                    c for c in por_tipo.get(subtipo, []) if _campo(c, "id") not in usados
+                ]
+                if candidatos:
+                    escolhido = candidatos[0]
+                    ex["exerciseId"] = _campo(escolhido, "id")
+                    usados.add(_campo(escolhido, "id"))
+                    restantes.append(ex)
+                    trocas.append(
+                        f"Um exercício de {dia} foi trocado por "
+                        f"{_campo(escolhido, 'name') or 'outro do catálogo'}, do mesmo tipo."
+                    )
+                else:
+                    trocas.append(
+                        f"Um exercício de {dia} foi removido por não existir no catálogo, "
+                        "e não havia substituto do mesmo tipo."
+                    )
+            fase["exercises"] = restantes
+
+    return json.dumps(plan, ensure_ascii=False), trocas
