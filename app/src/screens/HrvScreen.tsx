@@ -5,7 +5,7 @@ import { LayoutChangeEvent, Pressable } from 'react-native';
 import { EmptyMetric } from '../components/BandStatus';
 import { Note } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
-import { MeasureButton } from '../components/MeasureButton';
+import { FetchFromBandButton, MeasureButton } from '../components/MeasureButton';
 import { MeasuredAt } from '../components/MeasuredAt';
 import { DayPickerRow, useHistoricoDoDia } from '../components/DayPicker';
 import { LineChart } from '../components/charts/LineChart';
@@ -162,6 +162,13 @@ export function HrvScreen() {
 
 
       <MeasureButton kind="hrv" />
+      {/*
+        Os dois, e não um. A medição sob demanda de HRV nunca concluiu com valor
+        em campo — todas as tentativas foram recusadas por sensor ocupado, o que
+        só se corrigiu em 18/08 e ainda não foi provado num aparelho. Reler a
+        memória é o caminho que funciona, e agora ele varre sete dias.
+      */}
+      <FetchFromBandButton label="Buscar HRV na pulseira" />
     </DetailScreen>
   );
 }

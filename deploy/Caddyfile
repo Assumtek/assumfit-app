@@ -2,26 +2,59 @@
 # TLS é automático (ACME) para os três nomes; certificados chegam sozinhos
 # quando o DNS de cada um apontar para esta máquina, e renovam sem cron.
 
-# O site institucional — landing e política de privacidade.
-assumfit.com.br {
-	encode gzip
-	header {
-		Strict-Transport-Security "max-age=31536000; includeSubDomains"
-		X-Content-Type-Options "nosniff"
-		-Server
-	}
-	root * /site
-	# /privacidade sem extensão: é a URL que vai nas lojas e no rodapé.
-	try_files {path} {path}.html
-	file_server
-}
+# ---------------------------------------------------------------------------
+# O RAIZ E O WWW ESTÃO DESLIGADOS — e não é preferência, é DNS.
+#
+# `assumfit.com.br` e `www` resolvem para 18.155.21.x (a CDN da Hostinger), não
+# para esta máquina. O desafio ACME desses nomes chega lá, não aqui, e o Caddy
+# tentava obter certificado a cada 6 horas: 50 tentativas registradas até
+# 18/08/2026, com "Cannot negotiate ALPN protocol acme-tls/1".
+#
+# O prejuízo não é o site sem HTTPS (ele nem é servido daqui): é o risco de a
+# conta bater no limite de emissões do Let's Encrypt e atrasar a RENOVAÇÃO do
+# `api.assumfit.com.br`, que é o nome de que o app depende.
+#
+# Para reativar, quando o A do domínio apontar para 52.67.144.172: apagar este
+# comentário e as marcas de comentário dos dois blocos abaixo. Nada mais.
+# ---------------------------------------------------------------------------
 
-www.assumfit.com.br {
-	redir https://assumfit.com.br{uri} permanent
-}
+# assumfit.com.br {
+#	encode gzip
+#	header {
+#		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+#		X-Content-Type-Options "nosniff"
+#		-Server
+#	}
+#	root * /site
+#	# /privacidade sem extensão: é a URL que vai nas lojas e no rodapé.
+#	try_files {path} {path}.html
+#	file_server
+# }
+
+# www.assumfit.com.br {
+#	redir https://assumfit.com.br{uri} permanent
+# }
 
 # A API.
 api.assumfit.com.br {
+	# Log de acesso.
+	#
+	# Não havia nenhum — nem aqui, nem no backend. Em 18/08 foi impossível
+	# responder "o aparelho dela buscou o plano?" porque não existe rastro de
+	# quem chamou o quê. Sem isso, toda pergunta desse tipo continua sem
+	# resposta.
+	#
+	# O corpo NUNCA é registrado, só o método, o caminho, o status e a duração:
+	# o corpo carrega dado biométrico e token, e log de saúde com identificação
+	# é exatamente o que a LGPD trata como sensível.
+	log {
+		output file /var/log/caddy/api-access.log {
+			roll_size 20mb
+			roll_keep 5
+		}
+		format json
+	}
+
 	encode gzip
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"

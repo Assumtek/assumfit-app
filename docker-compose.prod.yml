@@ -131,6 +131,10 @@ services:
       - ./deploy/site:/site:ro
       - caddy_data:/data
       - caddy_config:/config
+      # O log de acesso precisa sobreviver ao contêiner: sem volume, ele some a
+      # cada deploy — e a pergunta que ele existe para responder ("o aparelho
+      # dela buscou o plano?") costuma ser feita depois de um deploy.
+      - caddy_logs:/var/log/caddy
     depends_on:
       - backend
 
@@ -140,3 +144,4 @@ volumes:
   backups:
   caddy_data:
   caddy_config:
+  caddy_logs:

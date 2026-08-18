@@ -195,3 +195,50 @@ export function SyncSleepButton() {
     </YStack>
   );
 }
+
+
+/**
+ * "Buscar na pulseira" — para a grandeza que a pulseira mede SOZINHA.
+ *
+ * O HRV é o caso: a porta de histórico agendado desta pulseira é do anel do
+ * fabricante ("Only Ring Support" no cabeçalho do SDK) e devolve vazio, e a
+ * medição sob demanda nunca concluiu com valor nas tentativas de campo — todas
+ * recusadas por sensor ocupado, o que só foi corrigido em 18/08. Enquanto isso
+ * não se prova num aparelho, o caminho que FUNCIONA é reler a memória, que agora
+ * varre até sete dias para trás.
+ *
+ * Fica ao lado do "medir agora" em vez de substituí-lo: remover o botão de
+ * medição apagaria um recurso que talvez funcione, e manter só ele deixaria a
+ * pessoa sem a única ação que com certeza traz dado.
+ */
+export function FetchFromBandButton({ label = 'Buscar na pulseira' }: { label?: string }) {
+  const { colors } = useTheme();
+  const syncHistory = useBiometricStore((s) => s.syncHistory);
+  const sincronizando = useBiometricStore((s) => s.syncing);
+  const connection = useBiometricStore((s) => s.connection);
+
+  if (connection !== 'connected') return null;
+
+  return (
+    <YStack marginTop="$md">
+      <Pressable
+        onPress={() => void syncHistory(true)}
+        disabled={sincronizando}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: sincronizando, busy: sincronizando }}
+        style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
+      >
+        <Pill>
+          {sincronizando ? (
+            <ActivityIndicator size="small" color={colors.textMuted} />
+          ) : (
+            <Icon name="refresh" size={16} color={colors.text} />
+          )}
+          <Text fontSize={14} color="$foreground">
+            {sincronizando ? 'Lendo a pulseira…' : label}
+          </Text>
+        </Pill>
+      </Pressable>
+    </YStack>
+  );
+}
