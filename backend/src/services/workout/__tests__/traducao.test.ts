@@ -26,7 +26,7 @@ const BASE = {
 
 describe('tradução da conversa para a anamnese', () => {
   it('pergunta pulada ("—") não vira lesão', () => {
-    const anamnese = traduzirParaAnamnese({ ...BASE, injuries: '—', cirurgias: '—' });
+    const anamnese = traduzirParaAnamnese({ ...BASE, boneJointWhere: '—', cirurgias: '—' });
     expect(anamnese.injuries).toBeNull();
   });
 
@@ -42,15 +42,23 @@ describe('tradução da conversa para a anamnese', () => {
   });
 
   it('negativa com conteúdo depois É conteúdo e permanece', () => {
+    // A pergunta de lesão em texto livre saiu (ago/2026): produzia a mesma flag
+    // que o PAR-Q e acendia por lesão antiga já resolvida. Quem descreve a
+    // região agora é `boneJointWhere`, e a regra do "não, mas…" continua valendo.
     const anamnese = traduzirParaAnamnese({
       ...BASE,
-      injuries: 'Não, mas sinto o joelho direito ao agachar',
+      boneJoint: 'Sim',
+      boneJointWhere: 'Não, mas sinto o joelho direito ao agachar',
     });
     expect(anamnese.injuries).toContain('joelho direito');
   });
 
   it('lesão de verdade continua acendendo a flag ortopédica', () => {
-    const anamnese = traduzirParaAnamnese({ ...BASE, injuries: 'Rompi o LCA em 2023' });
+    const anamnese = traduzirParaAnamnese({
+      ...BASE,
+      boneJoint: 'Sim',
+      boneJointWhere: 'Rompi o LCA em 2023',
+    });
     const flags = deriveFlags(parseAnamnesis(anamnese), { sex: 'f', birthDate: new Date('1996-01-01') });
     expect(flags).toContain('lesao-ortopedica');
   });
@@ -62,7 +70,7 @@ describe('tradução da conversa para a anamnese', () => {
   });
 
   it('placeholder embrulhado não vaza para as notas', () => {
-    const anamnese = traduzirParaAnamnese({ ...BASE, cuidadoEspecial: '—', alimentacao: '—' });
+    const anamnese = traduzirParaAnamnese({ ...BASE, observacaoFinal: '—', alimentacao: '—' });
     expect(anamnese.notes ?? '').not.toContain('—');
   });
 });

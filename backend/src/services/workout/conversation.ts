@@ -551,9 +551,7 @@ export function traduzirParaAnamnese(r: Answers) {
     r.regiaoPrioritaria && r.regiaoPrioritaria !== 'Não, corpo todo'
       ? `priorizar: ${r.regiaoPrioritaria}`
       : null,
-    dito(r.motivacao),
     r.horario ? `treina: ${r.horario}` : null,
-    dito(r.cuidadoEspecial) ? `cuidado especial: ${dito(r.cuidadoEspecial)}` : null,
     dito(r.observacaoFinal),
     dito(r.otherReasonWhich),
   ].filter((x) => x && x !== '—');
@@ -573,8 +571,17 @@ export function traduzirParaAnamnese(r: Answers) {
     weightKg: num(r.weightKg),
     heightCm: num(r.heightCm),
     medications: dito(r.medications),
+    /*
+     A lesão vem do PAR-Q e das cirurgias, não mais de uma pergunta própria.
+
+     Havia um `injuries` em texto livre — "tem ou já teve alguma lesão?" — que
+     produzia a MESMA flag `lesao-ortopedica` que `boneJoint`, e ainda por cima
+     acendia a flag para lesão antiga e resolvida. Quem responde não ao PAR-Q
+     ("problema que possa PIORAR com atividade") está dizendo que não há lesão
+     ativa, e é essa a pergunta que decide prescrição.
+    */
     injuries:
-      [dito(r.injuries), dito(r.cirurgias) ? `cirurgia: ${dito(r.cirurgias)}` : null, dito(r.boneJointWhere)]
+      [dito(r.cirurgias) ? `cirurgia: ${dito(r.cirurgias)}` : null, dito(r.boneJointWhere)]
         .filter(Boolean)
         .join('; ') || null,
     experience: EXPERIENCIA[r.experience] ?? 'iniciante',

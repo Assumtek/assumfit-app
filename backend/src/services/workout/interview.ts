@@ -48,6 +48,16 @@ const SIM_NAO = ['Sim', 'Não'];
 const sim = (a: Answers, id: string) => a[id] === 'Sim';
 
 /**
+ * A pessoa marcou esta condição na lista de condições de saúde?
+ *
+ * `conditions` é múltipla escolha e chega como texto — pode vir só
+ * "Cardiopatia" ou "Hipertensão, Diabetes". Compara por conteúdo, e não por
+ * igualdade, para não depender da ordem em que a pessoa tocou nas opções.
+ */
+const incluiCondicao = (a: Answers, condicao: string) =>
+  typeof a.conditions === 'string' && a.conditions.toLowerCase().includes(condicao.toLowerCase());
+
+/**
  * O roteiro, na ordem em que é perguntado.
  *
  * PAR-Q primeiro, e não por formalidade: são as sete perguntas que decidem
@@ -154,13 +164,6 @@ export const QUESTIONS: Question[] = [
     required: false,
   },
   {
-    id: 'injuries',
-    ask: 'Você tem ou já teve alguma lesão? Me conta como foi.',
-    label: 'Lesões',
-    type: 'TEXT',
-    required: false,
-  },
-  {
     id: 'cirurgias',
     ask: 'Já passou por alguma cirurgia? Qual?',
     label: 'Cirurgias',
@@ -207,13 +210,6 @@ export const QUESTIONS: Question[] = [
     label: 'Região prioritária',
     type: 'MULTIPLE_CHOICE',
     options: ['Não, corpo todo', 'Membros superiores', 'Membros inferiores', 'Glúteos', 'Abdômen e core', 'Costas'],
-    required: false,
-  },
-  {
-    id: 'motivacao',
-    ask: 'O que te motiva a treinar neste momento?',
-    label: 'Motivação',
-    type: 'TEXT',
     required: false,
   },
 
@@ -295,6 +291,15 @@ export const QUESTIONS: Question[] = [
     type: 'YES_NO',
     options: SIM_NAO,
     required: true,
+    /*
+     Já declarou cardiopatia? Não pergunta de novo.
+
+     As duas produzem a MESMA flag (`cardiopata`, em `context-builder.ts`), e
+     quem marcou Cardiopatia na lista de condições já está classificado — a
+     resposta aqui não mudaria nada, só faria a pessoa responder duas vezes
+     sobre o coração. O PAR-Q segue íntegro para quem NÃO declarou.
+    */
+    when: (a) => !incluiCondicao(a, 'Cardiopatia'),
   },
   {
     id: 'chestPain',
@@ -344,6 +349,9 @@ export const QUESTIONS: Question[] = [
     type: 'YES_NO',
     options: SIM_NAO,
     required: true,
+    // Mesma flag (`hipertensao`) de quem marcou Hipertensão nas condições, e a
+    // medicação contínua já foi perguntada em `medications`.
+    when: (a) => !incluiCondicao(a, 'Hipertensão'),
   },
   {
     id: 'pregnant',
@@ -374,13 +382,6 @@ export const QUESTIONS: Question[] = [
     when: (a) => sim(a, 'otherReason'),
   },
 
-  {
-    id: 'cuidadoEspecial',
-    ask: 'Alguma região do seu corpo precisa de cuidado especial no treino?',
-    label: 'Cuidado especial',
-    type: 'TEXT',
-    required: false,
-  },
   {
     id: 'observacaoFinal',
     ask: 'Para terminar: tem mais alguma coisa que eu deva considerar ao montar o seu plano?',
