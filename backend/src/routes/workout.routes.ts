@@ -619,7 +619,7 @@ workoutRoutes.get(
       status: request.status,
       trainingPlanId: request.trainingPlanId,
       finished: done || failed,
-      message: failed ? messageFor(request.blockReason) : null,
+      message: failed ? messageFor(request.blockReason, request.flags ?? []) : null,
       // O motivo, não o texto: a tela decide se oferece "tentar de novo"
       // (qualidade, timeout) ou não (encaminhamento).
       reason: request.blockReason,

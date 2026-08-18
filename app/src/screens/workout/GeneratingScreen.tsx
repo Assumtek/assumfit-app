@@ -138,6 +138,23 @@ export function GeneratingScreen() {
             />
           ) : null}
 
+          {/*
+            Encaminhamento não oferece "tentar de novo" — a mesma anamnese
+            devolve o mesmo encaminhamento —, mas precisa oferecer REFAZER.
+
+            A mensagem agora nomeia a condição declarada ("você indicou uma
+            condição cardíaca"), e nomear sem dar caminho seria pior que a frase
+            genérica de antes: quem marcou por engano leria a acusação e não
+            teria como corrigi-la.
+          */}
+          {isReferral ? (
+            <Button
+              title="Refazer a anamnese"
+              variant="secondary"
+              onPress={() => navigation.replace('Anamnesis')}
+            />
+          ) : null}
+
           <Button
             title="Voltar para o início"
             variant="ghost"

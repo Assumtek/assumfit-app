@@ -29,8 +29,9 @@ import { classify, isReferral } from './risk-tier';
  */
 const REASON_MESSAGES: Record<string, string> = {
   encaminhamento_clinico:
-    'Pelo seu perfil de saúde, o ideal é passar por um profissional antes de começar a treinar. ' +
-    'Por segurança, não geramos um treino automático — procure um educador físico ou um médico.',
+    'Nesses casos, o exercício precisa ser prescrito por alguém que possa te avaliar de perto — ' +
+    'por segurança, não geramos um treino automático. Procure um educador físico ou um médico, ' +
+    'e leve esta informação com você. Se marcou algo por engano, você pode refazer a anamnese.',
   seguranca_clinica:
     'Por segurança, não conseguimos montar um treino adequado ao seu perfil de saúde agora. ' +
     'Você pode tentar de novo; se a recomendação se mantiver, o caminho é a avaliação de um profissional.',
@@ -45,8 +46,48 @@ const REASON_MESSAGES: Record<string, string> = {
   timeout: 'A geração demorou mais que o esperado e não foi concluída. Tente gerar o treino de novo.',
 };
 
-export function messageFor(reason: string | null): string {
-  return (reason && REASON_MESSAGES[reason]) || REASON_MESSAGES.qualidade;
+/**
+ * O que na anamnese levou ao encaminhamento, em linguagem de gente.
+ *
+ * As flags que disparam encaminhamento são poucas e conhecidas (`risk-tier.ts`),
+ * e ficam GRAVADAS na requisição. A mensagem dizia apenas "pelo seu perfil de
+ * saúde" — verdadeiro e inútil: quem lê não sabe qual resposta causou aquilo,
+ * não tem como saber se marcou algo por engano, e nem o que levar ao
+ * profissional.
+ *
+ * Só entram as flags que REALMENTE encaminham. Listar "obeso" ou "idoso" numa
+ * tela de encaminhamento sugeriria que elas impediram o treino, e elas não
+ * impedem — geram plano conservador.
+ */
+const FLAG_QUE_ENCAMINHA: Record<string, string> = {
+  'dor-toracica-nao-investigada': 'dor no peito ainda não investigada',
+  cardiopata: 'uma condição cardíaca',
+  gestante: 'gestação',
+};
+
+export function motivoDoEncaminhamento(flags: string[]): string | null {
+  const causas = flags.map((f) => FLAG_QUE_ENCAMINHA[f]).filter(Boolean);
+  if (causas.length === 0) return null;
+  const lista =
+    causas.length === 1
+      ? causas[0]
+      : `${causas.slice(0, -1).join(', ')} e ${causas[causas.length - 1]}`;
+  return `Você indicou ${lista} na anamnese.`;
+}
+
+/**
+ * A mensagem da tela, com a causa quando ela é conhecida.
+ *
+ * `flags` vem da requisição de geração. Sem flag reconhecida — o caso em que o
+ * próprio modelo decidiu encaminhar, num perfil que a nossa tabela não cobre —
+ * a frase genérica assume, porque inventar a causa seria afirmar sobre algo que
+ * este código não sabe.
+ */
+export function messageFor(reason: string | null, flags: string[] = []): string {
+  const base = (reason && REASON_MESSAGES[reason]) || REASON_MESSAGES.qualidade;
+  if (reason !== 'encaminhamento_clinico') return base;
+  const causa = motivoDoEncaminhamento(flags);
+  return causa ? `${causa} ${base}` : base;
 }
 
 /**
