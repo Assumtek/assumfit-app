@@ -12,7 +12,9 @@ import { Body, Button, Data, Display, Label, MetricSm, RatingText, SectionTitle 
 import { Card } from '../components/ui/Card';
 import { Sheet } from '../components/ui/Dialog';
 import { MAX_ML, MIN_ML, STEP_ML, type Container } from '../domain/containers';
+import * as api from '../services/api.service';
 import { useHabitsStore } from '../store/habits.store';
+import { useUserStore } from '../store/user.store';
 import { useTheme } from '../theme/ThemeProvider';
 
 /** `1500` → `1,5`. Vírgula, porque a tela é em português. */
@@ -43,12 +45,54 @@ export function HabitsScreen() {
   const setContainerMl = useHabitsStore((s) => s.setContainerMl);
   const [chartWidth, setChartWidth] = useState(0);
   const [ajustando, setAjustando] = useState(false);
+  const refreshGoal = useHabitsStore((s) => s.refreshGoal);
+  const goalReason = useHabitsStore((s) => s.goalReason);
+  const user = useUserStore((s) => s.user);
 
   // Semana e dia vêm do servidor — é o que faz a água de ontem existir e a de
   // hoje sobreviver ao app fechar.
   useEffect(() => {
     void hydrate();
   }, [hydrate]);
+
+  /*
+   A meta sai do PESO da pessoa e do treino de hoje. As duas fontes vêm de
+   lugares diferentes (anamnese e histórico), e nenhuma delas é obrigatória:
+   sem peso, a meta cai na referência por sexo e a tela diz isso.
+  */
+  useEffect(() => {
+    let vivo = true;
+    void (async () => {
+      const inicioDoDia = new Date();
+      inicioDoDia.setHours(0, 0, 0, 0);
+      const [anamnese, execucoes, sessoes] = await Promise.all([
+        api.fetchAnamnesis().catch(() => null),
+        api.fetchExecutionHistory(1).catch(() => []),
+        api.fetchSportSessions(1).catch(() => []),
+      ]);
+      if (!vivo) return;
+
+      const respostas = anamnese?.answers as { weightKg?: number } | undefined;
+      const peso = typeof respostas?.weightKg === 'number' ? respostas.weightKg : null;
+
+      const vinculadas = new Set(
+        sessoes.map((se) => se.workoutExecutionId).filter((id): id is string => !!id),
+      );
+      const minutos =
+        execucoes
+          .filter((e) => e.status === 'FINISHED' && new Date(e.startedAt) >= inicioDoDia)
+          .filter((e) => !vinculadas.has(e.id))
+          .reduce((soma, e) => soma + (e.durationSec ?? 0) / 60, 0) +
+        sessoes
+          .filter((se) => new Date(se.startedAt) >= inicioDoDia)
+          .reduce((soma, se) => soma + se.durationS / 60, 0);
+
+      refreshGoal({ weightKg: peso, sex: user.sex, activeMinToday: Math.round(minutos) });
+    })();
+    return () => {
+      vivo = false;
+    };
+  }, [refreshGoal, user.sex]);
 
   const pct = Math.min(1, today.waterMl / goalMl);
   const remaining = Math.max(0, goalMl - today.waterMl);
@@ -82,7 +126,11 @@ export function HabitsScreen() {
         </YStack>
         <XStack justifyContent="space-between">
           <Data>0</Data>
-          <Data>meta {liters(goalMl)} L</Data>
+          {/* A meta mostra DE ONDE veio: é a conta da pessoa, e ela pode
+              conferir — sem isso, um número novo na tela é só um número. */}
+          <Data>
+            meta {liters(goalMl)} L{goalReason ? ` · ${goalReason}` : ' · referência'}
+          </Data>
         </XStack>
       </YStack>
 

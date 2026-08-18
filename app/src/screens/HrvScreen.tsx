@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { LayoutChangeEvent, Pressable } from 'react-native';
 
 import { EmptyMetric } from '../components/BandStatus';
-import { Row, Section } from '../components/Card';
+import { Note, Row, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
 import { MeasureButton } from '../components/MeasureButton';
 import { LineChart } from '../components/charts/LineChart';
@@ -65,25 +65,53 @@ export function HrvScreen() {
         marginBottom="$md"
         onLayout={(e: LayoutChangeEvent) => setChartWidth(e.nativeEvent.layout.width)}
       >
-        <LineChart
-          data={hrvHistory}
-          width={chartWidth}
-          height={150}
-          markLast
-          // Sem HRV medido não há média pessoal, e faixa de referência
-          // desenhada sobre nada seria decoração enganosa.
-          band={baseline == null ? undefined : { from: baseline * 0.85, to: baseline * 1.15 }}
-          thresholds={baseline == null ? [] : [{ value: baseline, label: 'sua média' }]}
-          xLabels={['1h atrás', '30 min', 'agora']}
-          id="hrv"
-        />
+        {/*
+          Curva só existe com pelo menos DOIS pontos — um ponto é um valor, não
+          uma linha. O `LineChart` devolvia `null` nesse caso e a tela ficava
+          com um vazio silencioso onde deveria haver gráfico: quem abria não
+          sabia se o app estava carregando, quebrado ou sem dado. Agora a
+          ausência é dita, com o caminho para resolvê-la logo abaixo.
+        */}
+        {hrvHistory.length >= 2 ? (
+          <LineChart
+            data={hrvHistory}
+            width={chartWidth}
+            height={150}
+            markLast
+            // Sem HRV medido não há média pessoal, e faixa de referência
+            // desenhada sobre nada seria decoração enganosa.
+            band={baseline == null ? undefined : { from: baseline * 0.85, to: baseline * 1.15 }}
+            thresholds={baseline == null ? [] : [{ value: baseline, label: 'sua média' }]}
+            xLabels={['1h atrás', '30 min', 'agora']}
+            id="hrv"
+          />
+        ) : (
+          <Note
+            title={hrvHistory.length === 1 ? 'Uma medição só' : 'Sem série ainda'}
+            body={
+              hrvHistory.length === 1
+                ? 'A curva aparece a partir da segunda medição — uma medida é um valor, não uma tendência.'
+                : 'A pulseira registra HRV nas medições agendadas e quando você mede aqui. A curva das últimas horas aparece quando houver duas leituras.'
+            }
+          />
+        )}
       </YStack>
-      <Data marginBottom="$sm" lineHeight={17}>
-        A faixa é a sua linha de base — HRV só significa alguma coisa contra ela, nunca em valor
-        absoluto.
-      </Data>
+      {hrvHistory.length >= 2 ? (
+        <Data marginBottom="$sm" lineHeight={17}>
+          A faixa é a sua linha de base — HRV só significa alguma coisa contra ela, nunca em valor
+          absoluto.
+        </Data>
+      ) : null}
 
       <Section label="Frequência cardíaca">
+        {recent.length === 0 ? (
+          <Row>
+            <Body flex={1} lineHeight={18}>
+              Sem leituras recentes de batimento. Elas entram sozinhas enquanto a pulseira estiver
+              no pulso e conectada.
+            </Body>
+          </Row>
+        ) : null}
         <Row>
           <Body flex={1}>Mínima</Body>
           <MetricSm fontSize={17}>{min} bpm</MetricSm>

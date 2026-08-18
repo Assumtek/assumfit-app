@@ -262,10 +262,13 @@ type BiometricState = {
   recoverBandMemory: () => Promise<void>;
   /** Grandeza sendo medida agora, `null` quando não há medição em curso. */
   measuring: MeasurableKind | null;
+  /** Quando a medição corrente começou — a tela conta o tempo com isto. */
+  measureStartedAt: number | null;
   /** Motivo da última falha de medição, para a tela poder mostrar. */
   measureError: string | null;
   /** Manda a pulseira medir agora. Ver `MeasureButton`. */
   measureNow: (kind: MeasurableKind) => Promise<void>;
+  cancelMeasure: () => Promise<void>;
   listen: () => () => void;
 };
 
@@ -287,6 +290,15 @@ type BiometricState = {
  Agora tudo começa vazio e só é preenchido pelo que a pulseira entrega. Onde não
  há medição, `ratings.ts` devolve `available: false` e a tela mostra traço.
  */
+
+/**
+ * Teto de uma medição sob demanda.
+ *
+ * SpO₂ e pressão levam de 30 a 60 segundos quando tudo vai bem; 90 dá folga
+ * para a leitura difícil e ainda devolve a tela a quem está esperando. Sem
+ * teto, o botão girava para sempre.
+ */
+const MEASURE_TIMEOUT_MS = 90_000;
 
 export const useBiometricStore = create<BiometricState>((set, get) => ({
   connection: 'idle',
@@ -312,6 +324,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
   batteryPct: null,
   connectError: null,
   measuring: null,
+  measureStartedAt: null,
   measureError: null,
 
   startScan: () => {
@@ -514,18 +527,72 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
       return;
     }
 
-    set({ measuring: kind, measureError: null });
+    // O instante da última leitura ANTES de medir: é ele que diz, no fim, se
+    // a medição produziu valor ou terminou vazia.
+    const antes = get().latest?.recordedAt ?? 0;
+    const hrvAntes = get().hrvHistory.length;
+
+    set({ measuring: kind, measureError: null, measureStartedAt: Date.now() });
     try {
-      await ble.measure(kind);
+      /*
+       Corrida contra o relógio, e não `await` puro.
+
+       O SDK do fabricante só chama o bloco de conclusão quando a leitura
+       CONVERGE. Pulseira frouxa, braço em movimento ou sensor fora da pele
+       produzem uma medição que roda para sempre: a promessa nativa nunca
+       resolve nem rejeita, e o botão girava até o app ser fechado. Visto em
+       campo (ago/2026).
+      */
+      await Promise.race([
+        ble.measure(kind),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('TEMPO')), MEASURE_TIMEOUT_MS),
+        ),
+      ]);
+
+      /*
+       Terminou — mas mediu?
+
+       Com o monitoramento agendado desligado no firmware, a medição sob
+       demanda conclui com SUCESSO e devolve vazio. Sem esta checagem a tela
+       dizia "pronto" e continuava mostrando traço, que é a forma mais
+       confusa possível de falhar.
+      */
+      const depois = get().latest?.recordedAt ?? 0;
+      const chegou = kind === 'hrv' ? get().hrvHistory.length > hrvAntes : depois > antes;
+      if (!chegou) {
+        set({
+          measureError:
+            'A pulseira concluiu sem devolver valor. Costuma ser contato com a pele: ' +
+            'aperte a pulseira um furo e meça de novo, com o braço parado.',
+        });
+      }
     } catch (err) {
       // Falha de medição é rotina, não erro de programa: pulseira frouxa,
       // braço em movimento, sensor sem contato com a pele. A frase precisa
       // dizer o que fazer, não o que quebrou.
+      const foiTempo = err instanceof Error && err.message === 'TEMPO';
+      // Tempo esgotado deixa o sensor LIGADO no aparelho: desligar é parte de
+      // desistir, senão a próxima medição disputa um sensor já ocupado.
+      if (foiTempo) await ble.stopMeasure?.(kind).catch(() => undefined);
       const detalhe = err instanceof Error ? err.message : 'a medição não concluiu';
-      set({ measureError: `Não deu para medir: ${detalhe}. Ajuste a pulseira no pulso e tente de novo.` });
+      set({
+        measureError: foiTempo
+          ? 'A medição passou de um minuto e meio sem concluir. Ajuste a pulseira no pulso, ' +
+            'deixe o braço parado e tente de novo.'
+          : `Não deu para medir: ${detalhe}. Ajuste a pulseira no pulso e tente de novo.`,
+      });
     } finally {
-      set({ measuring: null });
+      set({ measuring: null, measureStartedAt: null });
     }
+  },
+
+  /** Desistir no meio: desliga o sensor e devolve o botão. */
+  cancelMeasure: async () => {
+    const kind = get().measuring;
+    if (!kind) return;
+    set({ measuring: null, measureStartedAt: null, measureError: null });
+    await ble.stopMeasure?.(kind).catch(() => undefined);
   },
 
   /**

@@ -403,6 +403,12 @@ export class QCBandService implements BleService {
    * cada tela de saúde tem o próprio botão, porque medir de novo é justamente o
    * que se quer fazer ao olhar um número e desconfiar dele.
    */
+  async stopMeasure(kind: MeasurableKind): Promise<void> {
+    // Silencioso de propósito: quem chama já desistiu da medição, e um erro
+    // aqui só trocaria um problema por outro na tela.
+    await QCBand?.stopMeasure(kind).catch(() => undefined);
+  }
+
   async measure(kind: MeasurableKind): Promise<void> {
     if (!QCBand) throw new Error('Pulseira não disponível neste build');
     await QCBand.measure(kind);

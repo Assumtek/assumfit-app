@@ -125,6 +125,15 @@ export interface BleService {
    */
   measure?(kind: MeasurableKind): Promise<void>;
   /**
+   * Aborta uma medição em curso e desliga o sensor.
+   *
+   * Existe porque `measure` pode não terminar NUNCA: o SDK do fabricante só
+   * chama o bloco de conclusão quando a leitura converge, e pulseira frouxa ou
+   * braço em movimento produzem uma medição que roda para sempre. Quem desiste
+   * precisa desligar o sensor, não só parar de olhar.
+   */
+  stopMeasure?(kind: MeasurableKind): Promise<void>;
+  /**
    * Assina TODAS as características notificáveis e despeja o que chegar.
    *
    * É a ferramenta de engenharia reversa. O H59 não expõe frequência cardíaca

@@ -8,19 +8,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Checkbox, Field } from '../components/Field';
 import { Icon } from '../components/Icon';
 import { Body, Data, Label } from '../components/ui';
+import { isValidBirthDate, maskBirthDate, toIsoBirthDate } from '../domain/birthDate';
 import { useAuthStore } from '../store/auth.store';
 import { useTheme } from '../theme/ThemeProvider';
 
 /** aaaa-mm-dd, e uma data que existe de verdade. */
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-function validBirthDate(value: string): boolean {
-  if (!ISO_DATE.test(value)) return false;
-  const date = new Date(`${value}T00:00:00Z`);
-  if (Number.isNaN(date.getTime())) return false;
-  const age = (Date.now() - date.getTime()) / (365.25 * 24 * 3600 * 1000);
-  return age >= 16 && age <= 110;
-}
 
 export function SignUpScreen() {
   const { colors } = useTheme();
@@ -39,19 +32,27 @@ export function SignUpScreen() {
   const [consentBiometric, setConsentBiometric] = useState(false);
   const [consentTransfer, setConsentTransfer] = useState(false);
 
-  const dateOk = birthDate.length === 0 || validBirthDate(birthDate);
+  const dateOk = birthDate.length === 0 || isValidBirthDate(birthDate);
   const canSubmit =
     name.trim().length >= 2 &&
     email.includes('@') &&
     password.length >= 10 &&
-    validBirthDate(birthDate) &&
+    isValidBirthDate(birthDate) &&
     sex !== null &&
     consentBiometric &&
     consentTransfer;
 
   const submit = async () => {
     if (!canSubmit || loading || !sex) return;
-    await signUp({ name: name.trim(), email: email.trim().toLowerCase(), password, birthDate, sex });
+    await signUp({
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+      // A tela fala português; o servidor fala ISO. A tradução mora aqui, na
+      // borda, e não no que a pessoa digita.
+      birthDate: toIsoBirthDate(birthDate)!,
+      sex,
+    });
   };
 
   return (
@@ -123,10 +124,10 @@ export function SignUpScreen() {
         <Field
           label="Data de nascimento"
           value={birthDate}
-          onChangeText={setBirthDate}
-          placeholder="1990-05-12"
-          keyboardType="numbers-and-punctuation"
-          error={dateOk ? undefined : 'Use o formato aaaa-mm-dd'}
+          onChangeText={(t) => setBirthDate(maskBirthDate(t))}
+          placeholder="12/05/1990"
+          keyboardType="number-pad"
+          error={dateOk ? undefined : 'Use o formato dia/mês/ano'}
           hint="Define a faixa etária de referência da sua idade biológica"
         />
 

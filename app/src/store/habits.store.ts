@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 
 import { api, isAuthenticated } from '../services/api.service';
+import { waterGoalMl } from '../domain/waterGoal';
+import type { Sex } from '../domain/types';
 import {
   DEFAULT_CONTAINERS,
   clampMl,
@@ -26,6 +28,10 @@ type HabitsState = {
   goalMl: number;
   /** Os recipientes com o volume que a PESSOA usa — preferência do aparelho. */
   containers: Container[];
+  /** A conta que produziu a meta, para a tela poder mostrá-la. */
+  goalReason: string | null;
+  /** Recalcula a meta a partir do peso da anamnese e do treino de hoje. */
+  refreshGoal: (input: { weightKg: number | null; sex: Sex; activeMinToday: number }) => void;
   setContainerMl: (key: ContainerKey, ml: number) => void;
   today: Today;
   week: Day[];
@@ -113,7 +119,21 @@ const prefs: Store | null = (() => {
 
 export const useHabitsStore = create<HabitsState>((set, get) => ({
   goalMl: DEFAULT_GOAL_ML,
+  goalReason: null,
   containers: DEFAULT_CONTAINERS,
+
+  /*
+   A meta é do CORPO da pessoa (ago/2026): 2,5 L fixos era muito para quem tem
+   50 kg e pouco para quem tem 100. Quem chama é a tela, que tem o peso da
+   anamnese e os minutos de treino do dia — o store não busca nada sozinho,
+   para a meta não depender de uma rodada de rede a mais.
+  */
+  refreshGoal: ({ weightKg, sex, activeMinToday }) => {
+    set({
+      goalMl: waterGoalMl({ weightKg, sex, activeMinToday }),
+      goalReason: weightKg ? `${Math.round(weightKg)} kg` : null,
+    });
+  },
 
   setContainerMl: (key, ml) => {
     const containers = get().containers.map((c) =>

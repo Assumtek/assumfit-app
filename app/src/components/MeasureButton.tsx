@@ -1,6 +1,6 @@
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable } from 'react-native';
 
 import type { MeasurableKind } from '../services/ble';
@@ -55,6 +55,8 @@ export function MeasureButton({ kind, label }: { kind: MeasurableKind; label?: s
   const measuring = useBiometricStore((s) => s.measuring);
   const measureError = useBiometricStore((s) => s.measureError);
   const measureNow = useBiometricStore((s) => s.measureNow);
+  const cancelMeasure = useBiometricStore((s) => s.cancelMeasure);
+  const measureStartedAt = useBiometricStore((s) => s.measureStartedAt);
   const connection = useBiometricStore((s) => s.connection);
   const bandActivity = useBiometricStore((s) => s.bandActivity);
 
@@ -67,6 +69,20 @@ export function MeasureButton({ kind, label }: { kind: MeasurableKind; label?: s
   const desteBotao = measuring === kind || automatica === kind;
   const ocupado = measuring !== null || automatica !== null;
   const conectado = connection === 'connected';
+
+  /*
+   Um tique por segundo só enquanto ESTA tela mede. O tempo em si vem de
+   `measureStartedAt` no store (epoch), então perder um tique não perde
+   contagem — o próximo redesenho traz o valor certo.
+  */
+  const [agora, setAgora] = useState(() => Date.now());
+  useEffect(() => {
+    if (!desteBotao || !measureStartedAt) return;
+    setAgora(Date.now());
+    const id = setInterval(() => setAgora(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [desteBotao, measureStartedAt]);
+  const segundos = measureStartedAt ? Math.floor((agora - measureStartedAt) / 1000) : 0;
 
   return (
     <YStack marginTop="$lg">
@@ -101,9 +117,30 @@ export function MeasureButton({ kind, label }: { kind: MeasurableKind; label?: s
       {!conectado ? (
         <Body marginTop="$sm">Conecte a pulseira para medir.</Body>
       ) : desteBotao ? (
-        <Body marginTop="$sm">
-          A medição leva alguns segundos. Mantenha a pulseira firme no pulso.
-        </Body>
+        <YStack marginTop="$sm" gap="$sm" alignItems="flex-start">
+          {/*
+            O SEGUNDO conta na tela. Sem ele, "Medindo…" parado por um minuto é
+            indistinguível de travado — e era exatamente essa a dúvida: o botão
+            girava e ninguém sabia se algo acontecia.
+          */}
+          <Body>
+            {segundos > 0 ? `Medindo há ${segundos}s. ` : ''}
+            Mantenha a pulseira firme no pulso e o braço parado.
+          </Body>
+          {/* A saída existe a partir de 10s: antes disso, desistir é quase
+              sempre impaciência, e o sensor mal começou. */}
+          {segundos >= 10 ? (
+            <Pressable
+              onPress={() => void cancelMeasure()}
+              accessibilityRole="button"
+              accessibilityLabel="Parar a medição"
+              hitSlop={8}
+              style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
+            >
+              <Body color="$mutedForeground">Parar medição</Body>
+            </Pressable>
+          ) : null}
+        </YStack>
       ) : measureError ? (
         <Body marginTop="$sm">{measureError}</Body>
       ) : null}

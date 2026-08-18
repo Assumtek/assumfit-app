@@ -10,6 +10,7 @@ import { DetailScreen } from '../components/DetailScreen';
 import { Field } from '../components/Field';
 import { Icon } from '../components/Icon';
 import { Body, Button, Data, Title } from '../components/ui';
+import { formatDateBR, maskBirthDate, toIsoBirthDate } from '../domain/birthDate';
 import { useUserStore } from '../store/user.store';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -49,7 +50,7 @@ export function ProfileScreen() {
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(user.name);
-  const [birthDate, setBirthDate] = useState(paraBrasileira(profile?.birthDate));
+  const [birthDate, setBirthDate] = useState(formatDateBR(profile?.birthDate));
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -58,7 +59,7 @@ export function ProfileScreen() {
 
   const beginEdit = () => {
     setName(user.name);
-    setBirthDate(paraBrasileira(profile?.birthDate));
+    setBirthDate(formatDateBR(profile?.birthDate));
     setError(null);
     setEditing(true);
   };
@@ -67,7 +68,7 @@ export function ProfileScreen() {
     // Valida antes de mandar: o servidor recusaria de qualquer forma, e uma ida
     // à rede para descobrir que a data não parseia é ida desperdiçada.
     if (name.trim().length < 2) return setError('Nome muito curto');
-    const iso = paraIso(birthDate);
+    const iso = toIsoBirthDate(birthDate);
     if (!iso) return setError('Data no formato DD/MM/AAAA');
 
     const ok = await save({ name: name.trim(), birthDate: iso });
@@ -89,7 +90,7 @@ export function ProfileScreen() {
   const rows = [
     { label: 'Nome', value: user.name },
     { label: 'E-mail', value: profile?.email ?? '—' },
-    { label: 'Nascimento', value: profile ? formatDate(profile.birthDate) : '—' },
+    { label: 'Nascimento', value: profile ? formatDateBR(profile.birthDate) : '—' },
     { label: 'Idade', value: `${age} anos` },
     { label: 'Sexo biológico', value: SEX_LABEL[user.sex] },
   ];
@@ -131,7 +132,7 @@ export function ProfileScreen() {
         <YStack flex={1} gap="$sm">
           <Title>{user.name}</Title>
           <Data>
-            {profile ? `assinante desde ${formatDate(profile.createdAt)}` : 'perfil local — sem conexão'}
+            {profile ? `assinante desde ${formatDateBR(profile.createdAt)}` : 'perfil local — sem conexão'}
           </Data>
         </YStack>
       </XStack>
@@ -142,7 +143,7 @@ export function ProfileScreen() {
           <Field
             label="Nascimento"
             value={birthDate}
-            onChangeText={(texto) => setBirthDate(mascaraData(texto))}
+            onChangeText={(texto) => setBirthDate(maskBirthDate(texto))}
             placeholder="DD/MM/AAAA"
             keyboardType="numbers-and-punctuation"
           />
@@ -197,7 +198,7 @@ export function ProfileScreen() {
               <YStack flex={1} gap="$xs">
                 <RowLabel>{PURPOSE_LABEL[consent.purpose] ?? consent.purpose}</RowLabel>
                 <Data>
-                  versão {consent.version} · {formatDate(consent.grantedAt)}
+                  versão {consent.version} · {formatDateBR(consent.grantedAt)}
                 </Data>
               </YStack>
               {/* $foreground, não acento: texto em #877BF0 mede ~2,8:1 no tema
@@ -237,33 +238,6 @@ export function ProfileScreen() {
  * Pelo texto, nunca por `new Date()`: o ISO do servidor vem à meia-noite UTC, e
  * o construtor a converteria para o fuso local — nascimento viraria véspera.
  */
-function formatDate(iso: string): string {
-  const [y, m, d] = iso.slice(0, 10).split('-');
-  if (!y || !m || !d) return iso;
-  return `${d}/${m}/${y}`;
-}
-
-/** ISO do servidor → valor do campo de edição. Vazio permanece vazio. */
-const paraBrasileira = (iso?: string) => (iso ? formatDate(iso) : '');
-
-/** `12/03/1994` → `1994-03-12`, ou `null` se não for uma data que existe. */
-function paraIso(brasileira: string): string | null {
-  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(brasileira);
-  if (!m) return null;
-  const [, d, mes, y] = m;
-  const data = new Date(Number(y), Number(mes) - 1, Number(d));
-  const existe =
-    data.getFullYear() === Number(y) && data.getMonth() === Number(mes) - 1 && data.getDate() === Number(d);
-  return existe ? `${y}-${mes}-${d}` : null;
-}
-
-/** Digitou dígitos, as barras entram sozinhas — apagar também funciona. */
-function mascaraData(texto: string): string {
-  const digitos = texto.replace(/\D/g, '').slice(0, 8);
-  if (digitos.length <= 2) return digitos;
-  if (digitos.length <= 4) return `${digitos.slice(0, 2)}/${digitos.slice(2)}`;
-  return `${digitos.slice(0, 2)}/${digitos.slice(2, 4)}/${digitos.slice(4)}`;
-}
 
 /**
  * O par rótulo/valor de uma linha de cadastro.

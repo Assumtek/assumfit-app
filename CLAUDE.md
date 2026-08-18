@@ -207,6 +207,25 @@ Frameworks com `ExpoModulesJSI` e `grep api.assumfit.com.br` no `main.jsbundle`
 (o env de produção entra no ARCHIVE via `EXPO_PUBLIC_API_URL=...` na linha do
 xcodebuild).
 
+### Numeração de build: sequencial, começando em 1
+
+`buildNumber` (iOS) e `versionCode` (Android) são **1, 2, 3…**, um por envio, e
+recomeçam em 1 a cada `version` nova. Decisão da fundadora (ago/2026), e o
+motivo é que ela lê esse número: "build 3 da 1.0.2" diz quantas tentativas a
+versão levou; "build 13" não diz nada.
+
+Duas coisas que quebravam isso e foram desligadas:
+
+- **`autoIncrement: true` no perfil `production` do `eas.json`.** O EAS mantém
+  um contador PRÓPRIO e ignora o `app.json` — foi ele que produziu um build 12
+  do nada. Agora está `false`: quem numera é o arquivo, à mão.
+- A tentação de "pular para um número maior que o do EAS" quando um envio é
+  recusado. A Apple só exige `CFBundleVersion` crescente DENTRO da mesma
+  `CFBundleShortVersionString`: mudou a versão, o build volta a 1.
+
+A 1.0.1 saiu com build 13 por causa desse erro e fica como está — o número já
+está na App Store Connect. A 1.0.2 começa em 1.
+
 ### O caminho que funcionou em ago/2026 (versão 1.0.1, build 13)
 
 A cota de iOS do EAS renovou e o build na nuvem **rodou** — e ainda assim o
