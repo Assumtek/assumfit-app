@@ -50,16 +50,21 @@ export type AgentAdjustResult = {
  * REVISAR (ago/2026) cada revisão é outra geração completa mais outra avaliação
  * — até duas. No pior caso são cinco ciclos, não dois.
  *
- * 300 s cobria o mundo anterior e passou a cortar o novo: a primeira geração do
- * regime de revisão morreu em 301 s, e o desfecho gravado foi "timeout" para um
- * pipeline que estava trabalhando. Abortar cedo mata geração válida e ainda
- * cobra por ela.
+ * 300 s cobria o mundo anterior e passou a cortar o novo. Depois 600 s também
+ * cortou: a rodada de testes mediu 129, 192, 474 e 755 segundos em quatro
+ * perfis, todos gerando plano válido. Os dois extremos têm causa conhecida — a
+ * primeira geração depois de um deploy paga a ESCRITA do cache de prompt (51 mil
+ * tokens de catálogo), e cada revisão do avaliador soma uma geração inteira.
+ *
+ * O teto precisa cobrir o pior caso REAL — cache frio somado a revisão —, não o
+ * caso típico. Abortar cedo mata geração válida, cobra por ela e grava
+ * "timeout" para um pipeline que estava trabalhando.
  *
  * Nada aqui segura uma requisição HTTP: a geração roda fora do ciclo do pedido
  * e o app consulta o status. O custo de um teto largo é uma linha PENDING por
  * mais tempo; o de um teto curto é a pessoa não receber treino nenhum.
  */
-const TIMEOUT_MS = 600_000;
+const TIMEOUT_MS = 900_000;
 
 const client = axios.create({ baseURL: env.AI_SERVICE_URL, timeout: TIMEOUT_MS });
 
