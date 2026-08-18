@@ -43,15 +43,23 @@ export type AgentAdjustResult = {
 };
 
 /**
- * Uma geração faz DUAS chamadas de modelo sobre o catálogo inteiro e leva de 50
- * a 120 segundos — e quando o juiz bloqueia, a RE-VOTAÇÃO de maioria soma até
- * duas avaliações extras. Com 180s um bloqueio legítimo virava "timeout" no
- * meio do re-voto (visto em produção, ago/2026): o backend desistia, a IA
- * terminava para ninguém, e a pessoa via a falha errada. O teto cobre o
- * pipeline inteiro; abortar cedo mataria gerações válidas e ainda cobraria
- * por elas.
+ * O teto cobre o PIPELINE INTEIRO, e ele cresceu.
+ *
+ * A conta: uma geração faz duas chamadas de modelo sobre o catálogo (50 a 120 s),
+ * a re-votação de maioria soma até duas avaliações, e desde que reprovar virou
+ * REVISAR (ago/2026) cada revisão é outra geração completa mais outra avaliação
+ * — até duas. No pior caso são cinco ciclos, não dois.
+ *
+ * 300 s cobria o mundo anterior e passou a cortar o novo: a primeira geração do
+ * regime de revisão morreu em 301 s, e o desfecho gravado foi "timeout" para um
+ * pipeline que estava trabalhando. Abortar cedo mata geração válida e ainda
+ * cobra por ela.
+ *
+ * Nada aqui segura uma requisição HTTP: a geração roda fora do ciclo do pedido
+ * e o app consulta o status. O custo de um teto largo é uma linha PENDING por
+ * mais tempo; o de um teto curto é a pessoa não receber treino nenhum.
  */
-const TIMEOUT_MS = 300_000;
+const TIMEOUT_MS = 600_000;
 
 const client = axios.create({ baseURL: env.AI_SERVICE_URL, timeout: TIMEOUT_MS });
 
