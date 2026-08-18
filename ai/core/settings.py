@@ -63,7 +63,19 @@ class Settings(BaseModel):
     #: pensamento, que os modelos 5 rejeitam. `high` é o piso para trabalho
     #: sensível a acerto; abaixo disso a prescrição fica rasa.
     llm_effort: str = "high"
-    llm_max_tokens: int = 16384
+    # Teto de SAÍDA da geração de plano.
+    #
+    # 16384 truncava. O log de produção (ago/2026) mostra
+    # `stop_reason: "max_tokens"` com 16384 tokens em geração após geração: o
+    # plano era cortado no meio e o JSON chegava inválido — a famosa vírgula
+    # faltando na linha 61. Cada tentativa queimava o teto inteiro e voltava
+    # quebrada, o que multiplicava retries, revisões e latência até estourar o
+    # tempo do backend.
+    #
+    # Um plano de seis dias com aquecimento, série principal e alongamento não
+    # cabe em 16k, e o raciocínio ainda consome parte disso. Era o defeito de
+    # baixo de toda a pilha que investiguei hoje.
+    llm_max_tokens: int = 32768
 
     grader_enabled: bool = True
     #: Nota mínima (0–10) para o plano passar. Abaixo disso, bloqueia.
@@ -122,7 +134,7 @@ def get_settings() -> Settings:
         llm_chat_model=os.getenv("LLM_CHAT_MODEL", "claude-haiku-4-5"),
         nutrition_model=os.getenv("NUTRITION_MODEL", "claude-sonnet-5"),
         llm_effort=os.getenv("LLM_EFFORT", "high"),
-        llm_max_tokens=_env_int("LLM_MAX_TOKENS", 16384),
+        llm_max_tokens=_env_int("LLM_MAX_TOKENS", 32768),
         grader_enabled=_env_bool("GRADER_ENABLED", True),
         grader_min_score=_env_float("GRADER_MIN_SCORE", 6.0),
         grader_confirm_blocks=_env_bool("GRADER_CONFIRM_BLOCKS", True),
