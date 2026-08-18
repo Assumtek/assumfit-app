@@ -141,7 +141,7 @@ export function DeviceScreen() {
             title={sincronizando ? 'Lendo a pulseira…' : 'Sincronizar agora'}
             variant="secondary"
             icon={<Icon name="refresh" size={16} color={colors.text} />}
-            onPress={() => void syncHistory()}
+            onPress={() => void syncHistory(true)}
             disabled={sincronizando}
             loading={sincronizando}
           />

@@ -3,11 +3,13 @@ import React, { useState } from 'react';
 import { LayoutChangeEvent, Pressable } from 'react-native';
 
 import { EmptyMetric } from '../components/BandStatus';
-import { Note, Row, Section } from '../components/Card';
+import { Note } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
 import { MeasureButton } from '../components/MeasureButton';
+import { MeasuredAt } from '../components/MeasuredAt';
+import { DayPickerRow, useHistoricoDoDia } from '../components/DayPicker';
 import { LineChart } from '../components/charts/LineChart';
-import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
+import { Data, Display, RatingText } from '../components/ui';
 import { rateHrv, shown } from '../domain/ratings';
 import { faixaInicial, FAIXAS, noPeriodo, rotulosDoPeriodo, type Faixa } from '../domain/series';
 import { useBiometricStore } from '../store/biometric.store';
@@ -15,25 +17,29 @@ import { useBiometricStore } from '../store/biometric.store';
 export function HrvScreen() {
   const latest = useBiometricStore((s) => s.latest);
   const hrvHistory = useBiometricStore((s) => s.hrvHistory);
-  const hrHistory = useBiometricStore((s) => s.hrHistory);
   /*
    A aba inicial é decidida pelo DADO, uma vez.
 
    Num `useState` com inicializador preguiçoso de propósito: recalcular a cada
    render arrancaria a aba da mão de quem acabou de tocar em outra.
   */
+  const historico = useHistoricoDoDia((p) => p.hrv_ms, hrvHistory);
   const [range, setRange] = useState<Faixa>(() => faixaInicial(hrvHistory));
   const [chartWidth, setChartWidth] = useState(0);
 
   if (!latest)
     return (
-      <DetailScreen title="Coração e HRV">
+      <DetailScreen title="Variabilidade (HRV)">
         <EmptyMetric measure="hrv" />
       </DetailScreen>
     );
 
   const rating = rateHrv(latest.hrvMs);
-  const serie = noPeriodo(hrvHistory, range);
+  /*
+   As faixas de período recortam HOJE. Num dia passado elas não fazem sentido —
+   "última hora" de anteontem não é nada —, e ali a curva é o dia inteiro.
+  */
+  const serie = historico.ehHoje ? noPeriodo(hrvHistory, range) : historico.pontos;
   /*
    A linha de base é da JANELA em vista, não da série inteira.
 
@@ -44,18 +50,34 @@ export function HrvScreen() {
   const baseline = serie.length
     ? serie.reduce((soma, p) => soma + p.value, 0) / serie.length
     : latest.hrvMs;
-  const recent = hrHistory.slice(-30).map((p) => p.value);
-  const min = recent.length ? Math.round(Math.min(...recent)) : '—';
-  const max = recent.length ? Math.round(Math.max(...recent)) : '—';
 
   return (
-    // O título assume os DOIS nomes: os cards "HRV" e "Coração" da home
-    // desembocam aqui, e a tela mostra variabilidade E frequência de repouso.
-    // Com só "HRV", o toque em "Coração" parecia rota errada.
-    <DetailScreen title="Coração e HRV">
+    /*
+     Só variabilidade. A frequência tem tela própria (`HeartRateScreen`).
+
+     As duas moravam aqui porque os cards "HRV" e "coração" da home iam para o
+     mesmo lugar — remendo de navegação, não decisão. São grandezas com fontes e
+     cadências diferentes: batimento a cada poucos segundos, HRV numa janela por
+     hora que passa dias vazia. Juntas, a idade de um valia pelo outro.
+    */
+    <DetailScreen title="Variabilidade (HRV)">
       <YStack marginBottom="$xxl">
         <Display>{shown(latest.hrvMs)}</Display>
+        {/*
+          A IDADE da medição, ao lado do número.
+
+          A pulseira mede HRV em janelas agendadas e passa dias sem nenhuma —
+          confirmado no aparelho e no app do fabricante, que mostrava 45 ms de
+          quatro dias antes. Um número sem data se lê como "agora", e aí a
+          pessoa interpreta como estado atual algo que é de anteontem.
+        */}
         <Data marginTop="$sm">ms · variabilidade cardíaca</Data>
+        {/*
+          O carimbo é o da AMOSTRA (`hrvAt`), não o da leitura: o HRV vem de uma
+          janela agendada e a leitura que o carrega é do minuto. Usar
+          `recordedAt` faria um dado de dias atrás parecer recém-medido.
+        */}
+        <MeasuredAt at={latest.hrvAt ?? undefined} />
         <RatingText
           marginTop="$lg"
           color={rating.state === 'alert' ? '$destructive' : '$foreground'}
@@ -64,11 +86,18 @@ export function HrvScreen() {
         </RatingText>
       </YStack>
 
+      <DayPickerRow
+        selecionado={historico.dia}
+        onSelecionar={historico.setDia}
+        comDado={historico.comDado}
+      />
+
+      {historico.ehHoje ? (
       <XStack gap="$xl" marginBottom="$lg">
         {FAIXAS.map((r) => {
           // Faixa sem curva fica visivelmente indisponível em vez de levar a um
           // vazio: o controle passa a informar onde há dado antes do toque.
-          const vazia = noPeriodo(hrvHistory, r).length < 2;
+          const vazia = noPeriodo(hrvHistory, r).length === 0;
           return (
             <Pressable
               key={r}
@@ -87,6 +116,7 @@ export function HrvScreen() {
           );
         })}
       </XStack>
+      ) : null}
 
       <YStack
         marginBottom="$md"
@@ -99,7 +129,7 @@ export function HrvScreen() {
           sabia se o app estava carregando, quebrado ou sem dado. Agora a
           ausência é dita, com o caminho para resolvê-la logo abaixo.
         */}
-        {serie.length >= 2 ? (
+        {serie.length >= 1 ? (
           <LineChart
             data={serie.map((p) => p.value)}
             width={chartWidth}
@@ -114,11 +144,11 @@ export function HrvScreen() {
           />
         ) : (
           <Note
-            title={serie.length === 1 ? 'Uma medição nesta faixa' : 'Sem série nesta faixa'}
+            title="Sem medições nesta faixa"
             body={
-              hrvHistory.length >= 2
-                ? 'Há medições fora deste período. Toque numa faixa mais larga para ver a curva.'
-                : 'A pulseira registra HRV nas medições agendadas e quando você mede aqui. A curva aparece a partir da segunda leitura.'
+              hrvHistory.length >= 1
+                ? 'Há medições fora deste período. Toque numa faixa mais larga para vê-las.'
+                : 'A pulseira registra HRV numa janela por hora, e quando você mede aqui. A primeira medição já aparece no gráfico.'
             }
           />
         )}
@@ -130,28 +160,6 @@ export function HrvScreen() {
         </Data>
       ) : null}
 
-      <Section label="Frequência cardíaca">
-        {recent.length === 0 ? (
-          <Row>
-            <Body flex={1} lineHeight={18}>
-              Sem leituras recentes de batimento. Elas entram sozinhas enquanto a pulseira estiver
-              no pulso e conectada.
-            </Body>
-          </Row>
-        ) : null}
-        <Row>
-          <Body flex={1}>Mínima</Body>
-          <MetricSm fontSize={17}>{min} bpm</MetricSm>
-        </Row>
-        <Row>
-          <Body flex={1}>Atual</Body>
-          <MetricSm fontSize={17}>{Math.round(latest.heartRate)} bpm</MetricSm>
-        </Row>
-        <Row last>
-          <Body flex={1}>Máxima</Body>
-          <MetricSm fontSize={17}>{max} bpm</MetricSm>
-        </Row>
-      </Section>
 
       <MeasureButton kind="hrv" />
     </DetailScreen>

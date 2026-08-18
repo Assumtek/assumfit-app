@@ -68,7 +68,16 @@ export function LineChart({
   const plotH = height - padBottom;
 
   const geom = useMemo(() => {
-    if (data.length < 2 || width <= 0) return null;
+    /*
+     UMA medição também desenha.
+
+     A curva exigia dois pontos — "um ponto é um valor, não uma linha" — e o
+     raciocínio está certo para a LINHA e errado para a tela: quem acabou de
+     medir quer ver onde caiu, e um vazio explicado no lugar do gráfico faz a
+     primeira medição parecer perdida. Com um ponto só, desenhamos o ponto: sem
+     traço e sem área, porque não há trajeto entre medições que não existem.
+    */
+    if (data.length < 1 || width <= 0) return null;
 
     const values = [...data, ...thresholds.map((t) => t.value)];
     if (band) values.push(band.from, band.to);
@@ -81,13 +90,21 @@ export function LineChart({
 
     // Margem à direita para o marcador de último ponto não encostar na borda.
     const plotW = markLast ? width - 9 : width;
-    const x = (i: number) => (i / (data.length - 1)) * plotW;
+    // Ponto único vai à DIREITA, onde mora o mais recente em qualquer série —
+    // centralizá-lo sugeriria meio-dia, ou meio período, que ele não é.
+    const x = (i: number) => (data.length === 1 ? plotW : (i / (data.length - 1)) * plotW);
     const y = (v: number) => plotH - ((v - min) / span) * plotH;
 
-    const line = data.map((v, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(2)} ${y(v).toFixed(2)}`).join(' ');
+    const line =
+      data.length === 1
+        ? ''
+        : data
+            .map((v, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(2)} ${y(v).toFixed(2)}`)
+            .join(' ');
     return {
       line,
-      areaPath: `${line} L${plotW} ${plotH} L0 ${plotH} Z`,
+      // Área sob um ponto só seria um triângulo que não representa nada.
+      areaPath: data.length === 1 ? '' : `${line} L${plotW} ${plotH} L0 ${plotH} Z`,
       y,
       lastX: x(data.length - 1),
       lastY: y(data[data.length - 1]),
@@ -137,10 +154,19 @@ export function LineChart({
         </React.Fragment>
       ))}
 
-      {area ? <Path d={geom.areaPath} fill={`url(#${id}-fill)`} /> : null}
-      <Path d={geom.line} stroke={color} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" fill="none" />
+      {area && geom.areaPath ? <Path d={geom.areaPath} fill={`url(#${id}-fill)`} /> : null}
+      {geom.line ? (
+        <Path
+          d={geom.line}
+          stroke={color}
+          strokeWidth={1.5}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          fill="none"
+        />
+      ) : null}
 
-      {markLast ? (
+      {markLast || data.length === 1 ? (
         <>
           <Circle cx={geom.lastX} cy={geom.lastY} r={8} fill={color} opacity={0.2} />
           <Circle cx={geom.lastX} cy={geom.lastY} r={3} fill={color} />

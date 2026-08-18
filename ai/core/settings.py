@@ -82,6 +82,10 @@ class Settings(BaseModel):
     #: existe no catálogo. É erro mecânico (id alucinado), não erro de juízo —
     #: vale corrigir e tentar de novo antes de gastar o avaliador.
     max_catalog_retries: int = 2
+    # Quantas REVISÕES o plano ganha quando o avaliador reprova por opinião.
+    # Reprovar sem revisar entrega nada a quem pediu; revisar sem teto gastaria
+    # a geração inteira num perfil que o modelo não consegue atender.
+    max_judge_retries: int = 2
 
     log_level: str = "INFO"
 
@@ -123,6 +127,7 @@ def get_settings() -> Settings:
         grader_min_score=_env_float("GRADER_MIN_SCORE", 6.0),
         grader_confirm_blocks=_env_bool("GRADER_CONFIRM_BLOCKS", True),
         max_catalog_retries=_env_int("MAX_CATALOG_RETRIES", 2),
+        max_judge_retries=_env_int("MAX_JUDGE_RETRIES", 2),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
     )
 

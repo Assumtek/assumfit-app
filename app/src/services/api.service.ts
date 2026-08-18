@@ -320,8 +320,29 @@ export async function fetchBaseline(): Promise<{ hrvMs: number | null; calibrati
   return data;
 }
 
-export async function fetchSeries(hours = 24) {
-  const { data } = await api.get('/biometric/series', { params: { hours } });
+/**
+ * Um ponto por HORA, agregado no servidor. Até 720 horas — trinta dias.
+ *
+ * É a fonte do histórico por dia: a memória da pulseira guarda sete dias e
+ * exige uma consulta serial por dia, enquanto isto vem numa requisição só e
+ * cobre o mês. Hora a hora é grosso para a curva de HOJE (a pulseira mede a
+ * cada cinco minutos), e é exatamente o que se precisa de um dia passado.
+ */
+export type HourlyPoint = {
+  /** Início da hora, em ISO. */
+  hour: string;
+  hrv_ms: number | null;
+  heart_rate: number | null;
+  heart_rate_min: number | null;
+  heart_rate_max: number | null;
+  spo2_pct: number | null;
+  temperature: number | null;
+  steps: number | null;
+  stress_score: number | null;
+};
+
+export async function fetchSeries(hours = 24): Promise<HourlyPoint[]> {
+  const { data } = await api.get<HourlyPoint[]>('/biometric/series', { params: { hours } });
   return data;
 }
 
@@ -480,6 +501,14 @@ export type TrainingPlan = {
   goal: string | null;
   level: string | null;
   rationale: string | null;
+  /**
+   * O que o avaliador de segurança exigiu conter neste plano.
+   *
+   * Vazio na esmagadora maioria dos casos. Quando tem conteúdo, é porque o
+   * plano foi revisado para caber num limite — e a pessoa precisa saber disso,
+   * senão recebe um treino mais conservador sem explicação.
+   */
+  revisionNotes?: string[];
   startDate: string;
   endDate: string;
   /** Dia da semana no fuso da pessoa, resolvido no servidor. */

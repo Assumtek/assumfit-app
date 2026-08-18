@@ -48,6 +48,52 @@ export function comAmostraDeHrv(
   return [...serie, { at, value: reading.hrvMs }].sort((a, b) => a.at - b.at).slice(-limite);
 }
 
+/**
+ * Quando a medição foi feita: data E hora, na forma que se lê sem traduzir.
+ *
+ * Um número de saúde sem carimbo se lê como "agora", e nesta pulseira quase
+ * nunca é: ela mede em janelas agendadas e passa dias sem tocar em algumas
+ * grandezas — o app do fabricante mostrava HRV de quatro dias antes ao lado de
+ * batimento do minuto. Sem a data, a pessoa toma decisão de hoje com dado de
+ * anteontem sem saber.
+ *
+ * "hoje" e "ontem" por extenso porque é assim que se fala; data curta a partir
+ * daí, com o ano só quando ele muda — `14/08 às 09:15` diz tudo que importa, e
+ * `14/08/2026` gasta espaço com o que já se sabe.
+ */
+export function medidoEm(at: number, agora = Date.now()): string {
+  const quando = new Date(at);
+  const hoje = new Date(agora);
+  const hora = quando.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  const mesmoDia = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+
+  if (mesmoDia(quando, hoje)) return `hoje às ${hora}`;
+
+  const ontem = new Date(agora);
+  ontem.setDate(ontem.getDate() - 1);
+  if (mesmoDia(quando, ontem)) return `ontem às ${hora}`;
+
+  const dia = String(quando.getDate()).padStart(2, '0');
+  const mes = String(quando.getMonth() + 1).padStart(2, '0');
+  const ano = quando.getFullYear() === hoje.getFullYear() ? '' : `/${quando.getFullYear()}`;
+  return `${dia}/${mes}${ano} às ${hora}`;
+}
+
+/**
+ * O instante da amostra mais nova, ou `0` numa série vazia.
+ *
+ * É o que identifica "chegou medição nova" quando a série tem TETO: contar
+ * itens numa lista que já está no limite dá sempre o mesmo número, porque cada
+ * entrada empurra a mais antiga para fora.
+ */
+export function ultimoInstante(serie: Ponto[]): number {
+  return serie.reduce((maior, p) => (p.at > maior ? p.at : maior), 0);
+}
+
 export type Faixa = '1H' | '6H' | '24H' | '7D';
 
 export const FAIXAS: Faixa[] = ['1H', '6H', '24H', '7D'];
@@ -103,7 +149,9 @@ export function quandoFoi(instante: number, agora = Date.now()): string {
  */
 export function faixaInicial(serie: Ponto[], agora = Date.now()): Faixa {
   for (const faixa of FAIXAS) {
-    if (noPeriodo(serie, faixa, agora).length >= 2) return faixa;
+    // Uma medição basta: ela já é um ponto no gráfico, e abrir numa faixa
+    // vazia esconderia a única medição que existe.
+    if (noPeriodo(serie, faixa, agora).length >= 1) return faixa;
   }
   return '24H';
 }

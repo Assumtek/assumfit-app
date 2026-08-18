@@ -6,6 +6,7 @@ import { Note, Row, Section } from '../components/Card';
 import { SyncSleepButton } from '../components/MeasureButton';
 import { SleepPlanner } from '../components/SleepPlanner';
 import { DetailScreen } from '../components/DetailScreen';
+import { formatDateBR } from '../domain/birthDate';
 import { Hypnogram } from '../components/charts/Hypnogram';
 import { LineChart } from '../components/charts/LineChart';
 import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
@@ -78,6 +79,15 @@ export function SleepScreen() {
       <YStack marginBottom="$xxl">
         <Display>{sleep.score}</Display>
         <Data marginTop="$sm">score · {duration(sleep.totalMin)} de sono</Data>
+        {/*
+          A DATA da noite, não uma hora.
+
+          `SleepSegment` guarda duração e fase, nunca instante — carimbar um
+          horário de despertar aqui seria invenção. E a data importa: uma noite
+          de quatro dias atrás exibida sem ela se lê como a de ontem, que foi o
+          que o app do fabricante mostrava.
+        */}
+        <Data marginTop="$xs">noite de {formatDateBR(sleep.date)}</Data>
         <RatingText
           marginTop="$lg"
           color={rating.state === 'alert' ? '$destructive' : '$foreground'}

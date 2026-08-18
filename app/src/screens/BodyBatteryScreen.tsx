@@ -4,6 +4,7 @@ import React from 'react';
 import { Note, Row, Section } from '../components/Card';
 import { LineChart } from '../components/charts/LineChart';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
+import { MeasuredAt } from '../components/MeasuredAt';
 import { Body, Data, Display, Label, MetricSm, RatingText } from '../components/ui';
 import { calcBodyBattery, recoveryEfficiency } from '../domain/bodyBattery';
 import { rateBodyBattery, ratingTextColor } from '../domain/ratings';
@@ -58,6 +59,12 @@ export function BodyBatteryScreen() {
       <YStack marginBottom="$lg">
         <Display>{bateria.current}</Display>
         <Data marginTop="$xs">de 100 · reserva agora</Data>
+        {/* Calculada a partir do sono e do estresse: a idade dela é a da
+            amostra de estresse mais nova que entrou na conta. */}
+        <MeasuredAt
+          at={stressHistory.length ? stressHistory[stressHistory.length - 1].at : undefined}
+          prefixo="com dados de"
+        />
         <RatingText marginTop="$sm" style={{ color: ratingTextColor(rating.state, colors) }}>
           {rating.label}
         </RatingText>

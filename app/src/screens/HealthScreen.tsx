@@ -80,12 +80,17 @@ export function HealthScreen() {
     if (connection !== 'connected') return;
     setSyncing(true);
     try {
-      await syncHistory();
+      await syncHistory(true);
     } finally {
       setSyncing(false);
     }
   }, [connection, syncHistory]);
 
+  /*
+   Na montagem, SEM forçar: a loja corta por idade do dado. Antes toda visita à
+   tela disparava seis consultas em série, e o painel de progresso dava a
+   impressão de um app que vive carregando. O gesto de puxar continua forçando.
+  */
   useEffect(() => {
     if (connection === 'connected') void syncHistory();
   }, [connection, syncHistory]);
@@ -272,7 +277,7 @@ export function HealthScreen() {
               icone="heart"
               serie={hrHistory.map((p) => p.value)}
               rating={latest ? rateHeartRate(latest.heartRate) : null}
-              onPress={() => (navigation as any).push('Hrv' as never)}
+              onPress={() => (navigation as any).push('HeartRate' as never)}
             />
             <Celula
               label="oxigênio"

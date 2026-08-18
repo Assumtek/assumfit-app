@@ -136,6 +136,15 @@ export interface BleService {
   vibrate?(): Promise<boolean>;
   /** Liga o ANCS, sem o qual notificação nenhuma chega ao pulso com o app fechado. */
   enableAncs?(): Promise<boolean>;
+  /**
+   * O motivo da última medição AUTOMÁTICA que falhou, como o firmware o disse.
+   *
+   * As medições da conexão rodam sozinhas e falhavam em silêncio: a pulseira
+   * respondia "não está corretamente encaixada" às três, e a pessoa via telas
+   * vazias sem nenhuma pista de que bastava apertar a pulseira. O que o botão
+   * "medir" já mostrava, isto leva ao que acontece sem ninguém pedir.
+   */
+  onMeasureFailure?(listener: (motivo: string) => void): () => void;
   /** O filtro de avisos por categoria. Ver `domain/bandNotifications.ts`. */
   getNotificationFilter?(): Promise<{ type: number; enabled: boolean }[]>;
   setNotificationFilter?(entries: { type: number; enabled: boolean }[]): Promise<boolean>;

@@ -24,6 +24,15 @@ VALID_SUBTYPES = {"STRENGTH", "CARDIO", "MOBILITY"}
 #: re-gera com correção em vez de bloquear direto.
 CATALOG_ERROR_PREFIXES = ("exercicio_fora_do_catalogo", "used_id_fora_do_catalogo")
 
+# Erros MECÂNICOS: o modelo errou a forma, não o juízo clínico. Valem uma nova
+# tentativa antes de gastar avaliação e devolver veredito reprovado.
+#
+# `json_invalido` entrou depois de um caso em produção (ago/2026): a saída veio
+# com um delimitador faltando na linha 61, o plano foi descartado inteiro e a
+# pessoa recebeu "não deu para gerar" por um erro de vírgula. Uma falha de
+# formatação é o exemplo mais puro do que se resolve pedindo de novo.
+MECHANICAL_ERROR_PREFIXES = CATALOG_ERROR_PREFIXES + ("json_invalido",)
+
 
 def validate_plan(plan_json: str, inp: WorkoutGenerationInput) -> list[str]:
     """Lista de violações. Vazia = aprovado nesta camada."""
@@ -107,5 +116,15 @@ def validate_plan(plan_json: str, inp: WorkoutGenerationInput) -> list[str]:
 
 
 def catalog_errors(errors: list[str]) -> list[str]:
-    """Filtra só as violações de catálogo — as que vale re-gerar."""
+    """Filtra só as violações de catálogo."""
     return [e for e in errors if e.startswith(CATALOG_ERROR_PREFIXES)]
+
+
+def mechanical_errors(errors: list[str]) -> list[str]:
+    """Os erros de FORMA — catálogo e JSON —, que valem re-gerar."""
+    return [e for e in errors if e.startswith(MECHANICAL_ERROR_PREFIXES)]
+
+
+def json_errors(errors: list[str]) -> list[str]:
+    """Só as falhas de parse, para a instrução de correção ser específica."""
+    return [e for e in errors if e.startswith("json_invalido")]

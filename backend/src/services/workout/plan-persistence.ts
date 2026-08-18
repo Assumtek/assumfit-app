@@ -115,6 +115,8 @@ export type PersistParams = {
   level: Prisma.TrainingPlanCreateInput['level'];
   frequencyPerWeek: number | null;
   location: Prisma.TrainingPlanCreateInput['location'];
+  /** Ressalvas do avaliador que a tela do plano precisa mostrar. */
+  revisionNotes?: string[];
 };
 
 /**
@@ -144,6 +146,7 @@ export async function persistPlan(params: PersistParams): Promise<string> {
         frequencyPerWeek: params.frequencyPerWeek,
         location: params.location,
         rationale: plan.rationale ?? null,
+        revisionNotes: params.revisionNotes ?? [],
         startDate,
         endDate,
       },

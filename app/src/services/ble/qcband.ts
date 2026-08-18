@@ -1,7 +1,7 @@
 import { QCBand, type QCDevice, type QCHrvSeries, type QCState } from '../../../modules/qcband';
 import { nightFrom } from '../../domain/sleep';
 import type { Reading, SleepNight, SleepPhase, SleepSegment } from '../../domain/types';
-import { comTeto, eTempoEsgotado, TETO_CONSULTA_MS } from './timeout';
+import { comTeto, eTempoEsgotado, TETO_CONSULTA_MS, TETO_MEDICAO_MS } from './timeout';
 import {
   SYNC_TOTAL_STEPS,
   type BandActivity,
@@ -29,6 +29,9 @@ import {
  * ponte — a pulseira mede HRV em janelas agendadas.
  */
 export class QCBandService implements BleService {
+  /** Duas horas entre sequências automáticas. Ver `ultimaSequencia`. */
+  private static readonly INTERVALO_SEQUENCIA_MS = 2 * 60 * 60 * 1000;
+
   private state: ConnectionState = 'idle';
   /** Motivo do último `error`, para novos assinantes o receberem junto. */
   private stateReason: string | undefined;
@@ -43,6 +46,31 @@ export class QCBandService implements BleService {
    */
   private activity: BandActivity | null = null;
   private activityListeners = new Set<(a: BandActivity | null) => void>();
+  private measureFailureListeners = new Set<(motivo: string) => void>();
+  /**
+   * A grandeza que está ocupando o sensor AGORA, e o pedido de parar a
+   * sequência automática.
+   *
+   * O sensor óptico é um só: duas medições ao mesmo tempo não existem, e o
+   * firmware recusa a segunda com a mensagem de encaixe — que descreve outra
+   * coisa. Sem este par, o app disputava a pulseira consigo mesmo.
+   */
+  private medindo: MeasurableKind | null = null;
+  private abortarAutomatica = false;
+  /**
+   * Quando a sequência automática rodou pela última vez.
+   *
+   * Ela corria a CADA conexão — e o app reconecta sempre que volta ao primeiro
+   * plano, então abrir a tela disparava minutos de "Medindo…" com o sensor
+   * ocupado. Era isso que parecia uma medição de estresse infinita.
+   *
+   * O intervalo é generoso de propósito: a pulseira já mede sozinha nas janelas
+   * agendadas — batimento a cada 5 min, estresse a cada 30, oxigênio e HRV de
+   * hora em hora, tudo confirmado no aparelho —, e a memória dela é lida na
+   * sincronização. A sequência sob demanda é um complemento para quem acabou de
+   * parear, não a fonte principal.
+   */
+  private ultimaSequencia = 0;
   private battery: number | null = null;
   private lastHrv: number | null = null;
   /** Instante da amostra de HRV — quase nunca é o da leitura. */
@@ -115,6 +143,13 @@ export class QCBandService implements BleService {
     this.activityListeners.forEach((l) => l(activity));
   }
 
+  onMeasureFailure(listener: (motivo: string) => void): () => void {
+    this.measureFailureListeners.add(listener);
+    return () => {
+      this.measureFailureListeners.delete(listener);
+    };
+  }
+
   onActivity(listener: (activity: BandActivity | null) => void): () => void {
     this.activityListeners.add(listener);
     listener(this.activity);
@@ -175,6 +210,11 @@ export class QCBandService implements BleService {
    */
   private async measureAll(features: Record<string, boolean | number>) {
     if (!QCBand) return;
+    if (Date.now() - this.ultimaSequencia < QCBandService.INTERVALO_SEQUENCIA_MS) {
+      if (__DEV__) console.log('[qcband] sequência automática pulada — rodou há pouco');
+      return;
+    }
+    this.ultimaSequencia = Date.now();
 
     /*
      Ligar o monitoramento agendado ANTES de pedir qualquer medição.
@@ -257,18 +297,59 @@ export class QCBandService implements BleService {
      descreve a família inteira de aparelhos do fabricante, não esta pulseira.
      */
 
+    this.abortarAutomatica = false;
     for (const kind of pedidos) {
+      // Alguém pediu uma medição no meio: a automática para por aqui. Ela é
+      // oportunista — a próxima conexão tenta de novo — e insistir só produz
+      // recusa do firmware por sensor ocupado.
+      if (this.abortarAutomatica) break;
       // Narrada ANTES de começar: cada medição leva dezenas de segundos, e é
       // exatamente esta espera que a tela precisa explicar.
       this.setActivity({ kind: 'measure', what: kind as MeasurableKind });
+      this.medindo = kind as MeasurableKind;
       try {
-        await QCBand.measure(kind as Parameters<typeof QCBand.measure>[0]);
+        /*
+         Teto aqui também, e não só no botão "medir agora".
+
+         Esta é a sequência que roda na CONEXÃO, e o `completedHandle` do SDK
+         pode nunca ser chamado — sensor que não converge, pulseira frouxa. Sem
+         teto, este `await` pendurava para sempre: a etapa continuava anunciada
+         e a tela dizia "Medindo estresse…" indefinidamente, sem nada que a
+         pessoa pudesse fazer. Visto em campo (ago/2026), no teste em aparelho.
+
+         Estourou, desliga o sensor: desistir sem desligar deixa o próximo
+         pedido disputando um sensor já ocupado.
+        */
+        await this.comSensorLivre(() =>
+          comTeto(
+            QCBand!.measure(kind as Parameters<NonNullable<typeof QCBand>['measure']>[0]),
+            TETO_MEDICAO_MS,
+            kind,
+          ),
+        );
         if (__DEV__) console.log(`[qcband] medição concluída: ${kind}`);
       } catch (err) {
         // Falha de medição é rotina, não erro de programa: pulseira frouxa no
         // pulso, braço em movimento, aparelho sem contato com a pele. Seguir
         // para a próxima grandeza vale mais que interromper a série.
-        if (__DEV__) console.warn(`[qcband] medição de ${kind} falhou:`, err);
+        if (eTempoEsgotado(err)) {
+          await this.stopMeasure(kind as MeasurableKind).catch(() => undefined);
+          console.warn(`[qcband] medição de ${kind} passou do teto e foi abortada`);
+        } else if (__DEV__) {
+          console.warn(`[qcband] medição de ${kind} falhou:`, err);
+        }
+        /*
+         O motivo do firmware sobe para quem pode mostrá-lo.
+
+         Sem isto a sequência inteira falhava calada: três medições recusadas
+         pelo mesmo aviso de encaixe, e a tela apenas sem número.
+        */
+        const motivo = err instanceof Error ? err.message : '';
+        if (motivo) this.measureFailureListeners.forEach((l) => l(motivo));
+      } finally {
+        // Só solta se ainda for nossa: um pedido sob demanda pode ter assumido
+        // o sensor no meio, e zerar ali apagaria o dono verdadeiro.
+        if (this.medindo === kind) this.medindo = null;
       }
     }
 
@@ -289,23 +370,42 @@ export class QCBandService implements BleService {
    */
   private async refreshHrv() {
     if (!QCBand) return;
-    const series = await QCBand.getHrv(0).catch(() => []);
-    const values = series.flatMap((s) => s.values).filter((v) => v > 0);
-    if (__DEV__) console.log(`[qcband] histórico de HRV: ${values.length} amostras`);
-    if (values.length) {
-      this.lastHrv = values[values.length - 1];
-      /*
-       O instante é o do FIM da série, não o de agora.
+    const { amostras } = await this.hrvMaisRecente();
+    if (!amostras.length) return;
+    // O instante é o da AMOSTRA, não o de agora: a pulseira mede HRV em janelas
+    // agendadas, e carimbar com `Date.now()` faria um dado de dias atrás
+    // parecer recém-medido — o oposto do que a tela precisa dizer.
+    const ultima = amostras[amostras.length - 1];
+    this.lastHrv = ultima.value;
+    this.lastHrvAt = ultima.at;
+  }
 
-       A última amostra do histórico pode ser de horas atrás — a pulseira mede
-       HRV em janelas agendadas. Carimbar com `Date.now()` faria um dado velho
-       parecer recém-medido, que é o oposto do que a tela precisa dizer.
-       */
-      const ultima = series[series.length - 1];
-      const passos = ultima.values.length - 1;
-      this.lastHrvAt =
-        new Date(`${ultima.date}T00:00:00`).getTime() + passos * ultima.secondInterval * 1000;
+  /**
+   * A série de HRV mais recente que a pulseira ainda guarda — não só a de hoje.
+   *
+   * Pedíamos apenas o dia 0 e desistíamos, e num dia sem medição isso virava
+   * "sem HRV" com quatro dias de dado a um índice de distância. O app do
+   * fabricante faz o contrário e é por isso que ele mostra "HRV · 14 ago ·
+   * 45 ms" enquanto o nosso mostrava traço: o número existe, só não é de hoje.
+   *
+   * Mostrar medição antiga COM A DATA não fere a regra de "medido ou traço" —
+   * ela existe contra número inventado, e este foi medido. O que seria mentira é
+   * apresentá-lo como atual, e por isso o instante volta junto.
+   *
+   * O protocolo endereça 0–6. Para na primeira que tiver valor: uma consulta por
+   * dia num canal serial, e varrer sete sem necessidade custa segundos.
+   */
+  private async hrvMaisRecente(): Promise<{ amostras: Sample[]; diasAtras: number }> {
+    if (!QCBand) return { amostras: [], diasAtras: 0 };
+    for (let dia = 0; dia <= 6; dia++) {
+      const series = await comTeto(QCBand.getHrv(dia), TETO_CONSULTA_MS, 'hrv').catch(() => []);
+      const amostras = amostrasDeSerie(series);
+      if (amostras.length) {
+        if (__DEV__) console.log(`[qcband] HRV: ${amostras.length} amostras do dia -${dia}`);
+        return { amostras, diasAtras: dia };
+      }
     }
+    return { amostras: [], diasAtras: 0 };
   }
 
   /**
@@ -411,12 +511,67 @@ export class QCBandService implements BleService {
     await QCBand?.stopMeasure(kind).catch(() => undefined);
   }
 
+  /**
+   * Medição PEDIDA por alguém — e ela tem prioridade sobre a automática.
+   *
+   * O sensor óptico é um só, e o firmware recusa uma segunda medição enquanto
+   * a primeira corre. A recusa vem com a mensagem de encaixe (`未正确佩戴手环`),
+   * que descreve a causa mais comum e não esta: quem lê conclui que a pulseira
+   * está frouxa quando na verdade ela está ocupada.
+   *
+   * Foi exatamente o que aconteceu em campo (ago/2026): a sequência automática
+   * começa a cada conexão e ocupa o sensor por minutos; um toque em "medir"
+   * nesse intervalo era recusado, e a tela mandava apertar uma pulseira que já
+   * estava firme — tanto que o app do fabricante media normalmente.
+   *
+   * Quem pediu ganha: a automática é oportunista e pode esperar a próxima
+   * conexão; a pessoa está olhando para a tela agora.
+   */
   async measure(kind: MeasurableKind): Promise<void> {
     if (!QCBand) throw new Error('Pulseira não disponível neste build');
-    await QCBand.measure(kind);
-    // HRV não chega por callback: é série histórica, e a medição que acabou de
-    // rodar acrescentou uma amostra a ela.
-    if (kind === 'hrv') await this.refreshHrv();
+
+    if (this.medindo) {
+      // Cede a vez: desliga o sensor da automática antes de pedir o nosso, e
+      // sinaliza para o laço não seguir para a próxima grandeza.
+      this.abortarAutomatica = true;
+      await this.stopMeasure(this.medindo).catch(() => undefined);
+    }
+
+    this.medindo = kind;
+    try {
+      await this.comSensorLivre(() => QCBand!.measure(kind));
+      // HRV não chega por callback: é série histórica, e a medição que acabou de
+      // rodar acrescentou uma amostra a ela.
+      if (kind === 'hrv') await this.refreshHrv();
+    } finally {
+      this.medindo = null;
+    }
+  }
+
+  /**
+   * Roda `fn` com o sensor óptico LIVRE — sem o batimento contínuo por cima.
+   *
+   * O batimento ao vivo é ligado na conexão e só era desligado ao desconectar,
+   * ou seja, ficava ocupando o sensor o tempo inteiro. E o sensor é um só: com
+   * ele tomado, `startToMeasuring` é recusado — e a recusa vem com a mensagem
+   * de encaixe (`未正确佩戴手环`), que descreve outra causa e mandava apertar
+   * uma pulseira que já estava firme.
+   *
+   * A pista veio da interface do fabricante: lá o batimento contínuo só corre
+   * quando alguém toca em "iniciar medição", e a medição de um toque tem botão
+   * próprio. Eles nunca deixam os dois disputando.
+   *
+   * O contínuo volta no fim, inclusive quando a medição falha: é ele que
+   * alimenta a leitura ao vivo da home, e deixá-lo desligado trocaria um
+   * problema por outro.
+   */
+  private async comSensorLivre<T>(fn: () => Promise<T>): Promise<T> {
+    await QCBand?.stopRealtimeHeartRate().catch(() => undefined);
+    try {
+      return await fn();
+    } finally {
+      await QCBand?.startRealtimeHeartRate().catch(() => undefined);
+    }
   }
 
   /**
@@ -517,7 +672,15 @@ export class QCBandService implements BleService {
       anunciar('heartRate');
       const fc = await ler('fc', () => QCBand!.getHeartRateHistory(dayIndex));
       anunciar('hrv');
-      const hrv = await ler('hrv', () => QCBand!.getHrv(dayIndex));
+      /*
+       HRV varre para trás; as outras grandezas, não.
+
+       Ela é medida uma vez por hora, no máximo, e um dia sem uso da pulseira a
+       deixa vazia — enquanto batimento e passos enchem o dia inteiro. Buscar a
+       mais recente que ainda existe é o que evita a tela dizer "sem HRV" com
+       dado de anteontem guardado no aparelho.
+      */
+      const hrvRecente = dayIndex === 0 ? (await this.hrvMaisRecente()).amostras : [];
       anunciar('stress');
       const estresse = await ler('estresse', () => QCBand!.getStressHistory(dayIndex));
       anunciar('spo2');
@@ -534,7 +697,7 @@ export class QCBandService implements BleService {
 
       const historico: DayHistory = {
         heartRate: amostrasDeSerie(fc),
-        hrv: amostrasDeSerie(hrv),
+        hrv: hrvRecente,
         stress: amostrasDeSerie(estresse),
         // A medição pedida na mão fica de fora da série do dia: ela costuma ser
         // feita parado e de propósito, e misturá-la com a agendada distorce a
@@ -776,16 +939,26 @@ function montarNoite(bruto: { type: number; minutes: number; start: string }[]):
   return nightFrom(data, segments);
 }
 
-function amostrasDeSerie(series: QCHrvSeries[]): Sample[] {
+function amostrasDeSerie(series: QCHrvSeries[], nome = 'serie'): Sample[] {
   const amostras: Sample[] = [];
   for (const serie of series) {
     const base = new Date(`${serie.date}T00:00:00`).getTime();
+    console.log(
+        `valores=${serie.values.length} positivos=${serie.values.filter((v) => v > 0).length} ` +
+        `base=${Number.isNaN(base) ? 'NaN — DATA NÃO PARSEIA' : new Date(base).toISOString()}`,
+    );
     if (Number.isNaN(base)) continue;
     serie.values.forEach((value, i) => {
       if (value > 0) amostras.push({ at: base + i * serie.secondInterval * 1000, value });
     });
   }
-  return amostras.sort((a, b) => a.at - b.at);
+  const r = amostras.sort((a, b) => a.at - b.at);
+  console.log(
+      (r.length
+        ? ` · de ${new Date(r[0].at).toISOString()} a ${new Date(r[r.length - 1].at).toISOString()}`
+        : ''),
+  );
+  return r;
 }
 
 /**

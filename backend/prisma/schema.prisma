@@ -659,6 +659,13 @@ model TrainingPlan {
   /// Fundamentação que o modelo escreveu para a prescrição. Fica guardada
   /// porque é o que permite auditar POR QUE um plano ficou daquele jeito.
   rationale        String?
+  /// O que foi CONTIDO no plano por exigência do avaliador de segurança.
+  ///
+  /// Existe porque a regra do produto passou a ser sempre entregar um treino
+  /// (ago/2026): quando o avaliador reprova, o plano é revisado em vez de
+  /// descartado, e o que sobrou de ressalva precisa chegar a quem vai treinar.
+  /// Sem isto, a pessoa receberia um plano mais conservador sem saber por quê.
+  revisionNotes    String[]           @map("revision_notes")
   startDate        DateTime           @map("start_date") @db.Timestamptz(3)
   /// Validade. Um plano não fica ativo para sempre: o corpo adapta, e treinar
   /// o mesmo estímulo por meses é o caminho para a estagnação.

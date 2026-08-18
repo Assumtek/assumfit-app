@@ -5,6 +5,9 @@ import { LayoutChangeEvent } from 'react-native';
 import { EmptyMetric } from '../components/BandStatus';
 import { Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
+import { MeasuredAt } from '../components/MeasuredAt';
+import { DayPickerRow, useHistoricoDoDia } from '../components/DayPicker';
+import { DayChart } from '../components/charts/DayChart';
 import { MeasureButton } from '../components/MeasureButton';
 import { BarChart } from '../components/charts/BarChart';
 import { Data, Display, RatingText } from '../components/ui';
@@ -16,6 +19,8 @@ export function StressScreen() {
   const { colors } = useTheme();
   const latest = useBiometricStore((s) => s.latest);
   const byHour = useBiometricStore((s) => s.stressByHour);
+  const stressHistory = useBiometricStore((s) => s.stressHistory);
+  const historico = useHistoricoDoDia((p) => p.stress_score, stressHistory);
   const [chartWidth, setChartWidth] = useState(0);
   if (!latest)
     return (
@@ -31,6 +36,7 @@ export function StressScreen() {
       <YStack marginBottom="$xxl">
         <Display>{shown(latest.stressScore)}</Display>
         <Data marginTop="$sm">índice de 0 a 100</Data>
+        <MeasuredAt at={latest.recordedAt} />
         <RatingText
           marginTop="$lg"
           color={rating.state === 'alert' ? '$destructive' : '$foreground'}
@@ -39,6 +45,31 @@ export function StressScreen() {
         </RatingText>
       </YStack>
 
+      <DayPickerRow
+        selecionado={historico.dia}
+        onSelecionar={historico.setDia}
+        comDado={historico.comDado}
+      />
+
+      {/*
+        Dia passado desenha CURVA, hoje desenha barras por hora.
+
+        Não é inconsistência: as barras vêm de `stressByHour`, que só existe
+        para o dia corrente — a memória da pulseira é lida por dia e o servidor
+        agrega por hora. Forçar barras num dia passado exigiria remontar o
+        agrupamento a partir de outra fonte, com outro significado.
+      */}
+      {!historico.ehHoje ? (
+        <YStack marginBottom="$xl">
+          <DayChart
+            serie={historico.pontos}
+            dia={historico.dia}
+            id="stress-dia"
+            thresholds={[{ value: 40, label: 'recuperação' }]}
+            vazio="Nenhuma medição de estresse neste dia."
+          />
+        </YStack>
+      ) : (
       <Section label="Ao longo do dia">
         <YStack onLayout={(e: LayoutChangeEvent) => setChartWidth(e.nativeEvent.layout.width)}>
           <BarChart
@@ -59,6 +90,7 @@ export function StressScreen() {
           passou acima da linha.
         </Data>
       </Section>
+      )}
 
       <MeasureButton kind="stress" />
     </DetailScreen>

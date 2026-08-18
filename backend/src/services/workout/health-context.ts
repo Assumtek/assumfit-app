@@ -29,7 +29,8 @@ export type HealthContext = {
 export async function buildHealthContext(userId: string): Promise<HealthContext> {
   const since = new Date(Date.now() - ADHERENCE_WINDOW_DAYS * 86_400_000);
 
-  const [baseline, latest, executions, lastEnergy] = await Promise.all([
+  const [conta, baseline, latest, executions, lastEnergy] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { createdAt: true } }),
     hrvBaseline(userId),
     latestReading(userId),
     prisma.workoutExecution.findMany({
@@ -58,14 +59,41 @@ export async function buildHealthContext(userId: string): Promise<HealthContext>
     biometrics.score_energia = Math.round(lastEnergy.score);
   }
 
-  return { biometrics, historySummary: summarize(executions) };
+  const diasDeConta = conta
+    ? Math.floor((Date.now() - conta.createdAt.getTime()) / 86_400_000)
+    : null;
+
+  return { biometrics, historySummary: summarize(executions, diasDeConta) };
 }
 
+/**
+ * O histórico em texto — sem transformar AUSÊNCIA em afirmação sobre a pessoa.
+ *
+ * A frase antiga era "Sem histórico de treino registrado no aplicativo nos
+ * últimos 45 dias", e 45 é a janela da NOSSA consulta, não um fato de ninguém.
+ * O avaliador leu aquilo como "45 dias sem treinar" e exigiu carga
+ * conservadora; num caso real (ago/2026) isso reprovou o plano de alguém que
+ * tinha criado a conta no dia anterior — não havia como existir registro.
+ *
+ * Quem sabe se a pessoa está destreinada é a ANAMNESE, onde ela declara a
+ * própria experiência. O resumo do histórico não pode competir com isso: sem
+ * registro, o texto diz que não sabe, e diz por quê.
+ */
 function summarize(
   executions: { startedAt: Date; completionPct: number | null; perceivedEffort: number | null }[],
+  diasDeConta: number | null,
 ): string {
   if (executions.length === 0) {
-    return 'Sem histórico de treino registrado no aplicativo nos últimos 45 dias.';
+    const conta =
+      diasDeConta !== null && diasDeConta <= ADHERENCE_WINDOW_DAYS
+        ? ` A conta foi criada há ${diasDeConta} ${diasDeConta === 1 ? 'dia' : 'dias'}, então não houve tempo de acumular histórico.`
+        : '';
+    return (
+      'O aplicativo ainda não tem sessões registradas para esta pessoa.' +
+      conta +
+      ' Isso NÃO indica que ela esteja destreinada nem parada:' +
+      ' use a experiência e a frequência declaradas na anamnese para calibrar carga e volume.'
+    );
   }
 
   const completions = executions.map((e) => e.completionPct).filter((v): v is number => v !== null);

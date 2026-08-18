@@ -1,8 +1,14 @@
-"""Re-voto do bloqueio por opinião — maioria de 2 em 3.
+"""Re-voto do bloqueio por opinião — maioria de 2 em 3 — e o desfecho depois dele.
 
 Rodada de testes 1 (jul/2026): o mesmo perfil limpo levou hard-fail de
 segurança em 1 de 4 avaliações. Falso bloqueio cobra a geração inteira e não
 entrega nada, então bloqueio que é só opinião do juiz precisa de maioria.
+
+Ago/2026, decisão da fundadora: confirmada a reprovação, o plano **não morre**.
+O parecer volta ao gerador como pedido de revisão e, esgotadas as revisões, o
+melhor plano é entregue com as ressalvas à vista. "Não foi possível gerar" é a
+pior resposta possível para quem respondeu uma anamnese inteira. Segue bloqueado
+só o que não tem plano para entregar — JSON que não parseia.
 """
 
 from __future__ import annotations
@@ -21,7 +27,13 @@ APROVA = {"score": 8.0, "hard_failures": [], "judges": [], "checks": []}
 REPROVA_JUIZ = {
     "score": 0.0,
     "hard_failures": [{"type": "judge", "name": "seguranca_clinica", "score": 5.0, "min": 7.0}],
-    "judges": [],
+    "judges": [
+        {
+            "name": "seguranca_clinica",
+            "score": 5.0,
+            "reason": "Volume agressivo para retorno pós 45 dias. Reduza as séries de perna.",
+        }
+    ],
     "checks": [],
 }
 REPROVA_CHECK = {
@@ -61,11 +73,20 @@ async def test_aprovado_nao_revota(monkeypatch):
 
 
 @pytest.mark.anyio
-async def test_bloqueio_confirmado_por_dois_votos(monkeypatch):
-    chamadas = _prepara(monkeypatch, [REPROVA_JUIZ, REPROVA_JUIZ])
+async def test_reprovacao_confirmada_vira_revisao_e_entrega(monkeypatch):
+    """Dois votos contra confirmam a reprovação — e aí o plano é REVISADO.
+
+    Antes isto devolvia bloqueio e nada mais. O que se cobra agora: as revisões
+    acontecem, e no fim sai um plano com as ressalvas escritas.
+    """
+    monkeypatch.setattr(settings, "max_judge_retries", 2)
+    # 2 vereditos do re-voto + 1 por revisão.
+    chamadas = _prepara(monkeypatch, [REPROVA_JUIZ] * 4)
     result = await pipeline.run_agent(ENTRADA)
-    assert result.blocked
-    assert len(chamadas) == 2
+    assert not result.blocked
+    assert result.revision_notes
+    assert "Volume agressivo" in result.revision_notes[0]
+    assert len(chamadas) == 4
 
 
 @pytest.mark.anyio
@@ -80,33 +101,55 @@ async def test_falso_bloqueio_cai_na_maioria(monkeypatch):
 
 @pytest.mark.anyio
 async def test_empate_se_resolve_no_terceiro(monkeypatch):
-    chamadas = _prepara(monkeypatch, [REPROVA_JUIZ, APROVA, REPROVA_JUIZ])
+    # Duas revisões depois do desempate: 3 do re-voto + 2 de revisão.
+    monkeypatch.setattr(settings, "max_judge_retries", 2)
+    chamadas = _prepara(monkeypatch, [REPROVA_JUIZ, APROVA, REPROVA_JUIZ] + [REPROVA_JUIZ] * 2)
     result = await pipeline.run_agent(ENTRADA)
-    assert result.blocked
-    assert len(chamadas) == 3
+    # O desempate confirmou a reprovação, e ainda assim o plano sai.
+    assert not result.blocked
+    assert len(chamadas) == 5
 
 
 @pytest.mark.anyio
-async def test_erro_deterministico_nao_revota(monkeypatch):
-    # Validação reprovou: re-votar não muda nada e só queima chamada.
-    chamadas = _prepara(monkeypatch, [APROVA], det_errors=["dia repetido"])
+async def test_erro_deterministico_nao_revota_mas_revisa(monkeypatch):
+    """Erro de validação não RE-VOTA — re-votar não muda o que é objetivo.
+
+    Mas revisa: uma falha estrutural é corrigível, e a regra é entregar um
+    plano. O que não se faz é gastar chamada de avaliação pedindo segunda
+    opinião sobre um erro que não é de opinião.
+    """
+    monkeypatch.setattr(settings, "max_judge_retries", 2)
+    chamadas = _prepara(monkeypatch, [APROVA] * 3, det_errors=["dia repetido"])
     result = await pipeline.run_agent(ENTRADA)
+    # Persistindo o erro depois das revisões, segue bloqueado: não há plano
+    # válido para entregar, e esta é a fronteira do "sempre entrega".
     assert result.blocked
-    assert len(chamadas) == 1
+    assert not result.revision_notes
 
 
 @pytest.mark.anyio
 async def test_checagem_dura_nao_revota(monkeypatch):
-    chamadas = _prepara(monkeypatch, [REPROVA_CHECK])
+    """Checagem dura não RE-VOTA — repetiria idêntica e queimaria chamada.
+
+    Revisar, sim: uma checagem reprovada é objetiva e o gerador pode corrigi-la.
+    O que se cobra aqui é que nenhuma das chamadas seja re-voto — são revisões,
+    cada uma com um plano novo.
+    """
+    monkeypatch.setattr(settings, "max_judge_retries", 2)
+    chamadas = _prepara(monkeypatch, [REPROVA_CHECK] * 3)
     result = await pipeline.run_agent(ENTRADA)
-    assert result.blocked
-    assert len(chamadas) == 1
+    # 1 avaliação inicial + 2 revisões. Um re-voto teria gasto mais.
+    assert len(chamadas) == 3
+    assert not result.blocked
 
 
 @pytest.mark.anyio
 async def test_chave_desliga_o_revoto(monkeypatch):
-    chamadas = _prepara(monkeypatch, [REPROVA_JUIZ])
     monkeypatch.setattr(settings, "grader_confirm_blocks", False)
+    monkeypatch.setattr(settings, "max_judge_retries", 0)
+    chamadas = _prepara(monkeypatch, [REPROVA_JUIZ])
     result = await pipeline.run_agent(ENTRADA)
-    assert result.blocked
+    # Sem re-voto e sem revisão, o plano ainda assim é entregue com ressalvas.
     assert len(chamadas) == 1
+    assert not result.blocked
+    assert result.revision_notes

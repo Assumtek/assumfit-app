@@ -1,5 +1,7 @@
 import {
   comAmostraDeHrv,
+  medidoEm,
+  ultimoInstante,
   faixaInicial,
   noPeriodo,
   quandoFoi,
@@ -107,14 +109,95 @@ describe('comAmostraDeHrv', () => {
 });
 
 describe('faixaInicial', () => {
-  it('abre na faixa mais estreita que tem curva', () => {
+  it('abre na faixa mais estreita que tem medição', () => {
     expect(faixaInicial([em(0.2), em(0.6)], AGORA)).toBe('1H');
     expect(faixaInicial([em(3), em(5)], AGORA)).toBe('6H');
     expect(faixaInicial([em(30), em(40)], AGORA)).toBe('7D');
   });
 
-  it('sem dado suficiente em nenhuma faixa, cai num padrão estável', () => {
+  it('UMA medição já escolhe a faixa — ela vira ponto no gráfico', () => {
+    // Exigir duas escondia a única medição que existia, justamente de quem
+    // acabou de medir pela primeira vez e quer ver onde caiu.
+    expect(faixaInicial([em(2)], AGORA)).toBe('6H');
+    expect(faixaInicial([em(0.5)], AGORA)).toBe('1H');
+  });
+
+  it('sem medição nenhuma, cai num padrão estável', () => {
     expect(faixaInicial([], AGORA)).toBe('24H');
-    expect(faixaInicial([em(2)], AGORA)).toBe('24H');
+    expect(faixaInicial([em(200)], AGORA)).toBe('24H');
+  });
+});
+
+describe('ultimoInstante', () => {
+  it('série vazia não confunde com amostra de 1970', () => {
+    expect(ultimoInstante([])).toBe(0);
+  });
+
+  it('acha a mais nova mesmo fora de ordem', () => {
+    expect(ultimoInstante([em(5), em(0), em(9)])).toBe(AGORA);
+  });
+});
+
+describe('série no TETO: medição nova precisa ser detectável', () => {
+  /*
+   O defeito visto no primeiro teste em aparelho: a detecção de "mediu ou veio
+   vazio" contava ITENS. Desde que a série passou a ser preenchida da memória da
+   pulseira, ela chega no teto — e aí cada medição bem-sucedida empurra a mais
+   antiga para fora, o tamanho fica igual, e o app acusava "concluiu sem
+   devolver valor" sobre uma medição que deu certo.
+  */
+  const LIMITE = 90;
+  const cheia: Ponto[] = Array.from({ length: LIMITE }, (_, i) => ({
+    at: AGORA - (LIMITE - i) * 60_000,
+    value: 50,
+  }));
+
+  it('o tamanho NÃO muda — é por isso que contar itens mentia', () => {
+    const depois = comAmostraDeHrv(cheia, { hrvMs: 61, hrvAt: AGORA, recordedAt: AGORA }, LIMITE);
+    expect(depois).toHaveLength(cheia.length);
+  });
+
+  it('o carimbo muda, e é ele que prova que a medição chegou', () => {
+    const antes = ultimoInstante(cheia);
+    const depois = comAmostraDeHrv(cheia, { hrvMs: 61, hrvAt: AGORA, recordedAt: AGORA }, LIMITE);
+    expect(ultimoInstante(depois)).toBeGreaterThan(antes);
+  });
+
+  it('medição que NÃO chegou deixa o carimbo parado', () => {
+    const antes = ultimoInstante(cheia);
+    const depois = comAmostraDeHrv(cheia, { hrvMs: null, recordedAt: AGORA }, LIMITE);
+    expect(ultimoInstante(depois)).toBe(antes);
+  });
+});
+
+describe('medidoEm', () => {
+  // 17/08/2026 às 12:00 no fuso local — o mesmo AGORA do resto do arquivo.
+  const local = (dia: number, hora: number, min = 0) =>
+    new Date(2026, 7, dia, hora, min).getTime();
+  const agora = local(17, 12);
+
+  it('hoje vira a hora, sem data', () => {
+    expect(medidoEm(local(17, 9, 5), agora)).toBe('hoje às 09:05');
+  });
+
+  it('ontem é dito por extenso', () => {
+    expect(medidoEm(local(16, 22, 10), agora)).toBe('ontem às 22:10');
+  });
+
+  it('mais velho ganha data curta, sem o ano do ano corrente', () => {
+    expect(medidoEm(local(14, 9, 15), agora)).toBe('14/08 às 09:15');
+  });
+
+  it('ano diferente aparece, porque aí ele informa', () => {
+    expect(medidoEm(new Date(2025, 11, 31, 23, 40).getTime(), agora)).toBe(
+      '31/12/2025 às 23:40',
+    );
+  });
+
+  it('meia-noite não vira "ontem" por arredondamento', () => {
+    // 00:10 de hoje é HOJE, ainda que faltem menos de 24 h para agora.
+    expect(medidoEm(local(17, 0, 10), agora)).toBe('hoje às 00:10');
+    // e 23:50 de ontem é ONTEM, ainda que faltem menos de 24 h.
+    expect(medidoEm(local(16, 23, 50), agora)).toBe('ontem às 23:50');
   });
 });

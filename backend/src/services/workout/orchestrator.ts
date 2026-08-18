@@ -37,6 +37,9 @@ const REASON_MESSAGES: Record<string, string> = {
   catalogo:
     'Não foi possível montar um treino com os exercícios disponíveis para o seu perfil. ' +
     'Tente novamente em instantes.',
+  formato:
+    'A resposta do gerador veio incompleta e o treino foi descartado. ' +
+    'Isso costuma passar na segunda tentativa — pode gerar de novo.',
   qualidade:
     'Não conseguimos gerar um treino adequado desta vez. Você pode tentar novamente em instantes.',
   timeout: 'A geração demorou mais que o esperado e não foi concluída. Tente gerar o treino de novo.',
@@ -114,6 +117,25 @@ async function finish(
     where: { id: requestId },
     data: { status, finishedAt: new Date(), ...extra },
   });
+}
+
+/**
+ * Por que o plano foi bloqueado — o motivo que fica GRAVADO no banco.
+ *
+ * Todo erro determinístico virava `catalogo`, e isso escondeu um caso real
+ * (ago/2026): a saída do modelo veio com uma vírgula faltando na linha 61, o
+ * erro era `json_invalido`, e o registro dizia "catálogo". Quem fosse
+ * investigar procuraria exercício inexistente e não acharia nada — o motivo
+ * gravado mandava para o lugar errado.
+ *
+ * Cada motivo pede uma ação diferente: `formato` se resolve tentando de novo,
+ * `catalogo` indica exercício fora da lista, `seguranca_clinica` é juízo do
+ * avaliador e não se resolve repetindo.
+ */
+function motivoDoBloqueio(erros: string[]): string {
+  if (erros.length === 0) return 'seguranca_clinica';
+  if (erros.some((e) => e.startsWith('json_invalido'))) return 'formato';
+  return 'catalogo';
 }
 
 /** O pipeline. Cada saída possível grava o próprio desfecho na requisição. */
@@ -202,7 +224,7 @@ export async function runGeneration(requestId: string): Promise<void> {
     });
 
     if (result.blocked) {
-      const reason = result.deterministicErrors.length > 0 ? 'catalogo' : 'seguranca_clinica';
+      const reason = motivoDoBloqueio(result.deterministicErrors);
       await finish(requestId, GenerationStatus.BLOCKED, {
         blockReason: reason,
         score: result.score,
@@ -231,6 +253,7 @@ export async function runGeneration(requestId: string): Promise<void> {
     const planId = await persistPlan({
       userId,
       plan,
+      revisionNotes: result.revisionNotes,
       goal: GOAL_TO_ENUM[goal] ?? null,
       level: LEVEL_TO_ENUM[level] ?? null,
       frequencyPerWeek: Number(context.profile.frequencia_semanal) || null,

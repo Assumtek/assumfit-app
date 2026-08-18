@@ -5,12 +5,14 @@ import { LayoutChangeEvent } from 'react-native';
 import { Note, Row, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
 import { LineChart } from '../components/charts/LineChart';
+import { MeasuredAt } from '../components/MeasuredAt';
 import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
 import { rateActivity } from '../domain/ratings';
 import { useBiometricStore } from '../store/biometric.store';
 
 export function ActivityScreen() {
   const activity = useBiometricStore((s) => s.activity);
+  const latest = useBiometricStore((s) => s.latest);
   const stepsByHour = useBiometricStore((s) => s.stepsByHour);
   const [chartWidth, setChartWidth] = useState(0);
   const rating = rateActivity(activity);
@@ -27,6 +29,10 @@ export function ActivityScreen() {
       <YStack marginBottom="$xxl">
         <Display>{activity.steps.toLocaleString('pt-BR')}</Display>
         <Data marginTop="$sm">passos de {activity.goal.toLocaleString('pt-BR')}</Data>
+        {/* Passos vêm da pulseira e param quando ela sai do pulso — a hora da
+            última leitura é o que distingue "andei pouco" de "não estava com
+            ela". */}
+        <MeasuredAt at={latest?.recordedAt} prefixo="atualizado" />
         <RatingText marginTop="$lg">{rating.label}</RatingText>
       </YStack>
 

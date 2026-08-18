@@ -28,6 +28,8 @@ export type AgentGenerationResult = {
   deterministicErrors: string[];
   hardFailures: unknown[];
   traceId: string;
+  /** O que o avaliador exigiu conter, em linguagem de gente. Ver o pipeline. */
+  revisionNotes: string[];
 };
 
 export type AdjustOperation = Record<string, unknown>;
@@ -74,6 +76,7 @@ export async function generate(input: AgentGenerationInput): Promise<AgentGenera
       score: data.score,
       blocked: data.blocked,
       deterministicErrors: data.deterministic_errors ?? [],
+      revisionNotes: data.revision_notes ?? [],
       hardFailures: data.grader_breakdown?.hard_failures ?? [],
       traceId: data.trace_id,
     };

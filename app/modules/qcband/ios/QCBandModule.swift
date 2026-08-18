@@ -475,6 +475,8 @@ public class QCBandModule: Module {
    emitir isso viraria "0 bpm" ou "0 °C" na interface.
    */
   private func emitMeasurement(kind: String, result: Any?) {
+    // É o que responde onde este firmware entrega HRV, já que a porta de
+    // histórico agendado é "Only Ring Support".
     /*
      O SDK devolve dicionário ou número cru — NÃO os modelos do cabeçalho.
 
@@ -544,6 +546,27 @@ public class QCBandModule: Module {
        possibilidades produziria um número plausível e errado numa tela de
        saúde. A medição dedicada de estresse responde isso sem adivinhação.
        */
+      /*
+       HRV, se vier junto.
+
+       O modelo `QCRealOneKeyMeasureHeartRateModel` declara `heartRateHRV` em
+       milissegundos, e nenhuma chave era procurada aqui: numa medição que
+       trouxesse variabilidade, o valor chegava e ia embora. A porta de
+       histórico agendado é "Only Ring Support" e devolve vazio nesta pulseira
+       — provado no aparelho —, então a medição sob demanda é a única fonte de
+       HRV que resta, e descartá-la deixaria o produto sem o componente de
+       maior peso do score.
+      */
+      let hrv: Int =
+        (dict["hrv"] as? NSNumber)?.intValue
+        ?? (dict["heartRateHRV"] as? NSNumber)?.intValue
+        ?? 0
+      if hrv > 0 {
+        let p: [String: Any] = ["kind": "hrv", "value": hrv]
+        sendEvent("onReading", p)
+        emitiu = true
+      }
+
       let score: Int = (dict["score"] as? NSNumber)?.intValue ?? 0
       if score > 0 {
         onLogFromModule?(["raw": "oneKey trouxe score=\(score) (semântica ainda não confirmada)"])
@@ -559,6 +582,14 @@ public class QCBandModule: Module {
        */
       if !emitiu {
         let chaves: String = dict.keys.sorted().joined(separator: ", ")
+        /*
+         `NSLog` além do `onLog`: em Release o log do JavaScript não chega a
+         lugar nenhum, e foi por isso que a forma do resultado de HRV ficou
+         desconhecida por tanto tempo. Este caminho só corre quando uma medição
+         conclui sem render nada, ou seja, quase nunca — e é exatamente quando
+         alguém vai precisar da informação.
+        */
+        NSLog("[qcband] medição %@ sem chave conhecida — chaves: [%@]", kind, chaves)
         onLogFromModule?([
           "raw": "medição \(kind) devolveu dicionário sem chave conhecida — chaves: [\(chaves)] conteúdo: \(dict)",
         ])
@@ -792,6 +823,11 @@ public class QCBandModule: Module {
          expressão, e por isso custa caro. Quebrar em variáveis tipadas custa
          quatro linhas e elimina a classe inteira do problema.
          */
+        if let bruto = models as? NSArray {
+          for item in bruto.prefix(3) {
+          }
+        } else {
+        }
         let list: [QCHRVModel] = (models as? [QCHRVModel]) ?? []
         var series: [[String: Any]] = []
         for model in list {
@@ -858,8 +894,22 @@ public class QCBandModule: Module {
             promise.resolve(true)
             return
           }
-          let motivo = error?.localizedDescription ?? "a medição não concluiu"
-          promise.reject("falha", motivo)
+          /*
+           O motivo vem do UserInfo, não do `localizedDescription`.
+
+           O firmware devolve a causa REAL em `UserInfo["message"]` — a que
+           importa é "手环未正确佩戴": a pulseira não está fazendo contato com a
+           pele. O `localizedDescription` de um NSError sem tabela de tradução
+           vira "The operation couldn't be completed. (MeasuringError error
+           -3.)", que não diz nada a ninguém e era tudo que chegava à tela.
+
+           Passado adiante como veio, em `code`: quem traduz para o português e
+           decide o que sugerir é o domínio, não a ponte.
+          */
+          let userInfo = (error as NSError?)?.userInfo
+          let doFirmware = userInfo?["message"] as? String
+          let motivo = doFirmware ?? error?.localizedDescription ?? "a medição não concluiu"
+          promise.reject(doFirmware.map { _ in "firmware" } ?? "falha", motivo)
         }
       )
     }

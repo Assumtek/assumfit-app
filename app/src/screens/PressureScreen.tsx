@@ -6,6 +6,7 @@ import { LayoutChangeEvent } from 'react-native';
 import { EmptyMetric } from '../components/BandStatus';
 import { Row, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
+import { MeasuredAt } from '../components/MeasuredAt';
 import { MeasureButton } from '../components/MeasureButton';
 import { ScatterPlot } from '../components/charts/ScatterPlot';
 import { Body, Data, Display, RatingText } from '../components/ui';
@@ -49,6 +50,7 @@ export function PressureScreen() {
           </Text>
         </XStack>
         <Data marginTop="$sm">mmHg · sistólica / diastólica</Data>
+        <MeasuredAt at={latest.recordedAt} />
         <RatingText
           marginTop="$lg"
           color={rating.state === 'alert' ? '$destructive' : '$foreground'}

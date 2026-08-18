@@ -308,7 +308,7 @@ export async function scheduleMorningGreeting(texto: { title: string; body: stri
 const ATENCAO = {
   spo2: { nome: 'oxigenação', route: 'Oxygen' },
   pressao: { nome: 'pressão', route: 'Pressure' },
-  hr: { nome: 'frequência cardíaca', route: 'Hrv' },
+  hr: { nome: 'frequência cardíaca', route: 'HeartRate' },
 } as const;
 
 export type MetricaDeAtencao = keyof typeof ATENCAO;

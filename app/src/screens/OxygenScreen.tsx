@@ -6,7 +6,10 @@ import { HistoryRow, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
 import { MeasureButton } from '../components/MeasureButton';
 import { Scale } from '../components/Scale';
-import { Data, Display, RatingText } from '../components/ui';
+import { DayChart } from '../components/charts/DayChart';
+import { MeasuredAt } from '../components/MeasuredAt';
+import { DayPickerRow, useHistoricoDoDia } from '../components/DayPicker';
+import { Data, Display, RatingText, SectionTitle } from '../components/ui';
 import { rateSpo2, shown, stateColor } from '../domain/ratings';
 import { useBiometricStore } from '../store/biometric.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -14,6 +17,8 @@ import { useTheme } from '../theme/ThemeProvider';
 export function OxygenScreen() {
   const { colors } = useTheme();
   const latest = useBiometricStore((s) => s.latest);
+  const spo2History = useBiometricStore((s) => s.spo2History);
+  const historico = useHistoricoDoDia((p) => p.spo2_pct, spo2History);
   if (!latest)
     return (
       <DetailScreen title="Oxigênio no sangue">
@@ -30,6 +35,9 @@ export function OxygenScreen() {
       <YStack marginBottom="$xxl">
         <Display>{spo2}</Display>
         <Data marginTop="$sm">% de saturação</Data>
+        {/* SpO₂ é medida em janelas espaçadas: o valor na tela pode ser de
+            horas atrás, e sem a data ele se lê como agora. */}
+        <MeasuredAt at={spo2History.length ? spo2History[spo2History.length - 1].at : latest.recordedAt} />
         <RatingText
           marginTop="$lg"
           color={rating.state === 'alert' ? '$destructive' : '$foreground'}
@@ -46,11 +54,33 @@ export function OxygenScreen() {
       />
 
       {/*
-        Só a medição de agora. As quatro linhas que existiam aqui — "30 min: 97%",
-        "1 h: 98%", "Sono: 96%" — eram números escritos à mão, e apareciam iguais
-        para qualquer pessoa. O histórico de verdade está na aba Histórico, que
-        lê do banco.
+        As medições do dia. A série vem da memória do aparelho, medida nas
+        janelas agendadas — ela já existia e nenhuma tela a usava; esta mostrava
+        apenas a leitura de agora.
+
+        A faixa de referência é a saudável (95–100%), não a média da pessoa: em
+        oxigenação o normal é populacional, ao contrário do HRV, onde só a linha
+        de base individual significa algo.
       */}
+      <DayPickerRow
+        selecionado={historico.dia}
+        onSelecionar={historico.setDia}
+        comDado={historico.comDado}
+      />
+
+      <YStack marginBottom="$xl">
+        <SectionTitle fontSize={15} marginBottom="$md">
+          {historico.ehHoje ? 'Medições de hoje' : 'Medições do dia'}
+        </SectionTitle>
+        <DayChart
+          serie={historico.pontos}
+          dia={historico.dia}
+          id="spo2-dia"
+          band={{ from: 95, to: 100 }}
+          vazio="A pulseira mede oxigenação nas janelas agendadas e quando você pede aqui. A curva do dia aparece a partir da segunda medição."
+        />
+      </YStack>
+
       <Section label="Agora">
         <HistoryRow time="Medição" fraction={rating.fraction} value={`${spo2}%`} color={color} last />
       </Section>

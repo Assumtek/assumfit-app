@@ -74,6 +74,16 @@ let sonoRetroativoEnviado = false;
  */
 let sincronizacaoEmCurso: Promise<void> | null = null;
 
+/**
+ * Quando a última leitura de memória terminou, e o intervalo mínimo entre elas.
+ *
+ * Fora do estado: é bookkeeping de cadência, e a tela observa `syncing`. Dois
+ * minutos é o suficiente para que navegar entre telas não custe uma varredura
+ * de um minuto cada vez, e curto o bastante para o dado não envelhecer no dia.
+ */
+let ultimaSincronia = 0;
+const INTERVALO_MINIMO_SYNC_MS = 2 * 60_000;
+
 function gravarAparelhoPareado(id: string | null) {
   try {
     const f = new File(Paths.document, ARQUIVO_APARELHO);
@@ -206,7 +216,8 @@ import {
 } from '../services/notifications.service';
 import { syncQueue } from '../services/sync.service';
 import { rateHeartRate, ratePressure, rateSpo2 } from '../domain/ratings';
-import { comAmostraDeHrv } from '../domain/series';
+import { textoDaFalha } from '../domain/bandErrors';
+import { comAmostraDeHrv, ultimoInstante } from '../domain/series';
 import { useWorkoutStore } from './workout.store';
 import type {
   BandActivity,
@@ -314,7 +325,15 @@ type BiometricState = {
    * Roda na conexão. Também dá para chamar à mão — é o que um "puxar para
    * atualizar" faria.
    */
-  syncHistory: () => Promise<void>;
+  /**
+   * `force` distingue GESTO de montagem de tela.
+   *
+   * Sem essa distinção, abrir a tela de Saúde disparava uma leitura completa —
+   * seis consultas em série, perto de um minuto — a cada visita, e o painel de
+   * progresso parecia que o app vivia carregando. A memória do aparelho não
+   * muda a cada minuto; puxar para atualizar continua forçando.
+   */
+  syncHistory: (force?: boolean) => Promise<void>;
   /** Há uma leitura de memória em curso — a tela usa para não disparar duas. */
   syncing: boolean;
   /** Por que a última sincronização não trouxe nada, em linguagem de gente. */
@@ -448,8 +467,10 @@ async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
     spo2History: oxigenio,
   });
 
-  const e = get();
   persistirDerivado(get());
+  // Marcado só com dado na mão: leitura que falhou não deve bloquear a próxima
+  // tentativa pelo intervalo mínimo.
+  ultimaSincronia = Date.now();
 }
 
 export const useBiometricStore = create<BiometricState>((set, get) => ({
@@ -650,7 +671,9 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
       api.pushSleepNight(noite);
     }
 
-    await get().syncHistory();
+    // Forçado: conexão nova é o momento em que o dado local está mais velho, e
+    // o intervalo mínimo existe contra visita de tela, não contra pareamento.
+    await get().syncHistory(true);
 
     /*
      As noites ANTERIORES sobem uma vez por sessão — é o que preenche o sono
@@ -716,7 +739,17 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     // O instante da última leitura ANTES de medir: é ele que diz, no fim, se
     // a medição produziu valor ou terminou vazia.
     const antes = get().latest?.recordedAt ?? 0;
-    const hrvAntes = get().hrvHistory.length;
+    /*
+     O CARIMBO da amostra mais nova, não o tamanho da série.
+
+     Contar itens funcionava enquanto a série se construía do zero a cada
+     sessão. Desde que `syncHistory` passou a enchê-la da memória do aparelho,
+     ela chega no teto de `HISTORY_SIZE` — e aí toda medição bem-sucedida
+     empurra a mais antiga para fora, o tamanho não muda, e a tela acusava
+     "concluiu sem devolver valor" sobre uma medição que deu certo. Visto em
+     campo (ago/2026), no primeiro teste em aparelho.
+    */
+    const hrvAntes = ultimoInstante(get().hrvHistory);
 
     set({ measuring: kind, measureError: null, measureStartedAt: Date.now() });
     try {
@@ -740,7 +773,8 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
        confusa possível de falhar.
       */
       const depois = get().latest?.recordedAt ?? 0;
-      const chegou = kind === 'hrv' ? get().hrvHistory.length > hrvAntes : depois > antes;
+      const chegou =
+        kind === 'hrv' ? ultimoInstante(get().hrvHistory) > hrvAntes : depois > antes;
       if (!chegou) {
         set({
           measureError:
@@ -757,11 +791,23 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
       // desistir, senão a próxima medição disputa um sensor já ocupado.
       if (foiTempo) await ble.stopMeasure?.(kind).catch(() => undefined);
       const detalhe = err instanceof Error ? err.message : 'a medição não concluiu';
+      /*
+       A palavra do APARELHO ganha do nosso palpite.
+
+       O firmware manda a causa real — "a pulseira não está corretamente
+       encaixada", "bateria baixa" — e ela chegava aqui e era substituída por
+       uma frase genérica escrita por nós. Medido em campo (ago/2026): as três
+       medições da conexão falhavam com o aviso de encaixe, e nenhuma tela
+       dizia isso a quem podia resolver em dois segundos.
+      */
+      const doFirmware = textoDaFalha(detalhe);
       set({
-        measureError: foiTempo
-          ? 'A medição passou de um minuto e meio sem concluir. Ajuste a pulseira no pulso, ' +
-            'deixe o braço parado e tente de novo.'
-          : `Não deu para medir: ${detalhe}. Ajuste a pulseira no pulso e tente de novo.`,
+        measureError:
+          doFirmware ??
+          (foiTempo
+            ? 'A medição passou de um minuto e meio sem concluir. Ajuste a pulseira no pulso, ' +
+              'deixe o braço parado e tente de novo.'
+            : `Não deu para medir: ${detalhe}. Ajuste a pulseira no pulso e tente de novo.`),
       });
     } finally {
       set({ measuring: null, measureStartedAt: null });
@@ -776,7 +822,17 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     await ble.stopMeasure?.(kind).catch(() => undefined);
   },
 
-  syncHistory: () => {
+  syncHistory: (force = false) => {
+    /*
+     Leitura recente não se repete por montagem de tela.
+
+     O corte é por IDADE do dado, não por sessão: quem abre Saúde, sai e volta
+     em dez segundos não precisa de outra varredura, e quem volta meia hora
+     depois precisa.
+    */
+    if (!force && Date.now() - ultimaSincronia < INTERVALO_MINIMO_SYNC_MS) {
+      return Promise.resolve();
+    }
     /*
      Quem chega no meio ESPERA a leitura em curso, em vez de desistir.
 
@@ -916,6 +972,17 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     });
     // Serviço sem etapas (mock, GATT próprio) simplesmente não narra nada.
     const offActivity = ble.onActivity?.((bandActivity) => set({ bandActivity }));
+    /*
+     A falha das medições AUTOMÁTICAS vira aviso na tela.
+
+     Só quando há tradução conhecida: mensagem crua do firmware, em chinês, é
+     pior que silêncio. E não sobrescreve um erro de medição sob demanda em
+     curso — quem pediu a medição merece a resposta do próprio pedido.
+    */
+    const offMeasureFailure = ble.onMeasureFailure?.((motivo) => {
+      const texto = textoDaFalha(motivo);
+      if (texto && !get().measuring) set({ measureError: texto });
+    });
     const offReading = ble.subscribe((reading) => {
       vigiarLeitura(reading);
       // Toda leitura entra na fila de envio. Ela só sai de lá com confirmação
@@ -997,6 +1064,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
       pararCiclo();
       offState();
       offActivity?.();
+      offMeasureFailure?.();
       offReading();
     };
   },

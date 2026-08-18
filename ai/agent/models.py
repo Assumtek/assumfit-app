@@ -54,3 +54,9 @@ class AgentResult(BaseModel):
     deterministic_errors: list[str] = Field(default_factory=list)
     blocked: bool
     trace_id: str
+    #: O que foi AJUSTADO no plano por exigência do avaliador, em linguagem de
+    #: gente. Existe porque "não foi possível gerar o plano" é a pior resposta
+    #: possível para quem respondeu uma anamnese inteira: o plano sai, e o que a
+    #: pessoa precisa saber é o que foi contido e por quê — volume reduzido para
+    #: quem está voltando, frequência menor, progressão mais lenta.
+    revision_notes: list[str] = Field(default_factory=list)

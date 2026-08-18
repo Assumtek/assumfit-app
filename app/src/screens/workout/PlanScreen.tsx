@@ -5,6 +5,7 @@ import React, { useEffect } from 'react';
 
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
+import { Note } from '../../components/Card';
 import { Button, Card, Data, HeroCard, Pill, PillText, SectionTitle } from '../../components/ui';
 import { QuickMenu } from './QuickMenu';
 import { DAY_LABEL, WEEK_ORDER, isSportDay, modalityMeta, workoutMeta } from '../../domain/workout';
@@ -71,6 +72,22 @@ export function PlanScreen() {
   return (
     <DetailScreen title="Treino" refreshControl={puxar}>
       <YStack gap="$xl" paddingTop="$lg">
+        {/*
+          O que foi CONTIDO neste plano, e por quê.
+
+          Antes, um plano que o avaliador reprovava simplesmente não existia — a
+          pessoa respondia a anamnese inteira e recebia "não foi possível
+          gerar". Agora ele é revisado e entregue; o que não pode é chegar mais
+          conservador sem explicação. Some quando não há ressalva, que é o caso
+          da grande maioria.
+        */}
+        {plan.revisionNotes && plan.revisionNotes.length > 0 ? (
+          <Note
+            title="O que ajustamos no seu plano"
+            body={plan.revisionNotes.join(' ')}
+          />
+        ) : null}
+
         <YStack gap="$md">
           <SectionTitle>Treino de hoje</SectionTitle>
         <HeroCard eyebrow={todayWorkout ? 'treino de hoje' : DAY_LABEL[plan.today]}>

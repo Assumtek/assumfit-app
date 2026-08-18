@@ -13,7 +13,7 @@ import uuid
 from agent.generate import generate_plan
 from agent.knowledge import gather_knowledge
 from agent.models import AgentResult, WorkoutGenerationInput
-from agent.validate import catalog_errors, validate_plan
+from agent.validate import catalog_errors, json_errors, mechanical_errors, validate_plan
 from core.logging import get_logger
 from core.settings import settings
 from grader.grade import grade
@@ -31,6 +31,89 @@ def _catalog_correction(errors: list[str]) -> str:
         "Gere o plano novamente usando SOMENTE exerciseId presentes no catalogo permitido. "
         "Nunca invente ids nem use exercicios fora da lista."
     )
+
+
+def _json_correction(errors: list[str]) -> str:
+    """Instrução de correção para saída que não era JSON válido.
+
+    Diz ONDE quebrou. O parser aponta linha e coluna, e devolver isso ao modelo
+    é mais barato e mais eficaz que pedir "gere de novo" sem contexto.
+    """
+    detalhe = "; ".join(e.split(": ", 1)[1] for e in errors if ": " in e) or "(sem detalhe)"
+    return (
+        "# Correcao obrigatoria\n"
+        f"A saida anterior NAO era JSON valido: {detalhe}.\n"
+        "Devolva o plano inteiro como um unico objeto JSON valido, sem texto antes "
+        "nem depois, sem comentarios e sem virgula sobrando."
+    )
+
+
+def _correcao(errors: list[str]) -> str:
+    """A instrução da nova tentativa, específica para o que quebrou."""
+    do_json = json_errors(errors)
+    if do_json:
+        return _json_correction(do_json)
+    return _catalog_correction(catalog_errors(errors))
+
+
+def _correcao_do_juiz(breakdown: dict) -> str:
+    """A revisão pedida pelo AVALIADOR, com as objeções dele em texto.
+
+    Reprovar e parar entrega nada a quem pediu o treino — e a objeção quase
+    sempre é corrigível: volume alto demais para quem está voltando, progressão
+    abrupta, frequência acima do que o perfil suporta. Devolver o parecer ao
+    gerador é mais barato que uma geração nova às cegas, e mantém o critério de
+    pé: o plano revisado é avaliado outra vez, pelos mesmos juízes.
+
+    Só os juízes que REPROVARAM entram. Mandar o parecer inteiro faria o modelo
+    tentar agradar notas que já passaram, mexendo no que estava certo.
+    """
+    reprovados = [
+        j
+        for j in breakdown.get("judges", [])
+        if j.get("score") is not None and j["score"] < settings.grader_min_score + 1
+    ]
+    if not reprovados:
+        reprovados = breakdown.get("judges", [])[:2]
+
+    objecoes = "\n".join(
+        f"- {j['name']} (nota {j['score']}): {str(j.get('reason', ''))[:400]}" for j in reprovados
+    )
+    return (
+        "# Revisao obrigatoria\n"
+        "A versao anterior do plano foi REPROVADA na avaliacao. Objecoes:\n"
+        f"{objecoes}\n\n"
+        "Gere o plano novamente CORRIGINDO cada objecao acima. Reduza volume, "
+        "frequencia ou intensidade onde apontado, e mantenha o que nao foi "
+        "criticado. Prefira um plano mais conservador a um plano reprovado: "
+        "quem esta voltando de um periodo parado progride ao longo das semanas, "
+        "nao na primeira."
+    )
+
+
+def _ressalvas(breakdown: dict) -> list[str]:
+    """As objeções que sobraram, para a PESSOA ler — não para o modelo.
+
+    O parecer do avaliador é técnico e escrito para outro modelo ("RSA alta
+    intensidade + heavy leg criam risco de sobrecarga em membros inferiores").
+    Aqui vira o que interessa a quem vai treinar: o que foi contido e por quê.
+
+    Sai o nome do juiz e a nota; fica a justificativa, cortada na primeira frase
+    completa. Uma ressalva que ninguém termina de ler não protege ninguém.
+    """
+    notas: list[str] = []
+    for j in breakdown.get("judges", []):
+        if j.get("score") is None or j["score"] >= settings.grader_min_score:
+            continue
+        razao = str(j.get("reason", "")).strip()
+        if not razao:
+            continue
+        # Primeira frase inteira: o parecer é cortado em 300 caracteres na
+        # origem e costuma terminar no meio de uma palavra.
+        corte = razao.split(". ")[0].strip().rstrip(",;")
+        if corte:
+            notas.append(corte if corte.endswith(".") else f"{corte}.")
+    return notas[:3]
 
 
 def _plano_com_nomes(plan: str, catalogo) -> str:
@@ -89,19 +172,24 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
 
     errors = validate_plan(plan, inp)
 
-    # Id fora do catálogo é erro MECÂNICO — o modelo alucinou um identificador,
-    # não errou o juízo clínico. Vale corrigir e tentar de novo antes de gastar
-    # uma chamada de avaliação e devolver um veredito reprovado.
+    # Erro MECÂNICO — id fora do catálogo ou JSON malformado — é falha de FORMA,
+    # não de juízo clínico. Vale corrigir e tentar de novo antes de gastar uma
+    # chamada de avaliação e devolver um veredito reprovado.
+    #
+    # O JSON entrou nesta classe depois de um caso em produção (ago/2026): faltou
+    # um delimitador na linha 61 e o plano inteiro foi descartado, com a pessoa
+    # recebendo "não deu para gerar" por causa de uma vírgula.
     retries = 0
-    while catalog_errors(errors) and retries < settings.max_catalog_retries:
+    while mechanical_errors(errors) and retries < settings.max_catalog_retries:
         retries += 1
         log.info(
-            "agent.catalog_retry",
+            "agent.mechanical_retry",
             trace_id=trace_id,
             attempt=retries,
-            errors=len(catalog_errors(errors)),
+            errors=len(mechanical_errors(errors)),
+            kinds=sorted({e.split(":", 1)[0] for e in mechanical_errors(errors)}),
         )
-        plan = await generate_plan(inp, correction=_catalog_correction(catalog_errors(errors)))
+        plan = await generate_plan(inp, correction=_correcao(errors))
         errors = validate_plan(plan, inp)
 
     latency_ms = int((time.perf_counter() - started) * 1000)
@@ -153,11 +241,67 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
             )
         blocked = contra >= 2
 
+    # ----------------------------------------------------------------------
+    # Reprovado pelo juiz? REVISA — não devolve as mãos abanando.
+    #
+    # A regra do produto (ago/2026, decisão da fundadora): SEMPRE sai um plano,
+    # e a pessoa lê o que foi ajustado. Quem respondeu uma anamnese inteira não
+    # pode receber "não foi possível gerar"; pode receber um plano mais
+    # conservador com o motivo escrito.
+    #
+    # O critério de segurança continua valendo — ele deixou de ser um portão
+    # fechado e virou um revisor: o parecer volta ao gerador, o plano é
+    # refeito e avaliado de novo. O que muda é o desfecho quando as revisões
+    # se esgotam: entrega o melhor plano com as ressalvas à vista, em vez de
+    # entregar nada.
+    #
+    # O encaminhamento clínico (TIER de risco) NÃO passa por aqui: ele é
+    # decidido no backend, antes do modelo, e continua sendo o único caso em
+    # que não gerar é a resposta responsável.
+    # ----------------------------------------------------------------------
+    revisoes = 0
+    while blocked and revisoes < settings.max_judge_retries:
+        revisoes += 1
+        # A correção diz o que ESTÁ errado — validação ou parecer do juiz. Uma
+        # falha estrutural ("dia repetido") é tão corrigível quanto volume alto
+        # demais, e as duas se resolvem do mesmo jeito: dizendo ao gerador.
+        instrucao = _correcao(errors) if errors else _correcao_do_juiz(breakdown)
+        log.info(
+            "agent.judge_revision",
+            trace_id=trace_id,
+            attempt=revisoes,
+            por=("validacao" if errors else "avaliador"),
+        )
+        plan = await generate_plan(inp, correction=instrucao)
+        errors = validate_plan(plan, inp)
+        # Uma revisão pode quebrar o JSON de novo — o retry mecânico vale aqui
+        # também, senão a revisão troca um bloqueio por outro.
+        mecanicas = 0
+        while mechanical_errors(errors) and mecanicas < settings.max_catalog_retries:
+            mecanicas += 1
+            plan = await generate_plan(inp, correction=_correcao(errors))
+            errors = validate_plan(plan, inp)
+        plano_julgado = _plano_com_nomes(plan, inp.allowed_exercises)
+        breakdown = await grade(
+            question=request, answer=plano_julgado, context=context, latency_ms=latency_ms
+        )
+        blocked = bool(errors) or _juiz_reprovou(breakdown)
+
+    # Esgotadas as revisões, o plano SAI com as ressalvas. Só continua bloqueado
+    # o que não tem plano para entregar: erro determinístico significa que não
+    # há JSON válido, e não existe "melhor esforço" de um plano que não parseia.
+    notas: list[str] = []
+    if blocked and not errors:
+        notas = _ressalvas(breakdown)
+        blocked = False
+        log.info("agent.entregue_com_ressalvas", trace_id=trace_id, notas=len(notas))
+
     log.info(
         "agent.run",
         trace_id=trace_id,
         score=breakdown["score"],
         blocked=blocked,
+        revisoes=revisoes,
         det_errors=len(errors),
         catalog_retries=retries,
         hard_failures=len(breakdown.get("hard_failures", [])),
@@ -183,4 +327,5 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
         deterministic_errors=errors,
         blocked=blocked,
         trace_id=trace_id,
+        revision_notes=notas,
     )

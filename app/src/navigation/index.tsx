@@ -22,6 +22,7 @@ import { HealthScreen } from '../screens/HealthScreen';
 import { HistoryScreen } from '../screens/HistoryScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
+import { HeartRateScreen } from '../screens/HeartRateScreen';
 import { HrvScreen } from '../screens/HrvScreen';
 import { OxygenScreen } from '../screens/OxygenScreen';
 import { PressureScreen } from '../screens/PressureScreen';
@@ -91,6 +92,7 @@ const linking = {
       Cycle: 'ciclo',
       History: 'historico',
       Hrv: 'hrv',
+      HeartRate: 'coracao',
       Sleep: 'sono',
       Oxygen: 'oxigenio',
       Pressure: 'pressao',
@@ -206,6 +208,7 @@ export function Navigation() {
         <Stack.Screen name="Alerts" component={AlertsScreen} />
         <Stack.Screen name="Help" component={HelpScreen} />
         <Stack.Screen name="Hrv" component={HrvScreen} />
+        <Stack.Screen name="HeartRate" component={HeartRateScreen} />
         <Stack.Screen name="History" component={HistoryScreen} />
         <Stack.Screen name="Cycle" component={CycleScreen} />
         <Stack.Screen name="Sleep" component={SleepScreen} />
