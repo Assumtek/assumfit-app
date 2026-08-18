@@ -73,25 +73,29 @@ async def test_aprovado_nao_revota(monkeypatch):
 
 
 @pytest.mark.anyio
-async def test_reprovacao_confirmada_vira_revisao_e_entrega(monkeypatch):
-    """Dois votos contra confirmam a reprovação — e aí o plano é REVISADO.
+async def test_reprovacao_vira_revisao_sem_gastar_revoto(monkeypatch):
+    """Reprovou e há revisão disponível: revisa DIRETO, sem re-votar.
 
-    Antes isto devolvia bloqueio e nada mais. O que se cobra agora: as revisões
-    acontecem, e no fim sai um plano com as ressalvas escritas.
+    A re-votação existia para não bloquear por engano. Como reprovar não
+    bloqueia mais, confirmá-la com duas avaliações extras gastaria dois terços
+    do orçamento de tempo para decidir o que a revisão resolve melhor — e foi
+    o que estourou o teto em produção (ago/2026).
     """
     monkeypatch.setattr(settings, "max_judge_retries", 2)
-    # 2 vereditos do re-voto + 1 por revisão.
-    chamadas = _prepara(monkeypatch, [REPROVA_JUIZ] * 4)
+    # 1 avaliação inicial + 1 por revisão. Um re-voto teria somado mais duas.
+    chamadas = _prepara(monkeypatch, [REPROVA_JUIZ] * 3)
     result = await pipeline.run_agent(ENTRADA)
     assert not result.blocked
     assert result.revision_notes
     assert "Volume agressivo" in result.revision_notes[0]
-    assert len(chamadas) == 4
+    assert len(chamadas) == 3
 
 
 @pytest.mark.anyio
 async def test_falso_bloqueio_cai_na_maioria(monkeypatch):
     # 1 contra, 2 a favor → passa, e o breakdown final é o de aprovação.
+    # Sem revisão disponível, a re-votação é quem protege do bloqueio falso.
+    monkeypatch.setattr(settings, "max_judge_retries", 0)
     chamadas = _prepara(monkeypatch, [REPROVA_JUIZ, APROVA, APROVA])
     result = await pipeline.run_agent(ENTRADA)
     assert not result.blocked
@@ -101,13 +105,15 @@ async def test_falso_bloqueio_cai_na_maioria(monkeypatch):
 
 @pytest.mark.anyio
 async def test_empate_se_resolve_no_terceiro(monkeypatch):
-    # Duas revisões depois do desempate: 3 do re-voto + 2 de revisão.
-    monkeypatch.setattr(settings, "max_judge_retries", 2)
-    chamadas = _prepara(monkeypatch, [REPROVA_JUIZ, APROVA, REPROVA_JUIZ] + [REPROVA_JUIZ] * 2)
+    """O desempate só acontece onde a re-votação ainda vale: sem revisão."""
+    monkeypatch.setattr(settings, "max_judge_retries", 0)
+    chamadas = _prepara(monkeypatch, [REPROVA_JUIZ, APROVA, REPROVA_JUIZ])
     result = await pipeline.run_agent(ENTRADA)
-    # O desempate confirmou a reprovação, e ainda assim o plano sai.
+    # Reprovação confirmada por maioria — e mesmo assim o plano é entregue,
+    # agora com ressalvas, porque nunca mais se devolve as mãos abanando.
     assert not result.blocked
-    assert len(chamadas) == 5
+    assert result.revision_notes
+    assert len(chamadas) == 3
 
 
 @pytest.mark.anyio

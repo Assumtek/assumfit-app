@@ -219,7 +219,16 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
     # falso bloqueio cobra a geração inteira de novo sem entregar nada. Só entra
     # aqui o veredito que é PURAMENTE do juiz: erro determinístico (validação ou
     # checagem dura) re-votaria para o mesmo lugar, então não re-vota.
-    if blocked and not errors and settings.grader_confirm_blocks and _e_opiniao(breakdown):
+    # A re-votação só vale quando a reprovação MATA o plano.
+    #
+    # Ela nasceu contra o bloqueio falso: o mesmo perfil levou hard-fail em 1 de
+    # 4 avaliações, e um bloqueio errado não entregava nada. Desde que reprovar
+    # virou revisar (ago/2026), o pior desfecho é um plano mais conservador com
+    # ressalvas — e aí confirmar a reprovação com duas avaliações extras custa
+    # dois terços do orçamento de tempo para decidir algo que a revisão resolve
+    # melhor. Com revisão disponível, vai direto revisar.
+    revota = settings.grader_confirm_blocks and settings.max_judge_retries == 0
+    if blocked and not errors and revota and _e_opiniao(breakdown):
         contra, a_favor = 1, 0
         while contra < 2 and a_favor < 2:
             revoto = await grade(
