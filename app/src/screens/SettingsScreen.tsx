@@ -1,6 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { styled, Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
+import { mensagemDaFalha } from '../domain/apiErrors';
 import React, { useEffect, useState } from 'react';
 import { Alert, Linking, Pressable } from 'react-native';
 
@@ -62,8 +63,8 @@ export function SettingsScreen() {
             setBusy(true);
             try {
               await deleteAccount();
-            } catch {
-              Alert.alert('Não foi possível excluir', 'Confira a conexão e tente de novo.');
+            } catch (err) {
+              Alert.alert('Não foi possível excluir', mensagemDaFalha(err, 'A exclusão'));
             } finally {
               setBusy(false);
             }

@@ -1,6 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
+import { mensagemDaFalha } from '../../domain/apiErrors';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -113,7 +114,7 @@ export function AnamnesisConversationScreen() {
               ? 'Falta o consentimento de dados de saúde. Volte e toque em "Concordo, pode perguntar".'
               : status != null
                 ? `O servidor não conseguiu iniciar a anamnese (erro ${status}). Tente de novo em instantes.`
-                : 'Não foi possível começar a anamnese. Confira a conexão.',
+                : mensagemDaFalha(err, 'A anamnese'),
         );
       });
   }, []);

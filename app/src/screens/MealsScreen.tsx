@@ -13,6 +13,7 @@ import { Note, Row, Section } from '../components/Card';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
 import { Body, Button, Data, Display, HeroCard, Label } from '../components/ui';
 import { ageFromBirthDate, calorieGoal, toMeasure, type CalorieGoal } from '../domain/nutritionGoal';
+import { mensagemDaFalha } from '../domain/apiErrors';
 import * as api from '../services/api.service';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -199,8 +200,8 @@ export function MealsScreen() {
         setFotoPendente(null);
         setDetalhe(record);
       }
-    } catch {
-      setAviso('A análise falhou. Confira a conexão e tente de novo.');
+    } catch (err) {
+      setAviso(mensagemDaFalha(err, 'A análise'));
     } finally {
       setAnalisando(false);
     }
@@ -262,8 +263,8 @@ export function MealsScreen() {
     try {
       aplicarRegistro(await api.updateMealFoods(detalhe.id, foods));
       setEditando(null);
-    } catch {
-      setAvisoDetalhe('Não deu para salvar a edição. Confira a conexão e tente de novo.');
+    } catch (err) {
+      setAvisoDetalhe(mensagemDaFalha(err, 'A edição'));
     } finally {
       setSalvandoEdicao(false);
     }
@@ -287,8 +288,8 @@ export function MealsScreen() {
         ),
       );
       setEditando(null);
-    } catch {
-      setAvisoDetalhe('Não deu para remover. Confira a conexão e tente de novo.');
+    } catch (err) {
+      setAvisoDetalhe(mensagemDaFalha(err, 'A remoção'));
     } finally {
       setSalvandoEdicao(false);
     }
@@ -329,8 +330,8 @@ export function MealsScreen() {
     try {
       aplicarRegistro(await api.updateMealFoods(detalhe.id, foods));
       setPassos((p) => ({ ...p, [i]: { ...passo, mult } }));
-    } catch {
-      setAvisoDetalhe('Não deu para ajustar a porção. Confira a conexão e tente de novo.');
+    } catch (err) {
+      setAvisoDetalhe(mensagemDaFalha(err, 'O ajuste da porção'));
     } finally {
       setSalvandoEdicao(false);
     }
@@ -366,8 +367,8 @@ export function MealsScreen() {
     try {
       aplicarRegistro(await api.updateMealFoods(detalhe.id, foods));
       setAdicionando(null);
-    } catch {
-      setAvisoDetalhe('Não deu para adicionar. Confira a conexão e tente de novo.');
+    } catch (err) {
+      setAvisoDetalhe(mensagemDaFalha(err, 'A inclusão'));
     } finally {
       setSalvandoEdicao(false);
     }
@@ -397,8 +398,8 @@ export function MealsScreen() {
       } else if (!analysis.is_food) {
         setAvisoDetalhe('A reanálise não identificou comida — o registro ficou como estava.');
       }
-    } catch {
-      setAvisoDetalhe('A reanálise falhou. Confira a conexão e tente de novo.');
+    } catch (err) {
+      setAvisoDetalhe(mensagemDaFalha(err, 'A reanálise'));
     } finally {
       setReanalisando(false);
     }

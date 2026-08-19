@@ -3,6 +3,7 @@ import { AudioModule, RecordingPresets, useAudioRecorder } from 'expo-audio';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable } from 'react-native';
 
+import { mensagemDaFalha } from '../domain/apiErrors';
 import * as api from '../services/api.service';
 import { useTheme } from '../theme/ThemeProvider';
 import { Data } from './ui';
@@ -125,7 +126,9 @@ export function VoiceInput({
       const { uploadUrl, key } = await api.presignAudio('m4a');
       const blob = await (await fetch(uri)).blob();
       const up = await fetch(uploadUrl, { method: 'PUT', body: blob, headers: { 'Content-Type': 'audio/m4a' } });
-      if (!up.ok) return falha('O envio do áudio falhou. Confira a conexão.');
+      // O `fetch` respondeu, então não é conexão: é o armazenamento recusando.
+      // Culpar a rede aqui mandaria a pessoa conferir o Wi-Fi que está funcionando.
+      if (!up.ok) return falha(`O envio do áudio falhou (erro ${up.status}). Tente de novo.`);
 
       const { jobName } = await api.startTranscription(key, 'm4a');
 
@@ -154,7 +157,7 @@ export function VoiceInput({
       falha(
         status === 503
           ? 'O ditado por voz está indisponível no servidor no momento.'
-          : 'A transcrição falhou. Confira a conexão.',
+          : mensagemDaFalha(err, 'A transcrição'),
       );
     }
   };

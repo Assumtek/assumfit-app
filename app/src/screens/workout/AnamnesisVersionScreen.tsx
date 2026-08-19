@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Note, Row, Section } from '../../components/Card';
 import { DetailScreen } from '../../components/DetailScreen';
 import { Body, Data, Label, SectionTitle } from '../../components/ui';
+import { mensagemDaFalha } from '../../domain/apiErrors';
 import { fetchAnamnesisVersion, type AnamnesisVersion } from '../../services/api.service';
 
 /**
@@ -23,19 +24,19 @@ export function AnamnesisVersionScreen() {
   const [versao, setVersao] = useState<(AnamnesisVersion & { answers: Record<string, unknown> }) | null>(
     null,
   );
-  const [erro, setErro] = useState(false);
+  const [erro, setErro] = useState<unknown>(null);
 
   useEffect(() => {
-    if (!id) return setErro(true);
+    if (!id) return setErro(new Error('sem id'));
     fetchAnamnesisVersion(id)
       .then(setVersao)
-      .catch(() => setErro(true));
+      .catch((e) => setErro(e));
   }, [id]);
 
   if (erro) {
     return (
       <DetailScreen title="Anamnese">
-        <Note title="Não foi possível carregar" body="Confira a conexão e tente de novo." />
+        <Note title="Não foi possível carregar" body={mensagemDaFalha(erro, 'A leitura desta anamnese')} />
       </DetailScreen>
     );
   }

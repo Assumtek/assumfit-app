@@ -7,6 +7,7 @@ import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
 import { Body, Button, Card, Data, Display, Label, SectionTitle } from '../../components/ui';
 import { formatDuration } from '../../domain/workout';
+import { mensagemDaFalha } from '../../domain/apiErrors';
 import { fetchExecutionDetail, type ExecutionDetail } from '../../services/api.service';
 import { useTheme } from '../../theme/ThemeProvider';
 import { PHASE_COLOR, PHASE_NAME, type PhaseType } from './PhaseBar';
@@ -28,13 +29,13 @@ export function ExecutionDetailScreen() {
   const { id } = (useRoute().params ?? {}) as { id?: string };
 
   const [detalhe, setDetalhe] = useState<ExecutionDetail | null>(null);
-  const [erro, setErro] = useState(false);
+  const [erro, setErro] = useState<unknown>(null);
 
   useEffect(() => {
-    if (!id) return setErro(true);
+    if (!id) return setErro(new Error('sem id'));
     fetchExecutionDetail(id)
       .then(setDetalhe)
-      .catch(() => setErro(true));
+      .catch((e) => setErro(e));
   }, [id]);
 
   if (erro) {
@@ -42,7 +43,7 @@ export function ExecutionDetailScreen() {
       <DetailScreen title="Treino">
         <Note
           title="Não foi possível carregar"
-          body="Confira a conexão com o servidor e tente de novo."
+          body={mensagemDaFalha(erro, 'A leitura deste treino')}
         />
       </DetailScreen>
     );

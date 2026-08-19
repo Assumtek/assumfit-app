@@ -72,7 +72,14 @@ export function ProfileScreen() {
     if (!iso) return setError('Data no formato DD/MM/AAAA');
 
     const ok = await save({ name: name.trim(), birthDate: iso });
-    if (!ok) return setError('Não foi possível salvar. Confira a conexão.');
+    /*
+     Sem culpar a conexão: `save` devolve booleano e não entrega o erro, então
+     aqui não há como saber a causa. Afirmar "confira a conexão" quando o mais
+     provável é sessão expirada manda a pessoa consertar o que não quebrou —
+     ver `domain/apiErrors.ts`. Quando o store passar a propagar o erro, esta
+     linha vira `mensagemDaFalha`.
+    */
+    if (!ok) return setError('Não foi possível salvar. Tente de novo.');
     setEditing(false);
   };
 
