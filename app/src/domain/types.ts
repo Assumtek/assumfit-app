@@ -25,6 +25,20 @@ export type Reading = {
    * colada em cada batimento novo e a tela a apresenta como se fosse de agora.
    */
   hrvAt?: number;
+  /**
+   * Quando o BATIMENTO foi medido — que não é quando a leitura chegou.
+   *
+   * O serviço acumula as grandezas campo a campo, porque o SDK entrega uma por
+   * vez e uma leitura do domínio é um instante completo. O efeito colateral era
+   * grave: QUALQUER evento — passos, que mudam a cada passada — reemitia o
+   * último batimento conhecido carimbado com a hora de agora. Correndo, a tela
+   * mostrava a frequência de repouso como se fosse ao vivo, e a trava de
+   * frescor não pegava, porque o carimbo que ela lia era o da chegada.
+   *
+   * Relatado em produção (ago/2026): 53 bpm durante uma corrida. Mesma solução
+   * que o HRV já tinha em `hrvAt` — a grandeza carrega o próprio instante.
+   */
+  heartRateAt?: number;
   spo2Pct: number | null;
   temperatureC: number | null;
   steps: number | null;

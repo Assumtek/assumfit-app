@@ -155,3 +155,42 @@ export function faixaInicial(serie: Ponto[], agora = Date.now()): Faixa {
   }
   return '24H';
 }
+
+
+/**
+ * Teto de frescor do batimento AO VIVO, em milissegundos.
+ *
+ * A pulseira emite a cada poucos segundos com o contínuo ligado. Vinte segundos
+ * é folga para uma perda de pacote sem deixar passar um valor velho.
+ */
+export const TETO_BATIMENTO_VIVO_MS = 20_000;
+
+/**
+ * O batimento é DE AGORA?
+ *
+ * Existe porque a resposta óbvia — comparar com `recordedAt` — estava errada, e
+ * errada de um jeito que não aparece em teste de tela. `recordedAt` é quando a
+ * LEITURA chegou, e o serviço reemite a leitura inteira a cada evento de
+ * qualquer grandeza; passos mudam a cada passada, então correndo o app
+ * carimbava a frequência de repouso como se fosse do instante.
+ *
+ * Relatado em produção (ago/2026): 53 bpm durante uma corrida. Quem lê é
+ * `heartRateAt`, o instante da própria medida, com queda para `recordedAt` nas
+ * fontes que não distinguem as duas coisas (mock, GATT próprio).
+ */
+export function batimentoAoVivo(
+  reading: { heartRate: number; heartRateAt?: number; recordedAt: number } | null,
+  agora: number,
+  teto = TETO_BATIMENTO_VIVO_MS,
+): boolean {
+  if (!reading || !reading.heartRate) return false;
+  return agora - (reading.heartRateAt ?? reading.recordedAt) <= teto;
+}
+
+/** O instante em que o batimento foi medido — para a tela dizer "medido às". */
+export function batimentoMedidoEm(
+  reading: { heartRateAt?: number; recordedAt: number } | null,
+): number | null {
+  if (!reading) return null;
+  return reading.heartRateAt ?? reading.recordedAt;
+}

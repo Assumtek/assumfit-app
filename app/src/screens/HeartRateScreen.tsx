@@ -5,6 +5,7 @@ import { EmptyMetric } from '../components/BandStatus';
 import { Row, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
 import { MeasureButton } from '../components/MeasureButton';
+import { batimentoMedidoEm } from '../domain/series';
 import { MeasuredAt } from '../components/MeasuredAt';
 import { DayPickerRow, useHistoricoDoDia } from '../components/DayPicker';
 import { DayChart } from '../components/charts/DayChart';
@@ -54,7 +55,7 @@ export function HeartRateScreen() {
       <YStack marginBottom="$xxl">
         <Display>{Math.round(latest.heartRate)}</Display>
         <Data marginTop="$sm">bpm · batimentos por minuto</Data>
-        <MeasuredAt at={latest.recordedAt} />
+        <MeasuredAt at={batimentoMedidoEm(latest)} />
         <RatingText
           marginTop="$lg"
           color={rating.state === 'alert' ? '$destructive' : '$foreground'}

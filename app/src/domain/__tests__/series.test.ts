@@ -7,6 +7,8 @@ import {
   quandoFoi,
   rotulosDoPeriodo,
   type Ponto,
+  batimentoAoVivo,
+  batimentoMedidoEm,
 } from '../series';
 
 const AGORA = new Date('2026-08-17T12:00:00Z').getTime();
@@ -199,5 +201,55 @@ describe('medidoEm', () => {
     expect(medidoEm(local(17, 0, 10), agora)).toBe('hoje às 00:10');
     // e 23:50 de ontem é ONTEM, ainda que faltem menos de 24 h.
     expect(medidoEm(local(16, 23, 50), agora)).toBe('ontem às 23:50');
+  });
+});
+
+
+/**
+ * O batimento ao vivo — o defeito que fez a corrida do Leonardo marcar 53 bpm.
+ *
+ * O serviço acumula as grandezas campo a campo e reemite a leitura INTEIRA a
+ * cada evento. Passos mudam a cada passada; cada um desses eventos recarimbava
+ * o último batimento com a hora de agora. A trava de frescor lia esse carimbo e
+ * aprovava — a frequência de repouso aparecia rotulada como ao vivo.
+ */
+describe('batimentoAoVivo', () => {
+  const AGORA = 1_700_000_000_000;
+
+  it('o cenário do relato: leitura recém-chegada, batimento de meia hora atrás', () => {
+    const leitura = {
+      heartRate: 53,
+      heartRateAt: AGORA - 30 * 60_000,
+      // Um evento de passos acabou de reemitir a leitura inteira.
+      recordedAt: AGORA - 500,
+    };
+    expect(batimentoAoVivo(leitura, AGORA)).toBe(false);
+  });
+
+  it('batimento recente é ao vivo', () => {
+    expect(batimentoAoVivo({ heartRate: 148, heartRateAt: AGORA - 3_000, recordedAt: AGORA }, AGORA)).toBe(true);
+  });
+
+  it('passado o teto, deixa de ser ao vivo', () => {
+    expect(batimentoAoVivo({ heartRate: 148, heartRateAt: AGORA - 25_000, recordedAt: AGORA }, AGORA)).toBe(false);
+  });
+
+  it('sem `heartRateAt`, cai em `recordedAt` — mock e GATT não separam os dois', () => {
+    expect(batimentoAoVivo({ heartRate: 60, recordedAt: AGORA - 2_000 }, AGORA)).toBe(true);
+    expect(batimentoAoVivo({ heartRate: 60, recordedAt: AGORA - 60_000 }, AGORA)).toBe(false);
+  });
+
+  it('zero não é batimento', () => {
+    // O acumulador nasce com `heartRate: 0`. Zero é ausência, não bradicardia.
+    expect(batimentoAoVivo({ heartRate: 0, heartRateAt: AGORA, recordedAt: AGORA }, AGORA)).toBe(false);
+    expect(batimentoAoVivo(null, AGORA)).toBe(false);
+  });
+});
+
+describe('batimentoMedidoEm', () => {
+  it('devolve o instante da MEDIDA, não o da chegada', () => {
+    expect(batimentoMedidoEm({ heartRateAt: 111, recordedAt: 999 })).toBe(111);
+    expect(batimentoMedidoEm({ recordedAt: 999 })).toBe(999);
+    expect(batimentoMedidoEm(null)).toBeNull();
   });
 });

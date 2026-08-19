@@ -13,6 +13,7 @@ import {
   trackDistanceM,
   type GeoPoint,
   type SportKind,
+  valeRetomar,
 } from '../sport';
 
 describe('esporte', () => {
@@ -161,5 +162,37 @@ describe('simplifyTrack', () => {
       lat: Math.round(pontos[4999].lat * 1e5) / 1e5,
       lon: Math.round(pontos[4999].lon * 1e5) / 1e5,
     });
+  });
+});
+
+
+/**
+ * Retomar a sessão que o app deixou pela metade.
+ *
+ * O iOS recolhe memória de app em segundo plano sem avisar, e a sessão de
+ * esporte vivia só em estado do React — quanto mais longo o treino, maior a
+ * chance de perdê-lo inteiro. Relatado em produção (ago/2026): partida de tênis
+ * iniciada pelo app e nenhum registro.
+ */
+describe('valeRetomar', () => {
+  const AGORA = 1_700_000_000_000;
+
+  it('sessão de uma hora atrás retoma — é o caso que motivou tudo', () => {
+    expect(valeRetomar(AGORA - 60 * 60_000, AGORA)).toBe(true);
+  });
+
+  it('sessão de três dias atrás NÃO retoma: é resto, não treino', () => {
+    expect(valeRetomar(AGORA - 3 * 24 * 60 * 60_000, AGORA)).toBe(false);
+  });
+
+  it('exatamente no limite ainda vale; um milissegundo além, não', () => {
+    expect(valeRetomar(AGORA - 12 * 60 * 60_000, AGORA)).toBe(true);
+    expect(valeRetomar(AGORA - 12 * 60 * 60_000 - 1, AGORA)).toBe(false);
+  });
+
+  it('início no futuro é relógio bagunçado, não sessão', () => {
+    expect(valeRetomar(AGORA + 60_000, AGORA)).toBe(false);
+    expect(valeRetomar(null, AGORA)).toBe(false);
+    expect(valeRetomar(undefined, AGORA)).toBe(false);
   });
 });

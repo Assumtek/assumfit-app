@@ -1,7 +1,7 @@
 import { Directory, File, Paths } from 'expo-file-system';
 
 import * as api from './api.service';
-import type { GeoPoint } from '../domain/sport';
+import { valeRetomar, type GeoPoint } from '../domain/sport';
 
 /**
  * A caixa de saída das sessões de esporte.
@@ -14,6 +14,74 @@ import type { GeoPoint } from '../domain/sport';
  */
 
 const PREFIXO = 'esporte-pendente-';
+
+/**
+ * A sessão EM CURSO, gravada enquanto ela corre.
+ *
+ * A caixa de saída acima só conhece sessão CONCLUÍDA. A que está correndo vivia
+ * apenas no estado do React — e o iOS recolhe memória de app em segundo plano
+ * sem avisar ninguém. Uma partida de tênis de uma hora, com o celular no bolso,
+ * é exatamente o caso em que ele recolhe.
+ *
+ * O efeito era cruel na direção errada: quanto MAIS longa a sessão, maior a
+ * chance de o app morrer, e mais treino se perdia. E a Dynamic Island seguia
+ * contando — ela é nativa —, então tudo indicava que estava sendo gravado.
+ *
+ * Relatado em produção (ago/2026): sessão iniciada pelo app e nenhum registro.
+ */
+const EM_CURSO = 'esporte-em-curso.v1.json';
+
+export type SessaoEmCurso = {
+  /** `kind` do esporte; a tela reconstrói o resto do catálogo. */
+  sport: string;
+  startedAt: number;
+  pausedMs: number;
+  pausedSince: number | null;
+  points: GeoPoint[];
+  hrSamples: number[];
+  /** O dia do plano que esta sessão cumpre, quando veio do check-in. */
+  vinculo?: { workoutId: string; planDayId: string } | null;
+  execucaoVinculada?: string | null;
+};
+
+export function guardarEmCurso(sessao: SessaoEmCurso): void {
+  try {
+    new File(Paths.document, EM_CURSO).write(JSON.stringify(sessao));
+  } catch {
+    // Falha de disco não pode derrubar a sessão que está correndo: o pior caso
+    // volta a ser o comportamento antigo, que é perdê-la se o app morrer.
+  }
+}
+
+/**
+ * A sessão interrompida, se houver — e só se ainda fizer sentido retomá-la.
+ *
+ * Sessão de mais de doze horas é resto esquecido, não treino: retomar aquilo
+ * mostraria um cronômetro absurdo e gravaria um registro que ninguém fez.
+ */
+export function lerEmCurso(agora = Date.now()): SessaoEmCurso | null {
+  try {
+    const f = new File(Paths.document, EM_CURSO);
+    if (!f.exists) return null;
+    const s = JSON.parse(f.textSync()) as SessaoEmCurso;
+    if (!valeRetomar(s?.startedAt, agora)) {
+      descartarEmCurso();
+      return null;
+    }
+    return s;
+  } catch {
+    return null;
+  }
+}
+
+export function descartarEmCurso(): void {
+  try {
+    const f = new File(Paths.document, EM_CURSO);
+    if (f.exists) f.delete();
+  } catch {
+    // Sem disco, a próxima leitura simplesmente falha e devolve null.
+  }
+}
 
 export type SessaoPendente = {
   sport: string;

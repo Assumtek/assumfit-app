@@ -58,3 +58,33 @@ export function comTeto<T>(promessa: Promise<T>, ms: number, oQue: string): Prom
 export const TETO_CONSULTA_MS = 15_000;
 export const TETO_SINCRONIA_MS = 120_000;
 export const TETO_MEDICAO_MS = 90_000;
+
+/**
+ * Teto da busca de sono. DUAS consultas em série, não uma.
+ *
+ * `fetchSleep` pergunta por ontem e por hoje — a noite que começa às 23h fica
+ * arquivada no dia anterior —, e cada consulta já tem seu próprio
+ * `TETO_CONSULTA_MS`. O teto de fora precisa caber as duas somadas.
+ *
+ * Ele era `TETO_CONSULTA_MS`, ou seja, 15 s para cobrir duas chamadas de 15 s
+ * cada. Bastava a pulseira não responder instantaneamente para o teto externo
+ * disparar, a busca cair em `null` e a tela dizer "Nenhuma noite registrada" —
+ * com a noite gravada no pulso o tempo todo. Relatado por duas pessoas
+ * diferentes no mesmo dia (ago/2026), que foi o que revelou que era
+ * sistemático e não defeito de um aparelho.
+ *
+ * A regra geral que isto ensina: teto externo tem que ser maior que a SOMA dos
+ * internos. Aninhar tetos iguais é um cancelamento garantido.
+ */
+export const TETO_SONO_MS = 2 * TETO_CONSULTA_MS + 10_000;
+
+/**
+ * Teto da varredura de noites na memória: SETE consultas em série.
+ *
+ * Era `TETO_SINCRONIA_MS` (120 s) para cobrir 7 × 15 s = 105 s de consultas —
+ * quinze segundos de folga para sete idas ao canal serial. Pulseira lenta
+ * estourava, e o corte custava as noites lidas por último. Derivado dos
+ * internos, e não escrito à mão, para não voltar a divergir quando algum deles
+ * mudar.
+ */
+export const TETO_MEMORIA_SONO_MS = 7 * TETO_CONSULTA_MS + 30_000;

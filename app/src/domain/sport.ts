@@ -317,3 +317,21 @@ export function sportClock(elapsedMs: number): string {
   const mm = String(m).padStart(h > 0 ? 2 : 1, '0');
   return h > 0 ? `${h}:${mm}:${String(seg).padStart(2, '0')}` : `${mm}:${String(seg).padStart(2, '0')}`;
 }
+
+
+/** Depois disto, uma sessão interrompida é resto esquecido, não treino. */
+export const LIMITE_RETOMADA_MS = 12 * 60 * 60 * 1000;
+
+/**
+ * Vale retomar a sessão que o app deixou pela metade?
+ *
+ * A sessão em curso passou a ser gravada em disco porque o iOS recolhe memória
+ * de app em segundo plano — e uma partida longa com o celular no bolso é
+ * exatamente quando ele recolhe. Mas retomar não pode ser incondicional: um
+ * arquivo de três dias atrás reabriria um cronômetro absurdo e gravaria no
+ * histórico um treino que ninguém fez.
+ */
+export function valeRetomar(startedAt: number | null | undefined, agora: number): boolean {
+  if (!startedAt || startedAt > agora) return false;
+  return agora - startedAt <= LIMITE_RETOMADA_MS;
+}
