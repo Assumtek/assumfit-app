@@ -1,4 +1,10 @@
-import { QCBand, type QCDevice, type QCHrvSeries, type QCState } from '../../../modules/qcband';
+import {
+  QCBand,
+  type QCDevice,
+  type QCHrvSeries,
+  type QCSampleSeries,
+  type QCState,
+} from '../../../modules/qcband';
 import { nightFrom } from '../../domain/sleep';
 import type { Reading, SleepNight, SleepPhase, SleepSegment } from '../../domain/types';
 import { comTeto, eTempoEsgotado, TETO_CONSULTA_MS, TETO_MEDICAO_MS } from './timeout';
@@ -86,6 +92,7 @@ export class QCBandService implements BleService {
    */
   private partial: Omit<Reading, 'recordedAt' | 'source'> = {
     heartRate: 0,
+    heartRateAt: undefined,
     hrvMs: null,
     spo2Pct: null,
     temperatureC: null,
@@ -399,7 +406,7 @@ export class QCBandService implements BleService {
     if (!QCBand) return { amostras: [], diasAtras: 0 };
     for (let dia = 0; dia <= 6; dia++) {
       const series = await comTeto(QCBand.getHrv(dia), TETO_CONSULTA_MS, 'hrv').catch(() => []);
-      const amostras = amostrasDeSerie(series);
+      const amostras = amostrasComCarimbo(series);
       if (amostras.length) {
         if (__DEV__) console.log(`[qcband] HRV: ${amostras.length} amostras do dia -${dia}`);
         return { amostras, diasAtras: dia };
@@ -465,6 +472,15 @@ export class QCBandService implements BleService {
       default:
         return;
     }
+
+    /*
+     O batimento carrega o PRÓPRIO instante.
+
+     Sem isto, o acumulador reemitia o último batimento a cada evento de outra
+     grandeza, com o carimbo de agora — e passos mudam a cada passada. Quem
+     corria via a frequência de repouso rotulada como ao vivo.
+    */
+    if (kind === 'heartRate') this.partial.heartRateAt = Date.now();
 
     if (!this.partial.heartRate) return;
 
@@ -698,7 +714,7 @@ export class QCBandService implements BleService {
       const historico: DayHistory = {
         heartRate: amostrasDeSerie(fc),
         hrv: hrvRecente,
-        stress: amostrasDeSerie(estresse),
+        stress: amostrasComCarimbo(estresse),
         // A medição pedida na mão fica de fora da série do dia: ela costuma ser
         // feita parado e de propósito, e misturá-la com a agendada distorce a
         // mínima — que é justamente o número que importa em oxigenação.
@@ -750,6 +766,16 @@ export class QCBandService implements BleService {
      mensagem de erro.
     */
     return comTeto(QCBand.vibrate(), TETO_CONSULTA_MS, 'vibração').catch(() => false);
+  }
+
+  /**
+   * Calibração de uso. Teto próprio: ela LEVA dois minutos, e o teto de
+   * consulta (15 s) a mataria sempre — mas teto tem que existir, porque o bloco
+   * de conclusão do fabricante pode simplesmente não ser chamado.
+   */
+  async wearCalibration(): Promise<boolean> {
+    if (!QCBand) return false;
+    return comTeto(QCBand.wearCalibration(), 150_000, 'calibração');
   }
 
   async enableAncs(): Promise<boolean> {
@@ -807,9 +833,20 @@ export class QCBandService implements BleService {
   async fetchSleepHistory(): Promise<SleepNight[]> {
     if (!QCBand) return [];
 
+    /*
+     Do mais RECENTE para o mais antigo — a ordem importa e não é estética.
+
+     Eram sete consultas partindo do dia 6, e o teto de fora mal cobria as sete
+     somadas. Bastava a pulseira responder devagar para a varredura ser cortada
+     no fim — e o fim, nessa ordem, era HOJE e ONTEM. A peça que existe para
+     recuperar noite perdida perdia justamente as que interessam.
+
+     Lendo ao contrário, o corte custa a noite de seis dias atrás, que é o que
+     menos falta.
+    */
     const noites: SleepNight[] = [];
-    for (let dia = 6; dia >= 0; dia--) {
-      this.setActivity({ kind: 'sync', step: 'memory', done: 7 - dia, total: 7 });
+    for (let dia = 0; dia <= 6; dia++) {
+      this.setActivity({ kind: 'sync', step: 'memory', done: dia + 1, total: 7 });
       const bruto = await comTeto(QCBand.getSleep(dia), TETO_CONSULTA_MS, 'sono').catch(() => []);
       const noite = montarNoite(bruto);
       if (noite) noites.push(noite);
@@ -937,6 +974,27 @@ function montarNoite(bruto: { type: number; minutes: number; start: string }[]):
   // acordou dia 29 reconhece aquela como a noite do dia 28.
   const data = (bruto[0].start ?? '').slice(0, 10) || new Date().toISOString().slice(0, 10);
   return nightFrom(data, segments);
+}
+
+/**
+ * Série que JÁ vem com carimbo → amostras do domínio.
+ *
+ * É o caminho de HRV e estresse desde o SDK 1.0.0.20260812: o instante vem do
+ * aparelho, normalizado pelo próprio SDK numa grade de 5 minutos, em vez de ser
+ * reconstruído aqui a partir do índice. `amostrasDeSerie` abaixo continua
+ * existindo para a frequência cardíaca, que ainda é entregue como vetor de
+ * passo fixo — e o dia em que ela também ganhar carimbo, some.
+ */
+function amostrasComCarimbo(series: QCSampleSeries[]): Sample[] {
+  const amostras: Sample[] = [];
+  for (const serie of series) {
+    for (const ponto of serie.samples) {
+      if (ponto.value > 0 && Number.isFinite(ponto.at)) {
+        amostras.push({ at: ponto.at, value: ponto.value });
+      }
+    }
+  }
+  return amostras.sort((a, b) => a.at - b.at);
 }
 
 function amostrasDeSerie(series: QCHrvSeries[], nome = 'serie'): Sample[] {

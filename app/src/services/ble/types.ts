@@ -1,7 +1,18 @@
 import type { Reading, SleepNight } from '../../domain/types';
 
 /** O que dá para pedir ao aparelho que meça na hora. */
-export type MeasurableKind = 'hrv' | 'spo2' | 'bloodPressure' | 'stress' | 'oneKey';
+/**
+ * `oneKey` mede batimento, pressão e oxigenação numa corrida só — verificado
+ * nesta pulseira. `oneKeyFull` é o tipo mais amplo do SDK, que o cabeçalho diz
+ * trazer HRV e estresse junto; ainda não confirmado neste firmware.
+ */
+export type MeasurableKind =
+  | 'hrv'
+  | 'spo2'
+  | 'bloodPressure'
+  | 'stress'
+  | 'oneKey'
+  | 'oneKeyFull';
 
 export type DiscoveredDevice = {
   /**
@@ -134,6 +145,19 @@ export interface BleService {
    * que chega com o app suspenso depende do ANCS, que é do sistema.
    */
   vibrate?(): Promise<boolean>;
+  /**
+   * Calibração de uso — o estado que faz TODA medição falhar até ser feita.
+   *
+   * O SDK 1.0.0.20260812 documentou `error.code == -4` ("não calibrado") como
+   * desfecho possível de qualquer medição, e a ponte o traduz para o código
+   * `sem-calibracao`. Antes disso, uma pulseira não calibrada produzia medição
+   * que conclui sem valor e sem mensagem — indistinguível de defeito.
+   *
+   * Leva até dois minutos, vestida e parada, e é feita UMA vez. Por isso é a
+   * pessoa quem dispara, na tela do dispositivo: rodar ao conectar prenderia
+   * quem só queria ver o batimento.
+   */
+  wearCalibration?(): Promise<boolean>;
   /** Liga o ANCS, sem o qual notificação nenhuma chega ao pulso com o app fechado. */
   enableAncs?(): Promise<boolean>;
   /**

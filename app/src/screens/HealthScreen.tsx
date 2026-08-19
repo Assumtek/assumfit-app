@@ -7,9 +7,10 @@ import { LineChart } from '../components/charts/LineChart';
 import { DetailScreen } from '../components/DetailScreen';
 import { Hypnogram } from '../components/charts/Hypnogram';
 import { Icon, type IconName } from '../components/Icon';
+import { MeasureButton } from '../components/MeasureButton';
 import { Note } from '../components/Card';
 import { SyncProgress } from '../components/SyncProgress';
-import { Card, Data, HeroCard, Label, Metric, MetricSm, RatingText, SectionTitle } from '../components/ui';
+import { Body, Card, Data, HeroCard, Label, Metric, MetricSm, RatingText, SectionTitle } from '../components/ui';
 import { calcBioAge } from '../domain/bioAge';
 import { calcBodyBattery } from '../domain/bodyBattery';
 import { isoHoje } from '../domain/water';
@@ -27,6 +28,7 @@ import {
 } from '../domain/ratings';
 import * as api from '../services/api.service';
 import { deepSleepPct, useBiometricStore } from '../store/biometric.store';
+import { useInsightStore } from '../store/insight.store';
 import { useUserStore } from '../store/user.store';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -145,6 +147,16 @@ export function HealthScreen() {
   */
   const semDado = !latest && !sleep;
 
+  /*
+   O texto do dia — o mesmo que a home mostra cortado.
+
+   Vem do MODELO, não do cálculo local: o local existe para a home funcionar
+   sem rede e cabe nas três linhas do cartão; quem estoura e some com
+   reticências é o texto do modelo, que enxerga água, sono e a linha de base de
+   30 dias. É esse que precisava de um lugar para ser lido inteiro.
+  */
+  const leituraDoDia = useInsightStore((s) => s.model)?.insight ?? null;
+
   return (
     <DetailScreen
       title="Saúde"
@@ -164,6 +176,40 @@ export function HealthScreen() {
           <Card>
             <SyncProgress />
           </Card>
+        </YStack>
+      ) : null}
+
+      {/*
+        O texto do dia, INTEIRO.
+
+        Na home ele vive num cartão de carrossel, com manchete em duas linhas e
+        corpo em três — e some com reticências justamente quando tem mais a
+        dizer. Não havia onde lê-lo completo: esta tela mostrava as nove
+        métricas e nenhuma frase. Aqui não há corte, e é o lugar certo, porque
+        o texto explica exatamente os números que vêm logo abaixo.
+      */}
+      {leituraDoDia ? (
+        <YStack marginBottom="$xl" gap="$sm">
+          <RatingText>{leituraDoDia.headline}</RatingText>
+          <Body>{leituraDoDia.detail}</Body>
+        </YStack>
+      ) : null}
+
+      {/*
+        UMA medição para três números.
+
+        A pulseira mede batimento, pressão e oxigenação na mesma corrida de 30
+        segundos — é o que o `oneKey` devolve, verificado no aparelho. Sem este
+        botão, chegar aos três exigia abrir três telas e esperar trinta segundos
+        em cada uma, medindo de novo o que a corrida anterior já tinha trazido.
+
+        Estresse e HRV continuam de fora porque são rotinas de sensor
+        diferentes: o SDK cobra 30 s pelo estresse e 80 s pelo HRV, e não há
+        comando que os junte a estes — pelo menos não neste firmware.
+      */}
+      {connection === 'connected' ? (
+        <YStack marginBottom="$xl">
+          <MeasureButton kind="oneKey" label="Medir batimento, pressão e oxigenação" />
         </YStack>
       ) : null}
 

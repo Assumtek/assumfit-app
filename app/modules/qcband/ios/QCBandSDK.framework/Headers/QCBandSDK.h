@@ -38,7 +38,14 @@ FOUNDATION_EXPORT const unsigned char QCBandSDKVersionString[];
 #import <QCBandSDK/QCBloodGlucoseModel.h>
 #import <QCBandSDK/QCDimingTimeInfo.h>
 #import <QCBandSDK/QCStressModel.h>
+#import <QCBandSDK/QCOtherDataPressureModel.h>
+#import <QCBandSDK/QCPressureDayModel.h>
+#import <QCBandSDK/QCPressureSampleModel.h>
+#import <QCBandSDK/QCOtherDataEmotionModel.h>
+#import <QCBandSDK/QCEmotionItemModel.h>
 #import <QCBandSDK/QCHRVModel.h>
+#import <QCBandSDK/QCHRVDayModel.h>
+#import <QCBandSDK/QCHRVSampleModel.h>
 #import <QCBandSDK/QCSedentaryModel.h>
 #import <QCBandSDK/QCSportInfoModel.h>
 #import <QCBandSDK/OdmBandNotifyCenter.h>

@@ -31,6 +31,26 @@ export type QCHrvSeries = {
 };
 
 /**
+ * Série cujas amostras trazem o PRÓPRIO instante.
+ *
+ * É a forma que o SDK 1.0.0.20260812 passou a entregar para HRV e estresse
+ * (`0x39`), e ela substitui a reconstrução que fazíamos aqui: com
+ * `QCHrvSeries`, o instante saía de `índice × secondInterval` a partir da
+ * meia-noite, conta que só está certa se o vetor de fato começar à meia-noite e
+ * o intervalo de fato for aquele. O fabricante depreciou a interface antiga por
+ * esse motivo, e o modelo novo ainda informa o intervalo REAL de gravação do
+ * aparelho — que pode ser 30 minutos mesmo com a grade normalizada em 5.
+ *
+ * Amostra sem leitura já vem removida: o SDK marca com `value == 0`, e zero
+ * aqui não é medição.
+ */
+export type QCSampleSeries = {
+  /** `yyyy-MM-dd` */
+  date: string;
+  samples: { at: number; value: number }[];
+};
+
+/**
  * Ponto de oxigenação medido pela pulseira.
  *
  * Traz o próprio instante, ao contrário de HRV/estresse/FC: o firmware mede
@@ -95,16 +115,27 @@ declare class QCBandNativeModule extends NativeModule<QCBandEvents> {
   getFeatures(): Promise<Record<string, boolean | number>>;
   startRealtimeHeartRate(): Promise<void>;
   stopRealtimeHeartRate(): Promise<void>;
-  getHrv(dayIndex: number): Promise<QCHrvSeries[]>;
+  /**
+   * Calibração de uso — leva até 120 s, vestida e parada.
+   *
+   * Existe porque `measure` pode falhar com `sem-calibracao` (o código -4 que o
+   * SDK 1.0.0.20260812 documenta). Não roda ao conectar: prender a pessoa dois
+   * minutos sem ela ter pedido nada é pior que a medição que ela veio fazer.
+   */
+  wearCalibration(): Promise<boolean>;
+  stopWearCalibration(): Promise<void>;
+  getHrv(dayIndex: number): Promise<QCSampleSeries[]>;
   /**
    * Manda a pulseira medir agora.
    *
-   * `oneKey` mede batimento, SpO₂ e pressão numa tacada só. Os valores NÃO
+   * `oneKey` mede batimento, SpO₂ e pressão numa tacada só — verificado nesta
+   * pulseira. `oneKeyFull` é o tipo mais amplo do SDK, cujo modelo declara HRV
+   * e estresse junto; ainda não confirmado neste firmware. Os valores NÃO
    * voltam por esta promessa — chegam por `onReading`, porque a medição leva
    * dezenas de segundos e o aparelho vai reportando.
    */
   measure(
-    kind: 'hrv' | 'heartRate' | 'spo2' | 'bloodPressure' | 'stress' | 'oneKey',
+    kind: 'hrv' | 'heartRate' | 'spo2' | 'bloodPressure' | 'stress' | 'oneKey' | 'oneKeyFull',
   ): Promise<boolean>;
   stopMeasure(kind: string): Promise<void>;
   /**
@@ -136,7 +167,7 @@ declare class QCBandNativeModule extends NativeModule<QCBandEvents> {
    * o histórico agendado inteiro, e quem fatia é o consumidor.
    */
   getHeartRateHistory(dayIndex: number): Promise<QCHrvSeries[]>;
-  getStressHistory(dayIndex: number): Promise<QCHrvSeries[]>;
+  getStressHistory(dayIndex: number): Promise<QCSampleSeries[]>;
   getSpo2History(dayIndex: number): Promise<QCSpo2Point[]>;
   getPressureHistory(): Promise<QCPressurePoint[]>;
   getStepsHistory(dayIndex: number): Promise<QCStepsPoint[]>;

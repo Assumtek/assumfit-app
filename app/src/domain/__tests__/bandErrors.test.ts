@@ -36,6 +36,50 @@ describe('falhaDeMedicao', () => {
   });
 });
 
+/**
+ * Os códigos que o SDK 1.0.0.20260812 documentou.
+ *
+ * Antes deles, "mediu e não devolveu valor" era indistinguível de qualquer
+ * outra falha — a tela dizia "não deu para medir" e sugeria ajustar a pulseira,
+ * que é exatamente o conselho errado quando o problema é falta de calibração.
+ */
+describe('falhaDeMedicao por código', () => {
+  it('sem-calibracao aponta a calibração, e NÃO manda tentar de novo', () => {
+    const f = falhaDeMedicao(null, 'sem-calibracao');
+    expect(f?.titulo).toContain('calibrada');
+    // Precisa nomear ONDE calibrar: o botão existe em `DeviceScreen`, e uma
+    // mensagem que só diz "calibre" manda a pessoa procurar.
+    expect(f?.corpo).toContain('Dispositivo');
+    // Insistir não resolve: a repetição automática só gastaria bateria.
+    expect(f?.automatico).toBe(false);
+  });
+
+  it('mal-vestida, início e fim recusados têm saídas próprias', () => {
+    expect(falhaDeMedicao(null, 'mal-vestida')?.corpo).toContain('osso do pulso');
+    expect(falhaDeMedicao(null, 'inicio-recusado')?.corpo).toContain('Aproxime');
+    expect(falhaDeMedicao(null, 'fim-recusado')?.automatico).toBe(true);
+  });
+
+  it('o CÓDIGO ganha da mensagem quando os dois existem', () => {
+    /*
+     A mensagem é texto do firmware: muda entre versões e já mudou uma vez. O
+     código é contrato. Com os dois presentes e discordando, vale o contrato.
+    */
+    const f = falhaDeMedicao('未正确佩戴手环', 'sem-calibracao');
+    expect(f?.titulo).toContain('calibrada');
+  });
+
+  it('código desconhecido não atropela a mensagem que sabemos ler', () => {
+    expect(falhaDeMedicao('电量低', 'firmware')?.titulo).toContain('bateria');
+    expect(falhaDeMedicao('电量低', 'falha')?.titulo).toContain('bateria');
+  });
+
+  it('sem código e sem mensagem conhecida, devolve null como sempre', () => {
+    expect(falhaDeMedicao(null, 'falha')).toBeNull();
+    expect(textoDaFalha(null, 'sem-calibracao')).toContain('calibrada');
+  });
+});
+
 describe('textoDaFalha', () => {
   it('junta título e ação numa frase só', () => {
     expect(textoDaFalha('未正确佩戴手环')).toMatch(/^A pulseira não aceitou medir agora\. /);

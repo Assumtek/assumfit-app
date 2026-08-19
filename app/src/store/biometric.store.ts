@@ -231,6 +231,8 @@ import {
   comTeto,
   eTempoEsgotado,
   TETO_CONSULTA_MS,
+  TETO_MEMORIA_SONO_MS,
+  TETO_SONO_MS,
   TETO_MEDICAO_MS,
   TETO_SINCRONIA_MS,
 } from '../services/ble/timeout';
@@ -658,7 +660,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
      */
     const daPulseira = await comTeto(
       ble.fetchSleep?.() ?? Promise.resolve(null),
-      TETO_CONSULTA_MS,
+      TETO_SONO_MS,
       'sono da pulseira',
     ).catch(() => null);
     const noite =
@@ -684,7 +686,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     if (!sonoRetroativoEnviado && ble.fetchSleepHistory) {
       const noites = await comTeto(
         ble.fetchSleepHistory(),
-        TETO_SINCRONIA_MS,
+        TETO_MEMORIA_SONO_MS,
         'memória de sono',
       ).catch(() => [] as const);
       for (const n of noites) api.pushSleepNight(n);
@@ -800,7 +802,12 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
        medições da conexão falhavam com o aviso de encaixe, e nenhuma tela
        dizia isso a quem podia resolver em dois segundos.
       */
-      const doFirmware = textoDaFalha(detalhe);
+      // O código vem da ponte nativa (`promise.reject(codigo, ...)`) e ganha da
+      // frase: frase de firmware muda entre versões, código é contrato.
+      const codigo = typeof (err as { code?: unknown })?.code === 'string'
+        ? (err as { code: string }).code
+        : null;
+      const doFirmware = textoDaFalha(detalhe, codigo);
       set({
         measureError:
           doFirmware ??
@@ -880,7 +887,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     // pedir permissão de dado de saúde a quem não precisa conceder.
     const daPulseira = await comTeto(
       ble.fetchSleep?.() ?? Promise.resolve(null),
-      TETO_CONSULTA_MS,
+      TETO_SONO_MS,
       'sono da pulseira',
     ).catch(() => null);
     if (daPulseira) {

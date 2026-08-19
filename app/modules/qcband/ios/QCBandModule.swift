@@ -628,6 +628,19 @@ public class QCBandModule: Module {
     // Mede batimento, SpO₂ e pressão numa tacada — o caminho mais barato para
     // preencher a tela inteira, e o firmware desta pulseira declara suporte.
     case "oneKey": return .oneKeyMeasure
+    /*
+     A medição combinada AMPLA, ainda por confirmar nesta pulseira.
+
+     `QCRealOneKeyMeasureHeartRateModel` declara, num modelo só: batimento,
+     HRV, estresse, RRI, temperatura e pressão. Se este firmware responder,
+     UMA corrida de 30 s substitui as três que hoje são necessárias — e o HRV
+     deixa de custar 80 s à parte.
+
+     Fica exposto como tipo próprio, e não trocando o `oneKey`, porque o
+     `oneKey` desta unidade já foi verificado no aparelho (devolve hr, sbp,
+     dbp, so2). Trocar o verificado pelo suposto seria apostar o que funciona.
+    */
+    case "oneKeyFull": return .oneKeyMeasureHeartRate
     default: return nil
     }
   }
@@ -711,6 +724,184 @@ public class QCBandModule: Module {
     sdk.measuringFail = { [weak self] in
       let payload: [String: Any] = ["kind": "measuringFail"]
       self?.sendEvent("onReading", payload)
+    }
+  }
+
+  /*
+   ─── Corpos que moram FORA do `definition()` ────────────────────────────────
+
+   `ModuleDefinition` é um result builder: o corpo inteiro de `definition()` é
+   UMA expressão para o verificador de tipos, e cada `AsyncFunction` que se
+   acrescenta entra nela. Passado o orçamento do solver, o compilador responde
+   "failed to produce diagnostic for expression" apontando a assinatura de
+   `definition()` — sem linha, sem expressão, sem pista de que o problema é
+   tamanho e não sintaxe. Foi o que aconteceu ao acrescentar a calibração.
+
+   A saída é esta: closure de uma linha lá dentro, corpo aqui como método
+   privado. Cada método é verificado isoladamente e o builder volta a caber.
+   Vale para tudo que for acrescentado daqui em diante.
+  */
+
+  /** Série de HRV do dia, já com o instante de cada amostra. */
+  private func lerHrv(_ dayIndex: Int, _ promise: Promise) {
+    QCSDKCmdCreator.getHRVSamples(withDayIndexes: [NSNumber(value: dayIndex)]) { days, error in
+      if let error = error {
+        promise.reject("falha", error.localizedDescription)
+        return
+      }
+      promise.resolve(QCBandModule.seriesDeHrv(days ?? []))
+    }
+  }
+
+  private static func seriesDeHrv(_ dias: [QCHRVDayModel]) -> [[String: Any]] {
+    var series: [[String: Any]] = []
+    for dia in dias {
+      var amostras: [[String: Any]] = []
+      for amostra in dia.samples where amostra.value > 0 {
+        let instante: Double = Double(amostra.unixTimestamp) * 1000.0
+        let valor: Int = amostra.value
+        let ponto: [String: Any] = ["at": instante, "value": valor]
+        amostras.append(ponto)
+      }
+      let entry: [String: Any] = ["date": dia.date, "samples": amostras]
+      series.append(entry)
+    }
+    return series
+  }
+
+  /**
+   Liga (ou desliga) o HRV agendado — e o RRI junto.
+
+   RRI é o intervalo entre batimentos, a matéria-prima de que o HRV é
+   calculado: sem coletá-lo, a janela agendada de HRV roda e não produz nada. O
+   comando existe desde o SDK 1.0.0.20260812 (`setRRIAutoMeasureStatus`) e é
+   separado do interruptor de HRV, o que significa que a pulseira pode estar com
+   HRV ligado e RRI desligado — combinação que dá exatamente o sintoma de
+   histórico vazio sem erro nenhum.
+
+   O RRI vai como acessório e NÃO decide o resultado: quem responde à promessa é
+   o interruptor de HRV. Firmware que não conheça o comando falha nele em
+   silêncio, e o comportamento anterior fica de pé.
+   */
+  private func ligarHrv(_ enable: Bool, _ promise: Promise) {
+    QCSDKCmdCreator.setRRIAutoMeasureStatus(enable, suc: {}, fail: {})
+    QCSDKCmdCreator.setSchedualHRVStatus(enable) { _ in promise.resolve(nil) }
+  }
+
+  /** Série de estresse do dia. Mesma forma do HRV. */
+  private func lerEstresse(_ dayIndex: Int, _ promise: Promise) {
+    QCSDKCmdCreator.getPressureSamples(withDayIndexes: [NSNumber(value: dayIndex)]) { days, error in
+      if let error = error {
+        promise.reject("indisponivel", error.localizedDescription)
+        return
+      }
+      promise.resolve(QCBandModule.seriesDeEstresse(days ?? []))
+    }
+  }
+
+  private static func seriesDeEstresse(_ dias: [QCPressureDayModel]) -> [[String: Any]] {
+    var series: [[String: Any]] = []
+    for dia in dias {
+      var amostras: [[String: Any]] = []
+      for amostra in dia.samples where amostra.value > 0 {
+        let instante: Double = Double(amostra.unixTimestamp) * 1000.0
+        let valor: Int = amostra.value
+        let ponto: [String: Any] = ["at": instante, "value": valor]
+        amostras.append(ponto)
+      }
+      let entry: [String: Any] = ["date": dia.date, "samples": amostras]
+      series.append(entry)
+    }
+    return series
+  }
+
+  /**
+   Vibração com parâmetro, com queda para o alerta de emparelhamento.
+
+   Até o SDK 1.0.0.20260812 o único comando que fazia a pulseira vibrar era
+   `alertBindingSuccess` — o alerta de "emparelhou com sucesso" usado fora do
+   lugar. Funcionava, mas o padrão era o do fabricante e não havia como mudá-lo.
+   `sendCustomVibrationNotification` (0x51, AA=9) recebe ciclos, duração e
+   pausa; aqui: dois ciclos de 300 ms com 200 ms de intervalo, que é o pulso
+   curto-curto que se sente com o celular no chão e não se confunde com
+   notificação de mensagem.
+
+   Duração e pausa são em unidades de 100 ms, faixa 1–127 — não em
+   milissegundos. Errar a unidade aqui é vibração de trinta segundos.
+
+   A queda fica porque firmware antigo não conhece o 0x51, e vibrar com o
+   padrão do fabricante é melhor que não vibrar.
+   */
+  private func vibrar(_ promise: Promise) {
+    QCSDKCmdCreator.sendCustomVibrationNotification(
+      withPriority: 1,
+      action: .start,
+      cycleCount: 2,
+      vibrateDuration: 3,
+      pauseDuration: 2,
+      success: { promise.resolve(true) },
+      fail: { [weak self] in self?.vibrarPeloAlerta(promise) }
+    )
+  }
+
+  private func vibrarPeloAlerta(_ promise: Promise) {
+    QCSDKCmdCreator.alertBindingSuccess({
+      promise.resolve(true)
+    }, fail: {
+      promise.reject("indisponivel", "pulseira não respondeu")
+    })
+  }
+
+  /**
+   Calibração de uso — o passo que nunca demos.
+
+   O SDK sempre teve `wearCalibration`, e nós nunca o chamamos: presumimos que a
+   pulseira saísse calibrada de fábrica. O SDK 1.0.0.20260812 desfaz a presunção
+   ao documentar `error.code == -4` ("não calibrado") como desfecho possível de
+   QUALQUER medição — ou seja, é um estado em que o aparelho pode estar e que só
+   a calibração resolve.
+
+   Leva até 120 segundos e é feita UMA vez, parado, com a pulseira vestida. Quem
+   chama é a tela, depois de um `sem-calibracao`; rodar por conta própria ao
+   conectar prenderia a pessoa dois minutos sem ela ter pedido nada.
+   */
+  private func calibrarUso(_ promise: Promise) {
+    QCSDKManager.shareInstance().startToWearCalibration(withTimeout: 120) { isSuccess, error in
+      if isSuccess {
+        promise.resolve(true)
+        return
+      }
+      // Aqui o `error` NÃO é opcional: o cabeçalho declara `NSError *` sem
+      // `_Nullable`, e o Swift importa como `any Error`. Encadear `?.` nele não
+      // compila — ao contrário de `startToMeasuring`, cujo erro é anulável.
+      let comoNS: NSError = error as NSError
+      let doFirmware: String? = comoNS.userInfo["message"] as? String
+      let motivo: String = doFirmware ?? comoNS.localizedDescription
+      promise.reject("falha", motivo)
+    }
+  }
+
+  /**
+   O CÓDIGO da falha de medição, que tem significado fixo.
+
+   O SDK 1.0.0.20260812 documenta: -1 falha ao enviar o início, -2 falha ao
+   enviar o fim, -3 aparelho mal vestido, -4 NÃO CALIBRADO.
+
+   O -4 é o que faltava saber. Uma medição que conclui sem valor e sem mensagem
+   de firmware — o sintoma relatado em teste — cai aqui, e a correção não é
+   insistir: é rodar a calibração de uso uma vez. Antes disso tudo virava
+   "falha" genérica, e a tela não tinha o que sugerir.
+
+   Vai como código estável, não como frase: quem traduz para o português e
+   decide o que sugerir é o domínio, não a ponte.
+   */
+  private static func codigoDaFalha(_ erro: NSError?, temMensagemDeFirmware: Bool) -> String {
+    switch erro?.code {
+    case -1: return "inicio-recusado"
+    case -2: return "fim-recusado"
+    case -3: return "mal-vestida"
+    case -4: return "sem-calibracao"
+    default: return temMensagemDeFirmware ? "firmware" : "falha"
     }
   }
 
@@ -804,76 +995,22 @@ public class QCBandModule: Module {
     /**
      HRV do dia. `dayIndex` 0 é hoje, 1 é ontem, e assim por diante.
 
-     Devolve a série bruta, com o intervalo em segundos entre amostras — não uma
-     média. O produto precisa da série para comparar a pessoa com ela mesma; uma
-     média diária esconderia justamente a variação que interessa.
+     Devolve a série, não uma média: o produto compara a pessoa com ela mesma, e
+     a média diária esconderia justamente a variação que interessa.
+
+     **Cada amostra traz o INSTANTE dela.** Era o que faltava. A interface antiga
+     (`getSchedualHRVDataWithDates:`) devolvia um vetor de números sem tempo
+     nenhum, e o instante era RECONSTRUÍDO do outro lado multiplicando o índice
+     pelo intervalo declarado — uma conta que só está certa se o vetor começar
+     de fato à meia-noite e o intervalo for de fato aquele. O fabricante
+     depreciou essa interface exatamente por isso; a nova (`0x39`) normaliza as
+     posições do aparelho numa grade de 5 minutos, 288 pontos por dia, e entrega
+     o unix de cada ponto. `value == 0` é "não mediu nesta janela", não zero.
      */
     AsyncFunction("getHrv") { (dayIndex: Int, promise: Promise) in
-      QCSDKCmdCreator.getSchedualHRVData(withDates: [NSNumber(value: dayIndex)]) { models, error in
-        if let error = error {
-          promise.reject("falha", error.localizedDescription)
-          return
-        }
-        /*
-         Montado passo a passo, com tipo anotado em cada variável.
-
-         Literal de dicionário heterogêneo dentro de um `map` é o caso clássico
-         em que o Swift estoura o orçamento de inferência e responde "failed to
-         produce diagnostic for expression" — um erro que não aponta linha nem
-         expressão, e por isso custa caro. Quebrar em variáveis tipadas custa
-         quatro linhas e elimina a classe inteira do problema.
-         */
-        if let bruto = models as? NSArray {
-          for item in bruto.prefix(3) {
-          }
-        } else {
-        }
-        let list: [QCHRVModel] = (models as? [QCHRVModel]) ?? []
-        var series: [[String: Any]] = []
-        for model in list {
-          let values: [Int] = model.hrv.map { $0.intValue }
-          let entry: [String: Any] = [
-            "date": model.date,
-            "secondInterval": model.secondInterval,
-            "values": values,
-          ]
-          series.append(entry)
-        }
-        promise.resolve(series)
-      }
+      self.lerHrv(dayIndex, promise)
     }
 
-    /*
-     FALTA AQUI: medir HRV sob demanda, em vez de só ler o histórico.
-
-     O recurso existe — `QCMeasuringTypeHRV` no enum de tipos de medição do
-     `QCSDKManager.h`, e o SDK Android confirma com `startHrvMeasure()`. Ficou
-     de fora deste build de propósito.
-
-     O motivo é o erro que derrubou o build anterior. O nome que o Swift importa
-     para `startToMeasuringWithOperateType:measuringHandle:completedHandle:` não
-     é determinável lendo o cabeçalho: depende de como o importador quebra
-     `WithOperateType`, e um palpite errado dentro de uma expressão com duas
-     closures produz exatamente "failed to produce diagnostic" — erro sem linha,
-     que custa um ciclo inteiro de build para localizar.
-
-     Entra assim que houver um build verde: com o framework compilado, o
-     autocompletar do Xcode dá a assinatura exata, sem adivinhação. Enquanto
-     isso o HRV vem do histórico, que é real, só não é sob demanda.
-     */
-
-    /**
-     Manda a pulseira MEDIR agora, em vez de esperar a janela dela.
-
-     É o que faltava para a tela inicial ter mais que batimento. O aparelho
-     transmite frequência cardíaca continuamente, mas SpO₂, pressão, estresse e
-     HRV só existem quando alguém pede — e ninguém pedia.
-
-     O resultado NÃO sai do retorno desta chamada. Ele chega pelos blocos que
-     `wireSDKCallbacks` já liga (`boMeasuring`, `bpMeasuring`, `hrMeasuring`),
-     que é o caminho desenhado pelo fabricante: a medição leva dezenas de
-     segundos e vai reportando. Aqui só interessa se o comando foi aceito.
-     */
     AsyncFunction("measure") { (kind: String, promise: Promise) in
       guard let type = QCBandModule.measuringType(kind) else {
         promise.reject("tipo-invalido", "Medição desconhecida: \(kind)")
@@ -906,10 +1043,15 @@ public class QCBandModule: Module {
            Passado adiante como veio, em `code`: quem traduz para o português e
            decide o que sugerir é o domínio, não a ponte.
           */
-          let userInfo = (error as NSError?)?.userInfo
-          let doFirmware = userInfo?["message"] as? String
-          let motivo = doFirmware ?? error?.localizedDescription ?? "a medição não concluiu"
-          promise.reject(doFirmware.map { _ in "firmware" } ?? "falha", motivo)
+          let erro: NSError? = error as NSError?
+          let doFirmware: String? = erro?.userInfo["message"] as? String
+          let motivo: String = doFirmware ?? error?.localizedDescription ?? "a medição não concluiu"
+          // O código tem significado fixo — ver `codigoDaFalha`.
+          let codigo: String = QCBandModule.codigoDaFalha(
+            erro,
+            temMensagemDeFirmware: doFirmware != nil
+          )
+          promise.reject(codigo, motivo)
         }
       )
     }
@@ -924,6 +1066,15 @@ public class QCBandModule: Module {
       QCSDKManager.shareInstance().stopToMeasuring(withOperateType: type) { _, _ in
         promise.resolve(nil)
       }
+    }
+
+    /** Calibração de uso. Corpo em `calibrarUso`, que explica por que existe. */
+    AsyncFunction("wearCalibration") { (promise: Promise) in
+      self.calibrarUso(promise)
+    }
+
+    AsyncFunction("stopWearCalibration") { (promise: Promise) in
+      QCSDKManager.shareInstance().stopToWearCalibration { _, _ in promise.resolve(nil) }
     }
 
     /**
@@ -1023,7 +1174,7 @@ public class QCBandModule: Module {
       case "stress":
         QCSDKCmdCreator.setSchedualStressStatus(enable) { _ in promise.resolve(nil) }
       case "hrv":
-        QCSDKCmdCreator.setSchedualHRVStatus(enable) { _ in promise.resolve(nil) }
+        self.ligarHrv(enable, promise)
       case "bloodPressure":
         /*
          A janela é o dia inteiro, a cada 30 minutos.
@@ -1145,26 +1296,9 @@ public class QCBandModule: Module {
       })
     }
 
-    /** Estresse do dia. Mesma forma do HRV e da frequência cardíaca. */
+    /** Estresse do dia. Mesma forma do HRV — amostra com instante próprio. */
     AsyncFunction("getStressHistory") { (dayIndex: Int, promise: Promise) in
-      QCSDKCmdCreator.getSchedualStressData(withDates: [NSNumber(value: dayIndex)]) { models, error in
-        if let error = error {
-          promise.reject("indisponivel", error.localizedDescription)
-          return
-        }
-        let list: [QCStressModel] = (models as? [QCStressModel]) ?? []
-        var series: [[String: Any]] = []
-        for model in list {
-          let values: [Int] = model.stresses.map { $0.intValue }
-          let entry: [String: Any] = [
-            "date": model.date,
-            "secondInterval": model.secondInterval,
-            "values": values,
-          ]
-          series.append(entry)
-        }
-        promise.resolve(series)
-      }
+      self.lerEstresse(dayIndex, promise)
     }
 
     /**
@@ -1334,11 +1468,7 @@ public class QCBandModule: Module {
      depende do ANCS, abaixo.
      */
     AsyncFunction("vibrate") { (promise: Promise) in
-      QCSDKCmdCreator.alertBindingSuccess({
-        promise.resolve(true)
-      }, fail: {
-        promise.reject("indisponivel", "pulseira não respondeu")
-      })
+      self.vibrar(promise)
     }
 
     /**
@@ -1493,6 +1623,12 @@ public class QCBandModule: Module {
     }
     AsyncFunction("vibrate") { (promise: Promise) in
       promise.reject("indisponivel", "sem radio no simulador")
+    }
+    AsyncFunction("wearCalibration") { (promise: Promise) in
+      promise.reject("indisponivel", "sem radio no simulador")
+    }
+    AsyncFunction("stopWearCalibration") { (promise: Promise) in
+      promise.resolve(nil)
     }
     AsyncFunction("enableAncs") { (promise: Promise) in
       promise.reject("indisponivel", "sem radio no simulador")

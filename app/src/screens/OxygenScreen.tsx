@@ -85,7 +85,10 @@ export function OxygenScreen() {
         <HistoryRow time="Medição" fraction={rating.fraction} value={`${spo2}%`} color={color} last />
       </Section>
 
-      <MeasureButton kind="spo2" />
+      {/* `oneKey`, não `spo2`: as duas levam os mesmos 30 s, e a combinada
+          devolve batimento e pressão junto. Medir só oxigenação era jogar duas
+          medições fora a cada toque. */}
+      <MeasureButton kind="oneKey" />
     </DetailScreen>
   );
 }

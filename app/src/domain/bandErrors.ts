@@ -78,13 +78,60 @@ const DICIONARIO: { marca: string; falha: FalhaDeMedicao }[] = [
 ];
 
 /**
- * Traduz a falha de uma medição. `null` quando a mensagem não é do firmware —
- * aí quem responde é o texto genérico de quem chamou.
+ * As falhas pelo CÓDIGO, que é mais confiável que a frase.
+ *
+ * O SDK 1.0.0.20260812 documentou o `error.code` de `startToMeasuring`: -1 falha
+ * ao enviar o início, -2 falha ao enviar o fim, -3 mal vestida, -4 não
+ * calibrada. A ponte nativa os traduz para estes nomes antes de rejeitar.
+ *
+ * O código ganha da mensagem quando os dois existem: a mensagem é texto do
+ * firmware, muda entre versões e já mudou uma vez (`未正确佩戴手环` virou
+ * `手环未正确佩戴`); o código é contrato.
+ *
+ * `sem-calibracao` é o que mais importa: é a causa que NENHUMA tela sabia
+ * nomear, porque nem sabíamos que a pulseira podia estar nesse estado. A
+ * medição conclui sem valor e sem mensagem, e insistir não resolve — só a
+ * calibração de uso resolve.
+ */
+const POR_CODIGO: Record<string, FalhaDeMedicao> = {
+  'sem-calibracao': {
+    titulo: 'A pulseira precisa ser calibrada',
+    corpo:
+      'Ela não mede antes da calibração de uso, que é feita uma vez. Vista a pulseira, ' +
+      'fique parado e abra o menu → Dispositivo para calibrar — leva cerca de dois minutos.',
+    automatico: false,
+  },
+  'mal-vestida': {
+    titulo: 'A pulseira não está fazendo contato',
+    corpo: 'Ajuste-a um dedo acima do osso do pulso, firme mas sem apertar, e tente de novo.',
+    automatico: true,
+  },
+  'inicio-recusado': {
+    titulo: 'A pulseira não aceitou o comando',
+    corpo: 'Costuma ser sinal fraco. Aproxime o celular da pulseira e tente de novo.',
+    automatico: true,
+  },
+  'fim-recusado': {
+    titulo: 'A medição não fechou',
+    corpo:
+      'O aparelho mediu, mas não confirmou o fim — o sensor pode ter ficado ligado. ' +
+      'Aguarde alguns segundos antes de medir de novo.',
+    automatico: true,
+  },
+};
+
+/**
+ * Traduz a falha de uma medição. `null` quando não reconhecemos nem o código
+ * nem a mensagem — aí quem responde é o texto genérico de quem chamou.
  *
  * Nunca devolve a mensagem crua traduzida ao pé da letra: o firmware descreve o
  * ESTADO ("não está corretamente usada"), e o que a tela precisa é a ação.
  */
-export function falhaDeMedicao(mensagem: string | null | undefined): FalhaDeMedicao | null {
+export function falhaDeMedicao(
+  mensagem: string | null | undefined,
+  codigo?: string | null,
+): FalhaDeMedicao | null {
+  if (codigo && POR_CODIGO[codigo]) return POR_CODIGO[codigo];
   if (!mensagem) return null;
   for (const { marca, falha } of DICIONARIO) {
     if (mensagem.includes(marca)) return falha;
@@ -98,7 +145,10 @@ export function falhaDeMedicao(mensagem: string | null | undefined): FalhaDeMedi
  * Existe porque `measureError` é uma string só, e reescrever a tela inteira
  * para dois campos não vale a pena por enquanto.
  */
-export function textoDaFalha(mensagem: string | null | undefined): string | null {
-  const f = falhaDeMedicao(mensagem);
+export function textoDaFalha(
+  mensagem: string | null | undefined,
+  codigo?: string | null,
+): string | null {
+  const f = falhaDeMedicao(mensagem, codigo);
   return f ? `${f.titulo}. ${f.corpo}` : null;
 }

@@ -33,6 +33,7 @@ export const SYNC_ORDER: SyncStep[] = ['heartRate', 'hrv', 'stress', 'spo2', 'pr
 
 const MEASURE_LABEL: Record<MeasurableKind, string> = {
   oneKey: 'Medindo batimento, oxigênio e pressão…',
+  oneKeyFull: 'Medindo tudo o que a pulseira aceitar…',
   hrv: 'Medindo variabilidade…',
   spo2: 'Medindo oxigênio…',
   bloodPressure: 'Medindo pressão…',

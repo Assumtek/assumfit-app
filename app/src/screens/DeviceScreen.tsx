@@ -10,6 +10,7 @@ import { Note, Row, Section } from '../components/Card';
 import { ble } from '../services/ble';
 import { DetailScreen } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
+import { MeasureButton } from '../components/MeasureButton';
 import { SedentaryReminder } from '../components/SedentaryReminder';
 import { SyncProgress } from '../components/SyncProgress';
 import { Body, Button, Data } from '../components/ui';
@@ -59,6 +60,39 @@ export function DeviceScreen() {
       // Segura o rótulo "Vibrando…" o tempo da vibração — o retorno do SDK
       // chega antes de o motor parar, e o botão voltando na hora parece falha.
       setTimeout(() => setLocalizando(false), 2500);
+    }
+  };
+
+  /*
+   Calibração de uso — o passo que faltava.
+
+   Uma pulseira não calibrada aceita o comando de medir, mede, e conclui sem
+   valor: o SDK 1.0.0.20260812 documentou esse desfecho como `error.code == -4`,
+   e é o que `domain/bandErrors.ts` traduz para "precisa ser calibrada". Este
+   botão é o destino que aquela mensagem promete — sem ele, a tela mandaria a
+   pessoa a um lugar que não existe.
+
+   Leva até dois minutos e o rótulo diz isso ANTES, não depois: um botão que
+   trava por dois minutos sem avisar é um botão quebrado aos olhos de quem toca.
+  */
+  const [calibrando, setCalibrando] = React.useState(false);
+  const [calibracao, setCalibracao] = React.useState<string | null>(null);
+  const calibrar = async () => {
+    setCalibrando(true);
+    setCalibracao(null);
+    try {
+      const ok = await ble.wearCalibration?.();
+      setCalibracao(
+        ok
+          ? 'Calibração concluída. As medições sob demanda devem voltar a devolver valor.'
+          : 'A calibração não concluiu. Vista a pulseira firme, fique parado e tente de novo.',
+      );
+    } catch {
+      setCalibracao(
+        'A calibração não concluiu. Vista a pulseira firme, fique parado e tente de novo.',
+      );
+    } finally {
+      setCalibrando(false);
     }
   };
 
@@ -151,6 +185,36 @@ export function DeviceScreen() {
             onPress={() => void localizar()}
             disabled={localizando}
           />
+
+          <Button
+            title={calibrando ? 'Calibrando… (até 2 min)' : 'Calibrar uso da pulseira'}
+            variant="secondary"
+            onPress={() => void calibrar()}
+            disabled={calibrando}
+            loading={calibrando}
+          />
+          {calibrando ? (
+            <Data>Fique parado, com a pulseira vestida, até a calibração terminar.</Data>
+          ) : calibracao ? (
+            <Data>{calibracao}</Data>
+          ) : null}
+
+          {/*
+            EXPERIMENTO — mede tudo numa corrida só, se o firmware deixar.
+
+            O cabeçalho do SDK descreve um modelo de retorno com batimento, HRV,
+            estresse, RRI e pressão juntos. Se esta pulseira responder a ele, as
+            três medições de hoje (30 s + 30 s + 80 s) viram uma de 30 s. Se não
+            responder, volta vazio e nada muda — por isso mora aqui, na tela de
+            manutenção, e não numa tela de saúde.
+
+            Como conferir: toque, espere, e veja se Estresse e HRV mudaram.
+          */}
+          <MeasureButton kind="oneKeyFull" label="Testar medição combinada" />
+          <Data>
+            Experimento: tenta trazer batimento, pressão, oxigenação, estresse e HRV numa medição
+            só. Depois confira se as telas de Estresse e HRV mudaram.
+          </Data>
 
           {/*
             Mora aqui, e não em Configurações, porque só faz sentido com a

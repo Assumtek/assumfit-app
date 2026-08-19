@@ -33,7 +33,14 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
 @class QCManualHeartRateModel;
 @class QCDimingTimeInfo;
 @class QCStressModel;
+@class QCOtherDataPressureModel;
+@class QCPressureDayModel;
+@class QCPressureSampleModel;
+@class QCOtherDataEmotionModel;
+@class QCEmotionItemModel;
 @class QCHRVModel;
+@class QCHRVDayModel;
+@class QCHRVSampleModel;
 @class QCSedentaryModel;
 @class QCFlipWristInfoModel;
 @class QCFilterModel;
@@ -41,31 +48,42 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
 + (instancetype)shareInstance;
 
 /**
- Sets the device UUID.
-
- @param uuid   Device identifier string, must be less than 10 characters.
-               Note: This feature is only supported by certain devices.
- @param suc    Callback invoked when the operation succeeds.
- @param fail   Callback invoked when the operation fails.
+ *	@brief	Sets the device UUID.
+ *	设置设备 UUID。
+ *
+ *	@param 	uuid 	Device identifier string, must be less than 10 characters.
+ *	设备标识字符串，长度须小于 10 个字符。
+ *	Note: This feature is only supported by certain devices.
+ *	注意：仅部分设备支持此功能。
+ *	@param 	suc 	Callback invoked when the operation succeeds.
+ *	成功回调。
+ *	@param 	fail 	Callback invoked when the operation fails.
+ *	失败回调。
  */
 + (void)setUUID:(NSString *)uuid
         success:(void (^)(void))suc
          failed:(void (^)(void))fail;
 
 /**
- ​End Broadcast
- 
- @param suc    Callback invoked when the operation succeeds.
- @param fail   Callback invoked when the operation fails.
+ *	@brief	End broadcast.
+ *	结束广播。
+ *
+ *	@param 	suc 	Callback invoked when the operation succeeds.
+ *	成功回调。
+ *	@param 	fail 	Callback invoked when the operation fails.
+ *	失败回调。
  */
 + (void)endBroadcast:(void (^)(void))suc
          failed:(void (^)(void))fail;
 
 /**
- Gets the device UUID.
-
- @param suc    Callback invoked when the operation succeeds, returns the UUID string.
- @param fail   Callback invoked when the operation fails.
+ *	@brief	Gets the device UUID.
+ *	获取设备 UUID。
+ *
+ *	@param 	suc 	Callback invoked when the operation succeeds, returns the UUID string.
+ *	成功回调，返回 UUID 字符串。
+ *	@param 	fail 	Callback invoked when the operation fails.
+ *	失败回调。
  */
 + (void)getUUID:(void (^)(NSString *uuid))suc
          failed:(void (^)(void))fail;
@@ -103,10 +121,13 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
 + (void)setTime:(NSDate *)date success:(void (^)(NSDictionary *featureList))suc failed:(void (^)(void))fail;
 
 /**
- *  Read device battery
- *  读取设备电量
+ *	@brief	Read device battery.
+ *	读取设备电量。
  *
- *  @param suc battery: Power level
+ *	@param 	suc 	Success callback. battery: power level (%); charging: whether charging.
+ *	成功回调。battery：电量百分比；charging：是否正在充电。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)readBatterySuccess:(void (^)(int battery,BOOL charging))suc failed:(void (^)(void))fail;
 
@@ -122,18 +143,27 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
 + (void)setANCSFlagSuccess:(nullable void (^)(void))suc fail:(nullable void (^)(void))fail;
 
 /**
- *  Set watch time base/user personal information
- *  设置手环时间进制/用户个人信息
+ *	@brief	Set watch time format / user personal information.
+ *	设置手环时间进制 / 用户个人信息。
  *
- *  @param twentyfourHourFormat   : YES 24 hour system; NO 12 hour system
- *  @param metricSystem                     : YES metric system; NO British system
- *  @param gender                                  : Gender (0=Male，1=Female)
- *  @param age                                         : Age（years）
- *  @param height                                  : Height（cm）
- *  @param weight                                  : Weight（kg）
- *  @param sbpBase                                : systolic blood pressure base（mmhg）(reserved value, default 0)
- *  @param dbpBase                                : Diastolic blood pressure base（mmhg）(reserved value, default 0)
- *  @param hrAlarmValue                     : Heart rate alarm value（bpm）(reserved value, default 0)
+ *	@param 	twentyfourHourFormat 	YES = 24-hour; NO = 12-hour.
+ *	YES=24 小时制；NO=12 小时制。
+ *	@param 	metricSystem 	YES = metric; NO = imperial.
+ *	YES=公制；NO=英制。
+ *	@param 	gender 	Gender (0=Male, 1=Female).
+ *	性别（0=男，1=女）。
+ *	@param 	age 	Age in years.
+ *	年龄（岁）。
+ *	@param 	height 	Height in cm.
+ *	身高（厘米）。
+ *	@param 	weight 	Weight in kg.
+ *	体重（千克）。
+ *	@param 	sbpBase 	Systolic blood pressure base (mmHg). Reserved, default 0.
+ *	收缩压基准值（mmHg）。预留，默认 0。
+ *	@param 	dbpBase 	Diastolic blood pressure base (mmHg). Reserved, default 0.
+ *	舒张压基准值（mmHg）。预留，默认 0。
+ *	@param 	hrAlarmValue 	Heart rate alarm value (bpm). Reserved, default 0.
+ *	心率报警值（bpm）。预留，默认 0。
  */
 + (void)setTimeFormatTwentyfourHourFormat:(BOOL)twentyfourHourFormat
                              metricSystem:(BOOL)metricSystem
@@ -147,59 +177,109 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
                                   success:(void (^)(BOOL, BOOL, NSInteger, NSInteger, NSInteger, NSInteger, NSInteger, NSInteger, NSInteger))success fail:(void (^)(void))fail;
 
 /**
- *  Get watch time base/user personal information
- *  获取手环时间进制/用户个人信息
+ *	@brief	Get watch time format / user personal information.
+ *	获取手环时间进制 / 用户个人信息。
  *
- *  @param success  callback
- *  @note               isTwentyfour: YES 24 hour system; NO 12 hour system
- *  @note               isMetricSystem: YES metric system; NO British system
- *  @note               gender: Gender (0=Male，1=Female)
- *  @note               age: Age（years）
- *  @note               height: Height（cm）
- *  @note               weight: Weight（kg）
- *  @note               sbpBase: blood pressure base（mmhg）(reserved value, default 0)
- *  @note               dbpBase: Diastolic blood pressure base（mmhg）(reserved value, default 0)
- *  @note               hrAlarmValue: Heart rate alarm value（bpm）(reserved value, default 0)
- *
- *  @param fail callback
+ *	@param 	success 	Success callback.
+ *	成功回调。
+ *	@note 	isTwentyfour: YES = 24-hour; NO = 12-hour.
+ *	isTwentyfour：YES=24 小时制；NO=12 小时制。
+ *	@note 	isMetricSystem: YES = metric; NO = imperial.
+ *	isMetricSystem：YES=公制；NO=英制。
+ *	@note 	gender: Gender (0=Male, 1=Female).
+ *	gender：性别（0=男，1=女）。
+ *	@note 	age: Age in years.
+ *	age：年龄（岁）。
+ *	@note 	height: Height in cm.
+ *	height：身高（厘米）。
+ *	@note 	weight: Weight in kg.
+ *	weight：体重（千克）。
+ *	@note 	sbpBase: Systolic BP base (mmHg). Reserved, default 0.
+ *	sbpBase：收缩压基准值（mmHg）。预留，默认 0。
+ *	@note 	dbpBase: Diastolic BP base (mmHg). Reserved, default 0.
+ *	dbpBase：舒张压基准值（mmHg）。预留，默认 0。
+ *	@note 	hrAlarmValue: Heart rate alarm value (bpm). Reserved, default 0.
+ *	hrAlarmValue：心率报警值（bpm）。预留，默认 0。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getTimeFormatInfo:(nullable void (^)(BOOL isTwentyfour, BOOL isMetricSystem, NSInteger gender, NSInteger age, NSInteger height, NSInteger weight, NSInteger sbpBase, NSInteger dbpBase, NSInteger hrAlarmValue))success fail:(nullable void (^)(void))fail;
 
 /**
- *  Get the version number of the device firmware
- *  获取设备固件(Application)的版本号
+ *	@brief	Get the device firmware (Application) version.
+ *	获取设备固件（Application）版本号。
  *
- *  @param success Software and hardware version numbers are in the format "x.x.x"
+ *	@param 	success 	Success callback. Software/hardware versions use "x.x.x" format.
+ *	成功回调。软硬件版本号格式均为 "x.x.x"。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getDeviceSoftAndHardVersionSuccess:(void (^)(NSString *_Nonnull, NSString *_Nonnull))success fail:(void (^)(void))fail;
 
 /**
- *  Get the type of received push message
- *  查找接收推送消息
+ *	@brief	Get received push-message filter types.
+ *	获取接收推送消息的类型配置。
  *
- *  @param  suc filters :Supported push message types  0:telephone 1:SMS; 2:QQ 3:wechat 4:FaceBook 5:WhatsApp 6:twitter 7:skype 8:line 9:linkedin 10:instagram 11:tim 12:snapchat 13:reserved space 14:reserved space 15:other
- *          Fx ->@[@"1",@"0",@"0",@"0",@"0",@"0",@"0",@"0",@"0",@"0 ",@"0",@"0",@"0",@"0",@"0"] means to receive incoming call alerts
+ *	@param 	suc 	Success callback with filters array.
+ *	成功回调，返回 filters 数组。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
+ *
+ *	#### Supported push types: 0=telephone, 1=SMS, 2=QQ, 3=wechat, 4=FaceBook,
+ *	5=WhatsApp, 6=twitter, 7=skype, 8=line, 9=linkedin, 10=instagram, 11=tim,
+ *	12=snapchat, 13/14=reserved, 15=other.
+ *	#### 支持的推送类型：0=电话，1=短信，2=QQ，3=微信，4=FaceBook，5=WhatsApp，
+ *	6=twitter，7=skype，8=line，9=linkedin，10=instagram，11=tim，
+ *	12=snapchat，13/14=预留，15=其他。
+ *	#### Example @[@"1",@"0",...] enables incoming-call alerts.
+ *	#### 示例 @[@"1",@"0",...] 表示开启来电提醒。
  */
 + (void)getFilterSuccess:(void (^)(NSArray<NSNumber *> *filters))suc failed:(void (^)(void))fail;
 
 
-/// 获取App消息通知的开关状态
-/// @param suc 成功回调
-/// @param fail 失败回调
+/**
+ *	@brief	Get App notification filter switch states.
+ *	获取 App 消息通知的开关状态。
+ *
+ *	@param 	suc 	Success callback with filter models.
+ *	成功回调，返回通知过滤模型数组。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
+ */
 + (void)getAppNotiFilterSuccess:(void (^)(NSArray<QCFilterModel *> *_Nullable filters))suc failed:(void (^)(void))fail;
 /**
- *  Set the type of received push message
- *   设置接收推送消息
+ *	@brief	Set received push-message filter types.
+ *	设置接收推送消息的类型配置。
  *
- *  @param  filters :Supported push message types  0:telephone 1:SMS; 2:QQ 3:wechat 4:FaceBook 5:WhatsApp 6:twitter 7:skype 8:line 9:linkedin 10:instagram 11:tim 12:snapchat 13:reserved space 14:reserved space 15:other
- *          Fx ->@[@"1",@"0",@"0",@"0",@"0",@"0",@"0",@"0",@"0",@"0 ",@"0",@"0",@"0",@"0",@"0"] means to receive incoming call alerts
+ *	@param 	filters 	Push filter array.
+ *	推送过滤数组。
+ *	@param 	suc 	Success callback.
+ *	成功回调。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
+ *
+ *	#### Supported push types: 0=telephone, 1=SMS, 2=QQ, 3=wechat, 4=FaceBook,
+ *	5=WhatsApp, 6=twitter, 7=skype, 8=line, 9=linkedin, 10=instagram, 11=tim,
+ *	12=snapchat, 13/14=reserved, 15=other.
+ *	#### 支持的推送类型：0=电话，1=短信，2=QQ，3=微信，4=FaceBook，5=WhatsApp，
+ *	6=twitter，7=skype，8=line，9=linkedin，10=instagram，11=tim，
+ *	12=snapchat，13/14=预留，15=其他。
+ *	#### Example @[@"1",@"0",...] enables incoming-call alerts.
+ *	#### 示例 @[@"1",@"0",...] 表示开启来电提醒。
  */
 + (void)setFilter:(NSArray *)filters success:(void (^)(void))suc failed:(void (^)(void))fail;
 
-/// 设置App消息通知的状态开关
-/// @param filters app消息通知
-/// @param suc 成功回调
-/// @param fail 失败回调
+/**
+ *	@brief	Set App notification filter switch states.
+ *	设置 App 消息通知的状态开关。
+ *
+ *	@param 	filters 	App notification filter models.
+ *	App 消息通知过滤模型数组。
+ *	@param 	suc 	Success callback.
+ *	成功回调。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
+ */
 + (void)setAppNotiFilter:(NSArray<QCFilterModel *> * _Nullable)filters success:(void (^)(void))suc failed:(void (^)(void))fail;
 
 /**
@@ -209,99 +289,147 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
 + (void)getCurrentSportSucess:(void (^)(QCSportModel *sport))suc failed:(void (^)(void))fail;
 
 /**
- *  Get the aggregated step counting data of a certain day (not recommended, and will not be maintained in the future, the summary of a certain day needs to be calculated by yourself)
- *  获取某天汇总的计步数据(不建议使用，以后不维护，某天的汇总需要自己计算)
+ *	@brief	Get aggregated step data for a specific day.
+ *	获取某天的汇总计步数据。
+ *
+ *	#### Deprecated approach: not recommended. Prefer detailed sport APIs and aggregate locally.
+ *	#### 已不推荐使用。建议使用详细运动接口后自行汇总。
+ *
+ *	@param 	index 	Day index from today (0 = today, 1 = yesterday, and so on).
+ *	距今天数（0=今天，1=昨天，以此类推）。
+ *	@param 	suc 	Success callback with the day sport model.
+ *	成功回调，返回当天运动模型。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getOneDaySportBy:(NSInteger)index success:(void (^)(QCSportModel *model))suc fail:(void (^)(void))fail;
 
 /**
- *  Get detailed exercise data for a day
- *  获取某天的详细运动数据
+ *	@brief	Get detailed exercise (step) data for a day.
+ *	获取某天的详细运动（计步）数据。
  *
- *  @param items  sports:return all sports models
+ *	@param 	dayIndex 	Day index from today (0 = today, 1 = yesterday, and so on).
+ *	距今天数（0=今天，1=昨天，以此类推）。
+ *	@param 	items 	Success callback. sports: all sport models of that day.
+ *	成功回调。sports：当天全部运动模型。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getSportDetailDataByDay:(NSInteger)dayIndex sportDatas:(nullable void (^)(NSArray<QCSportModel *> *sports))items fail:(nullable void (^)(void))fail;
 
 /**
- *  Get detailed exercise data for a specified time period on a certain day
- *  获取某天指定时间段详细运动数据
+ *	@brief	Get detailed exercise data for a specified time range on a day.
+ *	获取某天指定时间段的详细运动数据。
  *
- *  @param  minuteInterval      minute interval for each index
- *  @param  beginIndex               time period start index
- *  @param  endIndex                   time period end index
- *  @param  items                          sports:return all sports models
+ *	@param 	dayIndex 	Day index from today (0 = today, 1 = yesterday, and so on).
+ *	距今天数（0=今天，1=昨天，以此类推）。
+ *	@param 	minuteInterval 	Minute interval represented by each index.
+ *	每个索引对应的分钟间隔。
+ *	@param 	beginIndex 	Start index of the time range.
+ *	时间段起始索引。
+ *	@param 	endIndex 	End index of the time range.
+ *	时间段结束索引。
+ *	@param 	items 	Success callback. sports: sport models in the range.
+ *	成功回调。sports：该时间段内的运动模型。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getSportDetailDataByDay:(NSInteger)dayIndex minuteInterval:(NSInteger)minuteInterval beginIndex:(NSInteger)beginIndex endIndex:(NSInteger)endIndex sportDatas:(nullable void (^)(NSArray<QCSportModel *> *sports))items fail:(nullable void (^)(void))fail;
 
 
 /**
- *  Get detailed sleep data for a day
- *  获取某天的详细睡眠数据
+ *	@brief	Get detailed sleep data for a day.
+ *	获取某天的详细睡眠数据。
  *
- *  @discussion The time period corresponding to each sleep type, please see the returned content for details
- *  @param items    sleeps: returns all sleep models
+ *	@param 	dayIndex 	Day index from today (0 = today, 1 = yesterday, and so on).
+ *	距今天数（0=今天，1=昨天，以此类推）。
+ *	@param 	items 	Success callback. sleeps: all sleep models of that day.
+ *	成功回调。sleeps：当天全部睡眠模型。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getSleepDetailDataByDay:(NSInteger)dayIndex sleepDatas:(nullable void (^)(NSArray<QCSleepModel *> *sleeps))items fail:(nullable void (^)(void))fail;
 
 /**
- *  Get detailed sleep data for a day
- *  获取某天的详细睡眠数据
+ *	@brief	Get full-day sleep data (night sleep + naps) for a day.
+ *	获取某天的全天睡眠数据（夜间睡眠 + 小睡）。
  *
- *  @discussion The time period corresponding to each sleep type, please see the returned content for details
- *  @param items    sleeps: returns all sleep models,naps: returns all naps models
+ *	@param 	dayIndex 	Day index from today (0 = today, 1 = yesterday, and so on).
+ *	距今天数（0=今天，1=昨天，以此类推）。
+ *	@param 	items 	Success callback. First array: night sleep models; second array: nap models.
+ *	成功回调。第一个数组：夜间睡眠模型；第二个数组：小睡模型。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getFulldaySleepDetailDataByDay:(NSInteger)dayIndex sleepDatas:(nullable void (^)(NSArray<QCSleepModel *> *_Nullable,NSArray<QCSleepModel *> *_Nullable))items fail:(nullable void (^)(void))fail;
 
 /**
- *  Get all sleep data from a certain day to today
- *  获取从某天到今天的所有睡眠数据
+ *	@brief	Get all sleep data from a certain day to today.
+ *	获取从某天到今天的所有睡眠数据。
  *
- *  @param  fromDayIndex    The number of days from today, (0: means today, 1: means yesterday)
- *  @param  items                   Returned sleep data (key: days from today, value: corresponding sleep data)
- *  @param  fail                     Failed callback
+ *	@param 	fromDayIndex 	Days from today (0=today, 1=yesterday).
+ *	距今天数（0=今天，1=昨天）。
+ *	@param 	items 	Returned sleep data (key: days from today, value: sleep models).
+ *	返回的睡眠数据（key：距今天数，value：对应睡眠数据）。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getSleepDetailDataFromDay:(NSInteger)fromDayIndex sleepDatas:(nullable void (^)(NSDictionary <NSString*,NSArray<QCSleepModel*>*>*_Nonnull))items fail:(nullable void (^)(void))fail;
 
 
 /**
- *  Get all sleep data from a certain day to today
- *  获取从某天到今天的所有睡眠数据
+ *	@brief	Get all full-day sleep data from a certain day to today.
+ *	获取从某天到今天的所有全天睡眠数据。
  *
- *  @param  fromDayIndex    The number of days from today, (0: means today, 1: means yesterday)
- *  @param  items                   Returned sleep data (key: days from today, value: corresponding sleep data)
- *  @param  fail                     Failed callback
+ *	@param 	fromDayIndex 	Days from today (0=today, 1=yesterday).
+ *	距今天数（0=今天，1=昨天）。
+ *	@param 	items 	Returned sleep data (key: days from today, value: sleep models).
+ *	返回的睡眠数据（key：距今天数，value：对应睡眠数据）。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getFulldaySleepDetailDataFromDay:(NSInteger)fromDayIndex sleepDatas:(nullable void (^)(NSDictionary <NSString*,NSArray<QCSleepModel*>*>*_Nonnull,NSDictionary <NSString*,NSArray<QCSleepModel*>*>*_Nonnull))items fail:(nullable void (^)(void))fail;
 
 /**
- *  Get all sleep data from a certain day to today (new protocol)
- *  获取从某天到今天的所有睡眠数据(新版协议)
+ *	@brief	Get sleep data from a certain day to today (new protocol).
+ *	获取从某天到今天的所有睡眠数据（新版协议）。
  *
- *  @param dayIndex     :0->today, 1: yesterday, 2: the day before yesterday
- *  @param items            :NSDictionary, key is sleep date, value corresponds to all sleep models of that day
+ *	@param 	dayIndex 	0=today, 1=yesterday, 2=the day before yesterday, ...
+ *	距今天数：0=今天，1=昨天，2=前天……
+ *	@param 	items 	NSDictionary: key = day-index string, value = sleep models of that day.
+ *	NSDictionary：key 为距今天数的字符串（如 @"0"、@"1"），value 为对应睡眠模型。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getSleepDetailDataV2ByDay:(NSInteger)dayIndex sleepDatas:(nullable void (^)(NSDictionary <NSString*,NSArray<QCSleepModel*>*>*_Nonnull))items fail:(nullable void (^)(void))fail;
 
 /**
- * Get sedentary reminders
- * 获取久坐提醒
+ *	@brief	Get sedentary reminders.
+ *	获取久坐提醒。
  *
- * @note beginTime Start movement time (format "HH:mm")
- * @note endTime End exercise time (format "HH:mm")
- * @note repeat Reminder repeat cycle (array order is Sunday-Saturday, such as @[@0, @1, @0, @0, @0, @0, @0], which means repeat every Monday)
- * @note interval Reminder interval/period (unit: minutes, range: 1-255)
+ *	@note 	beginTime: start time, format "HH:mm".
+ *	beginTime：开始时间，格式 "HH:mm"。
+ *	@note 	endTime: end time, format "HH:mm".
+ *	endTime：结束时间，格式 "HH:mm"。
+ *	@note 	repeat: weekly cycle, Sunday→Saturday, e.g. @[@0,@1,@0,@0,@0,@0,@0] = every Monday.
+ *	repeat：重复周期，周日→周六，例如 @[@0,@1,@0,@0,@0,@0,@0] 表示每周一重复。
+ *	@note 	interval: reminder interval in minutes, range 1-255.
+ *	interval：提醒间隔，单位：分钟，范围 1-255。
  */
 + (void)getSitLongRemindResult:(void (^)(NSString *beginTime, NSString *endTime, NSArray *repeat, NSUInteger interval))remind fail:(void (^)(void))fail;
 
 /**
- * Set sedentary reminders
+ *	@brief	Set sedentary reminders.
+ *	设置久坐提醒。
  *
- * 设置久坐提醒
- *
- * @param beginTime Start movement time (format "HH:mm")
- * @param endTime End exercise time (format "HH:mm")
- * @param repeat Reminder repeat cycle (note that the array order should be modified to Sunday-Saturday, such as: @[@0, @1, @0, @0, @0, @0, @0], which means repeat every Monday)
- * @param interval Reminder interval/period (unit: minutes, range: 1-255)
+ *	@param 	beginTime 	Start time, format "HH:mm".
+ *	开始时间，格式 "HH:mm"。
+ *	@param 	endTime 	End time, format "HH:mm".
+ *	结束时间，格式 "HH:mm"。
+ *	@param 	repeat 	Weekly cycle, Sunday→Saturday, e.g. @[@0,@1,@0,@0,@0,@0,@0] = every Monday.
+ *	重复周期，周日→周六，例如 @[@0,@1,@0,@0,@0,@0,@0] 表示每周一重复。
+ *	@param 	interval 	Reminder interval in minutes, range 1-255.
+ *	提醒间隔，单位：分钟，范围 1-255。
  */
 + (void)setBeginTime:(NSString *)beginTime endTime:(NSString *)endTime repeatModel:(NSArray *)repeat timeInterval:(NSUInteger)interval success:(void (^)(void))suc fail:(void (^)(void))fail;
 
@@ -310,6 +438,73 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
  *  查找手环
  */
 + (void)lookupDeviceSuccess:(void (^)(void))suc fail:(void (^)(void))fail;
+
+/**
+ *	@brief	Send a notification function event (0x51, AA=1~6).
+ *	发送通知功能事件（0x51，AA=1~6）。
+ *
+ *	@param 	eventType 	Notification event type. See QCNotificationEventType.
+ *	通知事件类型，参见 QCNotificationEventType。
+ *	@param 	suc 	Success callback.
+ *	成功回调。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
+ */
++ (void)sendNotificationEvent:(QCNotificationEventType)eventType success:(nullable void (^)(void))suc fail:(nullable void (^)(void))fail;
+
+/**
+ *	@brief	Send a custom light notification (0x51, AA=8).
+ *	发送自定义亮灯通知（0x51，AA=8）。
+ *
+ *	@param 	priority 	Notification priority.
+ *	通知优先级。
+ *	@param 	action 	Light action. See QCNotificationLightAction.
+ *	亮灯动作，参见 QCNotificationLightAction。
+ *	@param 	cycleCount 	Number of light cycles.
+ *	亮灯循环次数。
+ *	@param 	onDuration 	Light-on duration. Unit: 100ms. Range: 1~127.
+ *	亮灯持续时间。单位：100ms。范围：1~127。
+ *	@param 	pauseDuration 	Pause duration between cycles. Unit: 100ms.
+ *	周期之间的暂停时长。单位：100ms。
+ *	@param 	suc 	Success callback.
+ *	成功回调。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
+ */
++ (void)sendCustomLightNotificationWithPriority:(NSInteger)priority
+                                         action:(QCNotificationLightAction)action
+                                     cycleCount:(NSInteger)cycleCount
+                                     onDuration:(NSInteger)onDuration
+                                  pauseDuration:(NSInteger)pauseDuration
+                                        success:(nullable void (^)(void))suc
+                                           fail:(nullable void (^)(void))fail;
+
+/**
+ *	@brief	Send a custom vibration notification (0x51, AA=9).
+ *	发送自定义震动通知（0x51，AA=9）。
+ *
+ *	@param 	priority 	Notification priority.
+ *	通知优先级。
+ *	@param 	action 	Vibration action. See QCNotificationVibrationAction.
+ *	震动动作，参见 QCNotificationVibrationAction。
+ *	@param 	cycleCount 	Number of vibration cycles.
+ *	震动循环次数。
+ *	@param 	vibrateDuration 	Vibration duration. Unit: 100ms. Range: 1~127.
+ *	震动持续时间。单位：100ms。范围：1~127。
+ *	@param 	pauseDuration 	Pause duration between cycles. Unit: 100ms.
+ *	周期之间的暂停时长。单位：100ms。
+ *	@param 	suc 	Success callback.
+ *	成功回调。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
+ */
++ (void)sendCustomVibrationNotificationWithPriority:(NSInteger)priority
+                                             action:(QCNotificationVibrationAction)action
+                                         cycleCount:(NSInteger)cycleCount
+                                    vibrateDuration:(NSInteger)vibrateDuration
+                                      pauseDuration:(NSInteger)pauseDuration
+                                            success:(nullable void (^)(void))suc
+                                               fail:(nullable void (^)(void))fail;
 
 /**
  *  Start real-time heart rate
@@ -342,9 +537,11 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
 + (void)startHeartRateMeasuringWithSuccess:(nullable void (^)(void))suc fail:(nullable void (^)(void))fail;
 
 /**
- *  End heart rate measurement
- *  结束心率测量
- *  @param hr :The measured heart rate value (the watch needs to display the measurement result based on this value)
+ *	@brief	End heart rate measurement.
+ *	结束心率测量。
+ *
+ *	@param 	hr 	Measured heart rate (bpm). The watch displays the result based on this value.
+ *	测得的心率值（bpm）。手表根据该值显示测量结果。
  */
 + (void)endHeartRateMeasuringWithHR:(NSInteger)hr success:(nullable void (^)(void))suc fail:(nullable void (^)(void))fail;
 
@@ -355,10 +552,13 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
 + (void)startBloodPressureMeasuringSuccess:(nullable void (^)(void))suc fail:(nullable void (^)(void))fail;
 
 /**
- *  End blood pressure measurement
- *  结束血压测量
- *  @param sbp  :systolic blood pressure
- *  @param dbp  :diastolic blood pressure
+ *	@brief	End blood pressure measurement.
+ *	结束血压测量。
+ *
+ *	@param 	sbp 	Systolic blood pressure (mmHg).
+ *	收缩压（mmHg）。
+ *	@param 	dbp 	Diastolic blood pressure (mmHg).
+ *	舒张压（mmHg）。
  */
 + (void)endBloodPressureMeasuringWithSbp:(NSInteger)sbp dbp:(NSInteger)dbp success:(nullable void (^)(void))suc fail:(nullable void (^)(void))fail;
 
@@ -369,9 +569,11 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
 + (void)startBloodOxygenMeasuringWithSuccess:(nullable void (^)(void))suc fail:(nullable void (^)(void))fail;
 
 /**
- *  end blood oxygen
- *  结束血氧测量
- *  @param soa2 :blood oxygen
+ *	@brief	End blood oxygen measurement.
+ *	结束血氧测量。
+ *
+ *	@param 	soa2 	Blood oxygen (SpO2) value.
+ *	血氧（SpO2）值。
  */
 + (void)endBloodOxygenMeasuringWithSoa2:(CGFloat)soa2 success:(nullable void (^)(void))suc fail:(nullable void (^)(void))fail;
 
@@ -387,70 +589,88 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
 + (void)closeOneKeyExaminationSwitchSuccess:(nullable void (^)(void))suc fail:(nullable void (^)(void))fail;
 
 /**
- *  Set a reminder to drink water
+ *	@brief	Set a drink-water reminder.
+ *	设置喝水提醒。
  *
- *  设置喝水提醒
- *
- *  @param index        : reminder number
- *  @param type          : alarm type
- *  @param time          :Format: HH:mm
- *  @param cycle        :The time is Sunday-Saturday, the format: such as @[@0, @1, @0, @0, @0, @0, @0], it means repeat every Monday
+ *	@param 	index 	Reminder index/number.
+ *	提醒编号。
+ *	@param 	type 	Alarm type. See ALARMTYPE.
+ *	闹钟类型，参见 ALARMTYPE。
+ *	@param 	time 	Time, format "HH:mm".
+ *	时间，格式 "HH:mm"。
+ *	@param 	cycle 	Weekly cycle, Sunday→Saturday, e.g. @[@0,@1,@0,@0,@0,@0,@0] = every Monday.
+ *	重复周期，周日→周六，例如 @[@0,@1,@0,@0,@0,@0,@0] 表示每周一重复。
  */
 + (void)setDrinkWaterRemindIndex:(NSUInteger)index type:(ALARMTYPE)type time:(NSString *)time cycle:(NSArray<NSNumber *> *)cycle success:(nullable void (^)(void))suc failed:(nullable void (^)(void))fail;
 
 /**
- * Get water reminders
+ *	@brief	Get a drink-water reminder.
+ *	获取喝水提醒。
  *
- * 获取喝水提醒
- *
- * @param index         : reminder number
- * @note type               :alarm type
- * @note time               :Format: HH:mm
- * @note cycle              :The time is Sunday-Saturday, the format: such as @[@0, @1, @0, @0, @0, @0, @0], it means repeat every Monday
+ *	@param 	index 	Reminder index/number.
+ *	提醒编号。
+ *	@note 	type: alarm type.
+ *	type：闹钟类型。
+ *	@note 	time: format "HH:mm".
+ *	time：格式 "HH:mm"。
+ *	@note 	cycle: weekly cycle, Sunday→Saturday, e.g. @[@0,@1,@0,@0,@0,@0,@0] = every Monday.
+ *	cycle：重复周期，周日→周六，例如 @[@0,@1,@0,@0,@0,@0,@0] 表示每周一重复。
  */
 + (void)getDrinkWaterRemindWithIndex:(NSUInteger)index remind:(nullable void (^)(NSUInteger index, ALARMTYPE type, NSString *time, NSArray<NSNumber *> *cycle))remind fail:(nullable void (^)(void))fail;
 
 /**
- *  Get information about the wrist flip feature
+ *	@brief	Get information about the wrist-flip (raise-to-wake) feature.
+ *	获取翻腕亮屏功能的信息。
  *
- *  获取翻腕亮屏功能的信息
- *
- *  @param success callback
- *  @note           isOn: whether the function is turned on;
- *  @note           leftHandWear: whether the left hand is worn
- *  @param fail callback
+ *	@param 	success 	Success callback.
+ *	成功回调。
+ *	@note 	isOn: whether the feature is turned on.
+ *	isOn：功能是否开启。
+ *	@note 	flipType / leftHandWear: whether the device is worn on the left hand.
+ *	flipType / leftHandWear：是否左手佩戴。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getFlipWristInfo:(nullable void (^)(BOOL isOn, NSUInteger flipType))success fail:(void (^)(void))fail;
 
 /**
- *  Set information about the wrist flip feature
+ *	@brief	Set information about the wrist-flip (raise-to-wake) feature.
+ *	设置翻腕亮屏功能的信息。
  *
- *  设置翻腕亮屏功能的信息
- *
- *  @param on                       :Whether the function is enabled
- *  @param flipType          :Whether to wear on the left hand
+ *	@param 	on 	Whether the feature is enabled.
+ *	功能是否开启。
+ *	@param 	flipType 	Whether worn on the left hand.
+ *	是否左手佩戴。
  */
 + (void)setFlipWristOn:(BOOL)on flipType:(NSUInteger)flipType success:(nullable void (^)(BOOL featureOn, NSUInteger flipType))success fail:(nullable void (^)(void))fail;
 
 /**
- *  Get information about the Do Not Disturb feature
+ *	@brief	Get Do Not Disturb feature information.
+ *	获取勿扰模式功能的信息。
  *
- *  获取勿扰模式功能的信息
- *
- *  @param success       callback
- *  @note               isOn: whether the function is enabled;
- *  @note               begin: start time, the format is HH:mm;
- *  @note               end: end time, the format is HH: mm
+ *	@param 	success 	Success callback.
+ *	成功回调。
+ *	@note 	isOn: whether the feature is enabled.
+ *	isOn：功能是否开启。
+ *	@note 	begin: start time, format "HH:mm".
+ *	begin：开始时间，格式 "HH:mm"。
+ *	@note 	end: end time, format "HH:mm".
+ *	end：结束时间，格式 "HH:mm"。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getDontDisturbInfo:(nullable void (^)(BOOL isOn, NSString *begin, NSString *end))success fail:(void (^)(void))fail;
 
 /**
- *  Set information about the Do Not Disturb feature
+ *	@brief	Set Do Not Disturb feature information.
+ *	设置勿扰模式功能的信息。
  *
- *  设置勿扰模式功能的信息
- *  @param on               :whether the function is enabled
- *  @param begin        :start time, the format is HH:mm;
- *  @param end             :end time, the format is HH: mm
+ *	@param 	on 	Whether the feature is enabled.
+ *	功能是否开启。
+ *	@param 	begin 	Start time, format "HH:mm".
+ *	开始时间，格式 "HH:mm"。
+ *	@param 	end 	End time, format "HH:mm".
+ *	结束时间，格式 "HH:mm"。
  */
 + (void)setDontDisturbOn:(BOOL)on beginTime:(NSString *)begin endTime:(NSString *)end success:(nullable void (^)(BOOL featureOn, NSString *begin, NSString *end))success fail:(nullable void (^)(void))fail;
 
@@ -483,72 +703,93 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
 + (void)resetBandHardlySuccess:(nullable void (^)(void))suc fail:(nullable void (^)(void))fail;
 
 /**
- *  Get device Mac address
+ *	@brief	Get device MAC address.
+ *	获取设备 Mac 地址。
  *
- *  获取设备Mac地址
- *
- *  @param success      :The Mac address format is "AA:BB:CC:DD:EE:FF"
+ *	@param 	success 	Success callback. MAC format: "AA:BB:CC:DD:EE:FF".
+ *	成功回调。Mac 地址格式："AA:BB:CC:DD:EE:FF"。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getDeviceMacAddressSuccess:(nullable void (^)(NSString *_Nullable macAddress))success fail:(nullable void (^)(void))fail;
 
 /**
- *  Get information about the timed blood pressure measurement function
+ *	@brief	Get scheduled blood-pressure measurement configuration.
+ *	获取定时血压测量功能的信息。
  *
- *  获取定时血压测量功能的信息
- *
- *  @param success  featureOn                 YES: ON; NO: OFF
- *                  beginTime              Start Time, Formart:"HH:mm"
- *                  endTime                 End Time, Formart:"HH:mm"
- *                  minuteInterval        Minute interval
+ *	@param 	success 	Success callback.
+ *	成功回调。
+ *	@note 	featureOn: YES=ON, NO=OFF.
+ *	featureOn：YES=开启，NO=关闭。
+ *	@note 	beginTime: start time, format "HH:mm".
+ *	beginTime：开始时间，格式 "HH:mm"。
+ *	@note 	endTime: end time, format "HH:mm".
+ *	endTime：结束时间，格式 "HH:mm"。
+ *	@note 	minuteInterval: interval in minutes.
+ *	minuteInterval：间隔，单位：分钟。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getSchedualBPInfo:(nullable void (^)(BOOL featureOn, NSString *beginTime, NSString *endTime, NSInteger minuteInterval))success fail:(void (^)(void))fail;
 
 /**
- *  Get information about the timed blood oxygen  measurement function
+ *	@brief	Set scheduled blood-oxygen measurement switch.
+ *	设置定时血氧测量功能开关。
  *
- *  设置定时血氧测量功能的信息
- *  @param featureOn        YES: NO; NO: OFF
+ *	@param 	featureOn 	YES=ON, NO=OFF.
+ *	YES=开启，NO=关闭。
  */
 
 + (void)setSchedualBOInfoOn:(BOOL)featureOn success:(nullable void (^)(BOOL featureOn))success fail:(void (^)(void))fail;
 
 /**
- *  Set information about the timed blood oxygen  measurement function
+ *	@brief	Get scheduled blood-oxygen measurement switch.
+ *	获取定时血氧测量功能开关。
  *
- *  获取定时血氧测量功能的信息
- *
- *  @param success featureOn YES: NO; NO: OFF
+ *	@param 	success 	Success callback. featureOn: YES=ON, NO=OFF.
+ *	成功回调。featureOn：YES=开启，NO=关闭。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 
 + (void)getSchedualBOInfoSuccess:(nullable void (^)(BOOL featureOn))success fail:(void (^)(void))fail;
 
 /**
- *  Set information about the timed blood pressure measurement function
+ *	@brief	Set scheduled blood-pressure measurement configuration.
+ *	设置定时血压测量功能的信息。
  *
- *  设置定时血压测量功能的信息
- *
- *  @param featureOn                 :YES: ON; NO: OFF
- *  @param beginTime                 :Start Time, Formart:"HH:mm"
- *  @param endTime                      :End Time, Formart:"HH:mm"
- *  @param minuteInterval       :Minute interval
+ *	@param 	featureOn 	YES=ON, NO=OFF.
+ *	YES=开启，NO=关闭。
+ *	@param 	beginTime 	Start time, format "HH:mm".
+ *	开始时间，格式 "HH:mm"。
+ *	@param 	endTime 	End time, format "HH:mm".
+ *	结束时间，格式 "HH:mm"。
+ *	@param 	minuteInterval 	Interval in minutes.
+ *	间隔，单位：分钟。
  */
 + (void)setSchedualBPInfoOn:(BOOL)featureOn beginTime:(NSString *)beginTime endTime:(NSString *)endTime minuteInterval:(NSInteger)minuteInterval success:(nullable void (^)(BOOL featureOn, NSString *beginTime, NSString *endTime, NSInteger minuteInterval))success fail:(void (^)(void))fail;
 
 /**
- *  Obtain historical data of timed blood pressure measurement
+ *	@brief	Get scheduled blood-pressure history.
+ *	获取定时血压测量的历史数据。
  *
- *  获取定时血压测量的历史数据
- *
- *  @param userAge  :user age
- *  @param success  :blood pressure data
+ *	@param 	userAge 	User age in years.
+ *	用户年龄（岁）。
+ *	@param 	success 	Success callback with blood-pressure data array.
+ *	成功回调，返回血压数据数组。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getSchedualBPHistoryDataWithUserAge:(NSInteger)userAge success:(nullable void (^)(NSArray<QCBloodPressureModel *> *data))success fail:(nullable void (^)(void))fail;
 
 /**
- *  Obtain historical data for timed blood pressure measurements
+ *	@brief	Get scheduled blood-pressure history.
+ *	获取定时血压测量的历史数据。
  *
- *  获取定时血压测量的历史数据
- *  @param success  data    : blood pressure data
+ *	@param 	success 	Success callback with blood-pressure data array.
+ *	成功回调，返回血压数据数组。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getSchedualBPHistoryDataWithSuccess:(nullable void (^)(NSArray<QCBloodPressureModel *> *data))success fail:(nullable void (^)(void))fail;
 
@@ -560,65 +801,68 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
 + (void)resetBandToFacotrySuccess:(nullable void (^)(void))success fail:(nullable void (^)(void))fail;
 
 /**
- * Get workout history data
+ *	@brief	Get workout history data.
+ *	获取锻炼历史数据。
  *
- *  获取锻炼历史数据
- *
- *
- * @param lastUnixSeconds       :The time when the last exercise data occurred (seconds since 1970-01-01 00:00:00)
- * @note success                              :models Motion record data array
+ *	@param 	lastUnixSeconds 	Unix timestamp of the last known exercise record (seconds since 1970-01-01 00:00:00).
+ *	上次锻炼数据发生时间的 Unix 时间戳（自 1970-01-01 00:00:00 起的秒数）。
+ *	@note 	success: motion record model array.
+ *	success：运动记录模型数组。
  */
 + (void)getExerciseDataWithLastUnixSeconds:(NSUInteger)lastUnixSeconds getData:(nullable void (^)(NSArray<QCExerciseModel *> *models))getData fail:(nullable void (^)(void))fail;
 
 
 /**
- *  Get historical data for manual blood pressure measurements
+ *	@brief	Get manual blood-pressure history.
+ *	获取手动血压测量的历史数据。
  *
- *  获取手动测量血压测量的历史数据
- *
- * @param lastUnixSeconds       :The time when the last exercise data occurred (seconds since 1970-01-01 00:00:00)
- * @note success                              :models blood pressure data array
+ *	@param 	lastUnixSeconds 	Unix timestamp of the last known record (seconds since 1970-01-01 00:00:00).
+ *	上次记录发生时间的 Unix 时间戳（自 1970-01-01 00:00:00 起的秒数）。
+ *	@note 	success: blood-pressure model array.
+ *	success：血压模型数组。
  */
 + (void)getManualBloodPressureDataWithLastUnixSeconds:(NSUInteger)lastUnixSeconds success:(nullable void (^)(NSArray<QCBloodPressureModel *> *data))success fail:(nullable void (^)(void))fail;
 
 /**
- * Get timed heart rate historical data
+ *	@brief	Get scheduled heart-rate history by dates.
+ *	按日期获取定时心率历史数据。
  *
- * 获取定时心率历史数据
- *
- * @param dates            :List of dates for which historical data needs to be obtained
- * @note success            :models Timed heart rate data array
+ *	@param 	dates 	Date list to query.
+ *	需要查询的日期列表。
+ *	@note 	success: scheduled heart-rate model array.
+ *	success：定时心率模型数组。
  */
 + (void)getSchedualHeartRateDataWithDates:(NSArray<NSDate *> *)dates success:(nullable void (^)(NSArray<QCSchedualHeartRateModel *> *models))success fail:(nullable void (^)(void))fail;
 
 /**
- * Get timed heart rate historical data
+ *	@brief	Get scheduled heart-rate history by day indexes.
+ *	按天数索引获取定时心率历史数据。
  *
- * 获取定时心率历史数据
- *
- * @param dayIndexs         :The number of days for which historical data needs to be obtained (0->today, 1->yesterday, 2->the day before yesterday, and so on)
- * @note success                  :models Timed heart rate data array
+ *	@param 	dayIndexs 	Day indexes (0=today, 1=yesterday, 2=the day before yesterday, ...).
+ *	天数索引（0=今天，1=昨天，2=前天……）。
+ *	@note 	success: scheduled heart-rate model array.
+ *	success：定时心率模型数组。
  */
 + (void)getSchedualHeartRateDataWithDayIndexs:(NSArray<NSNumber*> *)dayIndexs success:(void (^)(NSArray<QCSchedualHeartRateModel *> *_Nonnull))success fail:(void (^)(void))fail;
 
 /**
- * Get manual heart rate  data
+ *	@brief	Get manual heart-rate data.
+ *	获取手动心率数据。
  *
- * 获取手动心率数据
- *
- * @param dayIndex         :The number of days for which historical data needs to be obtained (0->today, 1->yesterday, 2->the day before yesterday, and so on)
- * @param finished         :models Timed heart rate data array
+ *	@param 	dayIndex 	Day index (0=today, 1=yesterday, 2=the day before yesterday, ...).
+ *	天数索引（0=今天，1=昨天，2=前天……）。
+ *	@param 	finished 	Completion callback with manual heart-rate models and error.
+ *	完成回调，返回手动心率模型数组及错误信息。
  */
 + (void)getManualHeartRateDataByDayIndex:(NSInteger)dayIndex finished:(void (^)(NSArray <QCManualHeartRateModel *>* _Nullable, NSError * _Nullable))finished;
 
 /**
- *  Information on setting the timed heart rate function
+ *	@brief	Get scheduled heart-rate status (with current-state hint).
+ *	获取定时心率功能开关状态（带当前状态参考值）。
  *
- *  获取定时心率功能的信息
- *
- *  @param enable       :Whether the timed heart rate function is enabled. YES: enabled; NO: disabled
+ *	@param 	enable 	Current known state hint. YES=enabled, NO=disabled.
+ *	当前已知状态参考值。YES=开启，NO=关闭。
  */
-
 + (void)getSchedualHeartRateStatusWithCurrentState:(BOOL)enable success:(nullable void (^)(BOOL enable))success fail:(nullable void (^)(void))fail;
 
 /**
@@ -638,31 +882,45 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
 + (void)getSchedualHeartRateStatusAndIntervalWithSuccess:(nullable void (^)(BOOL enable,NSInteger interval))success fail:(nullable void (^)(void))fail;
 
 /**
- *  Get information about the weather forecast feature
+ *	@brief	Set scheduled heart-rate switch.
+ *	设置定时心率功能开关。
  *
- *  设置定时心率功能的信息
- *
- *  @param success  enable                  :Whether the weather Schedual HeartRate is enabled. YES: enabled; NO: disabled
+ *	@param 	enable 	YES=enabled, NO=disabled.
+ *	YES=开启，NO=关闭。
+ *	@param 	success 	Success callback. enable: whether enabled after setting.
+ *	成功回调。enable：设置后是否开启。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)setSchedualHeartRateStatus:(BOOL)enable success:(nullable void (^)(BOOL enable))success fail:(nullable void (^)(void))fail;
 
 /**
- *  Set the timing heart rate function on and off status and time interval (only supported by some watches)
+ *	@brief	Set scheduled heart-rate switch and interval (some watches only).
+ *	设置定时心率功能开关及时间间隔（仅部分手表支持）。
  *
- *  设置定时心率功能开关状态以及时间间隔(仅部分手表支持)
- *
- *  @param success  enable                  :Whether the weather Schedual HeartRate is enabled. YES: enabled; NO: disabled
- *  @param interval time interval        :Time interval for scheduled heart rate, unit: minutes
+ *	@param 	enable 	YES=enabled, NO=disabled.
+ *	YES=开启，NO=关闭。
+ *	@param 	interval 	Scheduled heart-rate interval in minutes.
+ *	定时心率间隔，单位：分钟。
+ *	@param 	success 	Success callback.
+ *	成功回调。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)setSchedualHeartRateStatus:(BOOL)enable timeInterval:(NSInteger)interval success:(nullable void (^)(void))success fail:(nullable void (^)(void))fail;
 
 /**
- *  Set the information of the weather forecast function
+ *	@brief	Get weather-forecast feature status.
+ *	获取天气预报功能的信息。
  *
- *  获取天气预报功能的信息
- *
- *  @param enable                                :Whether the weather forecast function is enabled. YES: enabled; NO: disabled
- *  @param success  temperatureUsingCelsius       :Whether to use Celsius. YES: Yes; NO: No, use Fahrenheit
+ *	@param 	enable 	Current known enable hint. YES=enabled, NO=disabled.
+ *	当前已知开关参考值。YES=开启，NO=关闭。
+ *	@param 	temperatureUsingCelsius 	Current known unit hint. YES=Celsius, NO=Fahrenheit.
+ *	当前已知温度单位参考值。YES=摄氏度，NO=华氏度。
+ *	@param 	success 	Success callback: (enable, usingCelsius).
+ *	成功回调：（是否开启，是否使用摄氏度）。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getWeatherForecastStatusWithCurrentState:(BOOL)enable temperatureUsingCelsius:(BOOL)temperatureUsingCelsius success:(nullable void (^)(BOOL enable, BOOL usingCelsius))success fail:(nullable void (^)(void))fail;
 /**
@@ -673,99 +931,283 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
 + (void)setWeatherForecastStatus:(BOOL)enable temperatureUsingCelsius:(BOOL)temperatureUsingCelsius success:(nullable void (^)(BOOL enable, BOOL usingCelsius))success fail:(nullable void (^)(void))fail;
 
 /**
- *  Send the content of the weather forecast to the watch
+ *	@brief	Send weather-forecast content to the watch.
+ *	发送天气预报内容到手环。
  *
- *  发送天气预报的内容到手环
- *
- *  @param contents [{"time"                   :Date timestamp (note that it needs to be modified to the current time zone),
- *                  "type"                    :weather type,
- *                  "low-temp"            :temperature minimum,
- *                  "high-temp"           :temperature maximum,
- *                  "humidity"              :Humidity value,
- *                  "needUmbrella"      :whether to bring an umbrella}]
- *
- *  @note:     weather type:     0=unknown, 1=sunny, 2=partly cloudy, 3 =rain, 4=Snow, 5=smog, 6=thunderbolt
- *
+ *	@param 	contents 	Array of dictionaries:
+ *	[{"time": date timestamp (adjust to current time zone),
+ *	"type": weather type,
+ *	"low-temp": min temperature,
+ *	"high-temp": max temperature,
+ *	"humidity": humidity,
+ *	"needUmbrella": whether an umbrella is needed}]
+ *	字典数组：
+ *	[{"time"：日期时间戳（需按当前时区调整），
+ *	"type"：天气类型，
+ *	"low-temp"：最低温，
+ *	"high-temp"：最高温，
+ *	"humidity"：湿度，
+ *	"needUmbrella"：是否需要带伞}]
+ *	@note 	weather type: 0=unknown, 1=sunny, 2=partly cloudy, 3=rain, 4=snow, 5=smog, 6=thunderbolt.
+ *	天气类型：0=未知，1=晴，2=多云，3=雨，4=雪，5=雾霾，6=雷电。
  */
 + (void)sendWeatherContents:(NSArray<NSDictionary *> *)contents success:(nullable void (^)(void))success fail:(nullable void (^)(void))fail;
 
 /**
- *  Get information about the device's brightness adjustment capabilities
+ *	@brief	Get device brightness level.
+ *	获取设备亮度等级。
  *
- *  获取设备亮度调节功能的信息
- *
- *  @param success lightLevel Brightness level, 1 - 10 => 10% - 100%
+ *	@param 	lightLevel 	Current brightness hint passed to the command (1-10 => 10%-100%). Use the device's known level when available.
+ *	传给指令的当前亮度参考值（1-10 => 10%-100%）。有已知亮度时请传入。
+ *	@param 	success 	Success callback. lightLevel: brightness level 1-10 => 10%-100%.
+ *	成功回调。lightLevel：亮度等级 1-10 => 10%-100%。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getDeviceLightLevelWithCurrentLevel:(NSInteger)lightLevel success:(nullable void (^)(NSInteger lightLevel))success fail:(nullable void (^)(void))fail;
 
 /**
- *  Information on setting the device's brightness adjustment function
+ *	@brief	Set device brightness level.
+ *	设置设备亮度等级。
  *
- *  设置设备亮度调节功能的信息
- *
- *  @param lightLevel       :Brightness level, 1 - 10 => 10% - 100%
+ *	@param 	lightLevel 	Brightness level, 1-10 => 10%-100%.
+ *	亮度等级，1-10 => 10%-100%。
  */
 + (void)setDeviceLightLevel:(NSInteger)lightLevel success:(nullable void (^)(NSInteger lightLevel))success fail:(nullable void (^)(void))fail;
 
 /**
- *  Get/set watch display time & user homepage parameter function information
+ *	@brief	Get screen orientation / wear-hand info.
+ *	获取屏幕方向与佩戴手信息。
  *
- *  获取/设置手环显示时长 & 用户首页参数 功能的信息
+ *	@param 	portraitOrientation 	Known portrait hint. YES=portrait, NO=landscape.
+ *	当前已知竖屏参考值。YES=竖屏，NO=横屏。
+ *	@param 	leftHandWear 	Known left-hand hint (effective in landscape).
+ *	当前已知左手佩戴参考值（横屏时生效）。
+ *	@param 	success 	Success callback: (portrait, leftHandWear).
+ *	成功回调：（是否竖屏，是否左手佩戴）。
+ */
++ (void)getScreenOrientationInfoWithPortrait:(BOOL)portraitOrientation
+                                leftHandWear:(BOOL)leftHandWear
+                                     success:(nullable void (^)(BOOL portraitOrientation, BOOL leftHandWear))success
+                                        fail:(nullable void (^)(void))fail;
+
+/**
+ *	@brief	Set screen orientation / wear-hand info.
+ *	设置屏幕方向与佩戴手信息。
  *
- *  @param opType                       :0X01=read，0x02=Write ，0x03=The homepage picture is restored to default（BBCCDDEE is invalid when AA=0x03）
- *  @param lightingSeconds   :Bright screen time, unit: seconds. Legal value 4~10 (seconds)
- *  @param homePageType          :Home page optional display data type (0=invalid, 1=steps, 2=calories, 3=weather, 4=heart rate)
- *  @param transparency         :The mask transparency setting of the home page (0~100, 0=the mask is opaque/the base image is not displayed, 100=the mask is fully transparent/the base image is displayed)
- *  @param pictureType           :0=default homepage picture, 1=user-configured homepage picture (only for reading, invalid when writing)
+ *	@param 	portraitOrientation 	YES=portrait, NO=landscape.
+ *	YES=竖屏，NO=横屏。
+ *	@param 	leftHandWear 	YES=left hand, NO=right hand (effective in landscape).
+ *	YES=左手，NO=右手（横屏时生效）。
+ */
++ (void)setScreenOrientationInfoWithPortrait:(BOOL)portraitOrientation
+                                leftHandWear:(BOOL)leftHandWear
+                                     success:(nullable void (^)(BOOL portraitOrientation, BOOL leftHandWear))success
+                                        fail:(nullable void (^)(void))fail;
+
+/**
+ *	@brief	Get whether raise-to-wake shows the clock homepage.
+ *	获取抬腕亮屏时是否显示钟表界面。
+ *
+ *	@param 	showing 	Known state hint.
+ *	当前已知状态参考值。
+ */
++ (void)getScreenHomePageShowingClockWithCurrentState:(BOOL)showing
+                                              success:(nullable void (^)(BOOL showingClockOnHomePage))success
+                                                 fail:(nullable void (^)(void))fail;
+
+/**
+ *	@brief	Set whether raise-to-wake shows the clock homepage.
+ *	设置抬腕亮屏时是否显示钟表界面。
+ *
+ *	@param 	showing 	YES to show clock UI on raise-to-wake.
+ *	YES=抬腕显示钟表界面。
+ */
++ (void)setScreenHomePageShowingClock:(BOOL)showing
+                              success:(nullable void (^)(BOOL showingClockOnHomePage))success
+                                 fail:(nullable void (^)(void))fail;
+
+/**
+ *	@brief	Get homepage style.
+ *	获取首页样式。
+ *
+ *	@param 	currentStyle 	Known style hint. Common values: 1 / 2.
+ *	当前已知样式参考值。常见取值：1 / 2。
+ */
++ (void)getScreenHomePageStyleWithCurrentStyle:(NSInteger)currentStyle
+                                       success:(nullable void (^)(NSInteger homePageStyle))success
+                                          fail:(nullable void (^)(void))fail;
+
+/**
+ *	@brief	Set homepage style.
+ *	设置首页样式。
+ *
+ *	@param 	style 	Homepage style. Common values: 1 / 2.
+ *	首页样式。常见取值：1 / 2。
+ */
++ (void)setScreenHomePageStyle:(NSInteger)style
+                       success:(nullable void (^)(NSInteger homePageStyle))success
+                          fail:(nullable void (^)(void))fail;
+
+/**
+ *	@brief	Get music-control switch status.
+ *	获取音乐控制开关状态。
+ *
+ *	@param 	enable 	Known state hint.
+ *	当前已知状态参考值。
+ *	@param 	success 	Success callback. enable: YES=on, NO=off.
+ *	成功回调。enable：YES=开启，NO=关闭。
+ */
++ (void)getMusicControlStatusWithCurrentState:(BOOL)enable
+                                      success:(nullable void (^)(BOOL enable))success
+                                         fail:(nullable void (^)(void))fail;
+
+/**
+ *	@brief	Set music-control switch status.
+ *	设置音乐控制开关状态。
+ *
+ *	@param 	enable 	YES to enable music control, NO to disable.
+ *	YES=开启音乐控制，NO=关闭。
+ */
++ (void)setMusicControlStatus:(BOOL)enable
+                      success:(nullable void (^)(BOOL enable))success
+                         fail:(nullable void (^)(void))fail;
+
+/**
+ *	@brief	Get AGPS switch status.
+ *	获取 AGPS 开关状态。
+ *
+ *	@param 	enable 	Known state hint.
+ *	当前已知状态参考值。
+ */
++ (void)getAGPSStatusWithCurrentState:(BOOL)enable
+                              success:(nullable void (^)(BOOL enable))success
+                                 fail:(nullable void (^)(void))fail;
+
+/**
+ *	@brief	Set AGPS switch status.
+ *	设置 AGPS 开关状态。
+ *
+ *	@param 	enable 	YES to enable AGPS, NO to disable.
+ *	YES=开启 AGPS，NO=关闭。
+ */
++ (void)setAGPSStatus:(BOOL)enable
+              success:(nullable void (^)(BOOL enable))success
+                 fail:(nullable void (^)(void))fail;
+
+/**
+ *	@brief	Get intelligent (PXP) alarm delay info.
+ *	获取智能报警（防丢/靠近）延迟信息。
+ *
+ *	@param 	success 	Success callback: (featureOn, delaySeconds).
+ *	成功回调：（是否开启，延迟秒数）。
+ */
++ (void)getPxpAlarmDelay:(nullable void (^)(BOOL featureOn, NSInteger delaySeconds))success
+                    fail:(nullable void (^)(void))fail;
+
+/**
+ *	@brief	Set intelligent (PXP) alarm delay info.
+ *	设置智能报警（防丢/靠近）延迟信息。
+ *
+ *	@param 	on 	YES to enable the feature.
+ *	YES=开启功能。
+ *	@param 	delaySeconds 	Delay check time in seconds (0～255).
+ *	延迟检查时间，单位：秒（0～255）。
+ */
++ (void)setPxpAlarmDelay:(BOOL)on
+            delaySeconds:(NSInteger)delaySeconds
+                 success:(nullable void (^)(BOOL featureOn, NSInteger realDelaySeconds))success
+                    fail:(nullable void (^)(void))fail;
+
+/**
+ *	@brief	Get extended device feature configuration dictionary.
+ *	获取扩展设备能力配置字典。
+ */
++ (void)getDeviceFeatureConfigSuccess:(nullable void (^)(NSDictionary *featureList))success
+                                 fail:(nullable void (^)(void))fail;
+
+/**
+ *	@brief	Get resource types for UI pages (standby / boot / shutdown).
+ *	获取各 UI 界面（待机 / 开机 / 关机）的资源类型。
+ *
+ *	@param 	uiTypes 	UI type array. See ODM_RES_UIType.
+ *	UI 类型数组，参见 ODM_RES_UIType。
+ *	@param 	success 	Success callback with resource type array. See ODM_RES_ResourceType.
+ *	成功回调，返回资源类型数组，参见 ODM_RES_ResourceType。
+ */
++ (void)getResourceWithUITypes:(NSArray<NSNumber *> *)uiTypes
+                       success:(nullable void (^)(NSArray<NSNumber *> *resourceTypes))success
+                          fail:(nullable void (^)(void))fail;
+
+/**
+ *	@brief	Get/set watch screen-on duration & homepage parameters.
+ *	获取/设置手环亮屏时长 & 用户首页参数。
+ *
+ *	@param 	opType 	0x01=read, 0x02=write, 0x03=restore homepage picture to default
+ *	(BBCCDDEE invalid when AA=0x03).
+ *	0x01=读，0x02=写，0x03=首页图片恢复默认（AA=0x03 时 BBCCDDEE 无效）。
+ *	@param 	lightingSeconds 	Screen-on time in seconds. Legal range: 4~10.
+ *	亮屏时长，单位：秒。合法范围：4~10。
+ *	@param 	homePageType 	Homepage display type (0=invalid, 1=steps, 2=calories, 3=weather, 4=heart rate).
+ *	首页可选显示类型（0=无效，1=步数，2=卡路里，3=天气，4=心率）。
+ *	@param 	transparency 	Mask transparency 0~100 (0=opaque/base hidden, 100=fully transparent/base shown).
+ *	首页遮罩透明度 0~100（0=不透明/不显示底图，100=全透明/显示底图）。
+ *	@param 	pictureType 	0=default homepage picture, 1=user-configured (read-only; invalid when writing).
+ *	0=默认首页图片，1=用户配置图片（仅读取有效，写入时无效）。
  */
 + (void)setHomePageScreenOpType:(NSInteger)opType lightingSeconds:(NSInteger)lightingSeconds homePageType:(NSInteger)homePageType transparency:(NSInteger)transparency pictureType:(NSInteger)pictureType success:(nullable void (^)(NSInteger lightingSeconds, NSInteger homePageType, NSInteger transparency, NSInteger pictureType))suc fail:(nullable void (^)(void))fail;
 
 
 /**
- *  Get/set watch display time & user homepage parameter function information
+ *	@brief	Get/set watch screen-on duration & homepage parameters via model.
+ *	通过模型获取/设置手环亮屏时长 & 用户首页参数。
  *
- *  获取/设置手环显示时长 & 用户首页参数 功能的信息
- *
- *  @param opType                       :0X01=read，0x02=Write ，0x03=The homepage picture is restored to default（BBCCDDEE is invalid when AA=0x03）
- *  @param info                            :function information
+ *	@param 	opType 	0x01=read, 0x02=write, 0x03=restore homepage picture to default.
+ *	0x01=读，0x02=写，0x03=首页图片恢复默认。
+ *	@param 	info 	Feature information model.
+ *	功能信息模型。
  */
 + (void)setHomePageScreenOpType:(NSInteger)opType info:(nullable QCDimingTimeInfo*)info success:(nullable void (^)(QCDimingTimeInfo*))suc fail:(nullable void (^)(void))fail;
 
 /**
- *  Set information on how long the watch will display
+ *	@brief	Set watch screen-on duration.
+ *	设置手环亮屏时长。
  *
- *  设置手环显示时长的信息
- *
- *  @param seconds      :Screen-on time, unit: second. The legal value is 4~10 (seconds).
+ *	@param 	seconds 	Screen-on time in seconds. Legal range: 4~10.
+ *	亮屏时长，单位：秒。合法范围：4~10。
  */
-
 + (void)setLightingSeconds:(NSInteger)seconds success:(nullable void (^)(void))suc fail:(nullable void (^)(void))fail;;
 
 /**
- *  Get information about display duration
+ *	@brief	Get watch screen-on duration.
+ *	获取亮屏时长信息。
  *
- *  获取显示时长的信息
- *
- *  @param suc lightingSeconds      :Screen-on time, unit: second. The legal value is 4~10 (seconds).
+ *	@param 	suc 	Success callback. lightingSeconds: screen-on time in seconds (4~10).
+ *	成功回调。lightingSeconds：亮屏时长，单位：秒（4~10）。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getLightingSecondsWithSuccess:(nullable void (^)(NSInteger seconds))suc fail:(nullable void (^)(void))fail;
 
 /**
- *  According to the specified timestamp, get the new version of Sports+ (V2) data summary information after the timestamp
+ *	@brief	Get Sport+ (V2) summary data after the specified timestamp.
+ *	根据指定时间戳，获取该时间戳之后的运动+（V2）概要数据。
  *
- *  根据指定时间戳, 获取该时间戳后的新版运动+(V2)数据概要信息
- *
- *  @param timestamp 时间戳
- *  @param finished spSummary - 运动+概要信息数组
+ *	@param 	timestamp 	Unix timestamp.
+ *	Unix 时间戳。
+ *	@param 	finished 	Completion callback. spSummary: Sport+ summary array.
+ *	完成回调。spSummary：运动+概要信息数组。
  */
 + (void)getSportPlusSummaryFromTimestamp:(NSTimeInterval)timestamp finished:(nullable void (^)(NSArray *_Nullable spSummary, NSError *_Nullable error))finished;
 
 /**
- *  Get part of the summary information and detailed data of the campaign according to the specified new version of the campaign + summary information
+ *	@brief	Get Sport+ (V2) detail data for a given summary.
+ *	根据指定运动+（V2）概要获取详情数据。
  *
- *  根据指定新版运动+概要信息, 获取该次运动的部分概要信息和详细数据
- *
- *  @param finished spSummary - Sports + summary information array
+ *	@param 	summary 	Sport+ summary model previously fetched from the device.
+ *	此前从设备获取的运动+概要模型。
+ *	@param 	finished 	Completion callback with updated summary, detail model, and error.
+ *	完成回调，返回更新后的概要、详情模型以及错误信息。
  */
 + (void)getSportPlusDetailsWithSummary:(OdmGeneralExerciseSummaryModel *)summary finished:(nullable void (^)(OdmGeneralExerciseSummaryModel *_Nullable summary, OdmGeneralExerciseDetailModel *_Nullable detail, NSError *_Nullable error))finished;
 
@@ -777,25 +1219,40 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
 + (void)getNeededFileListFinished:(nullable void (^)(NSArray<NSString *> *_Nullable fileList, NSError *_Nullable error))finished;
 
 /**
- *   获取用户目标信息
- *  @param suc stepTarget           :Step target
- *            calorieTarget         :Calorie goal, unit: cal
- *            distanceTarget      :Distance to target, unit: meter
- *            sportDuration        :Exercise duration target unit: minute (reserved value, default: 0)
- *            sleepDuration        :Sleep duration target unit: minute (reserved value, default: 0)
+ *	@brief	Get user target information.
+ *	获取用户目标信息。
+ *
+ *	@param 	suc 	Success callback.
+ *	成功回调。
+ *	@note 	stepTarget: step target.
+ *	stepTarget：步数目标。
+ *	@note 	calorieTarget: calorie goal, unit: cal.
+ *	calorieTarget：卡路里目标，单位：卡。
+ *	@note 	distanceTarget: distance target, unit: meter.
+ *	distanceTarget：距离目标，单位：米。
+ *	@note 	sportDuration: exercise duration target in minutes (reserved, default 0).
+ *	sportDuration：运动时长目标，单位：分钟（预留，默认 0）。
+ *	@note 	sleepDuration: sleep duration target in minutes (reserved, default 0).
+ *	sleepDuration：睡眠时长目标，单位：分钟（预留，默认 0）。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getStepTargetInfoWithSuccess:(nullable void (^)(NSInteger stepTarget,NSInteger calorieTarget,NSInteger distanceTarget,NSInteger sportDuration,NSInteger sleepDuration))suc fail:(nullable void (^)(void))fail;
 
 /**
- *  Set user target information
+ *	@brief	Set user target information.
+ *	设置用户目标信息。
  *
- *  设置用户目标信息
- *
- * @param stepTarget                    :Step target
- * @param calorieTarget             : Calorie Goal, Unit: Calories
- * @param distanceTarget           :Distance to target, unit: meters
- * @param sportDuration             :Exercise duration target Unit: minutes (reserved value, default: 0)
- * @param sleepDuration             :Sleep duration target unit: minutes (reserved value, default: 0)
+ *	@param 	stepTarget 	Step target.
+ *	步数目标。
+ *	@param 	calorieTarget 	Calorie goal, unit: calories.
+ *	卡路里目标，单位：卡。
+ *	@param 	distanceTarget 	Distance target, unit: meters.
+ *	距离目标，单位：米。
+ *	@param 	sportDuration 	Exercise duration target in minutes (reserved, default 0).
+ *	运动时长目标，单位：分钟（预留，默认 0）。
+ *	@param 	sleepDuration 	Sleep duration target in minutes (reserved, default 0).
+ *	睡眠时长目标，单位：分钟（预留，默认 0）。
  */
 + (void)setStepTarget:(NSInteger)stepTarget calorieTarget:(NSInteger)calorieTarget distanceTarget:(NSInteger)distanceTarget sportDurationTarget:(NSInteger)sportDuration sleepDurationTarget:(NSInteger)sleepDuration success:(nullable void (^)(void))suc fail:(nullable void (^)(void))fail;
 
@@ -807,106 +1264,178 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
 + (void)listDialFileFinished:(nullable void (^)(NSArray <QCSimpleDialFileModel *>*_Nullable dialFiles, NSError *_Nullable error))finished;
 
 /**
- *  Delete watch face file
+ *	@brief	Delete a watch-face file.
+ *	删除表盘文件。
  *
- *  删除表盘文件
- *
- *  @param fileName             :watch face file name
- *  @param force                    :The default is NO, YES is used for debugging, use with caution
+ *	@param 	fileName 	Watch-face file name.
+ *	表盘文件名。
+ *	@param 	force 	Default NO. YES is for debugging only; use with caution.
+ *	默认 NO。YES 仅用于调试，请谨慎使用。
  */
 + (void)deleteDialFileName:(NSString *)fileName force:(BOOL)force finished:(nullable void (^)(NSError *_Nullable error))finished;
 
 /**
- *  Delete watch face file
+ *	@brief	Delete a watch-face file.
+ *	删除表盘文件。
  *
- *  删除表盘文件
- *
- *  @param fileName     :watch face file name
+ *	@param 	fileName 	Watch-face file name.
+ *	表盘文件名。
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
  */
 + (void)deleteDialFileName:(NSString *)fileName finished:(nullable void (^)(NSError *_Nullable error))finished;
 
 /**
-*  Obtain historical data of timed body temperature measurement
-*
-*  获取定时体温测量的历史数据
-*/
+ *	@brief	Get scheduled body-temperature history for a day.
+ *	获取某天的定时体温历史数据。
+ *
+ *	@param 	dayIndex 	Day index from today (0 = today, 1 = yesterday, and so on).
+ *	距今天数（0=今天，1=昨天，以此类推）。
+ *	@param 	finished 	Completion callback with temperature list and error.
+ *	完成回调，返回体温列表及错误信息。
+ */
 + (void)getSchedualTemperatureDataByDayIndex:(NSInteger)dayIndex finished:(nullable void (^)(NSArray *_Nullable temperatureList, NSError *_Nullable error))finished;
 
 /**
- *  Get historical data of manual body temperature measurement
+ *	@brief	Get manual body-temperature history for a day.
+ *	获取某天的手动体温历史数据。
  *
- *  获取手动体温测量的历史数据
+ *	@param 	dayIndex 	Day index from today (0 = today, 1 = yesterday, and so on).
+ *	距今天数（0=今天，1=昨天，以此类推）。
+ *	@param 	finished 	Completion callback with temperature list and error.
+ *	完成回调，返回体温列表及错误信息。
  */
 + (void)getManualTemperatureDataByDayIndex:(NSInteger)dayIndex finished:(nullable void (^)(NSArray *_Nullable temperatureList, NSError *_Nullable error))finished;
 
 /**
- *  Obtain historical data of blood oxygen measurement
+ *	@brief	Get blood-oxygen history for a day.
+ *	获取某天的血氧历史数据。
  *
- *  获取血氧测量的历史数据
+ *	@param 	dayIndex 	Day index from today (0 = today, 1 = yesterday, and so on).
+ *	距今天数（0=今天，1=昨天，以此类推）。
+ *	@param 	finished 	Completion callback with blood-oxygen list and error.
+ *	完成回调，返回血氧列表及错误信息。
  */
 + (void)getBloodOxygenDataByDayIndex:(NSInteger)dayIndex finished:(void (^)(NSArray * _Nullable, NSError * _Nullable))finished;
 
 /**
- *  Get custom dial parameters
+ *	@brief	Get custom dial layout parameters (time / date / value positions).
+ *	获取自定义表盘布局参数（时间 / 日期 / 数值位置）。
  *
- *  获取自定义表盘参数
+ *	@param 	finished 	Completion callback with time, date, value models and error.
+ *	完成回调，返回时间、日期、数值模型及错误信息。
  */
 + (void)getDailParameterWithFinished:(void (^)(QCDialParameterModel * _Nullable time, QCDialParameterModel * _Nullable date, QCDialParameterModel * _Nullable value, NSError * _Nullable))finished;
 
 /**
- *  Set custom dial parameters
+ *	@brief	Set custom dial layout parameters (time / date / value positions).
+ *	设置自定义表盘布局参数（时间 / 日期 / 数值位置）。
  *
- *  设置自定义表盘参数
+ *	@param 	time 	Time display parameter model. Pass nil to leave unchanged when supported.
+ *	时间显示参数模型。在支持的情况下传 nil 表示保持不变。
+ *	@param 	date 	Date display parameter model. Pass nil to leave unchanged when supported.
+ *	日期显示参数模型。在支持的情况下传 nil 表示保持不变。
+ *	@param 	value 	Value display parameter model. Pass nil to leave unchanged when supported.
+ *	数值显示参数模型。在支持的情况下传 nil 表示保持不变。
+ *	@param 	finished 	Completion callback with the applied models and error.
+ *	完成回调，返回已应用的模型及错误信息。
  */
 + (void)setDailParameter:(QCDialParameterModel * _Nullable)time date:(QCDialParameterModel * _Nullable)date value:(QCDialParameterModel * _Nullable)value finished:(void (^)(QCDialParameterModel * _Nullable time, QCDialParameterModel * _Nullable date, QCDialParameterModel * _Nullable value, NSError * _Nullable))finished;
 
 /**
- *  Get the wristband alarm clock
+ *	@brief	Get all alarms configured on the band/watch.
+ *	获取手环/手表上已配置的全部闹钟。
  *
- *  获取手环闹钟
+ *	@param 	finished 	Completion callback with alarm models and error.
+ *	完成回调，返回闹钟模型列表及错误信息。
  */
 + (void)getBandAlarmsWithFinish:(void(^)(NSArray <QCAlarmModel*>* _Nullable,NSError * _Nullable))finished;
 
 /**
- *  Set the wristband alarm clock
+ *	@brief	Set alarms on the band/watch.
+ *	设置手环/手表闹钟。
  *
- *  设置手环闹钟
+ *	@param 	alarms 	Alarm models to write to the device.
+ *	写入设备的闹钟模型数组。
+ *	@param 	finished 	Completion callback with the applied alarm list and error.
+ *	完成回调，返回已应用的闹钟列表及错误信息。
  */
 + (void)setBandAlarms:(NSArray <QCAlarmModel*>*)alarms finish:(void(^)(NSArray * _Nullable,NSError * _Nullable))finished;
 
 
 /**
+ *	@brief	Set menstrual-cycle reminder configuration on the device.
+ *	设置设备经期提醒配置。
  *
- *  Period reminder function setting: send the setting to the wristband
+ *	@param 	open 	Feature switch: YES = on, NO = off (protocol values: 1=on, 0=off, 2=invalid).
+ *	功能开关：YES=开，NO=关（协议值：1=开，0=关，2=无效）。
+ *	@param 	durationday 	Menstrual period duration in days (default 6).
+ *	经期持续天数（默认 6）。
+ *	@param 	intervalday 	Menstrual cycle length in days (default 28).
+ *	月经周期天数（默认 28）。
+ *	@param 	startday 	Days since last period start (0 = starts today).
+ *	距上次经期开始的天数（0=今天开始）。
+ *	@param 	endday 	Days since last period end (0 = ends today).
+ *	距上次经期结束的天数（0=今天结束）。
+ *	@param 	remindOpen 	Reminder switch. YES = on.
+ *	提醒开关。YES=开启。
+ *	@param 	beforemenstrday 	Days in advance to remind before menstrual period (1~3, default 2).
+ *	经期提前提醒天数（1~3，默认 2）。
+ *	@param 	beforeovulateday 	Days in advance to remind before ovulation (1~3, default 2).
+ *	排卵期提前提醒天数（1~3，默认 2）。
+ *	@param 	hour 	Reminder hour (0-23).
+ *	提醒小时（0-23）。
+ *	@param 	minute 	Reminder minute (0-59).
+ *	提醒分钟（0-59）。
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
  *
- *  经期提醒功能设置：发送设置到手环
- *
- * @param open                                   :Switch 1=on, 0 off, 2=invalid (when the APP reads the configuration from the wristband, if this bit is 2, the wristband parameter is invalid)
- * @param durationday                   :Menstrual period duration, in days; (default 6 days)
- * @param intervalday                   :Menstrual cycle, unit day; (default 28 days)
- * @param startday                          :How many days ago was the last start, 0=starts today; (default 0 means, APP does not display)
- * @param endday                              :How many days ago was the last end, 0=end today; (the default value of 0 means that the APP does not display) (when endday is not equal to startday+durationday, it means that the user manually modified the end time)
- * @param remindOpen                    :Reminder switch 1=on, others off; (default off)
- * @param beforemenstrday         :How many days in advance to remind the menstrual period, 1 = one day in advance. 1~3. (default 2)
- * @param beforeovulateday      :How many days in advance to remind the ovulation period, 1~3. (default 2)
- * @param hour                                 :Reminder time point-Hour
- * @param minute                            :Reminder time point - minutes
  */
 + (void)setMenstrualFeature:(BOOL)open durationDay:(NSInteger)durationday intervalDay:(NSInteger)intervalday startDay:(NSInteger)startday endDay:(NSInteger)endday remindState:(BOOL)remindOpen menstrBeforeDay:(NSInteger)beforemenstrday ovulateBeforeDay:(NSInteger)beforeovulateday remindHour:(NSInteger)hour remindMinute:(NSInteger)minute finished:(void (^)(void))finished;
 
+/**
+ *	@brief	Deprecated. Use setMenstrualFeature:durationDay:intervalDay:... instead.
+ *	已废弃。请改用 setMenstrualFeature:durationDay:intervalDay:...。
+ *
+ *	@param 	open 	Feature switch.
+ *	功能开关。
+ *	@param 	durationday 	Menstrual period duration in days (string).
+ *	经期持续天数（字符串）。
+ *	@param 	intervalday 	Menstrual cycle length in days (string).
+ *	月经周期天数（字符串）。
+ *	@param 	startday 	Days since last period start (string).
+ *	距上次经期开始的天数（字符串）。
+ *	@param 	endday 	Days since last period end (string).
+ *	距上次经期结束的天数（字符串）。
+ *	@param 	remindOpen 	Reminder switch.
+ *	提醒开关。
+ *	@param 	beforemenstrday 	Days in advance before menstrual period (string).
+ *	经期提前提醒天数（字符串）。
+ *	@param 	beforeovulateday 	Days in advance before ovulation (string).
+ *	排卵期提前提醒天数（字符串）。
+ *	@param 	hour 	Reminder hour (string).
+ *	提醒小时（字符串）。
+ *	@param 	minute 	Reminder minute (string).
+ *	提醒分钟（字符串）。
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
 + (void)sendMenstrSettingFeatures:(BOOL)open durationDay:(NSString*)durationday intervalDay:(NSString*)intervalday startDay:(NSString*)startday endDay:(NSString*)endday remindState:(BOOL)remindOpen menstrBeforeDay:(NSString*)beforemenstrday ovulateBeforeDay:(NSString*)beforeovulateday remindHour:(NSString*)hour remindMinute:(NSString*)minute finished:(void (^)(void))finished __attribute__((deprecated("Use setMenstrualFeature: method")));
 
 /**
- 
- *  Send the firmware file, request to use the bin file to upgrade, the result will be processed in the callback
+ *	@brief	Send firmware bin for OTA upgrade. Results are delivered via callbacks.
+ *	发送固件 bin 文件进行 OTA 升级，结果通过回调返回。
  *
- *  发送固件文件，要求使用bin文件升级，结果会在回调里边处理
- *
- *  @param data                  :OTA binary character stream
- *  @param start                :start sending callback
- *  @param percentage     :progress callback
- *  @param success            :success callback
- *  @param failed              :failure callback
+ *	@param 	data 	OTA binary data.
+ *	OTA 二进制数据。
+ *	@param 	start 	Start-sending callback.
+ *	开始发送回调。
+ *	@param 	percentage 	Progress callback.
+ *	进度回调。
+ *	@param 	success 	Success callback.
+ *	成功回调。
+ *	@param 	failed 	Failure callback.
+ *	失败回调。
  */
 
 + (void)syncOtaBinData:(NSData *)data
@@ -916,16 +1445,21 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
                 failed:(nullable void (^)(NSError *_Nullable error))failed;
 
 /**
- *  Send the watch face file and require the use of the bin file
+ *	@brief	Send a watch-face bin file.
+ *	发送表盘 bin 文件。
  *
- *  发送表盘文件，要求使用bin文件
- *
- *  @param name                  :watch face file name
- *  @param data                  :Dial binary character stream
- *  @param start                :start sending callback
- *  @param percentage     :progress callback
- *  @param success            :success callback
- *  @param failed              :failure callback
+ *	@param 	name 	Watch-face file name.
+ *	表盘文件名。
+ *	@param 	data 	Dial binary data.
+ *	表盘二进制数据。
+ *	@param 	start 	Start-sending callback.
+ *	开始发送回调。
+ *	@param 	percentage 	Progress callback.
+ *	进度回调。
+ *	@param 	success 	Success callback.
+ *	成功回调。
+ *	@param 	failed 	Failure callback.
+ *	失败回调。
  */
 + (void)syncDialFileName:(NSString *)name
                  binData:(NSData *)data
@@ -935,15 +1469,21 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
                   failed:(nullable void (^)(NSError *_Nullable error))failed;
 
 /**
+ *	@brief	Send files missing from the watch.
+ *	发送手表缺失的文件。
  *
- *  Send files missing from the watch
- *
- *  @param name                  :watch missing file name
- *  @param data                  :watch missing file binary character stream
- *  @param start                :start sending callback
- *  @param percentage     :progress callback
- *  @param success            :success callback
- *  @param failed              :failure callback
+ *	@param 	name 	Watch missing file name.
+ *	手表缺失文件名。
+ *	@param 	data 	Watch missing file binary data.
+ *	手表缺失文件的二进制数据。
+ *	@param 	start 	Start sending callback.
+ *	开始发送回调。
+ *	@param 	percentage 	Progress callback.
+ *	进度回调。
+ *	@param 	success 	Success callback.
+ *	成功回调。
+ *	@param 	failed 	Failure callback.
+ *	失败回调。
  */
 + (void)syncResourceFileName:(NSString *)name
                      binData:(NSData *)data
@@ -953,16 +1493,19 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
                       failed:(nullable void (^)(NSError *_Nullable error))failed;
 
 /**
- 
- *  Send the picture dial file, and request the (pixel) size to be cropped to the size of the current bracelet (the watch will verify the width and height of the picture)
+ *	@brief	Send a picture dial. Crop pixels to current band size (width/height verified by watch).
+ *	发送图片表盘。请将像素裁剪为当前手环尺寸（手表会校验宽高）。
  *
- *  发送图片表盘文件，要求（像素）尺寸裁剪为当前手环的尺寸(手表会校验图片的宽高)
- *
- *  @param img                     :Dial picture
- *  @param start                 :Start sending callbacks
- *  @param percentage      :progress callback
- *  @param success            :success callback
- *  @param failed              :failure callback
+ *	@param 	img 	Dial picture.
+ *	表盘图片。
+ *	@param 	start 	Start-sending callback.
+ *	开始发送回调。
+ *	@param 	percentage 	Progress callback.
+ *	进度回调。
+ *	@param 	success 	Success callback.
+ *	成功回调。
+ *	@param 	failed 	Failure callback.
+ *	失败回调。
  */
 + (void)syncImage:(UIImage *)img
             start:(nullable void (^)(void))start
@@ -971,13 +1514,19 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
            failed:(nullable void (^)(NSError *_Nullable error))failed;
 
 /**
- *  Send the picture dial file, and request the (pixel) size to be cropped to the size of the current watch (the watch will verify the width and height of the picture)
+ *	@brief	Send a picture dial file. Crop pixels to the current watch size (width/height verified by watch).
+ *	发送图片表盘文件。请将像素尺寸裁剪为当前手表尺寸（手表会校验宽高）。
  *
- *  @param img                    :watch face image
- *  @param start                :start sending callback
- *  @param percentage     :progress callback
- *  @param success            :success callback
- *  @param failed              :failure callback
+ *	@param 	img 	Watch face image.
+ *	表盘图片。
+ *	@param 	start 	Start sending callback.
+ *	开始发送回调。
+ *	@param 	percentage 	Progress callback.
+ *	进度回调。
+ *	@param 	success 	Success callback.
+ *	成功回调。
+ *	@param 	failed 	Failure callback.
+ *	失败回调。
  */
 + (void)syncImage:(UIImage *)img
      transparency:(int)transparency
@@ -988,226 +1537,479 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
 
 
 /**
- *  Get Sport records
- *  获取运动记录
+ *	@brief	Get sport records after a timestamp.
+ *	获取指定时间戳之后的运动记录。
  *
- *  @param timeStamp                    :watch face image
- *  @param finish                           :finish callback
+ *	@param 	timeStamp 	Last synced timestamp.
+ *	上次同步的时间戳。
+ *	@param 	finish 	Completion callback with summaries and error.
+ *	完成回调，返回运动概要列表及错误信息。
  */
 + (void)getSportRecordsFromLastTimeStamp:(NSTimeInterval)timeStamp finish:(void (^)(NSArray<OdmGeneralExerciseSummaryModel *> * _Nullable summaries,NSError * _Nullable error))finish;
 
 /**
- *  Get Watch Call BT Name
- *   获取通话手表的BT名称
+ *	@brief	Get the call-watch BT name.
+ *	获取通话手表的 BT 名称。
  *
- *  @param finish                           :finish callback ==> btInfo: @{@"name":@"BTName",@"mac":@"aa:bb:cc"}
+ *	@param 	finish 	Completion callback. btInfo: @{@"name":@"BTName", @"mac":@"aa:bb:cc"}.
+ *	完成回调。btInfo：@{@"name":@"BTName", @"mac":@"aa:bb:cc"}。
  */
 + (void)getWatchCallBTName:(void (^)(NSDictionary * _Nullable btInfo,NSError * _Nullable error))finish;
 
 
 /**
- *  Set Contacts (Some Support)
- *   设置通讯录
+ *	@brief	Set contacts (some devices only).
+ *	设置通讯录（仅部分设备支持）。
  *
- *  @param contacts                      :   [ ["name":"allen","phone":"123546"],["name":"allen","phone":"123546"]]
- *  @param finish                           :finish callback
+ *	@param 	contacts 	Contact list, e.g. @[@{@"name":@"allen", @"phone":@"123546"}, ...].
+ *	通讯录列表，例如 @[@{@"name":@"allen", @"phone":@"123546"}, ...]。
+ *	@param 	percentage 	Progress callback.
+ *	进度回调。
+ *	@param 	finish 	Completion callback.
+ *	完成回调。
  */
 + (void)setContacts:(NSArray<NSDictionary*>*)contacts percentage:(nullable void (^)(int percentage))percentage finish:(void (^)(NSError * _Nullable error))finish;
 
 /**
- *  RealTime HeartRate Measuring
- *   实时心率测量
+ *	@brief	Real-time heart-rate measuring command.
+ *	实时心率测量指令。
  *
- *  @param type                      :  commond type
- *  @param finished                           :finish callback
+ *	@param 	type 	Command type. See QCBandRealTimeHeartRateCmdType.
+ *	指令类型，参见 QCBandRealTimeHeartRateCmdType。
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
  */
 + (void)realTimeHeartRateWithCmd:(QCBandRealTimeHeartRateCmdType)type finished:(nullable void (^)(BOOL))finished;
 
-/// Get Dial Index
-/// 获取表盘显示索引号
-/// 
-/// - Parameter finished: index--> 0 - N,0:壁纸
+/**
+ *	@brief	Get dial display index.
+ *	获取表盘显示索引号。
+ *
+ *	@param 	finished 	Completion callback. index: 0-N, 0=wallpaper.
+ *	完成回调。index：0-N，0=壁纸。
+ */
 + (void)getDialIndexWithFinshed:(nullable void (^)(NSInteger,NSError *_Nullable error))finished;
 
 
-/// Set Dial Index (Some Support)
-/// 设置表盘显示索引号
-///
-/// - Parameters:
-///   - index: Dial Index：0-N,0:WallPaper
-///   - finished: Callback
+/**
+ *	@brief	Set dial display index (some devices only).
+ *	设置表盘显示索引号（仅部分设备支持）。
+ *
+ *	@param 	index 	Dial index: 0-N, 0=wallpaper.
+ *	表盘索引：0-N，0=壁纸。
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
 + (void)setDialIndexWith:(NSInteger)index finshed:(nullable void (^)(NSError *_Nullable error))finished;
 
 
-/// Get Low Power Mode (Some Support)
-/// 获取低电量开关状态
-///
-/// - Parameter finished: isON: NO->关闭，YES:开启
+/**
+ *	@brief	Get low-power mode status (some devices only).
+ *	获取低电量开关状态（仅部分设备支持）。
+ *
+ *	@param 	finished 	Completion callback. isON: NO=off, YES=on.
+ *	完成回调。isON：NO=关闭，YES=开启。
+ */
 + (void)getLowPowerWithFinshed:(nullable void (^)(BOOL,NSError *_Nullable error))finished;
 
-/// Set Low Power Mode (Some Support)
-/// 设置低电量状态
-///
-/// - Parameters:
-///   - isOn: NO:OFF，YES：ON
-///   - finished:Callback
+/**
+ *	@brief	Set low-power mode status (some devices only).
+ *	设置低电量状态（仅部分设备支持）。
+ *
+ *	@param 	isOn 	NO=OFF, YES=ON.
+ *	NO=关闭，YES=开启。
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
 + (void)setLowPowerWith:(BOOL)isOn finshed:(nullable void (^)(NSError *_Nullable error))finished;
 
-/// Get Blood Glucose Data(Some Support)
-///
-/// - Parameters:
-///   - dayIndex: day Index:0-6,0:today,1:yesterday....
-///   - finished: finished callback
+/**
+ *	@brief	Get blood glucose data (some devices only).
+ *	获取血糖数据（仅部分设备支持）。
+ *
+ *	@param 	dayIndex 	Day index: 0-6, 0=today, 1=yesterday, ...
+ *	距今天数：0-6，0=今天，1=昨天……
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
 + (void)getBloodGlucoseDataByDayIndex:(NSInteger)dayIndex finished:(void (^)(NSArray * _Nullable, NSError * _Nullable))finished;
 
 
-/// Get Manual Blood Oxygen Data(Some Support)
-///
-/// - Parameters:
-///   - dayIndex: day Index:0-6,0:today,1:yesterday....
-///   - finished: finished callback
+/**
+ *	@brief	Get manual blood oxygen data (some devices only).
+ *	获取手动血氧数据（仅部分设备支持）。
+ *
+ *	@param 	dayIndex 	Day index: 0-6, 0=today, 1=yesterday, ...
+ *	距今天数：0-6，0=今天，1=昨天……
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
 + (void)getManualBloodOxygenDataByDayIndex:(NSInteger)dayIndex finished:(void (^)(NSArray * _Nullable, NSError * _Nullable))finished;
 
 
-/// Get Schedual Stress Datas (Only Ring Support)
-///
-/// - Parameters:
-/// - dates: 0-6,0:today,1:yesterday....
-/// - finished: finished callback
+/**
+ *	@brief	Get scheduled stress data (ring devices only).
+ *	获取定时压力数据（仅戒指设备支持）。
+ *
+ *	@param 	dates 	Day indexes: 0-6, 0=today, 1=yesterday, ...
+ *	天数索引：0-6，0=今天，1=昨天……
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
 + (void)getSchedualStressDataWithDates:(NSArray<NSNumber*> *)dates finished:(void (^)(NSArray * _Nullable, NSError * _Nullable))finished;;
 
 
-/// Get Schedual Stress Status
-///
-/// - Parameter finished: finished callback
+/**
+ *	@brief	Get scheduled stress status.
+ *	获取定时压力开关状态。
+ *
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
 + (void)getSchedualStressStatusWithFinshed:(nullable void (^)(BOOL,NSError *_Nullable error))finished;
 
-
-/// Set Schedual Stress Status
-///
-/// - Parameters:
-///   - enable:YES:On,NO:Off
-///   - finished: finished callback
+/**
+ *	@brief	Set scheduled stress status.
+ *	设置定时压力开关状态。
+ *
+ *	@param 	enable 	YES=On, NO=Off.
+ *	YES=开启，NO=关闭。
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
 + (void)setSchedualStressStatus:(BOOL)enable finshed:(nullable void (^)(NSError *_Nullable error))finished;
 
+/**
+ *	@brief	Get scheduled emotion status (0x3A, AA=0x05).
+ *	获取定时情绪测量开关状态（0x3A，AA=0x05）。
+ *
+ *	@param 	finished 	Completion callback; isOn = whether auto measurement is enabled.
+ *	完成回调；isOn 表示自动测量是否开启。
+ */
++ (void)getSchedualEmotionStatusWithFinshed:(nullable void (^)(BOOL isOn, NSError *_Nullable error))finished;
 
-/// Set Sport Mode State
-/// 
-/// - Parameters:
-///   - sportType: type
-///   - state: state
-///   - finished: finished callback
+
+/**
+ *	@brief	Set scheduled emotion status (0x3A, AA=0x05).
+ *	设置定时情绪测量开关状态（0x3A，AA=0x05）。
+ *
+ *	@param 	enable 	YES=On, NO=Off.
+ *	YES=开启，NO=关闭。
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
++ (void)setSchedualEmotionStatus:(BOOL)enable finshed:(nullable void (^)(NSError *_Nullable error))finished;
+
+
+/**
+ *	@brief	Get pressure samples with absolute timestamps (preferred, 0x7B long packet, AA=1).
+ *	获取压力采样点（推荐接口，0x7B 长包，AA=1）。每个采样点已包含绝对时间，用法类似 QCTemperatureModel.time。
+ *
+ *	SDK expands the device raw array as: sample.time = dayStart + index * intervalMinutes.
+ *	SDK 按公式展开：sample.time = 当天0点 + index × intervalMinutes。
+ *	sample.value == 0 means no valid reading at that slot.
+ *	sample.value == 0 表示该时段无有效压力值。
+ *
+ *	@param 	dayIndexes 	Day indexes: 0-6, 0=today, 1=yesterday, ...
+ *	天数索引：0-6，0=今天，1=昨天……
+ *	@param 	finished 	Completion callback with NSArray<QCPressureDayModel *> and error.
+ *	完成回调，返回按天分组的 QCPressureDayModel 列表及错误信息。
+ */
++ (void)getPressureSamplesWithDayIndexes:(NSArray<NSNumber *> *)dayIndexes
+                                finished:(void (^)(NSArray<QCPressureDayModel *> * _Nullable days, NSError * _Nullable error))finished;
+
+/**
+ *	@brief	Get other-data pressure records as a raw value array (legacy).
+ *	获取其他数据中的压力记录（原始 values 数组，旧接口）。
+ *
+ *	@param 	dayIndexes 	Day indexes: 0-6, 0=today, 1=yesterday, ...
+ *	天数索引：0-6，0=今天，1=昨天……
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
++ (void)getOtherDataPressureWithDayIndexes:(NSArray<NSNumber *> *)dayIndexes finished:(void (^)(NSArray<QCOtherDataPressureModel *> * _Nullable, NSError * _Nullable))finished
+    __deprecated_msg("Use +getPressureSamplesWithDayIndexes:finished:; each QCPressureSampleModel provides time (like QCTemperatureModel).");
+
+
+/**
+ *	@brief	Get scheduled stress status and interval (some devices only).
+ *	获取定时压力监测开关及时间间隔（仅部分设备支持）。
+ *
+ *	@param 	finished 	Completion callback: enable (YES=On/NO=Off),
+ *	minInterval (minutes), currentInterval (minutes).
+ *	完成回调：enable（YES=开/NO=关）、minInterval（分钟）、currentInterval（分钟）。
+ */
++ (void)getSchedualStressStatusWithIntervalFinshed:(nullable void (^)(BOOL,NSInteger,NSInteger,NSError *_Nullable error))finished;
+
+/**
+ *	@brief	Set scheduled stress status and interval (some devices only).
+ *	设置定时压力监测开关及时间间隔（仅部分设备支持）。
+ *
+ *	@param 	enable 	YES=On, NO=Off.
+ *	YES=开启，NO=关闭。
+ *	@param 	interval 	Interval in minutes, must be >= minInterval.
+ *	间隔（分钟），须 >= minInterval。
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
++ (void)setSchedualStressStatus:(BOOL)enable interval:(NSInteger)interval finshed:(nullable void (^)(NSError *_Nullable error))finished;
+
+
+/**
+ *	@brief	Get other-data emotion records (0x7B long packet, AA=2).
+ *	获取其他数据中的情绪记录（0x7B 长包，AA=2）。
+ *
+ *	@param 	dayIndexes 	Day indexes: 0-6, 0=today, 1=yesterday, ...
+ *	天数索引：0-6，0=今天，1=昨天……
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
++ (void)getOtherDataEmotionWithDayIndexes:(NSArray<NSNumber *> *)dayIndexes finished:(void (^)(NSArray<QCOtherDataEmotionModel *> * _Nullable, NSError * _Nullable))finished;
+
+
+/**
+ *	@brief	Set sport mode state.
+ *	设置运动模式状态。
+ *
+ *	@param 	sportType 	Sport type.
+ *	运动类型。
+ *	@param 	state 	Sport state.
+ *	运动状态。
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
 + (void)operateSportModeWithType:(OdmSportPlusExerciseModelType)sportType state:(QCSportState)state finish:(void(^)(id _Nullable,NSError * _Nullable))finished;
 
 
-/// Get Schedual HRV Datas (Only Ring Support)
-///
-/// @param dates 0-6,0:today,1:yesterday....
-/// @param finished finished callback
-+ (void)getSchedualHRVDataWithDates:(NSArray<NSNumber*> *)dates finished:(void (^)(NSArray * _Nullable, NSError * _Nullable))finished;
+/**
+ *	@brief	Get HRV samples with absolute timestamps (preferred, 0x39).
+ *	获取 HRV 采样点（推荐接口，0x39）。SDK 将设备原始槽位归一化到 5 分钟 / 288 点全天时间轴。
+ *
+ *	SDK expands device raw slots as: sample.time = dayStart + index * 5min.
+ *	SDK 按 5 分钟网格展开：sample.time = 当天0点 + index × 5min，共 288 点。
+ *	sample.value == 0 means no valid reading at that slot.
+ *	sample.value == 0 表示该时段无有效 HRV 值。
+ *
+ *	@param 	dayIndexes 	Day indexes: 0-6, 0=today, 1=yesterday, ...
+ *	天数索引：0-6，0=今天，1=昨天……
+ *	@param 	finished 	Completion callback with NSArray<QCHRVDayModel *> and error.
+ *	完成回调，返回按天分组的 QCHRVDayModel 列表及错误信息。
+ */
++ (void)getHRVSamplesWithDayIndexes:(NSArray<NSNumber *> *)dayIndexes
+                           finished:(void (^)(NSArray<QCHRVDayModel *> * _Nullable days, NSError * _Nullable error))finished;
 
-/// Get Schedual HRV Status
-///
-/// - Parameter finished: finished callback
+/**
+ *	@brief	Get scheduled HRV data (ring devices only, legacy raw array).
+ *	获取定时 HRV 数据（仅戒指设备支持，旧接口原始数组）。
+ *
+ *	@param 	dates 	Day indexes: 0-6, 0=today, 1=yesterday, ...
+ *	天数索引：0-6，0=今天，1=昨天……
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
++ (void)getSchedualHRVDataWithDates:(NSArray<NSNumber*> *)dates finished:(void (^)(NSArray * _Nullable, NSError * _Nullable))finished
+    __deprecated_msg("Use +getHRVSamplesWithDayIndexes:finished:; each QCHRVSampleModel provides time (288 slots/day at 5-min grid).");
+
+/**
+ *	@brief	Get scheduled HRV status.
+ *	获取定时 HRV 开关状态。
+ *
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
 + (void)getSchedualHRVWithFinshed:(nullable void (^)(BOOL,NSError *_Nullable error))finished;
 
-/// Set Schedual HRV Status
-///
-/// - Parameters:
-///   - enable:YES:On,NO:Off
-///   - finished: finished callback
+/**
+ *	@brief	Set scheduled HRV status.
+ *	设置定时 HRV 开关状态。
+ *
+ *	@param 	enable 	YES=On, NO=Off.
+ *	YES=开启，NO=关闭。
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
 + (void)setSchedualHRVStatus:(BOOL)enable finshed:(nullable void (^)(NSError *_Nullable error))finished;
 
 
-/// Get Touch Control Type (Not for RT11)
-///
-/// @param finished : callback-> type:QCTouchGestureControlType ,strength:1-10,sleeping:YES:NO,duration:sleep duration(unit:minutes)
+/**
+ *	@brief	Get touch control type (not for RT11).
+ *	获取触摸控制类型（不适用于 RT11）。
+ *
+ *	@param 	finished 	Callback: type=QCTouchGestureControlType, strength=1-10,
+ *	sleeping=YES/NO, duration=sleep duration (minutes).
+ *	回调：type=QCTouchGestureControlType，strength=1-10，
+ *	sleeping=YES/NO，duration=休眠时长（分钟）。
+ */
 + (void)getTouchControlFinshed:(nullable void (^)(QCTouchGestureControlType,NSInteger,BOOL,NSInteger,NSError *_Nullable error))finished;
 
-/// Set Touch Control  Type (Not for RT11)
-/// @param type : type
-/// @param strength :1-10(default:1,Reserved value )
-/// @param duration :sleep duration(unit:minutes,1-10)
-/// @param finished :callback
+/**
+ *	@brief	Set touch control type (not for RT11).
+ *	设置触摸控制类型（不适用于 RT11）。
+ *
+ *	@param 	type 	Control type.
+ *	控制类型。
+ *	@param 	strength 	1-10 (default 1, reserved).
+ *	强度 1-10（默认 1，预留值）。
+ *	@param 	duration 	Sleep duration in minutes (1-10).
+ *	休眠时长，单位：分钟（1-10）。
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
 + (void)setTouchControl:(QCTouchGestureControlType)type strength:(NSInteger)strength duration:(NSInteger)duration finshed:(nullable void (^)(NSError *_Nullable error))finished;
 
-/// Get Touch Control Type(Support for RT11 etc.)
-///
-/// @param finished : callback-> type:QCTouchGestureControlType ,strength:1-10,sleeping:YES-NO,duration:sleep duration
+/**
+ *	@brief	Get touch control type (supports RT11 etc.).
+ *	获取触摸控制类型（支持 RT11 等）。
+ *
+ *	@param 	finished 	Callback: type, strength(1-10), sleeping, duration.
+ *	回调：类型、强度(1-10)、是否休眠、休眠时长。
+ */
 + (void)getTouchControlOfScreenDevieFinshed:(nullable void (^)(QCTouchGestureControlType,NSInteger,BOOL,NSInteger,NSError *_Nullable error))finished;
 
-/// Set Touch Control  Type(Support for RT11 etc.)
-/// @param type : type
-/// @param strength :1-10(default:1,Reserved value )
-/// @param finished :callback
+/**
+ *	@brief	Set touch control type (supports RT11 etc.).
+ *	设置触摸控制类型（支持 RT11 等）。
+ *
+ *	@param 	type 	Control type.
+ *	控制类型。
+ *	@param 	strength 	1-10 (default 1, reserved).
+ *	强度 1-10（默认 1，预留值）。
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
 + (void)setTouchControlOfScreenDevie:(QCTouchGestureControlType)type strength:(NSInteger)strength duration:(NSInteger)duration finshed:(nullable void (^)(NSError *_Nullable error))finished;
 
-/// Get Gesture Control Type
-///
-/// @param finished : callback-> type:QCTouchGestureControlType ,strength:1-10
+/**
+ *	@brief	Get gesture control type.
+ *	获取手势控制类型。
+ *
+ *	@param 	finished 	Callback: type=QCTouchGestureControlType, strength=1-10.
+ *	回调：type=QCTouchGestureControlType，strength=1-10。
+ */
 + (void)getGestureControlFinshed:(nullable void (^)(QCTouchGestureControlType,NSInteger,BOOL,NSError *_Nullable error))finished;
 
 
-/// Set Gesture Control  Type
-/// @param type : type
-/// @param strength :1-10
-/// @param finished :callback
+/**
+ *	@brief	Set gesture control type.
+ *	设置手势控制类型。
+ *
+ *	@param 	type 	Control type.
+ *	控制类型。
+ *	@param 	strength 	1-10.
+ *	强度 1-10。
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
 + (void)setGestureControl:(QCTouchGestureControlType)type strength:(NSInteger)strength finshed:(nullable void (^)(NSError *_Nullable error))finished;
 
-/// Wearing Calibration
-///
-/// @param type 1->Start calibration (reset ring data), 2->End calibration, 3->Get single data, 4->Power consumption mode, 5->Stop power consumption, 6->App starts calibration
-/// @param finished finshed callback
+/**
+ *	@brief	Wearing calibration command.
+ *	佩戴校准指令。
+ *
+ *	@param 	type 	1=Start calibration (reset ring data), 2=End calibration,
+ *	3=Get single data, 4=Power consumption mode, 5=Stop power consumption,
+ *	6=App starts calibration.
+ *	1=开始校准（重置戒指数据），2=结束校准，3=获取单次数据，
+ *	4=功耗模式，5=停止功耗模式，6=App 开始校准。
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
 + (void)wearCalibration:(NSInteger)type finshed:(nullable void (^)(NSError *_Nullable error))finished;
 
 
-/// Get Sedentary Reminder (Only Ring Support)
-///
-/// @param fromDayIndex :0->Today,1->Yesterday,2->The day before yesterday ....
-/// @param finished : callback
+/**
+ *	@brief	Get sedentary reminder data (ring devices only).
+ *	获取久坐提醒数据（仅戒指设备支持）。
+ *
+ *	@param 	fromDayIndex 	0=Today, 1=Yesterday, 2=The day before yesterday, ...
+ *	0=今天，1=昨天，2=前天……
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
+ */
 + (void)getSedentaryReminderFromDay:(NSInteger)fromDayIndex finished:(nullable void (^)(NSDictionary <NSString*,NSArray<QCSedentaryModel*>*>*_Nullable datas, NSError *_Nullable error))finished;
 
-/// Set setSchedual Info (Only Ring Support)
-///
-/// @param type :data type
-/// @param featureOn :
-///
-/// @param success : callback
+/**
+ *	@brief	Set scheduled measurement info (ring devices only).
+ *	设置定时测量信息（仅戒指设备支持）。
+ *
+ *	@param 	type 	Scheduled info type. See SchedualInfoType.
+ *	定时信息类型，参见 SchedualInfoType。
+ *	@param 	featureOn 	YES to enable the feature, NO to disable.
+ *	YES 开启功能，NO 关闭功能。
+ *	@param 	calibrate 	Calibration value for the feature. Meaning depends on type; pass 0 if unused.
+ *	功能校准值。含义取决于类型；未使用时传 0。
+ *	@param 	success 	Success callback.
+ *	成功回调。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
+ */
 + (void)setSchedualInfoType:(SchedualInfoType)type featureOn:(BOOL)featureOn calibrate:(NSInteger)calibrate success:(nullable void (^)(void))success fail:(nullable void (^)(void))fail;
 
 
-/// Set setSchedual Info with interval (Only Ring Support)
-///
-/// @param type :data type
-/// @param interval : NSInteger type
-/// @param featureOn :
-///
-/// @param success : callback
+/**
+ *	@brief	Set scheduled measurement info with interval (ring devices only).
+ *	设置带间隔的定时测量信息（仅戒指设备支持）。
+ *
+ *	@param 	type 	Scheduled info type. See SchedualInfoType.
+ *	定时信息类型，参见 SchedualInfoType。
+ *	@param 	featureOn 	YES to enable the feature, NO to disable.
+ *	YES 开启功能，NO 关闭功能。
+ *	@param 	calibrate 	Calibration value for the feature. Meaning depends on type; pass 0 if unused.
+ *	功能校准值。含义取决于类型；未使用时传 0。
+ *	@param 	interval 	Measurement / sampling interval. Unit depends on type (commonly minutes).
+ *	测量/采样间隔。单位取决于类型（通常为分钟）。
+ *	@param 	success 	Success callback.
+ *	成功回调。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
+ */
 + (void)setSchedualInfoType:(SchedualInfoType)type featureOn:(BOOL)featureOn calibrate:(NSInteger)calibrate interval:(NSInteger)interval success:(nullable void (^)(void))success fail:(nullable void (^)(void))fail;
 
+/**
+ *	@brief	Get scheduled measurement info (ring devices only).
+ *	获取定时测量信息（仅戒指设备支持）。
+ *
+ *	@param 	type 	Scheduled info type. See SchedualInfoType.
+ *	定时信息类型，参见 SchedualInfoType。
+ *	@param 	success 	Success callback: (featureOn, calibrate).
+ *	成功回调：（是否开启，校准值）。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
+ */
 + (void)getSchedualInfoType:(SchedualInfoType)type success:(void (^)(BOOL, NSInteger))success fail:(void (^)(void))fail;
 
 /**
- *  @func Set the information of left and right hand wear (Only Ring Support)
+ *	@brief	Set left/right hand wearing info (ring devices only).
+ *	设置左右手佩戴信息（仅戒指设备支持）。
  *
- *  @param finished : finish call back
+ *	@param 	model 	Flip-wrist / wearing info model. Pass nil only if the protocol allows clearing.
+ *	翻腕/佩戴信息模型。仅在协议允许清空时才可传 nil。
+ *	@param 	finished 	Completion callback with error.
+ *	完成回调（含错误信息）。
  */
 + (void)setFlipWristInfo:(QCFlipWristInfoModel*_Nullable)model finshed:(nullable void (^)(NSError *_Nullable error))finished;
 
 /**
- *  @func Get the information of left and right hand wear (Only Ring Support)
+ *	@brief	Get left/right hand wearing info (ring devices only).
+ *	获取左右手佩戴信息（仅戒指设备支持）。
  *
- *  @param finished : finish call back
+ *	@param 	finished 	Completion callback.
+ *	完成回调。
  */
 + (void)getFlipWristInfoFinshed:(nullable void (^)(QCFlipWristInfoModel*_Nullable,NSError *_Nullable))finished;
 
 /**
- * @brief Configure scheduled blood oxygen (BO) monitoring
+ *	@brief	Configure scheduled blood oxygen (BO) monitoring.
+ *	配置定时血氧监测。
  *
- * @param featureOn    YES to enable scheduled BO monitoring, NO to disable
- * @param timeInterval Monitoring interval in minutes
- * @param success      Success callback
- * @param fail         Failure callback
+ *	@param 	featureOn 	YES to enable scheduled BO monitoring, NO to disable.
+ *	YES 开启定时血氧监测，NO 关闭。
+ *	@param 	timeInterval 	Monitoring interval in minutes.
+ *	监测间隔，单位：分钟。
+ *	@param 	success 	Success callback.
+ *	成功回调。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)setSchedualBOInfoOn:(BOOL)featureOn
                 timeInterval:(NSInteger)timeInterval
@@ -1215,115 +2017,199 @@ typedef NS_ENUM(NSInteger, QCSleepProcotolVersion) {
                         fail:(void (^)(void))fail;
 
 /**
- * @brief Retrieve scheduled blood oxygen (BO) monitoring configuration
+ *	@brief	Retrieve scheduled blood oxygen (BO) monitoring configuration.
+ *	获取定时血氧监测配置。
  *
- * @param success Success callback with two parameters:
- *                BOOL → Indicates whether scheduled BO monitoring is enabled
- *                NSInteger → Monitoring interval in minutes
- * @param fail    Failure callback
+ *	@param 	success 	Success callback with two parameters:
+ *	                BOOL → whether scheduled BO monitoring is enabled
+ *	                NSInteger → monitoring interval in minutes
+ *	成功回调，两个参数：
+ *	BOOL → 定时血氧是否开启
+ *	NSInteger → 监测间隔（分钟）
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getSchedualBOInfoWithIntervalSuccess:(void (^)(BOOL, NSInteger))success
                                         fail:(void (^)(void))fail;
 
 /**
- * @brief Get blood oxygen (BO) data for a specific day
+ *	@brief	Get blood oxygen (BO) data for a specific day.
+ *	获取某天的血氧数据。
  *
- * @param dayIndex Index of the day (0 = today, 1 = yesterday, and so on)
- * @param finished Completion callback with three parameters:
- *                 NSInteger → Number of data entries
- *                 NSArray   → Array of BO data (nullable)
- *                 NSError   → Error information (nullable, non-nil if failed)
+ *	@param 	dayIndex 	Index of the day (0 = today, 1 = yesterday, and so on).
+ *	距今天数（0=今天，1=昨天，以此类推）。
+ *	@param 	finished 	Completion callback with three parameters:
+ *	                 NSInteger → Number of data entries / interval
+ *	                 NSArray → Array of BO data (nullable)
+ *	                 NSError → Error information (nullable)
+ *	完成回调，三个参数：
+ *	NSInteger → 数据条目数/间隔
+ *	NSArray → 血氧数据数组（可空）
+ *	NSError → 错误信息（可空）
  */
 + (void)getBloodOxygenDataWithIntervalByDayIndex:(NSInteger)dayIndex
                                          finished:(void (^)(NSInteger, NSArray * _Nullable, NSError * _Nullable))finished;
 
 /**
- * @brief Get temperature data for a specific day with interval
+ *	@brief	Get temperature data for a specific day with interval.
+ *	获取某天带间隔信息的体温数据。
  *
- * @param dayIndex Index of the day (0 = today, 1 = yesterday, and so on)
- * @param finished Completion callback with three parameters:
- *                 NSInteger → Interval in minutes
- *                 NSArray   → Array of temperature data (nullable)
- *                 NSError   → Error information (nullable, non-nil if failed)
+ *	@param 	dayIndex 	Index of the day (0 = today, 1 = yesterday, and so on).
+ *	距今天数（0=今天，1=昨天，以此类推）。
+ *	@param 	finished 	Completion callback with three parameters:
+ *	                 NSInteger → Interval in minutes
+ *	                 NSArray → Array of temperature data (nullable)
+ *	                 NSError → Error information (nullable)
+ *	完成回调，三个参数：
+ *	NSInteger → 间隔（分钟）
+ *	NSArray → 体温数据数组（可空）
+ *	NSError → 错误信息（可空）
  */
 + (void)getTemperatureDataWithIntervalByDayIndex:(NSInteger)dayIndex
                                         finished:(void (^)(NSInteger, NSArray * _Nullable, NSError * _Nullable))finished;
 
 /**
- * @brief shut down
+ *	@brief	Get temperature data for a specific day by pocket index.
+ *	按分包索引获取某天的体温数据。
  *
- * @param success Callback when shutdown is successful
- * @param fail Callback when shutdown
+ *	@param 	dayIndex 	Index of the day (0 = today, 1 = yesterday, and so on).
+ *	距今天数（0=今天，1=昨天，以此类推）。
+ *	@param 	pocketIndex 	Pocket index (starts from 0).
+ *	分包索引（从 0 开始）。
+ *	@param 	finished 	Completion callback with interval, data list, error, pocketCount, pocketIndex.
+ *	完成回调，返回间隔、数据列表、错误、总分包数、当前分包索引。
+ */
+
++ (void)getTemperatureDataByDayIndex:(NSInteger)dayIndex pocketIndex:(NSInteger)pocketIndex finished:(nullable void (^)(NSInteger interval,NSArray *_Nullable dataList, NSError *_Nullable error,NSInteger pocketCount,NSInteger pocketIndex))finished;
+
+/**
+ *	@brief	Shut down the device.
+ *	关闭设备。
+ *
+ *	@param 	success 	Callback when shutdown is successful.
+ *	关机成功回调。
+ *	@param 	fail 	Callback when shutdown fails.
+ *	关机失败回调。
  */
 + (void)shutDownSuccess:(nullable void (^)(void))success fail:(nullable void (^)(void))fail;
 
 /**
- * @brief Get praise/prayer data for specific day indexes
+ *	@brief	Get praise/prayer data for specific day indexes.
+ *	按天数索引获取赞美/祈祷数据。
  *
- * @param dayIndexs Array of day indexes (0=today, 1=yesterday, etc.)
- * @param finished Completion callback with array of praise data and error information
+ *	@param 	dayIndexs 	Array of day indexes (0=today, 1=yesterday, etc.).
+ *	天数索引数组（0=今天，1=昨天，以此类推）。
+ *	@param 	finished 	Completion callback with array of praise data and error information.
+ *	完成回调，返回赞美/祈祷数据数组及错误信息。
  */
 + (void)getPraiseDataByDayIndexs:(NSArray<NSNumber *> *)dayIndexs finished:(void (^)(NSArray *_Nullable praiseList, NSError *_Nullable error))finished;
 
 /**
- * @brief Clear all praise/prayer data from the device
+ *	@brief	Clear all praise/prayer data from the device.
+ *	清除设备上的全部赞美/祈祷数据。
  *
- * @param success Callback when clear operation is successful
- * @param fail Callback when clear operation fails
+ *	@param 	success 	Callback when clear operation is successful.
+ *	清除成功回调。
+ *	@param 	fail 	Callback when clear operation fails.
+ *	清除失败回调。
  */
 + (void)clearPraiseDataWithSuccess:(nullable void (^)(void))success fail:(nullable void (^)(void))fail;
 
 /**
- * @brief Get one minute heart rate data with interval by specific day index
+ *	@brief	Get one-minute heart rate data for a specific day.
+ *	获取某天的一分钟心率数据。
  *
- * @param dayIndex Index of the day (0 = today, 1 = yesterday, and so on)
- * @param finished Completion callback with two parameters:
- *                 NSArray   → Array of one minute heart rate data (nullable)
- *                 NSError   → Error information (nullable, non-nil if failed)
+ *	@param 	dayIndex 	Index of the day (0 = today, 1 = yesterday, and so on).
+ *	距今天数（0=今天，1=昨天，以此类推）。
+ *	@param 	finished 	Completion callback with two parameters:
+ *	                 NSArray → one-minute heart rate data (nullable)
+ *	                 NSError → error information (nullable)
+ *	完成回调，两个参数：
+ *	NSArray → 一分钟心率数据（可空）
+ *	NSError → 错误信息（可空）
  */
 + (void)getOneMinuHeartRateDataWithIntervalByDayIndex:(NSInteger)dayIndex
                                              finished:(void (^)(NSArray * _Nullable, NSError * _Nullable))finished;
 
 /**
- * @brief Set scheduled heart rate monitoring configuration with all parameters
+ *	@brief	Set scheduled heart rate monitoring configuration with all parameters.
+ *	设置定时心率监测的完整配置。
  *
- * @param enable   Whether to enable scheduled heart rate monitoring. YES = enabled, NO = disabled
- * @param interval Heart rate measurement interval in minutes
- * @param maxHrTip Automatic heart rate alarm maximum threshold (bpm)
- * @param minHrTip Automatic heart rate alarm minimum threshold (bpm)
- * @param success  Success callback with two parameters:
- *                 BOOL → Indicates whether the feature is enabled after setting
- *                 NSInteger → Heart rate measurement interval after setting
- * @param fail     Failure callback
+ *	@param 	enable 	Whether to enable scheduled heart rate monitoring. YES = enabled, NO = disabled.
+ *	是否开启定时心率监测。YES=开启，NO=关闭。
+ *	@param 	interval 	Heart rate measurement interval in minutes.
+ *	心率测量间隔，单位：分钟。
+ *	@param 	maxHrTip 	Automatic heart rate alarm maximum threshold (bpm).
+ *	自动心率报警上限（bpm）。
+ *	@param 	minHrTip 	Automatic heart rate alarm minimum threshold (bpm).
+ *	自动心率报警下限（bpm）。
+ *	@param 	success 	Success callback: (enable, interval).
+ *	成功回调：（是否开启，测量间隔）。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)setSchedualHeartRateStatus:(BOOL)enable interval:(NSInteger)interval maxHrTip:(NSInteger)maxHrTip minHrTip:(NSInteger)minHrTip success:(nullable void (^)(BOOL enable, NSInteger interval))success fail:(nullable void (^)(void))fail;
 
 /**
- * @brief Set scheduled heart rate monitoring configuration with interval only
+ *	@brief	Set scheduled heart rate monitoring configuration with interval only.
+ *	仅设置定时心率监测开关与间隔。
  *
- * @param enable   Whether to enable scheduled heart rate monitoring. YES = enabled, NO = disabled
- * @param interval Heart rate measurement interval in minutes
- * @param success  Success callback with two parameters:
- *                 BOOL → Indicates whether the feature is enabled after setting
- *                 NSInteger → Heart rate measurement interval after setting
- * @param fail     Failure callback
+ *	@param 	enable 	Whether to enable scheduled heart rate monitoring. YES = enabled, NO = disabled.
+ *	是否开启定时心率监测。YES=开启，NO=关闭。
+ *	@param 	interval 	Heart rate measurement interval in minutes.
+ *	心率测量间隔，单位：分钟。
+ *	@param 	success 	Success callback: (enable, interval).
+ *	成功回调：（是否开启，测量间隔）。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)setSchedualHeartRateStatus:(BOOL)enable interval:(NSInteger)interval success:(nullable void (^)(BOOL enable, NSInteger interval))success fail:(nullable void (^)(void))fail;
 
 
 /**
- * @brief Get the Info of the scheduled heart rate function
+ *	@brief	Get scheduled heart-rate configuration (enable, interval, tips).
+ *	获取定时心率配置（开关、间隔、报警阈值）。
  *
- * @param success Success callback with five parameters:
- *                BOOL enable → Indicates whether scheduled heart rate monitoring is enabled
- *                NSInteger interval → Heart rate measurement interval in minutes
- *                NSInteger minInterval → Minimum heart rate measurement duration
- *                NSInteger minHrTip → Automatic heart rate alarm minimum threshold (bpm)
- *                NSInteger maxHrTip → Automatic heart rate alarm maximum threshold (bpm)
- * @param fail    Failure callback
+ *	@param 	success 	Success callback:
+ *	                enable — whether scheduled HR is on
+ *	                interval — measurement interval in minutes
+ *	                minInterval — minimum allowed interval in minutes
+ *	                minHrTip — low HR alarm threshold in bpm
+ *	                maxHrTip — high HR alarm threshold in bpm
+ *	成功回调：
+ *	enable — 定时心率是否开启
+ *	interval — 测量间隔（分钟）
+ *	minInterval — 允许的最小间隔（分钟）
+ *	minHrTip — 低心率报警阈值（bpm）
+ *	maxHrTip — 高心率报警阈值（bpm）
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
  */
 + (void)getSchedualHeartRateInfoWithSuccess:(nullable void (^)(BOOL enable, NSInteger interval, NSInteger minInterval, NSInteger minHrTip, NSInteger maxHrTip))success fail:(nullable void (^)(void))fail;
 
+/**
+ *	@brief	Set RRI auto-measure switch.
+ *	设置 RRI 自动测量开关。
+ *
+ *	@param 	isOpen 	YES to enable RRI auto measurement, NO to disable.
+ *	YES 开启 RRI 自动测量，NO 关闭。
+ *	@param 	suc 	Success callback.
+ *	成功回调。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
+ */
++ (void)setRRIAutoMeasureStatus:(BOOL)isOpen suc:(void(^)(void))suc fail:(void(^)(void))fail;
+
+/**
+ *	@brief	Get RRI auto-measure switch status.
+ *	获取 RRI 自动测量开关状态。
+ *
+ *	@param 	suc 	Success callback. YES = enabled, NO = disabled.
+ *	成功回调。YES=开启，NO=关闭。
+ *	@param 	fail 	Failure callback.
+ *	失败回调。
+ */
++ (void)getRRIAutoMeasureStatusWithSuccess:(void(^)(BOOL))suc fail:(void(^)(void))fail;
 @end
 
 NS_ASSUME_NONNULL_END
