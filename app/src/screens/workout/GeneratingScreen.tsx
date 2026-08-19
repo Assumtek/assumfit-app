@@ -1,7 +1,9 @@
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
+import { File, Paths } from 'expo-file-system';
 import React, { useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 
 import { Note } from '../../components/Card';
 import { DetailScreen } from '../../components/DetailScreen';
@@ -46,6 +48,63 @@ const POLL_MS = 2500;
  */
 const TIMEOUT_MS = 330_000;
 
+/**
+ * Quantas consultas seguidas podem falhar antes de a tela desistir.
+ *
+ * Era UMA. Bloquear a tela do celular durante a espera — que dura minutos — faz
+ * o iOS suspender o app e matar a requisição em voo; a consulta seguinte
+ * estourava e a tela dizia "perdemos a conexão", com o servidor gerando o plano
+ * normalmente do outro lado. Relatado em produção (ago/2026): a geração
+ * continuou `RUNNING` no banco depois de a pessoa ver o erro.
+ *
+ * Seis tentativas cobrem uma suspensão curta e a volta da rede sem transformar
+ * comportamento normal do sistema operacional em falha.
+ */
+const FALHAS_ATE_DESISTIR = 6;
+
+/**
+ * O pedido em curso, guardado em disco.
+ *
+ * Ele vivia só no fecho do efeito: sair da tela ou o app morrer perdia o
+ * identificador, e a pessoa recomeçava do zero — gerando um SEGUNDO pedido
+ * enquanto o primeiro ainda corria. Com o id em disco, voltar retoma a mesma
+ * espera.
+ */
+const ARQUIVO_PEDIDO = 'geracao-em-curso.v1.json';
+
+function guardarPedido(requestId: string) {
+  try {
+    new File(Paths.document, ARQUIVO_PEDIDO).write(JSON.stringify({ requestId, at: Date.now() }));
+  } catch {
+    // Sem disco, o comportamento volta a ser o antigo: recomeça do zero.
+  }
+}
+
+/** O pedido guardado, se ainda fizer sentido esperá-lo. */
+function lerPedido(): string | null {
+  try {
+    const f = new File(Paths.document, ARQUIVO_PEDIDO);
+    if (!f.exists) return null;
+    const { requestId, at } = JSON.parse(f.textSync()) as { requestId: string; at: number };
+    if (!requestId || Date.now() - at > TIMEOUT_MS) {
+      descartarPedido();
+      return null;
+    }
+    return requestId;
+  } catch {
+    return null;
+  }
+}
+
+function descartarPedido() {
+  try {
+    const f = new File(Paths.document, ARQUIVO_PEDIDO);
+    if (f.exists) f.delete();
+  } catch {
+    // Sem disco a próxima leitura simplesmente não acha nada.
+  }
+}
+
 export function GeneratingScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation<any>();
@@ -59,14 +118,21 @@ export function GeneratingScreen() {
   useEffect(() => {
     let alive = true;
     let timer: ReturnType<typeof setTimeout>;
+    let falhasSeguidas = 0;
+    let emCurso: string | null = null;
 
     const poll = async (requestId: string) => {
       if (!alive) return;
+      emCurso = requestId;
       try {
         const current = await fetchGenerationStatus(requestId);
         if (!alive) return;
+        falhasSeguidas = 0;
         setStatus(current);
+        setError(null);
+
         if (current.finished) {
+          descartarPedido();
           if (current.status === 'DONE') {
             await refresh();
             // Meio segundo para o anel FECHAR na tela antes de trocar: o
@@ -81,17 +147,60 @@ export function GeneratingScreen() {
         }
         timer = setTimeout(() => void poll(requestId), POLL_MS);
       } catch {
-        if (alive) setError('Perdemos a conexão com o servidor. Tente de novo.');
+        if (!alive) return;
+        /*
+         Falha de consulta NÃO é falha de geração.
+
+         O servidor gera de forma assíncrona e a tela só pergunta. Bloquear o
+         celular durante a espera suspende o app e mata a requisição em voo —
+         comportamento normal do iOS, que a versão anterior transformava em
+         "perdemos a conexão" na primeira ocorrência, com o plano sendo gerado
+         do outro lado.
+        */
+        falhasSeguidas += 1;
+        if (falhasSeguidas >= FALHAS_ATE_DESISTIR) {
+          setError('Perdemos a conexão com o servidor. O plano pode ter sido gerado — volte ao Treino em alguns minutos.');
+          return;
+        }
+        // Espera crescente: a rede que voltou não precisa ser martelada.
+        timer = setTimeout(() => void poll(requestId), POLL_MS * (falhasSeguidas + 1));
       }
     };
 
-    requestPlanGeneration()
-      .then((requestId) => void poll(requestId))
-      .catch(() => alive && setError('Não foi possível iniciar a geração.'));
+    /*
+     Retoma o pedido guardado em vez de abrir outro.
+
+     Sem isto, voltar à tela pedia uma SEGUNDA geração enquanto a primeira ainda
+     corria — duas chamadas de modelo pelo mesmo plano, e a pessoa esperando o
+     dobro.
+    */
+    const anterior = lerPedido();
+    if (anterior) {
+      void poll(anterior);
+    } else {
+      requestPlanGeneration()
+        .then((requestId) => {
+          if (!alive) return;
+          guardarPedido(requestId);
+          void poll(requestId);
+        })
+        .catch(() => alive && setError('Não foi possível iniciar a geração.'));
+    }
+
+    // De volta ao primeiro plano, pergunta na hora: o timer do JS fica congelado
+    // enquanto o app dorme, e esperar o próximo tique somaria segundos à espera.
+    const volta = AppState.addEventListener('change', (st) => {
+      if (st === 'active' && alive && emCurso) {
+        falhasSeguidas = 0;
+        clearTimeout(timer);
+        void poll(emCurso);
+      }
+    });
 
     return () => {
       alive = false;
       clearTimeout(timer);
+      volta.remove();
     };
   }, [navigation, refresh]);
 
