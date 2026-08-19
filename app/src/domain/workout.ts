@@ -208,7 +208,14 @@ export const MODALITY_META: Record<string, { label: string; icon: string }> = {
   futebol: { label: 'futebol', icon: 'ball' },
   lutas: { label: 'lutas', icon: 'swords' },
   crossfit: { label: 'crossfit', icon: 'dumbbell' },
-  'esportes-coletivos': { label: 'quadra e raquete', icon: 'ball' },
+  /*
+   Ícone NEUTRO ao grupo, e não o de um esporte dele.
+
+   O slug é um balde: cobre tênis, padel, vôlei e basquete. Usar a bola de vôlei
+   fazia a agenda mostrar vôlei para quem joga tênis — o lucide não tem raquete,
+   e escolher um dos esportes do balde erra para todos os outros.
+  */
+  'esportes-coletivos': { label: 'quadra e raquete', icon: 'trophy' },
   yoga: { label: 'yoga', icon: 'flower' },
   danca: { label: 'dança', icon: 'music' },
 };
@@ -226,4 +233,33 @@ export function modalityMeta(modality: string | null | undefined): { label: stri
       icon: 'flame',
     }
   );
+}
+
+
+/**
+ * A linha de contexto SEM repetir o que o título já diz.
+ *
+ * O nome do treino costuma ser derivado dos grupos musculares — "Peito e
+ * tríceps" —, e listar os grupos logo abaixo produzia "Peito e tríceps / peito
+ * e tríceps · 6 exercícios". A repetição era o caso COMUM, não a exceção, e
+ * fazia a peça de destaque parecer um erro de montagem.
+ *
+ * Quando o título já carrega os grupos, sobra a contagem. Quando não carrega, a
+ * meta é a de sempre.
+ */
+export function workoutMetaSemRepetir(
+  nome: string,
+  muscleGroups: string[],
+  exerciseCount: number,
+): string {
+  const completa = workoutMeta(muscleGroups, exerciseCount);
+  const grupos = muscleGroups.slice(0, 2).map((g) => MUSCLE_LABEL[g] ?? g.toLowerCase());
+  if (grupos.length === 0) return completa;
+
+  const noTitulo = nome.toLowerCase();
+  // Todos os grupos citados já aparecem no nome? Então eles são redundância.
+  const repetido = grupos.every((g) => noTitulo.includes(g));
+  if (!repetido) return completa;
+
+  return `${exerciseCount} ${exerciseCount === 1 ? 'exercício' : 'exercícios'}`;
 }

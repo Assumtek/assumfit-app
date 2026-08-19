@@ -8,6 +8,7 @@ import {
   rateEffort,
   workoutColor,
   workoutMeta,
+  workoutMetaSemRepetir,
 } from '../workout';
 
 describe('formatação de tempo', () => {
@@ -179,5 +180,39 @@ describe('cronômetro da sessão', () => {
   it('difere do relógio de descanso, que é curto e sem zero à esquerda', () => {
     expect(formatClock(95)).toBe('1:35');
     expect(formatSessionClock(95)).toBe('01:35');
+  });
+});
+
+/**
+ * A meta não repete o título.
+ *
+ * O nome do treino costuma sair dos grupos musculares, então "Peito e tríceps"
+ * seguido de "peito e tríceps · 6 exercícios" era o caso COMUM. A peça de
+ * destaque parecia erro de montagem — visto na rodada de testes de 19/08/2026.
+ */
+describe('workoutMetaSemRepetir', () => {
+  it('o caso do relato: título e grupos coincidem, sobra a contagem', () => {
+    expect(workoutMetaSemRepetir('Peito e tríceps', ['PEITO', 'TRICEPS'], 6)).toBe('6 exercícios');
+  });
+
+  it('título diferente dos grupos mantém a meta completa', () => {
+    expect(workoutMetaSemRepetir('Treino A', ['PEITO', 'TRICEPS'], 6)).toBe(
+      'peito e tríceps · 6 exercícios',
+    );
+  });
+
+  it('repetição PARCIAL não conta: um grupo fora do título mantém a lista', () => {
+    // "Peito" está no nome, "costas" não — omitir os dois esconderia informação.
+    expect(workoutMetaSemRepetir('Peito', ['PEITO', 'COSTAS'], 5)).toBe(
+      'peito e costas · 5 exercícios',
+    );
+  });
+
+  it('sem grupo nenhum, devolve o que a meta comum devolve', () => {
+    expect(workoutMetaSemRepetir('Corrida leve', [], 4)).toBe('4 exercícios');
+  });
+
+  it('singular quando é um exercício só', () => {
+    expect(workoutMetaSemRepetir('Peito', ['PEITO'], 1)).toBe('1 exercício');
   });
 });

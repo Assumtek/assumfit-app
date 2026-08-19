@@ -17,6 +17,8 @@ import { WEEK_ORDER } from './workout';
 
 /** O dia do plano, no formato que a API entrega (`api.PlanDay`). */
 export type DiaDoPlano = {
+  /** Id do dia no plano — é o que a sessão de esporte cita ao cumprir o dia. */
+  id?: string;
   dayOfWeek: string;
   dayType: 'WORKOUT' | 'OFF';
   workout: {
@@ -37,6 +39,8 @@ export type DiaDeTreino = {
   descanso: boolean;
   /** Minutos PREVISTOS pelo plano, quando ele estima duração. */
   previsto: number | null;
+  /** Id do dia no plano, para vincular a sessão de esporte que o cumpre. */
+  planDayId: string | null;
   /**
    * Minutos de movimento REGISTRADOS no dia — treino concluído e sessão de
    * esporte, já consolidados por `movementMinutes`. É a única grandeza medida
@@ -89,6 +93,7 @@ export function montarSemanaDeTreino(
     return {
       weekday,
       planejado: treina,
+      planDayId: entrada?.id ?? null,
       descanso: !!plano && !treina,
       previsto: treina?.estimatedDuration ?? null,
       cumprido: minutosPorDia.get(chave) ?? 0,

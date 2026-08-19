@@ -1357,8 +1357,14 @@ export function SportScreen() {
           );
         })()}
 
-        {/* Respiro para a última linha da lista nunca ficar sob o botão. */}
-        <YStack height={48} />
+        {/*
+          Respiro para o favo nunca ficar sob o botão flutuante.
+
+          Eram 48 pontos, e o botão cobria as peças de baixo do favo — que é
+          alto e termina perto do rodapé. O flutuante tem 56 de altura mais 24
+          de margem inferior; 120 deixa a última fileira respirando.
+        */}
+        <YStack height={120} />
        </YStack>
       </DetailScreen>
 

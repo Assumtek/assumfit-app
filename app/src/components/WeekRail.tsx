@@ -179,9 +179,18 @@ function Dia({
               borderColor={dia.ehHoje ? '$primary' : '$mutedForeground'}
             />
           ) : (
-            /* Descanso é o estado mais quieto dos três, e é de propósito: não
-               há nada a fazer nele. */
-            <YStack width={DISCO} height={2} borderRadius={1} backgroundColor="$borderStrong" />
+            /*
+             Descanso é o estado mais quieto dos três, e é de propósito: não há
+             nada a fazer nele. Menos quando é HOJE — aí o acento marca a posição
+             do agora, que é dado, e sem ele o dia corrente ficava sem acento
+             nenhum na régua justamente quando é dia de folga.
+            */
+            <YStack
+              width={DISCO}
+              height={2}
+              borderRadius={1}
+              backgroundColor={dia.ehHoje ? '$primary' : '$borderStrong'}
+            />
           )}
         </YStack>
       </YStack>

@@ -6,6 +6,7 @@ import type { DiaDoPlano } from '../trainingWeek';
 const QUARTA = new Date(2026, 7, 12, 12, 0, 0);
 
 const treino = (dia: string, nome: string, min: number | null = 50): DiaDoPlano => ({
+  id: `pd-${dia}`,
   dayOfWeek: dia,
   dayType: 'WORKOUT',
   workout: {
@@ -144,5 +145,26 @@ describe('diaCorrente', () => {
   it('devolve o dia de hoje', () => {
     const semana = montarSemanaDeTreino(plano([treino('WEDNESDAY', 'Costas')]), mapa(), QUARTA);
     expect(diaCorrente(semana).weekday).toBe('WEDNESDAY');
+  });
+});
+
+
+/**
+ * O id do dia do plano precisa chegar à tela.
+ *
+ * É ele que a sessão de esporte cita ao cumprir o dia — sem ele, a corrida
+ * registrada no cronômetro não se liga ao treino previsto, e o mesmo ato conta
+ * duas vezes na agenda de movimento.
+ */
+describe('planDayId', () => {
+  it('viaja do plano para o dia da régua', () => {
+    const semana = montarSemanaDeTreino(plano([treino('MONDAY', 'Pernas')]), mapa(), QUARTA);
+    expect(semana.dias[0].planDayId).toBe('pd-MONDAY');
+  });
+
+  it('dia que o plano não cobre não inventa id', () => {
+    const semana = montarSemanaDeTreino(plano([treino('MONDAY', 'Pernas')]), mapa(), QUARTA);
+    expect(semana.dias[1].planDayId).toBeNull();
+    expect(montarSemanaDeTreino(null, mapa(), QUARTA).dias[0].planDayId).toBeNull();
   });
 });

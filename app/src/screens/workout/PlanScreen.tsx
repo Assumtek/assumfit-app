@@ -11,7 +11,13 @@ import { Body, Button, Data, Headline } from '../../components/ui';
 import { QuickMenu } from './QuickMenu';
 import { movementMinutes } from '../../domain/movement';
 import { montarSemanaDeTreino, type DiaDeTreino } from '../../domain/trainingWeek';
-import { DAY_LABEL, isSportDay, modalityMeta, workoutMeta } from '../../domain/workout';
+import { sportForModality } from '../../domain/sport';
+import {
+  DAY_LABEL,
+  isSportDay,
+  modalityMeta,
+  workoutMetaSemRepetir,
+} from '../../domain/workout';
 import * as api from '../../services/api.service';
 import { useWorkoutStore } from '../../store/workout.store';
 import { darkPalette } from '../../theme/palette';
@@ -144,6 +150,9 @@ export function PlanScreen() {
             onVoltarParaHoje={() => setEscolhido(null)}
             onCheckin={() => navigation.push('Checkin')}
             onContinuar={() => navigation.push('Training')}
+            onCronometro={(kind, workoutId, planDayId) =>
+              navigation.navigate('Sport', { vinculo: { kind, workoutId, planDayId } })
+            }
           />
         ) : null}
 
@@ -172,12 +181,14 @@ function Leitura({
   onVoltarParaHoje,
   onCheckin,
   onContinuar,
+  onCronometro,
 }: {
   dia: DiaDeTreino;
   execucao: { workoutName: string } | null;
   onVoltarParaHoje: () => void;
   onCheckin: () => void;
   onContinuar: () => void;
+  onCronometro: (kind: string, workoutId: string, planDayId: string) => void;
 }) {
   const registrado = dia.cumprido > 0 ? `${dia.cumprido} min registrados` : null;
   const voltar = dia.ehHoje
@@ -209,22 +220,31 @@ function Leitura({
         ]
           .filter(Boolean)
           .join(' ')}
-        acao={
+        /*
+         Em dia de descanso a ação principal é DESCANSAR — então não há botão
+         preenchido. A peça dizia "recuperação é o que faz a adaptação
+         acontecer" e logo abaixo destacava treinar assim mesmo, com o acento
+         que o sistema reserva para a ação principal da tela. O convite
+         continua; deixa de ser o elemento mais alto.
+        */
+        acao={null}
+        secundaria={
           dia.ehHoje
-            ? { title: 'Treinar mesmo assim', onPress: onCheckin, icon: 'play' }
-            : null
+            ? { title: 'Treinar mesmo assim', onPress: onCheckin, variant: 'secondary' }
+            : voltar
         }
-        secundaria={voltar}
       />
     );
   }
 
   const treino = dia.planejado;
-  const detalhe = isSportDay(treino.modality)
+  const esporte = isSportDay(treino.modality);
+
+  const detalhe = esporte
     ? `${modalityMeta(treino.modality).label} · ${treino.exerciseCount} ${
         treino.exerciseCount === 1 ? 'bloco' : 'blocos'
       }`
-    : workoutMeta(treino.muscleGroups, treino.exerciseCount);
+    : workoutMetaSemRepetir(treino.name, treino.muscleGroups, treino.exerciseCount);
 
   const meta = [
     detalhe,
@@ -235,13 +255,41 @@ function Leitura({
     .filter(Boolean)
     .join(' · ');
 
+  /*
+   DIA DE ESPORTE ABRE O CRONÔMETRO, não o treino guiado.
+
+   A ação principal levava ao check-in, cujo botão preenchido leva ao guiado — e
+   o guiado não mede nada num dia de quadra, que é feito de blocos por tempo.
+   Foi esse percurso que gravou um treino de 65 segundos como 100% completo em
+   produção (ago/2026): a pessoa seguiu o caminho que a tela destacou.
+
+   O cronômetro é o único que mede distância, batimento e caloria, e conclui o
+   dia do plano junto. O guiado continua disponível, um degrau abaixo.
+  */
+  const doEsporte = esporte ? sportForModality(treino.modality) : null;
+  const principal =
+    dia.ehHoje && doEsporte && dia.planDayId
+      ? {
+          title: doEsporte.gps ? 'Registrar com GPS' : 'Registrar no cronômetro',
+          onPress: () => onCronometro(doEsporte.kind, treino.id, dia.planDayId!),
+          icon: 'play' as const,
+        }
+      : dia.ehHoje
+        ? { title: 'Começar treino', onPress: onCheckin, icon: 'play' as const }
+        : null;
+
+  const alternativa =
+    dia.ehHoje && doEsporte && dia.planDayId
+      ? { title: 'Abrir o treino guiado', onPress: onCheckin, variant: 'secondary' as const }
+      : voltar;
+
   return (
     <TrainingPanel
       titulo={treino.name}
       icone={modalityMeta(treino.modality).icon as never}
       meta={meta}
-      acao={dia.ehHoje ? { title: 'Começar treino', onPress: onCheckin, icon: 'play' } : null}
-      secundaria={voltar}
+      acao={principal}
+      secundaria={alternativa}
     />
   );
 }

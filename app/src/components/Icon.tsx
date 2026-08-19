@@ -1,4 +1,5 @@
 import {
+  Trophy,
   Menu,
   Brain,
   Zap,
@@ -183,6 +184,7 @@ const GLYPH = {
   footprints: Footprints,
   standing: PersonStanding,
   ball: Volleyball,
+  trophy: Trophy,
   flower: Flower2,
   zap: Zap,
   thermometer: Thermometer,
