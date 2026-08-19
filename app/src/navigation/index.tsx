@@ -42,6 +42,7 @@ import { AnamnesisHistoryScreen } from '../screens/workout/AnamnesisHistoryScree
 import { AnamnesisVersionScreen } from '../screens/workout/AnamnesisVersionScreen';
 import { PersonalScreen } from '../screens/workout/PersonalScreen';
 import { ProgressScreen } from '../screens/workout/ProgressScreen';
+import { ProjectScreen } from '../screens/workout/ProjectScreen';
 import { WorkoutShareScreen } from '../screens/workout/WorkoutShareScreen';
 import { PlanScreen } from '../screens/workout/PlanScreen';
 import { WorkoutHistoryScreen } from '../screens/workout/WorkoutHistoryScreen';
@@ -115,6 +116,7 @@ const linking = {
       AnamnesisHistory: 'anamnese-historico',
       AnamnesisVersion: 'anamnese-versao',
       Progress: 'progresso',
+      Project: 'meu-projeto',
       Checkin: 'checkin',
       Training: 'treino',
       TrainingFinished: 'treino-fim',
@@ -233,6 +235,7 @@ export function Navigation() {
         <Stack.Screen name="ExecutionDetail" component={ExecutionDetailScreen} />
         <Stack.Screen name="Personal" component={PersonalScreen} />
         <Stack.Screen name="Progress" component={ProgressScreen} />
+        <Stack.Screen name="Project" component={ProjectScreen} />
         <Stack.Screen name="AnamnesisHistory" component={AnamnesisHistoryScreen} />
         <Stack.Screen name="AnamnesisVersion" component={AnamnesisVersionScreen} />
         <Stack.Screen name="Checkin" component={CheckinScreen} />

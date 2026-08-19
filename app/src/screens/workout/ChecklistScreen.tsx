@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 
 import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
-import { Body, Card, Data, Display, RatingText, SectionTitle } from '../../components/ui';
+import { Body, Button, Card, Data, Display, RatingText, SectionTitle } from '../../components/ui';
 import { useWorkoutStore } from '../../store/workout.store';
 import { useTheme } from '../../theme/ThemeProvider';
 import { PHASE_COLOR, PHASE_NAME, type PhaseType } from './PhaseBar';
@@ -147,6 +147,22 @@ export function ChecklistScreen() {
           </YStack>
         );
       })}
+
+      {/*
+        A porta para o PROJETO fica aqui, e não só no menu do módulo.
+
+        O checklist é onde a ordem dos exercícios aparece inteira, e foi
+        olhando para ela que a pergunta surgiu em uso real — "não sei qual a
+        metodologia, ele fica intercalando peito e costas". Responder no menu
+        de outra tela é responder longe de quem perguntou.
+      */}
+      <YStack paddingTop="$xl">
+        <Button
+          title="Por que essa ordem?"
+          variant="ghost"
+          onPress={() => navigation.navigate('Project')}
+        />
+      </YStack>
     </DetailScreen>
   );
 }

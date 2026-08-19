@@ -28,10 +28,19 @@ const ITENS: Item[] = [
   { icone: 'ruler', rotulo: 'Anamnese', rota: 'AnamnesisHistory' },
   { icone: 'pulse', rotulo: 'Personal', rota: 'Personal' },
   { icone: 'up', rotulo: 'Progresso', rota: 'Progress' },
+  // "Por que meu treino é assim" foi pergunta de quem treina, não hipótese
+  // nossa — e a resposta já estava guardada no plano, sem porta nenhuma.
+  { icone: 'brain', rotulo: 'Projeto', rota: 'Project' },
 ];
 
-/** 56 pt: acima do alvo mínimo de 44 da Apple, com folga para o dedo. */
-const DISCO = 56;
+/**
+ * 50 pt: acima do alvo mínimo de 44 da Apple, e o que cabe com CINCO colunas.
+ *
+ * Eram 56 com quatro destinos. O quinto ("Projeto") aperta a linha num aparelho
+ * estreito, e disco encostando em disco lê como erro de layout — perder seis
+ * pontos custa menos que espremer.
+ */
+const DISCO = 50;
 
 export function QuickMenu() {
   const navigation = useNavigation<any>();
@@ -66,9 +75,9 @@ function Botao({ item, onPress }: { item: Item; onPress: () => void }) {
           alignItems="center"
           justifyContent="center"
         >
-          {/* Ícone acromático: estes quatro são navegação, e o acento
+          {/* Ícone acromático: estes cinco são navegação, e o acento
               pertence ao dado — a mesma regra do resto do sistema. */}
-          <Icon name={item.icone} size={21} color={colors.textMuted} strokeWidth={1.5} />
+          <Icon name={item.icone} size={19} color={colors.textMuted} strokeWidth={1.5} />
         </YStack>
         <Text fontSize={12} color="$mutedForeground" numberOfLines={1}>
           {item.rotulo}

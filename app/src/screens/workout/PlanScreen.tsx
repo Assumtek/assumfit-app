@@ -153,7 +153,7 @@ export function PlanScreen() {
         ) : null}
 
         {/*
-          Os quatro destinos do módulo, sem título de seção: quatro discos com
+          Os cinco destinos do módulo, sem título de seção: cinco discos com
           a palavra embaixo já dizem o que são, e um cabeçalho ali só ocuparia
           a pausa que a leitura acabou de merecer.
         */}
