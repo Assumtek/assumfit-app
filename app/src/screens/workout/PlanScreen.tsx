@@ -1,26 +1,47 @@
 import { useNavigation } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
-import { XStack, YStack } from '@tamagui/stacks';
-import React, { useEffect } from 'react';
+import { YStack } from '@tamagui/stacks';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { Note } from '../../components/Card';
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
-import { Note } from '../../components/Card';
-import { Button, Card, Data, HeroCard, Pill, PillText, SectionTitle } from '../../components/ui';
+import { TrainingPanel } from '../../components/TrainingPanel';
+import { WeekRail } from '../../components/WeekRail';
+import { Body, Button, Data, Headline } from '../../components/ui';
 import { QuickMenu } from './QuickMenu';
-import { DAY_LABEL, WEEK_ORDER, isSportDay, modalityMeta, workoutMeta } from '../../domain/workout';
+import { movementMinutes } from '../../domain/movement';
+import { montarSemanaDeTreino, type DiaDeTreino } from '../../domain/trainingWeek';
+import { DAY_LABEL, isSportDay, modalityMeta, workoutMeta } from '../../domain/workout';
+import * as api from '../../services/api.service';
 import { useWorkoutStore } from '../../store/workout.store';
-import { useTheme } from '../../theme/ThemeProvider';
+import { darkPalette } from '../../theme/palette';
 
 /**
- * O plano da semana, a constância recente e o caminho para o check-in.
+ * TREINO — a tela do plano.
  *
- * A semana é uma régua de sete posições, não sete cartões. A régua mostra o
- * RITMO — quais dias treinam, quais descansam, onde está hoje —, que é a
- * informação que se procura ao abrir a tela.
+ * ── CONTRATO DA DIREÇÃO ──────────────────────────────────────────────────────
+ * THESIS: Treino e Esporte não são duas telas, são UM instrumento em quatro
+ * estados (plano, check-in, sessão ao vivo, leitura). Recusa o padrão da
+ * categoria — pilha de cartões de mesmo tamanho sob títulos de seção — e o
+ * template "número grande + rótulo + estatísticas de apoio".
+ * OWN-WORLD: fixo, do manual de marca — fundo `#0E0A22`/`#ECE7F4`, um acento
+ * `#877BF0` que pertence ao dado, numerais finos (200–300) que fazem o número
+ * ler como instrumento, ícone monolinear de 1,5 px, relevo de `elevation.ts`
+ * (no escuro material, no claro sombra), linha no lugar da caixa.
+ * STORY: a pessoa abre sabendo só "o que eu faço hoje"; o painel responde com
+ * a palavra antes do número, entrega UMA ação, e mantém os mesmos mostradores
+ * do plano até o registro — os números que ela olhou são os que ela guarda.
+ * FIRST VIEWPORT: a semana como uma régua medida (sete posições, barra =
+ * cumprido, traço = previsto, ponto de acento = hoje) logo abaixo do título;
+ * sob ela a leitura do dia aberto — avaliação em `Headline`, meta técnica em
+ * `Body` — e a ação principal em largura cheia. Sem etiqueta, sem grade de
+ * cartões.
+ * FORM: painel de instrumento; candidato 4 de 7 da lista ordenada; seed 1759fd9c.
+ * FINISH: unreviewed and undocumented is unfinished; this build ends with the
+ * finish review, the verdict, and DESIGN.md
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 export function PlanScreen() {
-  const { colors } = useTheme();
   const navigation = useNavigation<any>();
 
   const plan = useWorkoutStore((s) => s.plan);
@@ -28,18 +49,47 @@ export function PlanScreen() {
   const loading = useWorkoutStore((s) => s.loading);
   const refresh = useWorkoutStore((s) => s.refresh);
 
-  useEffect(() => {
-    void refresh();
+  /*
+   O que foi CUMPRIDO na semana — a metade medida da régua. Vem das mesmas duas
+   fontes que a agenda de movimento consolida (treino concluído e sessão de
+   esporte, sem contar duas vezes o ato vinculado). Falhando a rede, a régua
+   ainda desenha o previsto: o plano vem do store, que tem cache.
+  */
+  const [minutos, setMinutos] = useState<Map<string, number>>(() => new Map());
+
+  const carregar = useCallback(async () => {
+    await refresh();
+    const [execucoes, sessoes] = await Promise.all([
+      api.fetchExecutionHistory(30).catch(() => null),
+      api.fetchSportSessions(30).catch(() => null),
+    ]);
+    if (execucoes || sessoes) setMinutos(movementMinutes(execucoes ?? [], sessoes ?? []));
   }, [refresh]);
 
-  const puxar = usePullRefresh(refresh);
+  useEffect(() => {
+    void carregar();
+  }, [carregar]);
+
+  const puxar = usePullRefresh(carregar);
+
+  const semana = useMemo(
+    () => montarSemanaDeTreino(plan, minutos, new Date()),
+    [plan, minutos],
+  );
+
+  /*
+   O dia aberto na leitura. `null` significa "siga o hoje" — sem isso, a tela
+   ficaria presa no dia que a pessoa tocou ontem, e um plano que muda de dia
+   sozinho durante a virada da meia-noite não teria como se corrigir.
+  */
+  const [escolhido, setEscolhido] = useState<string | null>(null);
+  const aberto: DiaDeTreino | undefined =
+    semana.dias.find((d) => d.weekday === escolhido) ?? semana.dias.find((d) => d.ehHoje);
 
   if (loading && !plan) {
     return (
       <DetailScreen title="Treino" refreshControl={puxar}>
-        <Text fontSize={15} color="$mutedForeground">
-          Carregando…
-        </Text>
+        <Data paddingTop="$lg">Carregando…</Data>
       </DetailScreen>
     );
   }
@@ -47,28 +97,24 @@ export function PlanScreen() {
   if (!plan) {
     return (
       <DetailScreen title="Treino" refreshControl={puxar}>
-        <YStack gap="$xl" paddingTop="$lg">
-          <YStack gap="$xs">
-            <Text fontSize={24} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
-              Você ainda não tem um plano
-            </Text>
-            <Text fontSize={14} color="$mutedForeground">
+        <YStack gap="$xl" paddingTop="$xl">
+          <YStack gap="$sm">
+            <Headline>Você ainda não tem um plano</Headline>
+            <Body>
               Algumas perguntas sobre saúde e rotina, e o treino é montado a partir delas —
               respeitando o que você já respondeu no perfil.
-            </Text>
+            </Body>
           </YStack>
           <Button
             title="Montar meu treino"
-            icon={<Icon name="dumbbell" size={16} color={colors.ink} />}
-            onPress={() => (navigation as any).push('Anamnesis')}
+            icon={<Icon name="dumbbell" size={16} color={darkPalette.ink} />}
+            onPress={() => navigation.push('Anamnesis')}
           />
         </YStack>
       </DetailScreen>
     );
   }
 
-  const byDay = new Map(plan.days.map((d) => [d.dayOfWeek, d]));
-  const todayWorkout = byDay.get(plan.today)?.workout ?? null;
   return (
     <DetailScreen title="Treino" refreshControl={puxar}>
       <YStack gap="$xl" paddingTop="$lg">
@@ -82,157 +128,120 @@ export function PlanScreen() {
           da grande maioria.
         */}
         {plan.revisionNotes && plan.revisionNotes.length > 0 ? (
-          <Note
-            title="O que ajustamos no seu plano"
-            body={plan.revisionNotes.join(' ')}
+          <Note title="O que ajustamos no seu plano" body={plan.revisionNotes.join(' ')} />
+        ) : null}
+
+        <WeekRail
+          semana={semana}
+          selecionado={aberto?.weekday ?? ''}
+          onSelect={(dia) => setEscolhido(dia.weekday)}
+        />
+
+        {aberto ? (
+          <Leitura
+            dia={aberto}
+            execucao={execution}
+            onVoltarParaHoje={() => setEscolhido(null)}
+            onCheckin={() => navigation.push('Checkin')}
+            onContinuar={() => navigation.push('Training')}
           />
         ) : null}
 
-        <YStack gap="$md">
-          <SectionTitle>Treino de hoje</SectionTitle>
-        <HeroCard eyebrow={todayWorkout ? 'treino de hoje' : DAY_LABEL[plan.today]}>
-          <XStack alignItems="flex-start" gap="$md">
-            <YStack flex={1} gap={6} minWidth={0}>
-              <Text fontSize={22} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
-                {todayWorkout ? todayWorkout.name : 'Dia de descanso'}
-              </Text>
-              <Text fontSize={13} color="$mutedForeground">
-                {todayWorkout
-                  ? workoutMeta(todayWorkout.muscleGroups, todayWorkout.exerciseCount)
-                  : 'Recuperação é o que faz a adaptação acontecer.'}
-              </Text>
-            </YStack>
-            {todayWorkout?.estimatedDuration ? (
-              <Pill>
-                <Icon name="clock" size={12} color={colors.accent} />
-                <PillText>{todayWorkout.estimatedDuration} min</PillText>
-              </Pill>
-            ) : null}
-          </XStack>
-
-          {/*
-            A ação mora DENTRO do card, e não abaixo dele.
-
-            Card e botão soltos são duas peças que a pessoa precisa relacionar;
-            juntos são uma coisa só — "este é o treino, comece por aqui". Foi a
-            mudança que mais aproximou a tela da referência.
-          */}
-          <YStack marginTop="$lg">
-            <Button
-              title={
-                execution ? 'Continuar treino' : todayWorkout ? 'Começar treino' : 'Treinar mesmo assim'
-              }
-              icon={<Icon name="play" size={16} color={colors.ink} />}
-              onPress={() => (navigation as any).push(execution ? 'Training' : 'Checkin')}
-            />
-          </YStack>
-        </HeroCard>
-        </YStack>
-
-        <YStack gap="$md">
-          <SectionTitle>Menu rápido</SectionTitle>
         {/*
-          Menu rápido logo abaixo da ação principal, e acima da semana.
-
-          Ele é NAVEGAÇÃO, e navegação vem antes de leitura: quem abriu a tela
-          para ir ao histórico não deveria rolar a semana e a lista de treinos
-          inteira até achar a porta.
+          Os quatro destinos do módulo, sem título de seção: quatro discos com
+          a palavra embaixo já dizem o que são, e um cabeçalho ali só ocuparia
+          a pausa que a leitura acabou de merecer.
         */}
         <QuickMenu />
-        </YStack>
-
-        {/*
-          A semana como LISTA de dias, não como régua de traços.
-
-          A régua mostrava o ritmo — quais dias treinam — e escondia o conteúdo:
-          para saber o que é o treino de quinta era preciso rolar até a lista
-          embaixo e cruzar na cabeça. A lista responde as duas perguntas no
-          mesmo lugar, e o dia de descanso deixa de ser um traço apagado para
-          virar uma afirmação.
-        */}
-        <YStack gap="$md">
-          <SectionTitle>Sua semana</SectionTitle>
-          {WEEK_ORDER.map((day) => {
-            const entry = byDay.get(day);
-            const hoje = day === plan.today;
-            const treina = entry?.dayType === 'WORKOUT' && entry.workout;
-            return (
-              <Card key={day} selected={hoje}>
-                <XStack alignItems="center" gap="$md">
-                  {/* Barra de fase à esquerda: acento só no dia de hoje, e só
-                      quando ele treina — é o único acento desta lista. */}
-                  <YStack
-                    width={3}
-                    height={treina ? 34 : 18}
-                    borderRadius={2}
-                    backgroundColor={hoje && treina ? '$primary' : '$borderStrong'}
-                  />
-                  <YStack flex={1} minWidth={0} gap={2}>
-                    <XStack alignItems="center" gap="$sm">
-                      {/*
-                        Token nos DOIS ramos, nunca `undefined`.
-
-                        `color={undefined}` não deixa o padrão do `styled`
-                        valer — ele o ANULA, e o `Text` do React Native cai no
-                        preto. Num tema escuro isso é texto invisível, e o
-                        typecheck não acusa porque `undefined` é um valor
-                        legítimo para a prop.
-                      */}
-                      <Data color={hoje ? '$foreground' : '$faint'}>{DAY_LABEL[day]}</Data>
-                      {hoje ? <Data color="$primary">hoje</Data> : null}
-                    </XStack>
-                    {treina ? (
-                      <>
-                        <Text fontSize={15} fontWeight="700" color="$foreground" numberOfLines={1}>
-                          {entry!.workout!.name}
-                        </Text>
-                        {/* Dia de esporte fala a língua do esporte: ícone da
-                            modalidade e blocos, não grupos musculares. */}
-                        {isSportDay(entry!.workout!.modality) ? (
-                          <XStack alignItems="center" gap="$sm">
-                            <Icon
-                              name={modalityMeta(entry!.workout!.modality).icon as never}
-                              size={13}
-                              color={colors.textMuted}
-                            />
-                            <Data numberOfLines={1}>
-                              {modalityMeta(entry!.workout!.modality).label}
-                              {' · '}
-                              {entry!.workout!.exerciseCount}{' '}
-                              {entry!.workout!.exerciseCount === 1 ? 'bloco' : 'blocos'}
-                            </Data>
-                          </XStack>
-                        ) : (
-                          <Data numberOfLines={1}>
-                            {workoutMeta(entry!.workout!.muscleGroups, entry!.workout!.exerciseCount)}
-                          </Data>
-                        )}
-                      </>
-                    ) : (
-                      <XStack alignItems="center" gap="$sm">
-                        <Icon name="moon" size={13} color={colors.textMuted} />
-                        <Data>Descanso</Data>
-                      </XStack>
-                    )}
-                  </YStack>
-                  {treina && entry!.workout!.estimatedDuration ? (
-                    <Data flexShrink={0}>{entry!.workout!.estimatedDuration} min</Data>
-                  ) : null}
-                </XStack>
-              </Card>
-            );
-          })}
-        </YStack>
-
-        {/*
-          A lista "Treinos" saiu.
-
-          Ela repetia exatamente o que a semana agora mostra — mesmo nome, mesma
-          meta, mesma duração — só que sem o dia. Dois blocos com o mesmo
-          conteúdo fazem a pessoa procurar a diferença entre eles, e não há.
-        */}
-
       </YStack>
     </DetailScreen>
+  );
+}
+
+/**
+ * A leitura do dia aberto na régua.
+ *
+ * A regra de ouro vale aqui como em toda métrica: o destaque é a frase, o
+ * número é subordinado — "Peito e tríceps" grande, "6 exercícios · ~52 min"
+ * embaixo. E o que já foi REGISTRADO no dia entra na mesma linha, porque o
+ * cumprido é a informação que a régua acabou de prometer.
+ */
+function Leitura({
+  dia,
+  execucao,
+  onVoltarParaHoje,
+  onCheckin,
+  onContinuar,
+}: {
+  dia: DiaDeTreino;
+  execucao: { workoutName: string } | null;
+  onVoltarParaHoje: () => void;
+  onCheckin: () => void;
+  onContinuar: () => void;
+}) {
+  const registrado = dia.cumprido > 0 ? `${dia.cumprido} min registrados` : null;
+  const voltar = dia.ehHoje
+    ? null
+    : { title: 'Ver o treino de hoje', onPress: onVoltarParaHoje, variant: 'ghost' as const };
+
+  // Sessão correndo manda em tudo: é o único estado que não pode ser lido como
+  // convite, porque já foi aceito.
+  if (dia.ehHoje && execucao) {
+    return (
+      <TrainingPanel
+        ativo
+        titulo={execucao.workoutName}
+        meta="Em andamento — continue de onde parou."
+        acao={{ title: 'Continuar treino', onPress: onContinuar, icon: 'play' }}
+      />
+    );
+  }
+
+  if (!dia.planejado) {
+    return (
+      <TrainingPanel
+        titulo="Dia de descanso"
+        icone="moon"
+        meta={[
+          'Recuperação é o que faz a adaptação acontecer.',
+          dia.ehHoje ? null : `Previsto para ${DAY_LABEL[dia.weekday]}.`,
+          registrado,
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        acao={
+          dia.ehHoje
+            ? { title: 'Treinar mesmo assim', onPress: onCheckin, icon: 'play' }
+            : null
+        }
+        secundaria={voltar}
+      />
+    );
+  }
+
+  const treino = dia.planejado;
+  const detalhe = isSportDay(treino.modality)
+    ? `${modalityMeta(treino.modality).label} · ${treino.exerciseCount} ${
+        treino.exerciseCount === 1 ? 'bloco' : 'blocos'
+      }`
+    : workoutMeta(treino.muscleGroups, treino.exerciseCount);
+
+  const meta = [
+    detalhe,
+    treino.estimatedDuration ? `~${treino.estimatedDuration} min` : null,
+    dia.ehHoje ? null : `previsto para ${DAY_LABEL[dia.weekday]}`,
+    registrado,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  return (
+    <TrainingPanel
+      titulo={treino.name}
+      icone={modalityMeta(treino.modality).icon as never}
+      meta={meta}
+      acao={dia.ehHoje ? { title: 'Começar treino', onPress: onCheckin, icon: 'play' } : null}
+      secundaria={voltar}
+    />
   );
 }

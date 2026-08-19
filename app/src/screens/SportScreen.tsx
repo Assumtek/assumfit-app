@@ -19,16 +19,29 @@ import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
 import { Icon, type IconName } from '../components/Icon';
 import { HexMosaic, type HexItem } from '../components/HexMosaic';
 import { PhotoViewer } from '../components/PhotoViewer';
-import { MovementWeek } from '../components/MovementWeek';
+import { TrainingPanel } from '../components/TrainingPanel';
+import { WeekRail } from '../components/WeekRail';
 import { BarChart } from '../components/charts/BarChart';
-import { Body, Button, Data, Display, HeroCard, Label, MetricSm, SectionTitle } from '../components/ui';
+import {
+  Body,
+  Button,
+  Data,
+  Display,
+  Headline,
+  Label,
+  Readout,
+  ReadoutCluster,
+  SectionTitle,
+} from '../components/ui';
 import { Card } from '../components/ui/Card';
 import { ScalePicker } from '../components/ScalePicker';
 import { ConfirmDialog, Sheet } from '../components/ui/Dialog';
 import { ShadowView } from '../components/ui/ShadowView';
 import { useFabShadow } from '../components/ui/elevation';
 import { buildMovementWeek, movementMinutes, weeklySeries } from '../domain/movement';
-import { isSportDay, modalityMeta, workoutMeta } from '../domain/workout';
+import { batimentoAoVivo } from '../domain/series';
+import { montarSemanaDeTreino } from '../domain/trainingWeek';
+import { formatDuration, isSportDay, modalityMeta, workoutMeta } from '../domain/workout';
 import { QuickMenu } from './workout/QuickMenu';
 import {
   SPORTS,
@@ -58,6 +71,7 @@ import { iniciarRastreio, pararRastreio, useSportTrackStore } from '../services/
 import { SportShare } from '../components/SportShare';
 import { useBiometricStore } from '../store/biometric.store';
 import { useWorkoutStore } from '../store/workout.store';
+import { darkPalette } from '../theme/palette';
 import { useTheme } from '../theme/ThemeProvider';
 
 /**
@@ -307,12 +321,82 @@ export function SportScreen() {
     return () => sub.remove();
   }, []);
 
-  // O batimento ao vivo entra como amostra a cada leitura nova da pulseira.
+  /*
+   A sessão em curso vai para o DISCO a cada mudança.
+
+   Ela vivia só aqui, em estado do React — e o iOS recolhe memória de app em
+   segundo plano sem avisar. Uma partida de uma hora com o celular no bolso é
+   justamente o caso em que ele recolhe, e o treino inteiro sumia. A Dynamic
+   Island seguia contando, porque é nativa, então nada indicava a perda.
+
+   Escrever no efeito e não em cada `setSessao` é de propósito: são muitos
+   pontos de mudança (pausa, GPS, batimento, ilha), e um esquecido é uma sessão
+   que volta truncada.
+  */
   useEffect(() => {
-    if (!sessao || sessao.pausedSince !== null || !latest?.heartRate) return;
-    setSessao((s) => (s ? { ...s, hrSamples: [...s.hrSamples, Math.round(latest.heartRate)] } : s));
+    if (!sessao) return;
+    outbox.guardarEmCurso({
+      sport: sessao.sport.kind,
+      startedAt: sessao.startedAt,
+      pausedMs: sessao.pausedMs,
+      pausedSince: sessao.pausedSince,
+      points: sessao.points,
+      hrSamples: sessao.hrSamples,
+      vinculo: vinculo.current,
+      execucaoVinculada: execucaoVinculada.current,
+    });
+  }, [sessao]);
+
+  /*
+   Retoma o que ficou pela metade, na abertura.
+
+   Sem confirmação: a pessoa não escolheu perder a sessão, o sistema é que
+   matou o app. Perguntar "quer retomar?" transformaria uma recuperação em mais
+   uma decisão, no meio de um treino.
+  */
+  useEffect(() => {
+    if (sessao) return;
+    const salva = outbox.lerEmCurso();
+    if (!salva) return;
+    const sport = SPORTS.find((x) => x.kind === salva.sport);
+    if (!sport) {
+      outbox.descartarEmCurso();
+      return;
+    }
+    vinculo.current = salva.vinculo ?? null;
+    execucaoVinculada.current = salva.execucaoVinculada ?? null;
+    cursorDoRastreio.current = salva.points.length;
+    setNow(Date.now());
+    setSessao({
+      sport,
+      startedAt: salva.startedAt,
+      pausedMs: salva.pausedMs,
+      pausedSince: salva.pausedSince,
+      points: salva.points,
+      hrSamples: salva.hrSamples,
+    });
+    // A ilha pode ter morrido junto com o app: reabre com o início já
+    // descontado das pausas, que é o que o timer nativo entende.
+    iniciarIlhaDeEsporte(sport.label, salva.startedAt + salva.pausedMs);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [latest?.recordedAt]);
+  }, []);
+
+  /*
+   O batimento ao vivo entra como amostra a cada MEDIDA nova da pulseira.
+
+   Antes bastava existir `latest.heartRate`, e a dependência era `recordedAt` —
+   o instante em que a leitura CHEGOU. Como o serviço reemite a leitura inteira
+   a cada evento de qualquer grandeza, e passos mudam a cada passada, a corrida
+   acumulava dezenas de cópias do último batimento. A média e o máximo da sessão
+   saíam da frequência de repouso.
+  */
+  useEffect(() => {
+    const bpm = latest?.heartRate;
+    if (!sessao || sessao.pausedSince !== null || !bpm) return;
+    if (!batimentoAoVivo(latest, Date.now())) return;
+    setSessao((s) => (s ? { ...s, hrSamples: [...s.hrSamples, Math.round(bpm)] } : s));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [latest?.heartRateAt]);
 
   const iniciar = async (sport: Sport) => {
     setAviso(null);
@@ -392,6 +476,9 @@ export function SportScreen() {
     const hr = sessao.hrSamples;
 
     setSessao(null);
+    // A sessão deixou de estar em curso — o arquivo de retomada morre aqui,
+    // antes de qualquer rede. O que segue dela é a caixa de saída.
+    outbox.descartarEmCurso();
     encerrarIlhaDeEsporte();
     const execucaoId = execucaoVinculada.current;
     execucaoVinculada.current = null;
@@ -650,57 +737,73 @@ export function SportScreen() {
     return (
       <DetailScreen title="Sessão concluída" onBack={concluirResumo}>
         <MapaDePercurso points={resumo.points} accent={colors.accent} />
-        <YStack marginTop="$lg" marginBottom="$md">
-          <Label>{resumo.sport.label}</Label>
-          <Display fontSize={56} lineHeight={62} letterSpacing={-2}>
-            {sportClock(resumo.elapsed)}
-          </Display>
+
+        {/*
+          A regra de ouro também vale no fim da sessão: o destaque é a frase
+          ("Corrida de 32 min"), e o cronômetro exato desce a sub-label. Antes
+          era o contrário — `56:12` em corpo 56 é número cru formatado grande,
+          exatamente o que nenhuma tela deste app deveria fazer.
+        */}
+        <YStack marginTop="$lg" marginBottom="$lg" gap="$xs">
+          <Headline>
+            {resumo.sport.label} de {formatDuration(resumo.elapsed / 1000)}
+          </Headline>
+          <Data>{sportClock(resumo.elapsed)} no cronômetro</Data>
         </YStack>
-        <XStack justifyContent="space-between" paddingHorizontal="$sm" marginBottom="$xl">
-          <Medida
+
+        <ReadoutCluster>
+          <Readout
             valor={resumo.dist ? (resumo.dist / 1000).toFixed(2).replace('.', ',') : '—'}
             unidade="km"
-            rotulo={resumo.dist ? paceMinPerKm(resumo.dist, resumo.elapsed) ?? 'distância' : 'sem GPS'}
+            rotulo={resumo.dist ? (paceMinPerKm(resumo.dist, resumo.elapsed) ?? 'distância') : 'sem GPS'}
           />
-          <Medida
+          <Readout
             valor={resumo.avgHr ? String(resumo.avgHr) : '—'}
             unidade="bpm"
-            rotulo={resumo.avgHr ? (resumo.maxHr ? `média · máx ${resumo.maxHr}` : 'média') : 'sem amostras'}
+            rotulo={
+              resumo.avgHr ? (resumo.maxHr ? `média · máx ${resumo.maxHr}` : 'média') : 'sem amostras'
+            }
           />
-          <Medida valor={kcalRangeLabel(resumo.sport.met, resumo.elapsed)} unidade="kcal" rotulo="estimadas" />
-        </XStack>
-        {salvando ? <Data marginBottom="$md">salvando no histórico…</Data> : null}
-        {aviso ? <Data marginBottom="$md">{aviso}</Data> : null}
+          <Readout
+            valor={kcalRangeLabel(resumo.sport.met, resumo.elapsed)}
+            unidade="kcal"
+            rotulo="estimadas"
+          />
+        </ReadoutCluster>
+
+        {salvando ? <Data marginTop="$md">salvando no histórico…</Data> : null}
+        {aviso ? <Data marginTop="$md">{aviso}</Data> : null}
 
         {/* O "como foi" do treino guiado, aqui também (decisão da fundadora,
-            ago/2026): mesmas perguntas, mesma escala, nada pré-marcado. */}
-        <YStack gap="$md" marginBottom="$xl">
+            ago/2026): mesmas perguntas, mesma escala, nada pré-marcado.
+            A pergunta é o próprio título do bloco — a etiqueta em caixa alta
+            que ficava acima dela dizia menos do que a pergunta já diz. */}
+        <YStack gap="$md" marginTop="$xl" marginBottom="$xl">
           <Card>
-            <Label>esforço percebido</Label>
-            <Text fontSize={15} color="$foreground" marginTop="$sm" marginBottom="$md">
-              Quanto esta sessão puxou?
-            </Text>
-            <ScalePicker values={[2, 4, 6, 8, 10]} value={esforco} onPick={setEsforco} label="Esforço" />
+            <SectionTitle>Quanto esta sessão puxou?</SectionTitle>
+            <YStack marginTop="$md">
+              <ScalePicker
+                values={[2, 4, 6, 8, 10]}
+                value={esforco}
+                onPick={setEsforco}
+                label="Esforço"
+              />
+            </YStack>
             <XStack justifyContent="space-between" marginTop="$sm">
-              <Text fontSize={12} color="$mutedForeground">
-                leve
-              </Text>
-              <Text fontSize={12} color="$mutedForeground">
-                no limite
-              </Text>
+              <Data>leve</Data>
+              <Data>no limite</Data>
             </XStack>
           </Card>
 
           <Card>
-            <Label>nota da sessão</Label>
-            <Text fontSize={15} color="$foreground" marginTop="$sm" marginBottom="$md">
-              A sessão de hoje serviu para você?
-            </Text>
-            <ScalePicker values={[1, 2, 3, 4, 5]} value={nota} onPick={setNota} label="Nota" />
+            <SectionTitle>A sessão de hoje serviu para você?</SectionTitle>
+            <YStack marginTop="$md">
+              <ScalePicker values={[1, 2, 3, 4, 5]} value={nota} onPick={setNota} label="Nota" />
+            </YStack>
           </Card>
 
           <Card>
-            <Label>observação</Label>
+            <SectionTitle>Algo que queira registrar?</SectionTitle>
             <TextInput
               style={{
                 color: colors.text,
@@ -711,7 +814,7 @@ export function SportScreen() {
               }}
               value={comentario}
               onChangeText={setComentario}
-              placeholder="Algo que queira registrar (opcional)"
+              placeholder="Opcional"
               placeholderTextColor={colors.textFaint}
               multiline
               accessibilityLabel="Observação sobre a sessão"
@@ -723,10 +826,14 @@ export function SportScreen() {
             secundário; "Concluir" fecha levando o como-foi — depois dele
             ninguém volta. */}
         <YStack gap="$md">
-          <Button title="Compartilhar sessão" variant="secondary" onPress={() => setCompartilhando(true)} />
+          <Button
+            title="Compartilhar sessão"
+            variant="secondary"
+            onPress={() => setCompartilhando(true)}
+          />
           <Button
             title="Concluir"
-            icon={<Icon name="check" size={16} color="#0E0A22" />}
+            icon={<Icon name="check" size={16} color={darkPalette.ink} />}
             onPress={concluirResumo}
           />
         </YStack>
@@ -783,31 +890,46 @@ export function SportScreen() {
             ser guardado no histórico.
           </Data>
         )}
-        <YStack marginTop="$lg" marginBottom="$md">
-          <Label>{quando(d.startedAt)}</Label>
-          <Display fontSize={56} lineHeight={62} letterSpacing={-2}>
-            {sportClock(d.durationS * 1000)}
-          </Display>
+        {/* Mesma leitura da conclusão, para a sessão guardada: a frase manda,
+            o cronômetro acompanha, e o trio de mostradores fica onde sempre
+            esteve — é o que permite comparar uma sessão com a outra sem
+            reaprender a tela. */}
+        <YStack marginTop="$lg" marginBottom="$lg" gap="$xs">
+          <Headline>
+            {rotulo(d.sport)} de {formatDuration(d.durationS)}
+          </Headline>
+          <Data>
+            {quando(d.startedAt)} · {sportClock(d.durationS * 1000)} no cronômetro
+          </Data>
         </YStack>
-        <XStack justifyContent="space-between" paddingHorizontal="$sm" marginBottom="$xl">
-          <Medida
+
+        <ReadoutCluster>
+          <Readout
             valor={d.distanceM ? (d.distanceM / 1000).toFixed(2).replace('.', ',') : '—'}
             unidade="km"
-            rotulo={d.distanceM ? paceMinPerKm(d.distanceM, d.durationS * 1000) ?? 'distância' : 'sem GPS'}
+            rotulo={
+              d.distanceM ? (paceMinPerKm(d.distanceM, d.durationS * 1000) ?? 'distância') : 'sem GPS'
+            }
           />
-          <Medida
+          <Readout
             valor={d.avgHr ? String(d.avgHr) : '—'}
             unidade="bpm"
             rotulo={d.avgHr ? (d.maxHr ? `média · máx ${d.maxHr}` : 'média') : 'sem amostras'}
           />
-          <Medida valor={faixaKcal(d.sport, d.durationS, d.kcal)} unidade="kcal" rotulo="estimadas" />
-        </XStack>
+          <Readout
+            valor={faixaKcal(d.sport, d.durationS, d.kcal)}
+            unidade="kcal"
+            rotulo="estimadas"
+          />
+        </ReadoutCluster>
 
-        <Button
-          title="Compartilhar sessão"
-          variant="secondary"
-          onPress={() => setCompartilhandoDetalhe(true)}
-        />
+        <YStack marginTop="$xl">
+          <Button
+            title="Compartilhar sessão"
+            variant="secondary"
+            onPress={() => setCompartilhandoDetalhe(true)}
+          />
+        </YStack>
       </DetailScreen>
     );
   }
@@ -821,7 +943,7 @@ export function SportScreen() {
     // "ao vivo" é alegação: sem leitura fresca, o valor vira traço em vez de
     // relíquia com selo de vivo — a pulseira solta no km 3 não pode congelar
     // um número que a tela continua jurando ser de agora.
-    const bpmFresco = latest !== null && now - latest.recordedAt <= 20_000;
+    const bpmFresco = batimentoAoVivo(latest, now);
     const gpsAtivo = sessao.points.length > 0;
 
     // Com sessão correndo, a seta não NAVEGA: ela pede a mesma confirmação
@@ -854,37 +976,69 @@ export function SportScreen() {
           </YStack>
         ) : null}
 
-        <YStack alignItems="center" paddingVertical={sessao.sport.gps ? '$lg' : '$xxl'}>
-          <Label>{pausado ? 'PAUSADO' : 'EM ANDAMENTO'}</Label>
-          <Display fontSize={sessao.sport.gps ? 56 : 72} lineHeight={sessao.sport.gps ? 62 : 80} letterSpacing={-3} marginTop="$sm">
-            {sportClock(elapsed)}
-          </Display>
+        {/*
+          O mostrador que está CONTANDO perde massa quando para de contar: com
+          a sessão pausada, o cronômetro e o trio caem para 55% de opacidade.
+          É o único jeito de a pausa se anunciar sem uma faixa de aviso — e sem
+          ela a tela pausada é indistinguível da tela correndo à primeira vista,
+          que foi como um teste real perdeu quatro minutos de corrida.
+        */}
+        <YStack opacity={pausado ? 0.55 : 1}>
+          <YStack alignItems="center" paddingVertical={sessao.sport.gps ? '$lg' : '$xxl'} gap="$sm">
+            <XStack alignItems="center" gap={6}>
+              {/* Luz de estado: aceso é dado — o cronômetro está correndo. */}
+              <YStack
+                width={6}
+                height={6}
+                borderRadius={3}
+                backgroundColor={pausado ? '$faint' : '$primary'}
+              />
+              <Label>{pausado ? 'pausado' : 'em andamento'}</Label>
+            </XStack>
+            <Display
+              fontSize={sessao.sport.gps ? 56 : 72}
+              lineHeight={sessao.sport.gps ? 62 : 80}
+              letterSpacing={-3}
+            >
+              {sportClock(elapsed)}
+            </Display>
+          </YStack>
+
+          <ReadoutCluster>
+            {/* "0,00 km" com GPS negado pareceria medição. Medido ou traço. */}
+            <Readout
+              valor={sessao.sport.gps && gpsAtivo ? (dist / 1000).toFixed(2).replace('.', ',') : '—'}
+              unidade="km"
+              rotulo={
+                !sessao.sport.gps
+                  ? 'sem GPS'
+                  : gpsAtivo
+                    ? (pace ?? 'distância')
+                    : rastreando
+                      ? 'aguardando GPS'
+                      : 'sem GPS'
+              }
+            />
+            <Readout
+              valor={bpmFresco ? String(Math.round(latest!.heartRate)) : '—'}
+              unidade="bpm"
+              rotulo={bpmFresco ? 'ao vivo' : 'sem sinal da pulseira'}
+            />
+            <Readout
+              valor={kcalRangeLabel(sessao.sport.met, elapsed)}
+              unidade="kcal"
+              rotulo="estimadas"
+            />
+          </ReadoutCluster>
         </YStack>
 
-        <XStack justifyContent="space-between" paddingHorizontal="$md" marginBottom="$xxl">
-          {/* "0,00 km" com GPS negado pareceria medição. Medido ou traço. */}
-          <Medida
-            valor={sessao.sport.gps && gpsAtivo ? (dist / 1000).toFixed(2).replace('.', ',') : '—'}
-            unidade="km"
-            rotulo={
-              !sessao.sport.gps
-                ? 'sem GPS'
-                : gpsAtivo
-                  ? pace ?? 'distância'
-                  : rastreando
-                    ? 'aguardando GPS'
-                    : 'sem GPS'
-            }
-          />
-          <Medida
-            valor={bpmFresco ? String(Math.round(latest!.heartRate)) : '—'}
-            unidade="bpm"
-            rotulo={bpmFresco ? 'ao vivo' : 'sem sinal da pulseira'}
-          />
-          <Medida valor={kcalRangeLabel(sessao.sport.met, elapsed)} unidade="kcal" rotulo="estimadas" />
-        </XStack>
-
-        <XStack justifyContent="center" alignItems="center" gap="$xxl">
+        {/*
+          O controle: disco de acento dentro de um aro de hairline. O aro é o
+          que o faz ler como comando de instrumento em vez de botão flutuante
+          solto no meio da tela — e dá ao alvo a folga que o dedo procura em
+          movimento, que é quando esta tela é usada.
+        */}
+        <XStack justifyContent="center" marginTop="$xxl">
           <Pressable
             onPress={alternarPausa}
             accessibilityRole="button"
@@ -892,16 +1046,26 @@ export function SportScreen() {
             style={({ pressed }) => pressed && { opacity: 0.75 }}
           >
             <YStack
-              width={72}
-              height={72}
-              borderRadius={36}
-              backgroundColor="$primary"
+              width={96}
+              height={96}
+              borderRadius={48}
+              borderWidth={1}
+              borderColor="$border"
               alignItems="center"
               justifyContent="center"
             >
-              {/* Ink fixo da marca: sobre o acento, nos DOIS temas — a mesma
-                  regra do texto do Button primário. */}
-              <Icon name={pausado ? 'play' : 'pause'} size={26} color="#0E0A22" />
+              <YStack
+                width={76}
+                height={76}
+                borderRadius={38}
+                backgroundColor="$primary"
+                alignItems="center"
+                justifyContent="center"
+              >
+                {/* Ink fixo da marca: sobre o acento, nos DOIS temas — a mesma
+                    regra do texto do Button primário. */}
+                <Icon name={pausado ? 'play' : 'pause'} size={28} color={darkPalette.ink} />
+              </YStack>
             </YStack>
           </Pressable>
         </XStack>
@@ -988,7 +1152,7 @@ export function SportScreen() {
           <Button
             title="Iniciar"
             onPress={() => void iniciar(preparando)}
-            icon={<Icon name="play" size={16} color="#0E0A22" />}
+            icon={<Icon name="play" size={16} color={darkPalette.ink} />}
           />
           <Button title="Voltar" variant="ghost" onPress={() => setPreparando(null)} />
         </YStack>
@@ -1004,10 +1168,16 @@ export function SportScreen() {
    retrato ficava escondido embaixo dela.
   */
   const hoje = new Date();
-  const semana =
-    historico !== null && (execucoes !== null || historico.length > 0)
-      ? buildMovementWeek(movementMinutes(execucoes ?? [], historico), hoje)
-      : null;
+  /*
+   As duas leituras da mesma semana: `movimento` guarda a sequência (a chama),
+   `semanaDeTreino` cruza o previsto do plano com o cumprido — é a régua que a
+   tela de Treino usa, e usar a MESMA aqui é o que faz as duas deixarem de
+   parecer produtos diferentes costurados.
+  */
+  const minutosPorDia = historico !== null ? movementMinutes(execucoes ?? [], historico) : null;
+  const movimento = minutosPorDia ? buildMovementWeek(minutosPorDia, hoje) : null;
+  const semanaDeTreino =
+    minutosPorDia || plano ? montarSemanaDeTreino(plano, minutosPorDia ?? new Map(), hoje) : null;
 
   // O favo ocupa a largura útil do card inteiro — hexágono encaixa sem sobra.
   const larguraDoFavo = width - 48 - 40;
@@ -1071,76 +1241,65 @@ export function SportScreen() {
   return (
     <YStack flex={1}>
       <DetailScreen title="Esporte" refreshControl={refresh}>
-        {execucaoGuiada ? (
-          <YStack marginTop="$md" marginBottom="$xl">
-            <HeroCard
-              eyebrow="em andamento"
-              selected
-              onPress={() => (navigation as any).push('Training')}
-              accessibilityLabel={`Treino em andamento: ${execucaoGuiada.workoutName}. Continuar`}
-            >
-              <Text fontSize={20} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
-                {execucaoGuiada.workoutName}
-              </Text>
-              <XStack alignItems="center" gap="$sm" marginTop="$xs">
-                <Data flex={1}>Continue de onde parou.</Data>
-                <Icon name="arrowRight" size={16} color={colors.textMuted} />
-              </XStack>
-            </HeroCard>
-          </YStack>
-        ) : treinoDeHoje ? (
-          <YStack marginTop="$md" marginBottom="$xl">
-            <HeroCard
-              eyebrow="hoje"
-              onPress={() => (navigation as any).push('Checkin')}
-              accessibilityLabel={`Treino de hoje: ${treinoDeHoje.name}, ${metaDoTreino}. Abrir check-in`}
-            >
-              <Text fontSize={20} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
-                {treinoDeHoje.name}
-              </Text>
-              <XStack alignItems="center" gap="$sm" marginTop="$xs">
-                <Icon
-                  name={modalityMeta(treinoDeHoje.modality).icon as never}
-                  size={14}
-                  color={colors.textMuted}
-                />
-                <Data flex={1}>{metaDoTreino}</Data>
-                <Icon name="arrowRight" size={16} color={colors.textMuted} />
-              </XStack>
-            </HeroCard>
-          </YStack>
+       <YStack gap="$xl" paddingTop="$lg">
+        {/*
+          A régua abre a tela, como em Treino. Aqui ela não seleciona dia — não
+          há leitura por dia nesta tela —, ela RESUME e abre o Progresso, que é
+          onde a semana continua.
+        */}
+        {semanaDeTreino && (semanaDeTreino.previstos > 0 || semanaDeTreino.minutos > 0) ? (
+          <WeekRail
+            semana={semanaDeTreino}
+            selecionado={semanaDeTreino.dias.find((d) => d.ehHoje)?.weekday ?? ''}
+            onSelect={() => (navigation as any).push('Progress')}
+            streak={movimento?.streak}
+          />
         ) : null}
 
-        {semana ? (
-          <YStack marginBottom="$xl">
-            <MovementWeek semana={semana} onPress={() => (navigation as any).push('Progress')} />
-          </YStack>
+        {/*
+          A sessão de HOJE do plano continua sendo a peça de destaque (decisão
+          da fundadora, ago/2026) — mas sem botão próprio: a ação preenchida
+          desta tela é UMA, o botão flutuante. A peça inteira é o alvo, e a
+          seta diz isso.
+        */}
+        {execucaoGuiada ? (
+          <TrainingPanel
+            ativo
+            titulo={execucaoGuiada.workoutName}
+            meta="Em andamento — continue de onde parou."
+            onPress={() => (navigation as any).push('Training')}
+            accessibilityLabel={`Treino em andamento: ${execucaoGuiada.workoutName}. Continuar`}
+          />
+        ) : treinoDeHoje ? (
+          <TrainingPanel
+            titulo={treinoDeHoje.name}
+            icone={modalityMeta(treinoDeHoje.modality).icon as never}
+            meta={metaDoTreino}
+            onPress={() => (navigation as any).push('Checkin')}
+            accessibilityLabel={`Treino de hoje: ${treinoDeHoje.name}, ${metaDoTreino}. Abrir check-in`}
+          />
         ) : null}
 
         {temConstancia ? (
-          <YStack marginBottom="$xl">
-            <Card>
-              <Label marginBottom="$md">constância · minutos por semana</Label>
-              <BarChart
-                bars={constancia.map((p, i) => ({
-                  label: p.label,
-                  value: Math.round(p.value),
-                  // A semana corrente carrega o acento; as passadas são régua.
-                  color: i === constancia.length - 1 ? colors.accent : colors.textMuted,
-                }))}
-                width={larguraDoFavo}
-                height={120}
-                labelEvery={1}
-                id="constancia"
-              />
-            </Card>
-          </YStack>
+          <Card>
+            <Label marginBottom="$md">constância · minutos por semana</Label>
+            <BarChart
+              bars={constancia.map((p, i) => ({
+                label: p.label,
+                value: Math.round(p.value),
+                // A semana corrente carrega o acento; as passadas são régua.
+                color: i === constancia.length - 1 ? colors.accent : colors.textMuted,
+              }))}
+              width={larguraDoFavo}
+              height={120}
+              labelEvery={1}
+              id="constancia"
+            />
+          </Card>
         ) : null}
 
         {/* Os quatro destinos do módulo de treino, os mesmos do plano. */}
-        <YStack marginBottom="$xl">
-          <QuickMenu />
-        </YStack>
+        <QuickMenu />
 
         {aviso ? <Note title="Aviso" body={aviso} /> : null}
 
@@ -1168,8 +1327,8 @@ export function SportScreen() {
               }));
           if (itens.length === 0) return null;
           return (
-            <YStack marginTop="$xl">
-              <Card>
+            <Card>
+              <YStack>
                 <Label marginBottom="$md">suas sessões</Label>
                 {/*
                   No modo demonstração o favo entra ESMAECIDO e com o convite
@@ -1188,18 +1347,19 @@ export function SportScreen() {
                     </Data>
                     <Button
                       title="Começar a registrar"
-                      icon={<Icon name="play" size={16} color={colors.ink} />}
+                      icon={<Icon name="play" size={16} color={darkPalette.ink} />}
                       onPress={() => setEscolhendo(true)}
                     />
                   </YStack>
                 ) : null}
-              </Card>
-            </YStack>
+              </YStack>
+            </Card>
           );
         })()}
 
         {/* Respiro para a última linha da lista nunca ficar sob o botão. */}
-        <YStack height={72} />
+        <YStack height={48} />
+       </YStack>
       </DetailScreen>
 
       <PhotoViewer
@@ -1226,8 +1386,11 @@ export function SportScreen() {
                 gap="$sm"
                 opacity={pressed ? 0.8 : 1}
               >
-                <Icon name="play" size={18} color={colors.ink} />
-                <Text fontSize={15} fontWeight="700" style={{ color: colors.ink }}>
+                {/* Sobre o acento, o ink ESCURO da marca nos dois temas.
+                    Com `colors.ink` o texto virava claro no tema claro — texto
+                    quase branco sobre roxo médio, que não alcança contraste. */}
+                <Icon name="play" size={18} color={darkPalette.ink} />
+                <Text fontSize={15} fontWeight="700" style={{ color: darkPalette.ink }}>
                   Iniciar treino
                 </Text>
               </XStack>
@@ -1480,19 +1643,9 @@ function MapaDePercurso({ points, accent }: { points: GeoPoint[]; accent: string
   );
 }
 
-function Medida({ valor, unidade, rotulo }: { valor: string; unidade: string; rotulo: string }) {
-  return (
-    // Um nó só para o VoiceOver: sem o agrupamento, cada métrica eram três
-    // paradas e o trio custava nove swipes.
-    <YStack alignItems="center" gap={2} accessible accessibilityLabel={`${valor} ${unidade}, ${rotulo}`}>
-      <XStack alignItems="baseline" gap={3}>
-        <MetricSm fontSize={28}>{valor}</MetricSm>
-        <Data>{unidade}</Data>
-      </XStack>
-      <Data fontSize={11}>{rotulo}</Data>
-    </YStack>
-  );
-}
+/* `Medida` virou `Readout`/`ReadoutCluster` em `components/ui`: o trio era
+   remontado à mão em cada estado desta tela, e a ordem já divergia entre a
+   sessão ao vivo e o detalhe do histórico. */
 
 const rotulo = (kind: string) => SPORTS.find((s) => s.kind === kind)?.label ?? kind;
 
