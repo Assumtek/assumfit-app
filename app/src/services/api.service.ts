@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import { umaPorVez } from '../domain/singleFlight';
 
 import type { Reading } from '../domain/types';
 import { clearTokens, loadTokens, saveTokens, type Tokens } from './tokenStorage';
@@ -46,6 +47,20 @@ api.interceptors.request.use((config) => {
 });
 
 /**
+ * Uma renovação em voo, compartilhada por todos os 401 simultâneos.
+ *
+ * O `_retried` abaixo protege contra laço numa requisição; ele nunca protegeu
+ * contra CONCORRÊNCIA. Oito telas pedindo dado ao mesmo tempo pegavam 401
+ * juntas e disparavam oito renovações com o MESMO refresh token — e o servidor
+ * rotaciona o refresh e trata reapresentação como roubo, revogando TODAS as
+ * sessões da pessoa. A primeira renovação passava; as outras sete acionavam a
+ * trava de segurança contra o próprio dono, que ficava deslogado, com o app
+ * lendo cache e sem conseguir enviar nada. Visto em produção (ago/2026): 11
+ * respostas 200 e 13 respostas 401 no mesmo endpoint, no mesmo segundo.
+ */
+const renovacaoCompartilhada = umaPorVez<Tokens>();
+
+/**
  * Renova o access token uma única vez por 401 e repete a requisição.
  * O flag `_retried` evita laço infinito quando o refresh também está inválido.
  */
@@ -57,14 +72,27 @@ api.interceptors.response.use(
       throw error;
     }
     original._retried = true;
+    const refreshToken = tokens.refreshToken;
     try {
-      const { data } = await axios.post<Tokens>(`${BASE_URL}/auth/refresh`, {
-        refreshToken: tokens.refreshToken,
+      /*
+       Quem chega durante uma renovação ESPERA a mesma, em vez de abrir outra.
+       Depois dela, a requisição repete lendo o token novo pelo interceptor de
+       pedido — por isso `api(original)` e não um reenvio com cabeçalho fixado.
+      */
+      const data = await renovacaoCompartilhada(async () => {
+        const r = await axios.post<Tokens>(`${BASE_URL}/auth/refresh`, { refreshToken });
+        await setSession(r.data);
+        return r.data;
       });
-      await setSession(data);
+      if (!data) throw error;
       return api(original);
     } catch {
-      await setSession(null);
+      /*
+       Limpa só se a sessão ainda for a que falhou. Sem esta checagem, um 401 de
+       requisição atrasada apagaria a sessão que a renovação bem-sucedida acabou
+       de gravar — trocando o defeito de lugar em vez de resolvê-lo.
+      */
+      if (tokens?.refreshToken === refreshToken) await setSession(null);
       throw error;
     }
   },
