@@ -106,7 +106,12 @@ export function deepSleepContinuity(segments: SleepSegment[]): number | null {
   return Math.round(consolidacao * fragmentacao * 100);
 }
 
-export function nightFrom(date: string, segments: SleepSegment[], spo2Night: number[] = []): SleepNight {
+export function nightFrom(
+  date: string,
+  segments: SleepSegment[],
+  spo2Night: number[] = [],
+  janela?: { startAt: number; endAt: number },
+): SleepNight {
   const phases: Record<SleepPhase, number> = { rem: 0, deep: 0, light: 0, awake: 0 };
   for (const s of segments) phases[s.phase] += s.minutes;
 
@@ -120,5 +125,33 @@ export function nightFrom(date: string, segments: SleepSegment[], spo2Night: num
     phases,
     segments,
     spo2Night,
+    startAt: janela?.startAt,
+    endAt: janela?.endAt,
   };
+}
+
+/**
+ * A curva de SpO₂ DENTRO da janela da noite.
+ *
+ * A tela de sono desenhava esse gráfico desde sempre e ele nunca teve dado:
+ * `nightFrom` recebe `spo2Night` com padrão `[]`, e o caminho da pulseira nunca
+ * passou o terceiro argumento. O resultado era um gráfico permanentemente vazio
+ * numa seção intitulada "Oxigênio durante a noite" — pior que não ter a seção,
+ * porque parece medição que deu zero.
+ *
+ * A pulseira mede SpO₂ em janelas agendadas ao longo das 24 h; o que interessa
+ * aqui é o recorte da noite. Fatiar é a operação inteira — nada é interpolado,
+ * porque inventar ponto entre duas medições numa tela de saúde é inventar
+ * dessaturação que não houve.
+ */
+export function spo2DaNoite(
+  inicioDaNoite: number,
+  fimDaNoite: number,
+  amostras: { at: number; value: number }[],
+): number[] {
+  if (!(fimDaNoite > inicioDaNoite)) return [];
+  return amostras
+    .filter((a) => a.at >= inicioDaNoite && a.at <= fimDaNoite && a.value > 0)
+    .sort((a, b) => a.at - b.at)
+    .map((a) => a.value);
 }

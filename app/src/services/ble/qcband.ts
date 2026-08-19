@@ -973,7 +973,21 @@ function montarNoite(bruto: { type: number; minutes: number; start: string }[]):
   // A data vem do início do primeiro segmento: quem dormiu dia 28 às 23h e
   // acordou dia 29 reconhece aquela como a noite do dia 28.
   const data = (bruto[0].start ?? '').slice(0, 10) || new Date().toISOString().slice(0, 10);
-  return nightFrom(data, segments);
+
+  /*
+   A JANELA da noite, que a pulseira já entrega e a gente descartava.
+
+   Sem ela não havia como recortar a série de SpO₂ do dia inteiro para o trecho
+   dormido — e era por isso que o gráfico "Oxigênio durante a noite" nascia
+   vazio e assim ficava.
+  */
+  const inicio = instanteDoFirmware(bruto[0].start ?? '');
+  const janela =
+    inicio > 0
+      ? { startAt: inicio, endAt: inicio + bruto.reduce((t, x) => t + x.minutes, 0) * 60_000 }
+      : undefined;
+
+  return nightFrom(data, segments, [], janela);
 }
 
 /**

@@ -138,6 +138,26 @@ type Derivado = {
   hrHistory?: Sample[];
 };
 
+
+/**
+ * Preenche a curva de oxigênio DA NOITE, quando as duas metades existem.
+ *
+ * A noite vem da pulseira sem SpO₂ — a memória de sono e a de oxigênio são
+ * consultas diferentes —, e o gráfico "Oxigênio durante a noite" nascia vazio
+ * por isso. Aqui as duas se encontram: a noite traz a janela, a série traz as
+ * amostras do dia, e o recorte é o que a tela desenha.
+ *
+ * Devolve a noite INTOCADA quando falta qualquer uma das partes: gráfico vazio
+ * é melhor que gráfico com o dia inteiro fingindo ser a noite.
+ */
+function comOxigenioDaNoite(
+  noite: SleepNight | null,
+  amostras: { at: number; value: number }[],
+): SleepNight | null {
+  if (!noite?.startAt || !noite.endAt || amostras.length === 0) return noite;
+  return { ...noite, spo2Night: spo2DaNoite(noite.startAt, noite.endAt, amostras) };
+}
+
 async function lerDerivado(): Promise<Derivado | null> {
   try {
     const f = new File(Paths.document, ARQUIVO_DERIVADO);
@@ -214,6 +234,7 @@ import {
   setupAndroidChannel,
   type MetricaDeAtencao,
 } from '../services/notifications.service';
+import { spo2DaNoite } from '../domain/sleep';
 import { syncQueue } from '../services/sync.service';
 import { rateHeartRate, ratePressure, rateSpo2 } from '../domain/ratings';
 import { textoDaFalha } from '../domain/bandErrors';
@@ -467,6 +488,13 @@ async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
     hrHistory: fc,
     hrvHistory: variabilidade,
     spo2History: oxigenio,
+    /*
+     A noite quase sempre chega ANTES da série de oxigênio — são consultas
+     diferentes ao canal serial, e a do sono roda primeiro. Recompor aqui é o
+     que faz o gráfico da noite se preencher na mesma sincronização, em vez de
+     só na próxima abertura do app.
+    */
+    sleep: comOxigenioDaNoite(get().sleep, oxigenio),
   });
 
   persistirDerivado(get());
@@ -669,7 +697,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
         ? await comTeto(fetchLastNight(), TETO_CONSULTA_MS, 'sono do app Saúde').catch(() => null)
         : null);
     if (noite) {
-      set({ sleep: noite });
+      set({ sleep: comOxigenioDaNoite(noite, get().spo2History) });
       api.pushSleepNight(noite);
     }
 
@@ -911,7 +939,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
       `[health] noite encontrada: ${noite ? `${noite.totalMin} min, score ${noite.score}` : 'nenhuma'}`,
     );
     if (noite) {
-      set({ sleep: noite });
+      set({ sleep: comOxigenioDaNoite(noite, get().spo2History) });
       api.pushSleepNight(noite);
     }
     // `true` significa "o diálogo foi apresentado", não "autorizado": o iOS não

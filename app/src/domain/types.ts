@@ -70,6 +70,16 @@ export type SleepNight = {
   segments: SleepSegment[];
   /** SpO₂ amostrado durante a noite, para detectar dessaturação. */
   spo2Night: number[];
+  /**
+   * Início e fim da noite, em epoch.
+   *
+   * A noite não carregava a própria janela, e sem ela não havia como recortar a
+   * série de SpO₂ das 24 h para o trecho dormido — que é o motivo de o gráfico
+   * "Oxigênio durante a noite" ter nascido e permanecido vazio. Opcionais
+   * porque noite vinda do HealthKit ou de arquivo antigo não os tem.
+   */
+  startAt?: number;
+  endAt?: number;
 };
 
 /** Par sistólica/diastólica de uma aferição. */

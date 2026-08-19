@@ -104,10 +104,20 @@ async function setSession(next: Tokens | null) {
   else await clearTokens();
 }
 
-/** Recarrega a sessão do Keychain. Chamado uma vez, na subida do app. */
-export async function restoreSession(): Promise<boolean> {
-  tokens = await loadTokens();
-  return tokens !== null;
+/**
+ * Recarrega a sessão do Keychain. Chamado na subida do app.
+ *
+ * Devolve `null` quando o Keychain não pôde ser lido — que NÃO é o mesmo que
+ * não haver sessão. Ver `loadTokens`: com o aparelho bloqueado a leitura falha,
+ * e é justamente quando o app sobe sozinho por tarefa de fundo.
+ */
+export async function restoreSession(): Promise<boolean | null> {
+  try {
+    tokens = await loadTokens();
+    return tokens !== null;
+  } catch {
+    return null;
+  }
 }
 
 export const isAuthenticated = () => tokens !== null;

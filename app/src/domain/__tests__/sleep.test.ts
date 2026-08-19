@@ -1,4 +1,4 @@
-import { deepSleepContinuity, nightFrom, sleepScore } from '../sleep';
+import { deepSleepContinuity, nightFrom, sleepScore, spo2DaNoite } from '../sleep';
 import type { SleepSegment } from '../types';
 
 /**
@@ -110,5 +110,44 @@ describe('deepSleepContinuity', () => {
       { phase: 'awake', minutes: 10 },
     ]);
     expect(comRuido).toBe(100);
+  });
+});
+
+/**
+ * O gráfico de oxigênio da noite nunca teve dado.
+ *
+ * `nightFrom` recebe `spo2Night` com padrão vazio e o caminho da pulseira nunca
+ * passou o argumento — a seção "Oxigênio durante a noite" desenhava um gráfico
+ * permanentemente vazio. Relatado em ago/2026.
+ */
+describe('spo2DaNoite', () => {
+  const H = 3_600_000;
+  const inicio = 1_700_000_000_000;
+  const fim = inicio + 8 * H;
+
+  const amostra = (offsetH: number, value: number) => ({ at: inicio + offsetH * H, value });
+
+  it('fica só com o que caiu DENTRO da noite', () => {
+    const todas = [
+      amostra(-2, 97), // antes de deitar
+      amostra(1, 96),
+      amostra(4, 93),
+      amostra(7, 95),
+      amostra(10, 98), // já acordada
+    ];
+    expect(spo2DaNoite(inicio, fim, todas)).toEqual([96, 93, 95]);
+  });
+
+  it('ordena pelo instante, não pela ordem de chegada', () => {
+    expect(spo2DaNoite(inicio, fim, [amostra(5, 94), amostra(2, 97)])).toEqual([97, 94]);
+  });
+
+  it('zero não é medição — a pulseira preenche a janela antes de medir', () => {
+    expect(spo2DaNoite(inicio, fim, [amostra(1, 0), amostra(2, 96)])).toEqual([96]);
+  });
+
+  it('janela inválida ou sem amostra devolve vazio, e a tela mostra ausência', () => {
+    expect(spo2DaNoite(fim, inicio, [amostra(1, 96)])).toEqual([]);
+    expect(spo2DaNoite(inicio, fim, [])).toEqual([]);
   });
 });

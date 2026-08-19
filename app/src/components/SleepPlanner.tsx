@@ -54,6 +54,17 @@ export function SleepPlanner({ horaDeDormirHabitual }: { horaDeDormirHabitual?: 
 
   const opcoes = modo === 'acordar-as' ? bedOptions(acordarMin) : wakeOptions(agoraMin);
 
+  /**
+   * O ciclo que a pessoa escolheu. `null` = a recomendação, que é a primeira.
+   *
+   * As três opções já apareciam na tela, mas o despertador usava a primeira
+   * fixa — quem queria um ciclo a mais via a alternativa e não conseguia
+   * pegá-la. Card que mostra escolha e não aceita toque promete algo que não
+   * existe.
+   */
+  const [escolhida, setEscolhida] = useState<number | null>(null);
+  const opcaoEscolhida = opcoes.find((o) => o.cycles === escolhida) ?? opcoes[0];
+
   return (
     <YStack gap="$md" marginTop="$xl">
       <SectionTitle>Ciclos de sono</SectionTitle>
@@ -108,14 +119,25 @@ export function SleepPlanner({ horaDeDormirHabitual }: { horaDeDormirHabitual?: 
         </Data>
       )}
 
+      {/*
+        As três opções são ESCOLHÍVEIS.
+
+        Elas já eram desenhadas, mas o despertador usava `opcoes[0]` fixo — quem
+        queria dormir um ciclo a mais via a opção na tela e não tinha como
+        pegá-la. Card que mostra alternativa e não aceita toque é pior que não
+        mostrar: promete uma escolha que não existe.
+
+        A primeira vem marcada por ser a recomendação, não por ser a única.
+      */}
       <YStack gap="$sm">
-        {opcoes.map((o, i) => (
+        {opcoes.map((o) => (
           <OpcaoDeCiclo
             key={o.cycles}
             opcao={o}
-            destaque={i === 0}
+            destaque={o.cycles === (escolhida ?? opcoes[0]?.cycles)}
             modo={modo}
             accent={colors.accent}
+            onPress={() => setEscolhida(o.cycles)}
           />
         ))}
       </YStack>
@@ -131,7 +153,7 @@ export function SleepPlanner({ horaDeDormirHabitual }: { horaDeDormirHabitual?: 
         title="Definir despertador"
         variant="secondary"
         icon={<Icon name="clock" size={16} color={colors.text} />}
-        onPress={() => void definirAlarme(opcoes[0], modo)}
+        onPress={() => void definirAlarme(opcaoEscolhida, modo)}
       />
 
       <Data>
@@ -147,14 +169,20 @@ function OpcaoDeCiclo({
   destaque,
   modo,
   accent,
+  onPress,
 }: {
   opcao: SleepOption;
   destaque: boolean;
   modo: Modo;
   accent: string;
+  onPress: () => void;
 }) {
   return (
-    <Card selected={destaque}>
+    <Card
+      selected={destaque}
+      onPress={onPress}
+      accessibilityLabel={`${cycleLabel(opcao.cycles)}, ${opcao.cycles} ciclos, ${formatHours(opcao.hours)} de sono`}
+    >
       <XStack alignItems="center" gap="$md">
         <YStack flex={1} gap={2}>
           {/* A avaliação em linguagem humana no destaque; o número técnico

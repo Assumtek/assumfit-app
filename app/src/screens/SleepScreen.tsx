@@ -123,6 +123,15 @@ export function SleepScreen() {
         ))}
       </Section>
 
+      {/*
+        A seção só existe quando HÁ medição.
+
+        Ela desenhava um gráfico permanentemente vazio: a noite vem da pulseira
+        sem SpO₂, e ninguém preenchia o campo. Área em branco sob o título
+        "Oxigênio durante a noite" não lê como ausência — lê como oxigênio que
+        deu zero, que numa tela de saúde é a leitura mais alarmante possível.
+      */}
+      {sleep.spo2Night.length >= 2 ? (
       <Section label="Oxigênio durante a noite">
         <LineChart
           data={sleep.spo2Night}
@@ -134,6 +143,16 @@ export function SleepScreen() {
           id="spo2night"
         />
       </Section>
+      ) : (
+        <Section label="Oxigênio durante a noite">
+          <Row last>
+            <Body flex={1}>
+              Sem medição de oxigênio nesta noite. A pulseira mede em janelas
+              agendadas — se o monitoramento estiver desligado, não há o que mostrar.
+            </Body>
+          </Row>
+        </Section>
+      )}
 
       <SleepPlanner horaDeDormirHabitual={bedtime} />
     </DetailScreen>

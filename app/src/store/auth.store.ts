@@ -10,7 +10,7 @@ type AuthState = {
   loading: boolean;
   error: string | null;
 
-  restore: () => Promise<void>;
+  restore: (tentativa?: number) => Promise<void>;
   signIn: (email: string, password: string) => Promise<boolean>;
   signUp: (input: api.RegisterInput) => Promise<boolean>;
   signOut: () => Promise<void>;
@@ -34,13 +34,45 @@ function message(err: unknown): string {
   return serverMessage ?? 'Não foi possível concluir';
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   status: 'unknown',
   loading: false,
   error: null,
 
-  restore: async () => {
+  /*
+   `null` significa Keychain indisponível, não ausência de sessão.
+
+   A chave é gravada como acessível só com o aparelho DESBLOQUEADO, e o app sobe
+   sozinho com ele bloqueado — tarefa de fundo do rastreio, toque em
+   notificação. Tratar essa falha como "não está logado" derrubava a sessão de
+   quem nunca saiu, e era uma das causas do "às vezes desloga" (ago/2026).
+
+   Ficando em `unknown`, a navegação segue na tela de carregamento e a próxima
+   tentativa — com o aparelho já desbloqueado — resolve.
+  */
+  restore: async (tentativa = 0) => {
     const ok = await api.restoreSession();
+
+    if (ok === null) {
+      /*
+       Keychain indisponível — quase sempre aparelho BLOQUEADO, e some assim que
+       ele for desbloqueado. Esperar resolve; desistir na hora derruba a sessão
+       de quem nunca saiu.
+
+       Mas não pode esperar para sempre: `unknown` mantém a tela de
+       carregamento, e app preso no spinner é pior que app pedindo login. Cinco
+       tentativas em intervalos crescentes cobrem o desbloqueio; depois disso,
+       trata como sem sessão.
+      */
+      if (tentativa < 5) {
+        set({ status: 'unknown' });
+        setTimeout(() => void get().restore(tentativa + 1), 800 * (tentativa + 1));
+        return;
+      }
+      set({ status: 'signedOut' });
+      return;
+    }
+
     set({ status: ok ? 'signedIn' : 'signedOut' });
     if (ok) void useUserStore.getState().load();
   },

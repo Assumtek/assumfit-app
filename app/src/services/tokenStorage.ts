@@ -77,12 +77,41 @@ export async function saveTokens(tokens: Tokens): Promise<void> {
   }
 }
 
+/** Keychain fora do ar não é o mesmo que ausência de sessão. Ver `loadTokens`. */
+export class KeychainReadError extends Error {
+  constructor(cause: unknown) {
+    super('Keychain indisponível para ler a sessão');
+    this.name = 'KeychainReadError';
+    this.cause = cause;
+  }
+}
+
+/**
+ * A sessão guardada, ou `null` quando REALMENTE não há nenhuma.
+ *
+ * A versão anterior devolvia `null` também quando o Keychain estava
+ * indisponível — e as duas coisas são diferentes de um jeito que a pessoa
+ * sente. A chave é gravada como `WHEN_UNLOCKED_THIS_DEVICE_ONLY`: com o
+ * aparelho BLOQUEADO a leitura falha, e é justamente aí que o app costuma
+ * subir sozinho (tarefa de fundo do rastreio de esporte, toque em notificação).
+ * Cair em `null` ali fazia o app concluir que ninguém estava logado e
+ * derrubar a sessão de quem nunca saiu.
+ *
+ * Agora a falha ESTOURA, e quem chama decide: sem sessão vai para o login;
+ * Keychain fora do ar mantém o estado como desconhecido e tenta de novo.
+ */
 export async function loadTokens(): Promise<Tokens | null> {
+  let raw: string | null;
   try {
-    const raw = secureStore ? await secureStore.getItemAsync(KEY) : devFallback;
-    return raw ? (JSON.parse(raw) as Tokens) : null;
+    raw = secureStore ? await secureStore.getItemAsync(KEY) : devFallback;
+  } catch (err) {
+    throw new KeychainReadError(err);
+  }
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as Tokens;
   } catch {
-    // Item corrompido ou Keychain indisponível: trata como sessão ausente.
+    // Item corrompido é sessão perdida de verdade — aí `null` é a resposta certa.
     return null;
   }
 }
