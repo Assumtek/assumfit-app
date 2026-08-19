@@ -11,6 +11,7 @@ import { sportForModality } from '../../domain/sport';
 import { DAY_LABEL, workoutMeta } from '../../domain/workout';
 import { fetchWorkout, type PlanDay } from '../../services/api.service';
 import { useWorkoutStore } from '../../store/workout.store';
+import { darkPalette } from '../../theme/palette';
 import { useTheme } from '../../theme/ThemeProvider';
 
 /**
@@ -269,24 +270,43 @@ export function CheckinScreen() {
                 </Pill>
               ) : null}
             </XStack>
-            <Button
-              title={busy ? 'Preparando…' : 'Iniciar treino'}
-              icon={<Icon name="play" size={16} color={colors.ink} />}
-              loading={busy}
-              onPress={handleStart}
-            />
             {/*
-              Coexistência (ago/2026): dia de esporte do plano tem DOIS jeitos
-              válidos de acontecer — o treino guiado (blocos na tela) ou o
-              cronômetro de esporte, que mede GPS, caloria e batimento e
-              CONCLUI o dia do plano junto, vinculado. Um ato, um registro.
+              Dia de esporte do plano tem DOIS jeitos válidos de acontecer — o
+              treino guiado (blocos na tela) ou o cronômetro, que mede GPS,
+              caloria e batimento e CONCLUI o dia do plano junto. Um ato, um
+              registro.
+
+              QUAL DELES É O PREENCHIDO decide o que a maioria vai fazer, e essa
+              escolha estava errada: num dia de quadra, o guiado não mede nada —
+              o treino é feito de blocos por tempo, e não há série para marcar.
+              Em produção (ago/2026) uma sessão de tênis foi registrada com 65
+              segundos porque a pessoa seguiu o botão que a tela destacou.
+
+              Então a ordem se inverte no dia de esporte: o cronômetro vira a
+              ação principal, o guiado desce a secundário. Nos demais dias nada
+              muda — o guiado é quem mede.
             */}
             {(() => {
               const esporte = sportForModality(selected.workout.modality);
-              return esporte ? (
+              const guiado = (
                 <Button
+                  key="guiado"
+                  title={busy ? 'Preparando…' : esporte ? 'Abrir o treino guiado' : 'Iniciar treino'}
+                  variant={esporte ? 'secondary' : 'primary'}
+                  icon={
+                    esporte ? undefined : <Icon name="play" size={16} color={darkPalette.ink} />
+                  }
+                  loading={busy}
+                  onPress={handleStart}
+                />
+              );
+              if (!esporte) return guiado;
+
+              const cronometro = (
+                <Button
+                  key="cronometro"
                   title={esporte.gps ? 'Registrar com GPS' : 'Registrar no cronômetro'}
-                  variant="secondary"
+                  icon={<Icon name="play" size={16} color={darkPalette.ink} />}
                   onPress={() =>
                     (navigation as any).navigate('Sport', {
                       vinculo: {
@@ -297,7 +317,8 @@ export function CheckinScreen() {
                     })
                   }
                 />
-              ) : null;
+              );
+              return [cronometro, guiado];
             })()}
           </YStack>
         ) : null}

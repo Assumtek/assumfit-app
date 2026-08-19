@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useMemo } from 'react';
 
@@ -22,6 +23,7 @@ import { PHASE_COLOR, PHASE_NAME, type PhaseType } from './PhaseBar';
  */
 export function ChecklistScreen() {
   const { colors } = useTheme();
+  const navigation = useNavigation<any>();
   const workout = useWorkoutStore((s) => s.workout);
   const progress = useWorkoutStore((s) => s.progress);
 
@@ -102,7 +104,23 @@ export function ChecklistScreen() {
               {fase.exercicios.map(({ exercise, feitas: f, total: t }) => {
                 const pronto = t > 0 && f === t;
                 return (
-                  <Card key={exercise.id} selected={pronto}>
+                  /*
+                    Tocar leva ATÉ o exercício, na tela de execução.
+
+                    A lista era só leitura, e a pessoa tentava tocar para trocar
+                    ou concluir — relatado em ago/2026. Repetir aqui os controles
+                    da execução criaria dois lugares para a mesma coisa, que
+                    divergem na primeira mudança; o checklist é o MAPA, e o que
+                    falta a um mapa é poder ir ao ponto.
+                  */
+                  <Card
+                    key={exercise.id}
+                    selected={pronto}
+                    accessibilityLabel={`${exercise.name}, ${f} de ${t} séries. Abrir na execução`}
+                    onPress={() =>
+                      navigation.navigate('Training', { exerciseId: exercise.id })
+                    }
+                  >
                     <XStack alignItems="center" gap="$md">
                       <YStack flex={1} minWidth={0} gap={2}>
                         <Body color="$foreground" numberOfLines={1}>
@@ -118,6 +136,9 @@ export function ChecklistScreen() {
                         size={16}
                         color={pronto ? colors.accent : colors.hairlineStrong}
                       />
+                      {/* A seta diz que a linha é alvo — sem ela, o toque é uma
+                          descoberta por tentativa. */}
+                      <Icon name="arrowRight" size={15} color={colors.textMuted} strokeWidth={1.5} />
                     </XStack>
                   </Card>
                 );

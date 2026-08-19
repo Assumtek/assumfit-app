@@ -11,7 +11,6 @@ import { Body, Button, Data, Headline } from '../../components/ui';
 import { QuickMenu } from './QuickMenu';
 import { movementMinutes } from '../../domain/movement';
 import { montarSemanaDeTreino, type DiaDeTreino } from '../../domain/trainingWeek';
-import { sportForModality } from '../../domain/sport';
 import {
   DAY_LABEL,
   isSportDay,
@@ -150,9 +149,6 @@ export function PlanScreen() {
             onVoltarParaHoje={() => setEscolhido(null)}
             onCheckin={() => navigation.push('Checkin')}
             onContinuar={() => navigation.push('Training')}
-            onCronometro={(kind, workoutId, planDayId) =>
-              navigation.navigate('Sport', { vinculo: { kind, workoutId, planDayId } })
-            }
           />
         ) : null}
 
@@ -181,14 +177,12 @@ function Leitura({
   onVoltarParaHoje,
   onCheckin,
   onContinuar,
-  onCronometro,
 }: {
   dia: DiaDeTreino;
   execucao: { workoutName: string } | null;
   onVoltarParaHoje: () => void;
   onCheckin: () => void;
   onContinuar: () => void;
-  onCronometro: (kind: string, workoutId: string, planDayId: string) => void;
 }) {
   const registrado = dia.cumprido > 0 ? `${dia.cumprido} min registrados` : null;
   const voltar = dia.ehHoje
@@ -256,40 +250,25 @@ function Leitura({
     .join(' · ');
 
   /*
-   DIA DE ESPORTE ABRE O CRONÔMETRO, não o treino guiado.
+   O caminho é sempre o CHECK-IN, inclusive em dia de esporte.
 
-   A ação principal levava ao check-in, cujo botão preenchido leva ao guiado — e
-   o guiado não mede nada num dia de quadra, que é feito de blocos por tempo.
-   Foi esse percurso que gravou um treino de 65 segundos como 100% completo em
-   produção (ago/2026): a pessoa seguiu o caminho que a tela destacou.
+   Houve uma versão que mandava o dia de esporte direto ao cronômetro, para
+   fugir do percurso que gravou um treino de 65 segundos como 100% em produção.
+   Resolvia o defeito e criava outro: pulava uma tela que tem função — é nela
+   que se escolhe o treino do dia, se lê o preparo e se decide entre os dois
+   jeitos de registrar.
 
-   O cronômetro é o único que mede distância, batimento e caloria, e conclui o
-   dia do plano junto. O guiado continua disponível, um degrau abaixo.
+   A correção pertence um nível abaixo, e está lá: no check-in, o dia de esporte
+   destaca o CRONÔMETRO e desce o guiado a secundário. Quem escolhe continua
+   vendo as duas opções; o que mudou é qual delas a tela recomenda.
   */
-  const doEsporte = esporte ? sportForModality(treino.modality) : null;
-  const principal =
-    dia.ehHoje && doEsporte && dia.planDayId
-      ? {
-          title: doEsporte.gps ? 'Registrar com GPS' : 'Registrar no cronômetro',
-          onPress: () => onCronometro(doEsporte.kind, treino.id, dia.planDayId!),
-          icon: 'play' as const,
-        }
-      : dia.ehHoje
-        ? { title: 'Começar treino', onPress: onCheckin, icon: 'play' as const }
-        : null;
-
-  const alternativa =
-    dia.ehHoje && doEsporte && dia.planDayId
-      ? { title: 'Abrir o treino guiado', onPress: onCheckin, variant: 'secondary' as const }
-      : voltar;
-
   return (
     <TrainingPanel
       titulo={treino.name}
       icone={modalityMeta(treino.modality).icon as never}
       meta={meta}
-      acao={principal}
-      secundaria={alternativa}
+      acao={dia.ehHoje ? { title: 'Começar treino', onPress: onCheckin, icon: 'play' } : null}
+      secundaria={voltar}
     />
   );
 }

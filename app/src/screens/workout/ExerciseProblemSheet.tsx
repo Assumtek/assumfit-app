@@ -30,16 +30,25 @@ type Motivo = {
 };
 
 const MOTIVOS: Motivo[] = [
+  /*
+   Os dois primeiros levam à MESMA folha de troca, e isso é correto: a saída é a
+   mesma, o motivo é que difere — e o motivo é o que o plano precisa saber para
+   aprender. O que estava errado era a tela não dizer isso: três linhas com seta
+   à direita, duas indo ao mesmo lugar, leem como repetição ou defeito.
+
+   Agora o detalhe distingue o que cada uma faz de diferente na escolha do
+   substituto, em vez de repetir "troca por um equivalente" duas vezes.
+  */
   {
     icone: 'dumbbell',
     titulo: 'Aparelho ocupado ou indisponível',
-    detalhe: 'Troca por um equivalente, só para hoje.',
+    detalhe: 'Sugere quem trabalha o mesmo músculo com outro equipamento.',
     acao: 'trocar',
   },
   {
     icone: 'help',
     titulo: 'Não sei executar',
-    detalhe: 'Troca por uma alternativa mais direta.',
+    detalhe: 'Sugere a versão mais simples do mesmo movimento.',
     acao: 'trocar',
   },
   {

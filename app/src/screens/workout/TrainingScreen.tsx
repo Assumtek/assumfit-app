@@ -1,8 +1,8 @@
-import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useMemo, useState } from 'react';
-import { AppState, Pressable, ScrollView } from 'react-native';
+import { AppState, KeyboardAvoidingView, Platform, Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -62,6 +62,7 @@ export function TrainingScreen() {
   const restEndsAt = useWorkoutStore((s) => s.restEndsAt);
   const setProgress = useWorkoutStore((s) => s.setProgress);
   const completeSet = useWorkoutStore((s) => s.completeSet);
+  const swapExercise = useWorkoutStore((s) => s.swapExercise);
   const startRest = useWorkoutStore((s) => s.startRest);
   const clearRest = useWorkoutStore((s) => s.clearRest);
   const refresh = useWorkoutStore((s) => s.refresh);
@@ -71,7 +72,17 @@ export function TrainingScreen() {
   const syncTimer = useWorkoutStore((s) => s.syncTimer);
   const cancel = useWorkoutStore((s) => s.cancel);
 
+  const route = useRoute();
   const [index, setIndex] = useState(0);
+
+  /*
+   O exercício que o checklist pediu para abrir.
+
+   A lista do checklist era só leitura — tocar não fazia nada, e era o que a
+   pessoa tentava para trocar ou concluir. Agora ela navega para cá com o id, e
+   a execução pula direto para ele. Sem isso, o toque abriria sempre o primeiro.
+  */
+  const pedido = (route.params as { exerciseId?: string } | undefined)?.exerciseId;
   const [swapOpen, setSwapOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [problemOpen, setProblemOpen] = useState(false);
@@ -258,6 +269,13 @@ export function TrainingScreen() {
         ? { nextLabel: 'A seguir', nextName: flat[index + 1].exercise.name }
         : { nextLabel: null, nextName: null };
 
+  useEffect(() => {
+    if (!pedido || !workout) return;
+    const todos = workout.phases.flatMap((f) => f.exercises);
+    const alvo = todos.findIndex((e) => e.id === pedido);
+    if (alvo >= 0) setIndex(alvo);
+  }, [pedido, workout]);
+
   const handleToggle = async (setIndex: number) => {
     const wasCompleted = sets[setIndex]?.completed ?? false;
     await completeSet(exercise.id, setIndex);
@@ -362,6 +380,22 @@ export function TrainingScreen() {
 
       <YStack height={1} backgroundColor="$border" marginTop="$md" />
 
+      {/*
+        O TECLADO cobria o campo de carga.
+
+        A tela tinha `keyboardShouldPersistTaps` — que resolve o toque atravessar
+        o teclado — e nada que EMPURRASSE o conteúdo. Registrar carga é digitar,
+        e o campo fica na parte de baixo da série: o teclado subia por cima
+        justamente do que se estava preenchendo. Relatado em ago/2026.
+
+        `padding` no iOS e `height` no Android é o par que o React Native pede;
+        o deslocamento é zero porque a tela já começa colada no topo.
+      */}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
+      >
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 20,
@@ -456,6 +490,7 @@ export function TrainingScreen() {
         </>
         )}
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/*
         O rodapé de ações vale para TODO exercício (decisão da fundadora,
@@ -517,7 +552,16 @@ export function TrainingScreen() {
       ) : null}
 
       {swapOpen ? (
-        <ExerciseSwapSheet exercise={exercise} onClose={() => setSwapOpen(false)} />
+        <ExerciseSwapSheet
+          exercise={exercise}
+          onClose={() => setSwapOpen(false)}
+          /*
+           `onPick` era opcional e ninguém passava: a pessoa escolhia o
+           substituto, a folha fechava e o treino seguia com o mesmo exercício.
+           A troca vale só para esta sessão — o plano não muda.
+          */
+          onPick={(substituto) => swapExercise(exercise.id, substituto)}
+        />
       ) : null}
 
       <ExerciseProblemSheet

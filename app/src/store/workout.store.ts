@@ -84,6 +84,24 @@ type WorkoutState = {
   plan: TrainingPlan | null;
   execution: Execution | null;
   workout: WorkoutDetail | null;
+  /**
+   * Troca um exercício por outro, SÓ nesta sessão.
+   *
+   * A folha de troca existia e nunca fez nada: ela recebia `onPick` opcional e
+   * quem a abria não passava o callback — a pessoa escolhia o substituto, a
+   * folha fechava e o treino seguia igual. Relatado em ago/2026.
+   *
+   * A troca é local de propósito: não reescreve o plano. Quem encontrou a
+   * máquina ocupada precisa de uma alternativa AGORA, e deixar a academia
+   * decidir as próximas quatro semanas seria o efeito de mexer na prescrição.
+   * Para mudar o plano existe o ajuste conversacional, com as travas clínicas.
+   *
+   * As séries prescritas seguem as mesmas — o que muda é o movimento. E o
+   * `exerciseId` muda junto com o nome: é por ele que as séries concluídas se
+   * ligam ao exercício, e trocar só o rótulo faria o registro apontar para o
+   * movimento errado.
+   */
+  swapExercise: (workoutExerciseId: string, replacement: { id: string; name: string }) => void;
   loading: boolean;
 
   /** Progresso local por exercício. Sobrevive a fechar a tela. */
@@ -166,6 +184,24 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   plan: null,
   execution: null,
   workout: null,
+
+  swapExercise: (workoutExerciseId, replacement) => {
+    const atual = get().workout;
+    if (!atual) return;
+    set({
+      workout: {
+        ...atual,
+        phases: atual.phases.map((phase) => ({
+          ...phase,
+          exercises: phase.exercises.map((ex) =>
+            ex.id === workoutExerciseId
+              ? { ...ex, exerciseId: replacement.id, name: replacement.name }
+              : ex,
+          ),
+        })),
+      },
+    });
+  },
   loading: false,
   progress: {},
   restEndsAt: null,
