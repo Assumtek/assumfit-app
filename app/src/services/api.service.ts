@@ -808,7 +808,28 @@ export type ChatReply = {
   blockReason: string | null;
   /** Quantas mudanças o agente propôs. O diff em si fica no servidor. */
   operationCount: number;
+  /**
+   * A proposta guardada, para o botão de confirmar aplicar.
+   *
+   * `null` quando não há o que confirmar — recusa, encaminhamento ou pergunta
+   * conversacional. O diff NUNCA vem para o app: mandar operações daqui de volta
+   * ao servidor abriria caminho para escrever no plano por fora das travas
+   * clínicas, então o que viaja é só o identificador do que a pessoa leu.
+   */
+  adjustmentId: string | null;
 };
+
+export type ApplyAdjustmentReply = {
+  applied: number;
+  /** Frase pronta quando a proposta envelheceu. `null` em caso de sucesso. */
+  failReason: string | null;
+};
+
+/** Confirma a proposta do chat e a aplica no plano. */
+export async function applyAdjustment(adjustmentId: string): Promise<ApplyAdjustmentReply> {
+  const { data } = await api.post<ApplyAdjustmentReply>('/workout/chat/apply', { adjustmentId });
+  return data;
+}
 
 export async function chatWithAgent(message: string, history: ChatTurn[]): Promise<ChatReply> {
   const { data } = await api.post<ChatReply>('/workout/chat', { message, history });

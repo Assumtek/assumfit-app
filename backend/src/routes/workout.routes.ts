@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { AuthedRequest, requireAuth } from '../middleware/auth';
 import { asyncRoute } from '../middleware/error';
 import { badRequest, forbidden, notFound } from '../lib/errors';
-import { chatWithAgent } from '../services/workout/chat';
+import { applyAdjustment, chatWithAgent } from '../services/workout/chat';
 import {
   answerConversation,
   editAnswer,
@@ -390,6 +390,25 @@ workoutRoutes.get(
  * saúde, com retenção e consentimento próprios, para resolver algo que o
  * aparelho já resolve.
  */
+/**
+ * Confirma uma proposta do chat e a aplica no plano.
+ *
+ * Separado do `/chat` de propósito: propor é uma coisa, mudar a prescrição de
+ * alguém é outra, e a segunda precisa de um toque explícito. O corpo carrega só
+ * o id — o diff nunca sai do servidor.
+ */
+workoutRoutes.post(
+  '/chat/apply',
+  asyncRoute<AuthedRequest>(async (req, res) => {
+    const { adjustmentId } = z
+      .object({ adjustmentId: z.string().uuid() })
+      .parse(req.body ?? {});
+
+    const result = await applyAdjustment(req.userId, adjustmentId);
+    res.json(result);
+  }),
+);
+
 workoutRoutes.post(
   '/chat',
   asyncRoute<AuthedRequest>(async (req, res) => {
@@ -413,10 +432,12 @@ workoutRoutes.post(
       reply: result.reply,
       blocked: result.blocked,
       blockReason: result.blockReason,
-      // As operações NÃO vão para o app. Ele não aplica mudança no plano — quem
-      // aplica é o servidor, e enquanto essa parte não existe é melhor a tela
-      // não receber um diff que não sabe usar.
+      // As operações continuam NÃO indo para o app: o diff mora no servidor, e
+      // o app devolve só o id ao confirmar. Aceitar operações do cliente seria
+      // deixar qualquer requisição escrever no plano por fora das travas
+      // clínicas — que são a razão de este módulo existir.
       operationCount: result.operations.length,
+      adjustmentId: result.adjustmentId,
     });
   }),
 );

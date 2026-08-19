@@ -32,9 +32,16 @@ ADJUST_PROMPT = ROOT / "prompts" / "adjust.md"
 
 _CACHE_CONTROL = {"type": "ephemeral"}
 
-#: Máximo de operações por resposta. Está no prompt e é reforçado aqui: uma
-#: proposta de quinze mudanças não é ajuste, é plano novo por outro caminho.
-MAX_OPERATIONS = 5
+#: Máximo de operações por resposta.
+#:
+#: Eram 5, com o argumento de que "quinze mudanças não é ajuste, é plano novo por
+#: outro caminho". O argumento caiu: o produto passou a permitir QUALQUER
+#: alteração no plano pelo chat (decisão da fundadora, ago/2026), e reorganizar
+#: uma semana — abrir um dia, distribuir exercícios nele, mover os outros — passa
+#: de cinco com facilidade. O teto continua existindo porque resposta sem teto é
+#: como uma alucinação vira vinte escritas no banco de uma vez; 20 cobre a
+#: reestruturação real e ainda é auditável numa tela.
+MAX_OPERATIONS = 20
 
 
 # --------------------------------------------------------------------------
@@ -100,8 +107,109 @@ class AddExerciseOp(BaseModel):
     sets: list[SetPrescription] = Field(min_length=1)
 
 
+class MoveWorkoutOp(BaseModel):
+    """Move o treino de um dia para outro, trocando com o que estiver lá.
+
+    Existe porque "meu jogo passou de terça para quarta" é o pedido mais comum
+    que o chat NÃO atendia: ele mexe na estrutura da semana, então caía na regra
+    de "refaça a anamnese" — e refazer a anamnese inteira para corrigir um dia
+    é desproporcional. Visto em produção (ago/2026): a pessoa aceitou a oferta
+    de reorganizar, e recebeu de volta a instrução de recomeçar do zero.
+
+    É a única operação estrutural permitida, e ela é segura por natureza: não
+    cria prescrição, não muda volume, não escolhe exercício. Só troca QUANDO —
+    os mesmos treinos, em dias diferentes.
+    """
+
+    op: Literal["MOVE_WORKOUT"]
+    from_day: str
+    to_day: str
+
+
+class SetDayTypeOp(BaseModel):
+    """Abre ou fecha um dia de treino — é como a FREQUÊNCIA semanal muda.
+
+    Fechar (`OFF`) descarta o treino daquele dia. Abrir (`WORKOUT`) cria um dia
+    vazio, que só vira treino de verdade com os `ADD_EXERCISE` que vierem na
+    mesma resposta: um dia aberto e vazio é pior que nenhum dia, porque aparece
+    na agenda prometendo algo que não existe. Quem cobra isso é o backend, na
+    aplicação — não o prompt.
+    """
+
+    op: Literal["SET_DAY_TYPE"]
+    day_of_week: str
+    day_type: Literal["WORKOUT", "OFF"]
+    #: Obrigatório ao abrir: o nome que a agenda mostra.
+    workout_name: str | None = None
+    muscle_groups: list[str] = Field(default_factory=list)
+
+
+#: Vocabulário FECHADO de condições. O modelo não inventa flag clínica: ou a
+#: condição está aqui, com o mesmo nome que a anamnese usa, ou a operação é
+#: recusada. Uma flag inventada não casa com `CONDITION_TO_FLAG` no backend e
+#: viraria uma condição registrada que a classificação de risco não enxerga —
+#: o pior desfecho possível, porque parece registrada e não protege ninguém.
+CONDICOES_CONHECIDAS = {
+    "cardiopatia",
+    "hipertensao",
+    "diabetes",
+    "asma",
+    "artrose",
+    "osteoporose",
+    "depressao_ansiedade",
+    "cancer",
+    "gestante",
+    # As do PAR-Q, que entram por outro campo mas pela mesma porta.
+    "dor_no_peito",
+    "tontura",
+    "problema_osteoarticular",
+    "medicacao_pressao",
+}
+
+
+class RecordConditionOp(BaseModel):
+    """Registra na anamnese uma condição relatada na conversa.
+
+    Existe por decisão de produto (ago/2026): condição nova relatada no chat
+    deixou de mandar a pessoa refazer a anamnese inteira. Ela é registrada aqui,
+    e o registro é o que faz a classificação de risco rodar de novo na próxima
+    mensagem — inclusive para ENCAMINHAR, se for o caso.
+
+    A operação não prescreve nada. Ela só grava o que a pessoa disse, no mesmo
+    campo em que a anamnese gravaria. Quem decide o que fazer com isso continua
+    sendo a classificação, e não o modelo.
+    """
+
+    op: Literal["RECORD_CONDITION"]
+    condition: str
+    #: O que a pessoa disse, com as palavras dela. Vai para o detalhe livre.
+    detail: str | None = None
+
+
+class RenameWorkoutOp(BaseModel):
+    """Renomeia o treino de um dia.
+
+    Existe por causa das outras: depois de trocar metade dos exercícios de
+    "Peito e tríceps", o nome vira mentira. Renomear é a operação mais barata do
+    conjunto e a que impede o plano de mentir sobre si mesmo.
+    """
+
+    op: Literal["RENAME_WORKOUT"]
+    day_of_week: str
+    name: str = Field(min_length=1, max_length=60)
+
+
 AdjustOperation = Annotated[
-    Union[ReplaceExerciseOp, AdjustSetsOp, RemoveExerciseOp, AddExerciseOp],
+    Union[
+        ReplaceExerciseOp,
+        AdjustSetsOp,
+        RemoveExerciseOp,
+        AddExerciseOp,
+        MoveWorkoutOp,
+        SetDayTypeOp,
+        RenameWorkoutOp,
+        RecordConditionOp,
+    ],
     Field(discriminator="op"),
 ]
 
@@ -194,6 +302,15 @@ def _plan_exercise_ids(current_plan: dict) -> set[str]:
     return ids
 
 
+def _plan_days(current_plan: dict) -> dict[str, bool]:
+    """Dias do plano → tem treino? Serve para `MOVE_WORKOUT` não citar dia que não existe."""
+    dias: dict[str, bool] = {}
+    for day in current_plan.get("days") or []:
+        if isinstance(day, dict) and day.get("dayOfWeek"):
+            dias[day["dayOfWeek"]] = bool(day.get("workout"))
+    return dias
+
+
 def validate_operations(operations: list[AdjustOperation], inp: WorkoutAdjustInput) -> list[str]:
     """Violações determinísticas das operações. Vazia = aprovado.
 
@@ -208,8 +325,24 @@ def validate_operations(operations: list[AdjustOperation], inp: WorkoutAdjustInp
     allowed_ids = {e.id for e in inp.allowed_exercises}
     plan_ids = _plan_exercise_ids(inp.current_plan)
 
+    dias_do_plano = _plan_days(inp.current_plan)
+
     for i, op in enumerate(operations):
         prefix = f"op[{i}]({op.op})"
+
+        if isinstance(op, MoveWorkoutOp):
+            for campo, dia in (("from_day", op.from_day), ("to_day", op.to_day)):
+                if dia not in VALID_DAYS:
+                    errors.append(f"{prefix} {campo}_invalido: {dia}")
+                elif dia not in dias_do_plano:
+                    errors.append(f"{prefix} {campo}_fora_do_plano: {dia}")
+            if op.from_day == op.to_day:
+                errors.append(f"{prefix} dias_iguais: {op.from_day}")
+            # Mover um dia de descanso para cima de outro descanso não é ajuste,
+            # é ruído: nada muda e a pessoa confirma uma mudança inexistente.
+            if op.from_day in dias_do_plano and not dias_do_plano.get(op.from_day):
+                errors.append(f"{prefix} origem_sem_treino: {op.from_day}")
+            continue
 
         if op.day_of_week not in VALID_DAYS:
             errors.append(f"{prefix} day_of_week_invalido: {op.day_of_week}")
@@ -229,6 +362,46 @@ def validate_operations(operations: list[AdjustOperation], inp: WorkoutAdjustInp
             if op.subtype not in VALID_SUBTYPES:
                 errors.append(f"{prefix} subtype_invalido: {op.subtype}")
 
+        if isinstance(op, RecordConditionOp):
+            if op.condition not in CONDICOES_CONHECIDAS:
+                errors.append(f"{prefix} condicao_desconhecida: {op.condition}")
+            continue
+
+        if isinstance(op, SetDayTypeOp) and op.day_type == "WORKOUT" and not op.workout_name:
+            errors.append(f"{prefix} abertura_sem_nome")
+
+        if isinstance(op, RenameWorkoutOp) and not dias_do_plano.get(op.day_of_week):
+            # Renomear descanso é renomear o que não existe.
+            abre_no_lote = any(
+                isinstance(o, SetDayTypeOp)
+                and o.day_of_week == op.day_of_week
+                and o.day_type == "WORKOUT"
+                for o in operations
+            )
+            if not abre_no_lote:
+                errors.append(f"{prefix} dia_sem_treino: {op.day_of_week}")
+
+    return errors + _erros_entre_operacoes(operations)
+
+
+def _erros_entre_operacoes(operations: list[AdjustOperation]) -> list[str]:
+    """Violações que só existem no CONJUNTO, não em cada operação isolada.
+
+    Um dia aberto e vazio é o caso que importa: `SET_DAY_TYPE` sozinho passa em
+    qualquer verificação individual e produz uma agenda que promete treino e
+    entrega nada. Só olhando o lote inteiro dá para ver que faltou exercício.
+    """
+    errors: list[str] = []
+    abertos = {
+        op.day_of_week
+        for op in operations
+        if isinstance(op, SetDayTypeOp) and op.day_type == "WORKOUT"
+    }
+    com_exercicio = {
+        op.day_of_week for op in operations if isinstance(op, AddExerciseOp)
+    }
+    for dia in sorted(abertos - com_exercicio):
+        errors.append(f"dia_aberto_sem_exercicio: {dia}")
     return errors
 
 
@@ -254,16 +427,13 @@ async def _complete_adjust(inp: WorkoutAdjustInput, correction: str | None = Non
     )
 
 
-_UNSAFE_REPLY = (
-    "Não consegui aplicar esse ajuste com segurança agora. Pode me dizer de outra "
-    "forma o que você quer mudar no treino?"
-)
+# As respostas fixas seguem a mesma regra do prompt: duas frases, o limite e o
+# caminho. Elas são as que mais aparecem na tela, e eram as mais longas.
+_UNSAFE_REPLY = "Não consegui aplicar esse ajuste com segurança. Me diga de outra forma o que quer mudar."
 
 _OUT_OF_SCOPE_REPLY = (
-    "Esse pedido vai além de um ajuste pontual no seu plano. Aqui eu consigo trocar "
-    "exercícios, ajustar séries, repetições e descanso, remover ou incluir um exercício. "
-    "Para um treino novo ou mais um dia de treino, o caminho é atualizar sua anamnese e "
-    "gerar um plano novo."
+    "Aqui eu troco exercício, ajusto séries, repetições e descanso, removo ou incluo um. "
+    "Treino novo ou mais um dia: atualize a anamnese e gere um plano."
 )
 
 

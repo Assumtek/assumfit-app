@@ -136,25 +136,26 @@ model User {
   /// a solicitação, nunca para "esconder" o registro.
   deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(3)
 
-  consents        Consent[]
-  devices         Device[]
-  subscriptions   Subscription[]
-  refreshTokens   RefreshToken[]
-  energyScores    EnergyScore[]
-  menstrualCycles MenstrualCycle[]
-  bioAgeScores    BioAgeScore[]
-  dailyHabits     DailyHabit[]
-  mealRecords     MealRecord[]
-  sportSessions   SportSession[]
-  lifestyle       LifestyleProfile?
-  anamnesis       HealthAnamnesis?
-  trainingPlans   TrainingPlan[]
-  executions      WorkoutExecution[]
-  generations     PlanGenerationRequest[]
+  consents               Consent[]
+  devices                Device[]
+  subscriptions          Subscription[]
+  refreshTokens          RefreshToken[]
+  energyScores           EnergyScore[]
+  menstrualCycles        MenstrualCycle[]
+  bioAgeScores           BioAgeScore[]
+  dailyHabits            DailyHabit[]
+  mealRecords            MealRecord[]
+  sportSessions          SportSession[]
+  lifestyle              LifestyleProfile?
+  anamnesis              HealthAnamnesis?
+  trainingPlans          TrainingPlan[]
+  executions             WorkoutExecution[]
+  generations            PlanGenerationRequest[]
+  planAdjustments        PlanAdjustment[]
+  anamnesisVersions      HealthAnamnesisVersion[]
+  anamnesisConversations AnamnesisConversation[]
 
   @@map("users")
-  anamnesisVersions HealthAnamnesisVersion[]
-  anamnesisConversations AnamnesisConversation[]
 }
 
 /// Consentimento por finalidade, versionado. Sem isso não há base legal para
@@ -342,15 +343,15 @@ model LifestyleProfile {
 }
 
 model DailyHabit {
-  id            BigInt   @id @default(autoincrement())
-  userId        String   @map("user_id") @db.Uuid
-  date          DateTime @db.Date
-  waterMl       Int      @default(0) @map("water_ml")
-  sleepScore    Float?   @map("sleep_score")
+  id           BigInt   @id @default(autoincrement())
+  userId       String   @map("user_id") @db.Uuid
+  date         DateTime @db.Date
+  waterMl      Int      @default(0) @map("water_ml")
+  sleepScore   Float?   @map("sleep_score")
   /// Duração da noite em minutos. Sem ela o score não tem avaliação: "82" pode
   /// ser uma noite ótima de 7h ou um cochilo bem pontuado — `ratings.ts` exige os dois.
-  sleepMinutes  Int?     @map("sleep_minutes")
-  mood          String?
+  sleepMinutes Int?     @map("sleep_minutes")
+  mood         String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -377,32 +378,32 @@ model MealRecord {
 }
 
 model SportSession {
-  id         String   @id @default(uuid()) @db.Uuid
-  userId     String   @map("user_id") @db.Uuid
-  sport      String
-  startedAt  DateTime @map("started_at") @db.Timestamptz(3)
-  durationS  Int      @map("duration_s")
+  id                 String   @id @default(uuid()) @db.Uuid
+  userId             String   @map("user_id") @db.Uuid
+  sport              String
+  startedAt          DateTime @map("started_at") @db.Timestamptz(3)
+  durationS          Int      @map("duration_s")
   /// Nula quando a modalidade não usa GPS (funcional, yoga) ou o sinal faltou.
-  distanceM  Int?     @map("distance_m")
+  distanceM          Int?     @map("distance_m")
   /// Estimativa por MET — declarada como estimativa em toda tela.
-  kcal       Int
-  avgHr      Int?     @map("avg_hr")
-  maxHr      Int?     @map("max_hr")
+  kcal               Int
+  avgHr              Int?     @map("avg_hr")
+  maxHr              Int?     @map("max_hr")
   /// Execução do plano que esta sessão CUMPRIU (fusão ago/2026): o dia de
   /// esporte do plano pode ser registrado pelo cronômetro de GPS, e aí a
   /// sessão e a execução são o MESMO ato — a contagem de movimento usa este
   /// vínculo para não somar duas vezes. Null = sessão avulsa.
-  workoutExecutionId String? @map("workout_execution_id") @db.Uuid
+  workoutExecutionId String?  @map("workout_execution_id") @db.Uuid
   /// "Como foi": os mesmos campos do fim de treino guiado, para a sessão
   /// avulsa. Sessão VINCULADA guarda o como-foi na execução, não aqui.
-  perceivedEffort Int?    @map("perceived_effort")
-  rating          Int?
-  comment         String?
+  perceivedEffort    Int?     @map("perceived_effort")
+  rating             Int?
+  comment            String?
   /// O percurso, SIMPLIFICADO no aparelho (≤300 pontos, ~1 m de precisão)
   /// antes de subir — decisão da fundadora (ago/2026) que reverte o
   /// "trilha morre no aparelho": o histórico mostra o mapa como o Strava.
   /// Minimização: fora da listagem (só no detalhe), apagado com a conta.
-  track Json?
+  track              Json?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -665,15 +666,16 @@ model TrainingPlan {
   /// (ago/2026): quando o avaliador reprova, o plano é revisado em vez de
   /// descartado, e o que sobrou de ressalva precisa chegar a quem vai treinar.
   /// Sem isto, a pessoa receberia um plano mais conservador sem saber por quê.
-  revisionNotes    String[]           @map("revision_notes")
+  revisionNotes    String[]           @default([]) @map("revision_notes")
   startDate        DateTime           @map("start_date") @db.Timestamptz(3)
   /// Validade. Um plano não fica ativo para sempre: o corpo adapta, e treinar
   /// o mesmo estímulo por meses é o caminho para a estagnação.
   endDate          DateTime           @map("end_date") @db.Timestamptz(3)
   createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
 
-  user User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  days TrainingPlanDay[]
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  days        TrainingPlanDay[]
+  adjustments PlanAdjustment[]
 
   @@index([userId, status])
   @@map("training_plans")
@@ -851,4 +853,49 @@ model PlanGenerationRequest {
   @@index([userId, createdAt])
   @@index([status])
   @@map("plan_generation_requests")
+}
+
+/// O que o chat do Personal PROPÔS, guardado até a pessoa confirmar.
+///
+/// A proposta mora no servidor, e não no app, por uma razão de segurança e não
+/// de arquitetura: se o aplicar recebesse as operações do cliente, qualquer um
+/// poderia mandar um diff arbitrário e escrever no próprio plano por fora das
+/// travas clínicas. O app só devolve o `id` daquilo que ele viu.
+///
+/// Guardado também depois de aplicado, porque isto é mudança de PRESCRIÇÃO: a
+/// pergunta "por que meu treino de quinta mudou?" precisa ter resposta, e a
+/// resposta é a conversa que a produziu.
+model PlanAdjustment {
+  id         String               @id @default(uuid()) @db.Uuid
+  userId     String               @map("user_id") @db.Uuid
+  planId     String               @map("plan_id") @db.Uuid
+  /// A mensagem que originou a proposta — o "por quê" em linguagem humana.
+  message    String
+  /// O texto que a pessoa leu antes de confirmar.
+  reply      String
+  /// As operações, no formato que o agente devolve.
+  operations Json
+  status     PlanAdjustmentStatus @default(PENDING)
+  /// Motivo da recusa quando aplicar falha na revalidação.
+  failReason String?              @map("fail_reason")
+  traceId    String?              @map("trace_id")
+  createdAt  DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  appliedAt  DateTime?            @map("applied_at") @db.Timestamptz(3)
+
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan TrainingPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([planId, status])
+  @@map("plan_adjustments")
+}
+
+enum PlanAdjustmentStatus {
+  PENDING
+  APPLIED
+  /// Revalidação no aplicar reprovou — o plano mudou desde a proposta, ou o
+  /// alvo sumiu. Não é erro do serviço: é a proposta que envelheceu.
+  STALE
+  /// A pessoa pediu outra coisa em seguida, sem confirmar esta.
+  SUPERSEDED
 }

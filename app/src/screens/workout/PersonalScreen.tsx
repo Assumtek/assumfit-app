@@ -7,8 +7,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '../../components/Icon';
 import { VoiceInput } from '../../components/VoiceInput';
-import { Body, Data, Label } from '../../components/ui';
-import { chatWithAgent, type ChatTurn } from '../../services/api.service';
+import { Body, Button, Data, Label } from '../../components/ui';
+import { applyAdjustment, chatWithAgent, type ChatTurn } from '../../services/api.service';
+import { darkPalette } from '../../theme/palette';
 import { useTheme } from '../../theme/ThemeProvider';
 
 /**
@@ -41,6 +42,18 @@ export function PersonalScreen() {
   const [texto, setTexto] = useState('');
   const [pensando, setPensando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  /*
+   A proposta pendente — o que o botão de confirmar aplica.
+
+   Guardamos só o ID: o diff mora no servidor. Mandar as operações de volta
+   daqui abriria caminho para escrever no plano por fora das travas clínicas.
+
+   Some a cada mensagem nova: quem perguntou outra coisa sem confirmar a
+   anterior não deveria ver um botão que aplica algo que já saiu de vista.
+  */
+  const [proposta, setProposta] = useState<string | null>(null);
+  const [aplicando, setAplicando] = useState(false);
+  const [aplicado, setAplicado] = useState<string | null>(null);
 
   const enviar = async () => {
     const pergunta = texto.trim();
@@ -53,15 +66,46 @@ export function PersonalScreen() {
     setTurnos(comPergunta);
     setTexto('');
     setErro(null);
+    setProposta(null);
+    setAplicado(null);
     setPensando(true);
 
     try {
       const r = await chatWithAgent(pergunta, turnos);
       setTurnos([...comPergunta, { role: 'assistant', content: r.reply }]);
+      setProposta(r.adjustmentId);
     } catch {
       setErro('Não foi possível falar com o agente agora. Tente de novo em instantes.');
     } finally {
       setPensando(false);
+    }
+  };
+
+  /**
+   * Aplica a proposta confirmada.
+   *
+   * Falha de revalidação NÃO é erro: o servidor devolve `failReason` quando o
+   * plano mudou desde a sugestão, e isso é informação, não defeito. Vira texto
+   * na conversa em vez de um vermelho de "algo deu errado".
+   */
+  const aplicar = async () => {
+    if (!proposta || aplicando) return;
+    setAplicando(true);
+    setErro(null);
+    try {
+      const r = await applyAdjustment(proposta);
+      if (r.failReason) {
+        setAplicado(r.failReason);
+      } else {
+        setAplicado(
+          r.applied === 1 ? 'Pronto — 1 mudança aplicada no seu plano.' : `Pronto — ${r.applied} mudanças aplicadas no seu plano.`,
+        );
+      }
+      setProposta(null);
+    } catch {
+      setErro('Não foi possível aplicar agora. Tente de novo em instantes.');
+    } finally {
+      setAplicando(false);
     }
   };
 
@@ -118,6 +162,28 @@ export function PersonalScreen() {
             </XStack>
           ) : null}
 
+          {/*
+            Confirmar é o passo que faltava no produto inteiro.
+
+            Antes, o agente propunha, a pessoa dizia "sim" — e nada acontecia,
+            porque o caminho de aplicar não existia. O "sim" digitado continua
+            valendo como conversa, mas quem muda a prescrição é este toque: um
+            ato explícito, com o texto do que muda logo acima dele.
+          */}
+          {proposta && !pensando ? (
+            <YStack marginTop="$lg" gap="$sm">
+              <Button
+                title={aplicando ? 'Aplicando…' : 'Aplicar no meu plano'}
+                onPress={() => void aplicar()}
+                disabled={aplicando}
+                loading={aplicando}
+                icon={<Icon name="check" size={16} color={darkPalette.ink} />}
+              />
+              <Data>Seu plano só muda depois deste toque.</Data>
+            </YStack>
+          ) : null}
+
+          {aplicado ? <Data marginTop="$lg">{aplicado}</Data> : null}
           {erro ? <Data color="$destructive">{erro}</Data> : null}
         </ScrollView>
 

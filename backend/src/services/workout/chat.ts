@@ -1,4 +1,4 @@
-import { TrainingPlanStatus } from '@prisma/client';
+import { PlanAdjustmentStatus, TrainingPlanStatus } from '@prisma/client';
 
 import { prisma } from '../../lib/prisma';
 import { badRequest, forbidden } from '../../lib/errors';
@@ -6,6 +6,7 @@ import { adjust, type AgentAdjustResult } from './agent.client';
 import { allowedExercises } from './catalog';
 import { buildContext, parseAnamnesis, type UserForContext } from './context-builder';
 import { buildHealthContext } from './health-context';
+import { aplicarOperacoes, PropostaVencida, type AdjustOperation } from './plan-adjust';
 import { classify, isReferral } from './risk-tier';
 
 /**
@@ -29,6 +30,12 @@ import { classify, isReferral } from './risk-tier';
 
 export type ChatTurn = { role: 'user' | 'assistant'; content: string };
 
+/** O que a rota devolve: a resposta do agente mais o id da proposta guardada. */
+export type ChatResult = AgentAdjustResult & {
+  /** `null` quando não há o que confirmar — recusa ou pergunta conversacional. */
+  adjustmentId: string | null;
+};
+
 /** Quantos turnos anteriores viajam junto. */
 const HISTORY_LIMIT = 12;
 
@@ -36,7 +43,7 @@ export async function chatWithAgent(
   userId: string,
   message: string,
   history: ChatTurn[],
-): Promise<AgentAdjustResult> {
+): Promise<ChatResult> {
   const consent = await prisma.consent.findFirst({
     where: { userId, purpose: 'workout_generation', revokedAt: null },
   });
@@ -84,13 +91,14 @@ export async function chatWithAgent(
       blocked: true,
       blockReason: 'encaminhamento_clinico',
       traceId: 'local',
+      adjustmentId: null,
     };
   }
 
   const catalog = await allowedExercises();
   if (catalog.length === 0) throw badRequest('Catálogo de exercícios indisponível');
 
-  return adjust({
+  const resultado = await adjust({
     message,
     // Os mais RECENTES, e não os primeiros: a conversa que importa é a que
     // acabou de acontecer, e mandar o histórico inteiro estoura a janela.
@@ -100,6 +108,123 @@ export async function chatWithAgent(
     flags: context.flags,
     constraints: context.constraints,
     allowed_exercises: catalog,
+  });
+
+  const adjustmentId = await guardarProposta(userId, plan.id, message, resultado);
+  return { ...resultado, adjustmentId };
+}
+
+/**
+ * Guarda a proposta para o botão de confirmar ter o que aplicar.
+ *
+ * A proposta mora no SERVIDOR e o app recebe só o id. Se o aplicar aceitasse as
+ * operações vindas do cliente, qualquer requisição escreveria um diff arbitrário
+ * no plano, por fora das travas clínicas que decidem quem pode receber
+ * prescrição automática — e essas travas são a razão de este módulo existir.
+ *
+ * A proposta anterior vira SUPERSEDED: quem pediu outra coisa sem confirmar a
+ * primeira não deveria conseguir aplicar as duas depois, em ordem nenhuma.
+ */
+async function guardarProposta(
+  userId: string,
+  planId: string,
+  message: string,
+  resultado: AgentAdjustResult,
+): Promise<string | null> {
+  if (resultado.blocked || resultado.operations.length === 0) return null;
+
+  await prisma.planAdjustment.updateMany({
+    where: { userId, status: PlanAdjustmentStatus.PENDING },
+    data: { status: PlanAdjustmentStatus.SUPERSEDED },
+  });
+
+  const criada = await prisma.planAdjustment.create({
+    data: {
+      userId,
+      planId,
+      message,
+      reply: resultado.reply,
+      operations: resultado.operations as never,
+      traceId: resultado.traceId,
+    },
+    select: { id: true },
+  });
+  return criada.id;
+}
+
+export type AplicacaoResult = {
+  applied: number;
+  /** O que falhou, em português, quando a proposta já não vale. */
+  failReason: string | null;
+};
+
+/**
+ * Aplica a proposta que a pessoa confirmou.
+ *
+ * Tudo num commit só — operações e a marca de aplicada. Fora disso existe o
+ * instante em que o plano já mudou e a proposta ainda diz "pendente", e um
+ * segundo toque no botão aplicaria o lote inteiro de novo.
+ */
+export async function applyAdjustment(
+  userId: string,
+  adjustmentId: string,
+): Promise<AplicacaoResult> {
+  const proposta = await prisma.planAdjustment.findFirst({
+    where: { id: adjustmentId, userId },
+  });
+  if (!proposta) throw badRequest('Proposta não encontrada');
+  if (proposta.status === PlanAdjustmentStatus.APPLIED) {
+    // Toque duplo no botão não é erro: é a mesma intenção, já cumprida.
+    return { applied: 0, failReason: null };
+  }
+  if (proposta.status !== PlanAdjustmentStatus.PENDING) {
+    throw badRequest('Essa sugestão não vale mais. Peça de novo no chat.');
+  }
+
+  /*
+   O plano ATIVO manda, não o que a proposta cita.
+
+   Entre propor e confirmar, uma geração nova pode ter substituído o plano —
+   e aplicar um diff calculado sobre o plano anterior escreveria mudança em
+   exercício que ninguém pediu.
+  */
+  const ativo = await prisma.trainingPlan.findFirst({
+    where: { userId, status: TrainingPlanStatus.ACTIVE },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true },
+  });
+  if (!ativo || ativo.id !== proposta.planId) {
+    await marcarVencida(adjustmentId, 'o plano mudou desde a sugestão');
+    return { applied: 0, failReason: 'Seu plano mudou desde essa sugestão. Peça de novo no chat.' };
+  }
+
+  const operations = proposta.operations as unknown as AdjustOperation[];
+  try {
+    const aplicadas = await prisma.$transaction(async (tx) => {
+      const total = await aplicarOperacoes(tx, proposta.planId, operations, userId);
+      await tx.planAdjustment.update({
+        where: { id: adjustmentId },
+        data: { status: PlanAdjustmentStatus.APPLIED, appliedAt: new Date() },
+      });
+      return total;
+    });
+    return { applied: aplicadas, failReason: null };
+  } catch (erro) {
+    if (erro instanceof PropostaVencida) {
+      await marcarVencida(adjustmentId, erro.motivo);
+      return {
+        applied: 0,
+        failReason: 'Essa sugestão não vale mais para o seu plano atual. Peça de novo no chat.',
+      };
+    }
+    throw erro;
+  }
+}
+
+async function marcarVencida(id: string, motivo: string) {
+  await prisma.planAdjustment.update({
+    where: { id },
+    data: { status: PlanAdjustmentStatus.STALE, failReason: motivo },
   });
 }
 
