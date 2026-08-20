@@ -61,8 +61,18 @@ function gravarSemPulseira() {
   }
 }
 
-/** Uma varredura de noites por sessão: a memória da pulseira não muda durante o dia. */
-let sonoRetroativoEnviado = false;
+/**
+ * O dia civil em que a varredura de noites rodou por último.
+ *
+ * Era um booleano — uma vez por SESSÃO — e a sessão de um app de pulseira
+ * atravessa dias: o iOS segura o BLE em segundo plano e o processo não morre.
+ * Num aparelho em produção (ago/2026) a varredura rodou no dia da instalação e
+ * nunca mais; as noites seguintes ficaram só na memória do aparelho.
+ */
+let sonoRetroativoDoDia: string | null = null;
+
+/** Última tentativa de buscar noite vencida — o garrote do ciclo de 4 min. */
+let ultimaBuscaDeSono = 0;
 
 /**
  * A leitura de memória em curso, para que pedidos simultâneos a compartilhem.
@@ -235,6 +245,7 @@ import {
   type MetricaDeAtencao,
 } from '../services/notifications.service';
 import { spo2DaNoite } from '../domain/sleep';
+import { noiteSustentaODia } from '../domain/bodyBattery';
 import { syncQueue } from '../services/sync.service';
 import { rateHeartRate, ratePressure, rateSpo2 } from '../domain/ratings';
 import { textoDaFalha } from '../domain/bandErrors';
@@ -419,6 +430,33 @@ type BiometricState = {
 type Set = (parcial: Partial<BiometricState>) => void;
 type Get = () => BiometricState;
 
+/** AAAA-MM-DD do relógio LOCAL. O fuso do servidor não interessa: a noite é de quem dormiu. */
+function hojeLocal(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/**
+ * Varre as noites guardadas na memória da pulseira (até 7 dias) e as envia.
+ *
+ * É o que preenche o sono dos dias em que o celular não estava por perto — e o
+ * que recupera as noites perdidas quando a busca diária falhou. Idempotente no
+ * servidor: re-enviar a mesma noite não duplica.
+ */
+async function varrerSonoRetroativo(): Promise<void> {
+  if (sonoRetroativoDoDia === hojeLocal() || !ble.fetchSleepHistory) return;
+  const noites = await comTeto(
+    ble.fetchSleepHistory(),
+    TETO_MEMORIA_SONO_MS,
+    'memória de sono',
+  ).catch(() => [] as const);
+  for (const n of noites) api.pushSleepNight(n);
+  // O portão só fecha com noite na mão: zero tanto pode ser memória vazia
+  // quanto o SDK mudo naquele instante — visto em produção — e neste caso
+  // a tentativa seguinte merece nova chance.
+  if (noites.length > 0) sonoRetroativoDoDia = hojeLocal();
+}
+
 async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
   set({ syncing: true, syncError: null });
   /*
@@ -496,6 +534,36 @@ async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
     */
     sleep: comOxigenioDaNoite(get().sleep, oxigenio),
   });
+
+  /*
+   A NOITE também vence — e era a única grandeza fora deste ciclo.
+
+   A busca do sono morava só no ritual de conexão. Quem mantém o app vivo e a
+   pulseira ao alcance nunca reconecta — o iOS segura o BLE em segundo plano — e
+   o sono parava no dia da última abertura a frio, com todo o resto fluindo.
+   Dois aparelhos em produção mostraram exatamente isso (ago/2026): fechar o
+   app "consertava", porque forçava o ritual.
+
+   Meia hora entre tentativas, porque de madrugada a noite ainda não fechou:
+   perguntar a cada ciclo seria gastar o canal com a resposta já conhecida. O
+   dia de referência é o LOCAL — a noite pertence a quem dormiu, não ao fuso do
+   servidor.
+  */
+  const atual = get().sleep;
+  const vencida = !atual || !noiteSustentaODia(atual, hojeLocal());
+  if (vencida && ble.fetchSleep && Date.now() - ultimaBuscaDeSono > 30 * 60_000) {
+    ultimaBuscaDeSono = Date.now();
+    const nova = await comTeto(ble.fetchSleep(), TETO_SONO_MS, 'sono da pulseira').catch(
+      () => null,
+    );
+    if (nova && (!atual || nova.date > atual.date)) {
+      set({ sleep: comOxigenioDaNoite(nova, get().spo2History) });
+      api.pushSleepNight(nova);
+    }
+    // Noite nova na mão é a deixa para varrer as que ficaram para trás — o
+    // portão diário de dentro decide se há algo a fazer.
+    await varrerSonoRetroativo();
+  }
 
   persistirDerivado(get());
   // Marcado só com dado na mão: leitura que falhou não deve bloquear a próxima
@@ -705,24 +773,9 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     // o intervalo mínimo existe contra visita de tela, não contra pareamento.
     await get().syncHistory(true);
 
-    /*
-     As noites ANTERIORES sobem uma vez por sessão — é o que preenche o sono
-     dos dias passados no histórico de saúde de quem já dormia com a pulseira
-     antes de o envio existir. DEPOIS do syncHistory e com await, nunca em
-     paralelo: o canal da pulseira é serial e leitura simultânea colide.
-    */
-    if (!sonoRetroativoEnviado && ble.fetchSleepHistory) {
-      const noites = await comTeto(
-        ble.fetchSleepHistory(),
-        TETO_MEMORIA_SONO_MS,
-        'memória de sono',
-      ).catch(() => [] as const);
-      for (const n of noites) api.pushSleepNight(n);
-      // O flag só queima com noite na mão: zero tanto pode ser memória vazia
-      // quanto o SDK mudo naquele instante — visto em produção — e neste caso
-      // o refresh seguinte merece nova chance.
-      if (noites.length > 0) sonoRetroativoEnviado = true;
-    }
+    // As noites ANTERIORES, no máximo uma vez por dia civil. DEPOIS do
+    // syncHistory e com await, nunca em paralelo: o canal serial colide.
+    await varrerSonoRetroativo();
 
     if (!api.isAuthenticated()) return;
     try {
@@ -919,9 +972,11 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
       'sono da pulseira',
     ).catch(() => null);
     if (daPulseira) {
-      set({ sleep: daPulseira });
+      // O MESMO recorte dos outros caminhos: sem ele, a noite buscada pelo
+      // botão chegava sem a curva de oxigênio — e "Oxigênio durante a noite"
+      // aparecia vazio com a série do dia inteira no aparelho.
+      set({ sleep: comOxigenioDaNoite(daPulseira, get().spo2History) });
       api.pushSleepNight(daPulseira);
-      const e = get();
       persistirDerivado(get());
       console.log('[health] sono veio da pulseira, sem precisar do app Saúde');
       return true;
