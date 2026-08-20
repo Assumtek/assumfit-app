@@ -66,6 +66,7 @@ import {
   iniciarIlhaDeEsporte,
 } from '../../modules/widgetbridge';
 import * as api from '../services/api.service';
+import { ble } from '../services/ble';
 import * as outbox from '../services/sport-outbox';
 import { iniciarRastreio, pararRastreio, useSportTrackStore } from '../services/sport-track';
 import { SportShare } from '../components/SportShare';
@@ -378,6 +379,9 @@ export function SportScreen() {
     // A ilha pode ter morrido junto com o app: reabre com o início já
     // descontado das pausas, que é o que o timer nativo entende.
     iniciarIlhaDeEsporte(sport.label, salva.startedAt + salva.pausedMs);
+    // App reaberto com sessão em curso: a pulseira pode ter fechado a dela
+    // (ou nunca ter aberto). Reabrir é idempotente para o firmware.
+    void ble.setSportState?.(sport.kind, salva.pausedSince === null ? 'start' : 'pause');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -424,6 +428,15 @@ export function SportScreen() {
     // A Dynamic Island conta o tempo sozinha a partir do início — o app só
     // manda distância/batimento de vez em quando.
     iniciarIlhaDeEsporte(sport.label, stamp);
+    /*
+     A sessão abre TAMBÉM na pulseira.
+
+     É o que liga a medição contínua de batimento do firmware. Sem isso o app
+     amostrava a cadência agendada de 5 min, e uma sessão de 36 min saiu com
+     média 75 e máximo 75 — uma amostra — enquanto 174 leituras passavam pelo
+     servidor. Sem pulseira ou com falha, a sessão segue valendo sem batimento.
+    */
+    void ble.setSportState?.(sport.kind, 'start');
 
     // Sessão que cumpre um dia do plano: a execução nasce AGORA, para o
     // servidor medir a duração de verdade. Falhou (outra execução aberta,
@@ -444,6 +457,7 @@ export function SportScreen() {
   const alternarPausa = () => {
     const stamp = Date.now();
     setNow(stamp);
+    if (sessao) void ble.setSportState?.(sessao.sport.kind, sessao.pausedSince === null ? 'pause' : 'continue');
     setSessao((s) => {
       if (!s) return s;
       const proximo =
@@ -480,6 +494,8 @@ export function SportScreen() {
     // antes de qualquer rede. O que segue dela é a caixa de saída.
     outbox.descartarEmCurso();
     encerrarIlhaDeEsporte();
+    // Fecha a da pulseira e religa a leitura contínua da home.
+    void ble.setSportState?.(sessao.sport.kind, 'stop');
     const execucaoId = execucaoVinculada.current;
     execucaoVinculada.current = null;
     vinculo.current = null;
@@ -596,8 +612,10 @@ export function SportScreen() {
         if (!atual) break;
         if (acao.action === 'pause' && atual.pausedSince === null) {
           atual = { ...atual, pausedSince: acao.atMs };
+          void ble.setSportState?.(atual.sport.kind, 'pause');
         } else if (acao.action === 'resume' && atual.pausedSince !== null) {
           atual = { ...atual, pausedMs: atual.pausedMs + (acao.atMs - atual.pausedSince), pausedSince: null };
+          void ble.setSportState?.(atual.sport.kind, 'continue');
         }
       }
       return atual;

@@ -295,6 +295,19 @@ export type DailySummary = {
  * a série da tela mora no aparelho, mas o resumo por dia vem do servidor.
  * Fire-and-forget — perder um envio custa menos que travar a sincronização.
  */
+export type DailyHabitRow = {
+  date: string;
+  waterMl: number;
+  sleepScore: number | null;
+  sleepMinutes: number | null;
+};
+
+/** Os últimos `days` dias de hábitos — é onde o sono de cada noite fica guardado. */
+export async function fetchHabitsHistory(days = 14): Promise<DailyHabitRow[]> {
+  const { data } = await api.get<DailyHabitRow[]>('/habits', { params: { days } });
+  return data;
+}
+
 export function pushSleepNight(night: { date: string; score: number; totalMin: number }): void {
   if (!isAuthenticated()) return;
   void api
@@ -864,13 +877,32 @@ export type ApplyAdjustmentReply = {
 };
 
 /** Confirma a proposta do chat e a aplica no plano. */
+/**
+ * Teto do chat com o Personal — há uma ida ao modelo no meio.
+ *
+ * O padrão do cliente é 10 s, e o chat leva 6 a 10 s em produção (medido no
+ * log de acesso: 6,5 s, 8,2 s, e duas conversas cortadas EXATAMENTE em 10,0 s
+ * com status 0 — o app desligando na cara do servidor). Para quem mandou a
+ * mensagem, "agente sem responder"; para o servidor, uma resposta entregue a
+ * ninguém. O mesmo teto da análise de refeição, que é outra chamada ao modelo.
+ */
+const TETO_DO_AGENTE_MS = 90_000;
+
 export async function applyAdjustment(adjustmentId: string): Promise<ApplyAdjustmentReply> {
-  const { data } = await api.post<ApplyAdjustmentReply>('/workout/chat/apply', { adjustmentId });
+  const { data } = await api.post<ApplyAdjustmentReply>(
+    '/workout/chat/apply',
+    { adjustmentId },
+    { timeout: TETO_DO_AGENTE_MS },
+  );
   return data;
 }
 
 export async function chatWithAgent(message: string, history: ChatTurn[]): Promise<ChatReply> {
-  const { data } = await api.post<ChatReply>('/workout/chat', { message, history });
+  const { data } = await api.post<ChatReply>(
+    '/workout/chat',
+    { message, history },
+    { timeout: TETO_DO_AGENTE_MS },
+  );
   return data;
 }
 

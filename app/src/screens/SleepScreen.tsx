@@ -1,8 +1,8 @@
 import { YStack } from '@tamagui/stacks';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { LayoutChangeEvent } from 'react-native';
 
-import { Note, Row, Section } from '../components/Card';
+import { HistoryRow, Note, Row, Section } from '../components/Card';
 import { SyncSleepButton } from '../components/MeasureButton';
 import { SleepPlanner } from '../components/SleepPlanner';
 import { DetailScreen } from '../components/DetailScreen';
@@ -13,6 +13,7 @@ import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
 import { rateSleep } from '../domain/ratings';
 import type { SleepPhase } from '../domain/types';
 import { useBiometricStore } from '../store/biometric.store';
+import * as api from '../services/api.service';
 import { useLifestyleStore } from '../store/lifestyle.store';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -58,6 +59,8 @@ export function SleepScreen() {
           aqui é buscar de novo o que a pulseira já gravou.
         */}
         <SyncSleepButton />
+
+        <UltimasNoites />
 
         {/* O planejador NÃO depende de noite medida: ele é fisiologia, não
             leitura da pulseira. Quem ainda não dormiu com o aparelho é
@@ -154,7 +157,58 @@ export function SleepScreen() {
         </Section>
       )}
 
+      <UltimasNoites />
+
       <SleepPlanner horaDeDormirHabitual={bedtime} />
     </DetailScreen>
+  );
+}
+
+/**
+ * As últimas noites, uma por linha.
+ *
+ * Pedido de quem testa (ago/2026): "daria pra ver dia a dia o histórico?". O
+ * servidor já guardava cada noite em `daily_habits`; faltava a porta. A régua
+ * é o score (0–100) e o valor é a duração — as duas grandezas que `rateSleep`
+ * exige para avaliar uma noite, lado a lado. Noite sem medição simplesmente não
+ * aparece: traço numa lista de noites leria como noite em claro.
+ */
+function UltimasNoites() {
+  const [noites, setNoites] = useState<api.DailyHabitRow[] | null>(null);
+
+  useEffect(() => {
+    let vivo = true;
+    api
+      .fetchHabitsHistory(14)
+      .then((linhas) => {
+        if (!vivo) return;
+        setNoites(
+          linhas
+            .filter((l) => l.sleepScore != null && l.sleepMinutes != null)
+            .sort((a, b) => (a.date < b.date ? 1 : -1)),
+        );
+      })
+      .catch(() => vivo && setNoites([]));
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
+  if (!noites || noites.length === 0) return null;
+
+  const duracao = (min: number) => `${Math.floor(min / 60)}h${String(min % 60).padStart(2, '0')}`;
+
+  return (
+    <Section label="Últimas noites">
+      {noites.map((n, i) => (
+        <HistoryRow
+          key={n.date}
+          time={formatDateBR(n.date.slice(0, 10)).slice(0, 5)}
+          fraction={(n.sleepScore ?? 0) / 100}
+          value={`${n.sleepScore} · ${duracao(n.sleepMinutes ?? 0)}`}
+          last={i === noites.length - 1}
+        />
+      ))}
+    </Section>
   );
 }

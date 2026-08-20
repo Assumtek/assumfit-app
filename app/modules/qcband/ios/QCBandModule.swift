@@ -672,6 +672,23 @@ public class QCBandModule: Module {
       self?.sendEvent("onReading", payload)
     }
 
+    /*
+     Batimento do MODO ESPORTE.
+
+     Com uma sessão aberta na pulseira, o firmware mede batimento continuamente
+     e o entrega por este bloco — não pelo `realTimeHeartRate`, que é o modo de
+     leitura contínua fora de exercício e que o aparelho encerra sozinho depois
+     de um tempo. Uma sessão de 36 minutos em produção saiu com média 75 e
+     máximo 75: uma amostra, da cadência agendada de 5 min. Para o produto é a
+     mesma grandeza, então entra pelo mesmo evento.
+     */
+    sdk.currentSportInfo = { [weak self] (info: QCSportInfoModel) in
+      let hr: Int = Int(info.hr)
+      guard hr > 0 else { return }
+      let payload: [String: Any] = ["kind": "heartRate", "value": hr]
+      self?.sendEvent("onReading", payload)
+    }
+
     // Medição pontual, disparada pelo aparelho ou por comando — chega por outro
     // bloco que a contínua, mas para o produto é a mesma grandeza.
     sdk.hrMeasuring = { [weak self] (hr: Int) in
@@ -783,6 +800,24 @@ public class QCBandModule: Module {
    o interruptor de HRV. Firmware que não conheça o comando falha nele em
    silêncio, e o comportamento anterior fica de pé.
    */
+  private func operarModoEsporte(_ sportType: Int, _ state: Int, _ promise: Promise) {
+    // Os dois enums têm tipos brutos diferentes no cabeçalho: `Int` para a
+    // modalidade e `UInt32` para o estado. Fora da faixa, resolve em silêncio.
+    guard let tipo = OdmSportPlusExerciseModelType(rawValue: sportType) else {
+      promise.resolve(nil)
+      return
+    }
+    // `QCSportState` chega ao Swift como struct (não é `NS_ENUM`), então o
+    // inicializador não é falível — valor fora da faixa é responsabilidade do JS.
+    let estado = QCSportState(rawValue: UInt32(state))
+    QCSDKCmdCreator.operateSportMode(with: tipo, state: estado) { _, error in
+      if let error = error {
+        NSLog("[qcband] modo esporte %ld/%ld falhou: %@", sportType, state, error.localizedDescription)
+      }
+      promise.resolve(nil)
+    }
+  }
+
   private func ligarHrv(_ enable: Bool, _ promise: Promise) {
     QCSDKCmdCreator.setRRIAutoMeasureStatus(enable, suc: {}, fail: {})
     QCSDKCmdCreator.setSchedualHRVStatus(enable) { _ in promise.resolve(nil) }
@@ -990,6 +1025,17 @@ public class QCBandModule: Module {
       // Falha ao parar é resolvida, não rejeitada: se o aparelho já parou
       // sozinho, insistir num erro só produziria ruído na interface.
       QCSDKCmdCreator.endRealTimeHeartRateSuccess({ promise.resolve(nil) }, fail: { promise.resolve(nil) })
+    }
+
+    /**
+     Modo esporte da pulseira: `sportType` é `OdmSportPlusExerciseModelType`,
+     `state` é `QCSportState` (1 início, 2 pausa, 3 continua, 4 fim). Com a
+     sessão aberta o firmware mede batimento sem parar e o entrega por
+     `currentSportInfo`. Falha é resolvida: a sessão do app não depende disso
+     para existir, só fica sem batimento — como já ficava.
+     */
+    AsyncFunction("setSportMode") { (sportType: Int, state: Int, promise: Promise) in
+      self.operarModoEsporte(sportType, state, promise)
     }
 
     /**
@@ -1599,6 +1645,7 @@ public class QCBandModule: Module {
     }
     AsyncFunction("startRealtimeHeartRate") { (promise: Promise) in promise.resolve(nil) }
     AsyncFunction("stopRealtimeHeartRate") { (promise: Promise) in promise.resolve(nil) }
+    AsyncFunction("setSportMode") { (_: Int, _: Int, promise: Promise) in promise.resolve(nil) }
     AsyncFunction("getHrv") { (_: Int, promise: Promise) in
       promise.resolve([[String: Any]]())
     }

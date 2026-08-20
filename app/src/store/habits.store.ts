@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 import { api, isAuthenticated } from '../services/api.service';
 import { diaCorrente, isoHoje } from '../domain/water';
-import { waterGoalMl } from '../domain/waterGoal';
+import { waterGoalMl, waterGoalReason } from '../domain/waterGoal';
 import type { Sex } from '../domain/types';
 import {
   DEFAULT_CONTAINERS,
@@ -128,7 +128,10 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
   refreshGoal: ({ weightKg, sex, activeMinToday }) => {
     set({
       goalMl: waterGoalMl({ weightKg, sex, activeMinToday }),
-      goalReason: weightKg ? `${Math.round(weightKg)} kg` : null,
+      // A regra inteira, não só o peso: "80 kg × 35 ml" responde sozinha à
+      // pergunta "isso está calibrado pelo meu peso?", que chegou como pedido
+      // de recurso quando o recurso já existia.
+      goalReason: waterGoalReason({ weightKg, sex, activeMinToday }),
     });
   },
 

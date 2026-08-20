@@ -1,3 +1,4 @@
+import type { SportKind } from '../../domain/sport';
 import type { Reading, SleepNight } from '../../domain/types';
 
 /** O que dá para pedir ao aparelho que meça na hora. */
@@ -99,6 +100,8 @@ export type DayHistory = {
  * interface. A implementação real (`react-native-ble-plx` + os UUIDs GATT do
  * Staranb) entra no M5, quando a amostra chegar, e só precisa satisfazer isto.
  */
+export type SportState = 'start' | 'pause' | 'continue' | 'stop';
+
 export interface BleService {
   scan(onDevice: (device: DiscoveredDevice) => void): () => void;
   connect(deviceId: string): Promise<void>;
@@ -133,6 +136,15 @@ export interface BleService {
    * Bluetooth SIG não tem perfil para isso.
    */
   fetchSleep?(): Promise<SleepNight | null>;
+  /**
+   * Abre, pausa, retoma ou fecha uma sessão de esporte NA PULSEIRA.
+   *
+   * Com a sessão aberta o firmware mede batimento continuamente e o entrega
+   * pelo mesmo fluxo de leitura. Sem isso, o treino livre ficava com a cadência
+   * agendada de 5 min — uma sessão de 36 min saiu com média 75 e máximo 75 em
+   * produção. Falha é silenciosa: a sessão do app existe sem a pulseira.
+   */
+  setSportState?(kind: SportKind, state: SportState): Promise<void>;
   /** As noites que a pulseira ainda guarda na memória, da mais antiga à mais nova. */
   fetchSleepHistory?(): Promise<SleepNight[]>;
   /** Vibra a pulseira para a pessoa achá-la. Resolve `false` se não alcançou. */

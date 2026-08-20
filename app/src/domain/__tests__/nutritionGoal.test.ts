@@ -94,3 +94,20 @@ describe('calorieGoal', () => {
     expect(r.tdee % 50).toBe(0);
   });
 });
+
+describe('objetivo em outros vocabulários', () => {
+  const base = { weightKg: 80, heightCm: 178, ageYears: 35, sex: 'm' as const, trainDaysPerWeek: 3 };
+
+  it('lê o objetivo do PLANO quando a anamnese não tem a pergunta', () => {
+    // Caso real (ago/2026): peso, altura e plano de emagrecimento, e a meta
+    // saía de manutenção — a tela só lia a anamnese de uma versão sem `goal`.
+    expect(calorieGoal({ ...base, goalAnswer: 'emagrecimento' })?.adjustment).toBe('deficit');
+    expect(calorieGoal({ ...base, goalAnswer: 'hipertrofia' })?.adjustment).toBe('surplus');
+  });
+
+  it('continua lendo a resposta da anamnese', () => {
+    expect(calorieGoal({ ...base, goalAnswer: 'Perder peso' })?.adjustment).toBe('deficit');
+    expect(calorieGoal({ ...base, goalAnswer: 'Ganhar massa' })?.adjustment).toBe('surplus');
+    expect(calorieGoal({ ...base, goalAnswer: 'Saúde e manutenção' })?.adjustment).toBe('maintain');
+  });
+});

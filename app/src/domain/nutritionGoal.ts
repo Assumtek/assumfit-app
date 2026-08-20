@@ -65,12 +65,22 @@ export function calorieGoal(input: {
     dias === null ? 1.45 : dias <= 0 ? 1.35 : dias <= 2 ? 1.45 : dias <= 4 ? 1.55 : 1.7;
   const tdee = bmr * fator;
 
+  /*
+   O objetivo chega em três vocabulários, e todos precisam ser lidos.
+
+   A resposta da anamnese ("Perder peso", "Ganhar massa"), o objetivo do plano
+   ativo (`emagrecimento`, `hipertrofia`) e o do perfil. Um testador com peso,
+   altura e um plano de emagrecimento recebia meta de MANUTENÇÃO — a tela só
+   lia a anamnese, que não tinha a pergunta na versão dele — e pediu "cálculo
+   de calorias para quem quer emagrecer ou ganhar massa" achando que não existia.
+  */
   const objetivo = (input.goalAnswer ?? '').toLowerCase();
-  const adjustment: CalorieGoal['adjustment'] = objetivo.includes('perder')
-    ? 'deficit'
-    : objetivo.includes('massa') || objetivo.includes('ganhar')
-      ? 'surplus'
-      : 'maintain';
+  const adjustment: CalorieGoal['adjustment'] =
+    objetivo.includes('perder') || objetivo.includes('emagrec')
+      ? 'deficit'
+      : objetivo.includes('massa') || objetivo.includes('ganhar') || objetivo.includes('hipertrof')
+        ? 'surplus'
+        : 'maintain';
 
   let goal = adjustment === 'deficit' ? tdee * 0.8 : adjustment === 'surplus' ? tdee * 1.12 : tdee;
   // Déficit não desce abaixo do repouso: a meta é sustentável ou não é meta.

@@ -116,6 +116,12 @@ declare class QCBandNativeModule extends NativeModule<QCBandEvents> {
   startRealtimeHeartRate(): Promise<void>;
   stopRealtimeHeartRate(): Promise<void>;
   /**
+   * Modo esporte do firmware. `sportType` é o código `OdmSportPlusExerciseModelType`
+   * e `state` é 1 início · 2 pausa · 3 continua · 4 fim. Com a sessão aberta a
+   * pulseira mede batimento sem parar — é o que falta ao treino livre.
+   */
+  setSportMode(sportType: number, state: number): Promise<void>;
+  /**
    * Calibração de uso — leva até 120 s, vestida e parada.
    *
    * Existe porque `measure` pode falhar com `sem-calibracao` (o código -4 que o

@@ -15,6 +15,7 @@ import { Body, Button, Data, Display, HeroCard, Label } from '../components/ui';
 import { ageFromBirthDate, calorieGoal, toMeasure, type CalorieGoal } from '../domain/nutritionGoal';
 import { mensagemDaFalha } from '../domain/apiErrors';
 import * as api from '../services/api.service';
+import { useWorkoutStore } from '../store/workout.store';
 import { useTheme } from '../theme/ThemeProvider';
 
 /**
@@ -98,7 +99,12 @@ export function MealsScreen() {
             heightCm: toMeasure(respostas.heightCm),
             ageYears: perfil ? ageFromBirthDate(perfil.birthDate, new Date()) : null,
             sex: perfil?.sex ?? null,
-            goalAnswer: typeof respostas.goal === 'string' ? respostas.goal : null,
+            // Anamnese primeiro; sem a pergunta lá (versões antigas), vale o
+            // objetivo do plano ativo, que é a decisão mais recente da pessoa.
+            goalAnswer:
+              typeof respostas.goal === 'string'
+                ? respostas.goal
+                : (useWorkoutStore.getState().plan?.goal ?? rotina?.goal ?? null),
             trainDaysPerWeek: rotina?.trainDays?.length ?? null,
           }),
         );

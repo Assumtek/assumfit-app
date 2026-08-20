@@ -6,6 +6,7 @@ import {
   type QCState,
 } from '../../../modules/qcband';
 import { nightFrom } from '../../domain/sleep';
+import type { SportKind } from '../../domain/sport';
 import type { Reading, SleepNight, SleepPhase, SleepSegment } from '../../domain/types';
 import { comTeto, eTempoEsgotado, TETO_CONSULTA_MS, TETO_MEDICAO_MS } from './timeout';
 import {
@@ -17,6 +18,7 @@ import {
   type DiscoveredDevice,
   type MeasurableKind,
   type Sample,
+  type SportState,
   type SyncStep,
 } from './types';
 
@@ -921,6 +923,28 @@ export class QCBandService implements BleService {
     });
   }
 
+  /**
+   * Sessão de esporte na pulseira.
+   *
+   * O contínuo (`realTimeHeartRate`) é o modo de leitura FORA de exercício, e o
+   * firmware o encerra sozinho depois de um tempo — por isso uma sessão de 36
+   * min saiu com uma amostra só. No modo esporte o aparelho mede sem parar e
+   * entrega pelo `currentSportInfo`, que a ponte já traduz em `heartRate`.
+   *
+   * Início desliga o contínuo (o sensor é um só) e fim o religa: é ele que
+   * alimenta a leitura ao vivo da home.
+   */
+  async setSportState(kind: SportKind, state: SportState): Promise<void> {
+    if (!QCBand) return;
+    const tipo = TIPO_DE_ESPORTE_DO_FIRMWARE[kind] ?? OUTRO_EXERCICIO;
+    const estado = { start: 1, pause: 2, continue: 3, stop: 4 }[state];
+    if (state === 'start') await QCBand.stopRealtimeHeartRate().catch(() => undefined);
+    await comTeto(QCBand.setSportMode(tipo, estado), TETO_CONSULTA_MS, 'modo esporte').catch(
+      (err) => console.warn(`[qcband] modo esporte ${kind}/${state}:`, err),
+    );
+    if (state === 'stop') await QCBand.startRealtimeHeartRate().catch(() => undefined);
+  }
+
   async disconnect(): Promise<void> {
     if (!QCBand) return;
     await QCBand.stopRealtimeHeartRate().catch(() => undefined);
@@ -1032,6 +1056,37 @@ function amostrasDeSerie(series: QCHrvSeries[], nome = 'serie'): Sample[] {
   );
   return r;
 }
+
+/** `OdmSportPlusExerciseModelTypeOtherExercise` — o balde do que o firmware não nomeia. */
+const OUTRO_EXERCICIO = 10;
+
+/**
+ * Nossa modalidade → `OdmSportPlusExerciseModelType` do SDK.
+ *
+ * O código muda o ÍCONE e o algoritmo de passos/distância do firmware, não a
+ * medição de batimento — qualquer tipo abre o sensor. Mapear mesmo assim custa
+ * nada e faz o registro da pulseira bater com o do app.
+ */
+const TIPO_DE_ESPORTE_DO_FIRMWARE: Partial<Record<SportKind, number>> = {
+  corrida: 7,
+  caminhada: 4,
+  ciclismo: 9,
+  trilha: 8,
+  escalada: 34,
+  skate: 36,
+  spinning: 24,
+  esteira: 40,
+  eliptico: 26,
+  remo: 27,
+  corda: 5,
+  natacao: 6,
+  futebol: 32,
+  volei: 33,
+  basquete: 31,
+  tenis: 29,
+  danca: 35,
+  yoga: 22,
+};
 
 /**
  * `2026-07-29 15:23:00` → epoch local.
