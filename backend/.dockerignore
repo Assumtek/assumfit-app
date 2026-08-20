@@ -1,0 +1,12 @@
+# O Dockerfile faz `COPY . .` no estágio de build. Sem esta lista, o `.env` de
+# desenvolvimento entra no contexto e viaja junto para o servidor — foi o que
+# aconteceu num deploy de ago/2026. O estágio final só leva `dist/`, então o
+# segredo não chegava ao contêiner em execução; chegava ao DISCO da máquina de
+# produção, legível por qualquer usuário dela.
+.env
+.env.*
+node_modules
+dist
+coverage
+*.log
+.git

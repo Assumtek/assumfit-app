@@ -1,0 +1,10 @@
+# Mesma razão do `backend/.dockerignore`: segredo de desenvolvimento não entra
+# no contexto de build. Este serviço lê `os.environ` direto, sem dotenv — a
+# chave vem do compose, pelo `.env` da máquina de produção.
+.env
+.env.*
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.git

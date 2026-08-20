@@ -10,6 +10,7 @@
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#0E0A22",
     "ios": {
+      "appleTeamId": "5695J86AVD",
       "supportsTablet": false,
       "bundleIdentifier": "br.com.assumtek.assumfit",
       "buildNumber": "4",
