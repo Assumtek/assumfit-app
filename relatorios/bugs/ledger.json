@@ -764,6 +764,60 @@
       "nota": "Combinado, chef. E agora eu escuto o canal em tempo real — mensagem nova aqui já entra na fila na hora.",
       "versao": "1.0.4 (3)",
       "em": "2026-08-21T00:04:54"
+    },
+    "slack:1787312880.514559": {
+      "commit": "28d1bca",
+      "nota": "Feito, Bruno (opcional, em Configurações → Notificações → \"Lembrar ao chegar no lugar do treino\"): o app guarda onde suas sessões começam, e quando um lugar se repete vira uma cerca de 150 m — chegar lá dispara o lembrete de check-in. Pede localização \"sempre\", por isso é um interruptor.",
+      "versao": "1.0.4 (5)",
+      "em": "2026-08-21T09:48:01"
+    },
+    "slack:1787311812.351499": {
+      "commit": "28d1bca",
+      "nota": "Feito, Leo — e do jeito que você descreveu: opcional, em Configurações → \"Notificações personalizadas — quanto mais você usa, mais ele aprende\". Ligado, ele lê 30 dias de refeições, treinos e a hora de dormir, e agenda lembretes nos seus horários típicos (nada com menos de 3 ocorrências). Inclui o relatório semanal de sono no domingo à noite.",
+      "versao": "1.0.4 (5)",
+      "em": "2026-08-21T09:48:09"
+    },
+    "ABzCJnfiVy_Ae9UbgENweeE": {
+      "commit": "28d1bca",
+      "nota": "As noites da lista na tela de Sono agora abrem o detalhe do dia, e o relatório semanal de sono chega domingo às 20h (dentro das notificações personalizadas, em Configurações).",
+      "versao": "1.0.4 (5)",
+      "em": "2026-08-21T09:48:17"
+    },
+    "AKYahkBs48vzS6dhBSpE4xI": {
+      "commit": "28d1bca",
+      "nota": "Feito em todos os gráficos de linha: segura e arrasta pra ver o valor de cada medição (linha vertical + número), e os eixos ganharam mín/máx à esquerda. Os de barras ganharam o topo da escala.",
+      "versao": "1.0.4 (5)",
+      "em": "2026-08-21T09:48:20"
+    },
+    "AMFLPj06f-vA1UBzFtwOfV8": {
+      "commit": "28d1bca",
+      "nota": "Progresso ganhou o ícone de compartilhar no topo: minutos ativos, treinos e carga do período, no mesmo story 9:16.",
+      "versao": "1.0.4 (5)",
+      "em": "2026-08-21T09:48:27"
+    },
+    "AHfvchjatARq-T48iBeRvd0": {
+      "commit": "28d1bca",
+      "nota": "Revertido um ajuste de teclado na rolagem que entrou ontem e coincide com isso. Se a tela de Atividade voltar a travar vazia ao rolar, me avisa com o print — aí isolo no aparelho.",
+      "versao": "1.0.4 (5)",
+      "em": "2026-08-21T09:48:30"
+    },
+    "AChWRmO5gp3IaMJzIYViCu8": {
+      "commit": "28d1bca",
+      "nota": "Você tinha razão: o compartilhar existia na conclusão e no detalhe da sessão de esporte, não na tela de Atividade. Agora tem o ícone lá também (passos, km, kcal).",
+      "versao": "1.0.4 (5)",
+      "em": "2026-08-21T09:48:33"
+    },
+    "AL7DPy2E3hdjr32oAFMzMPs": {
+      "commit": "28d1bca",
+      "nota": "Achado: a varredura da memória da pulseira só mandava as noites pro servidor (por isso a lista embaixo tinha 20/08) e não atualizava a tela. Agora atualiza. E a tela de Sono ganhou puxar-para-atualizar; as noites da lista abrem o detalhe.",
+      "versao": "1.0.4 (5)",
+      "em": "2026-08-21T09:48:36"
+    },
+    "AAEbVGcLsEAAqb2Jei1VkhY": {
+      "commit": "28d1bca",
+      "nota": "Passos, distância e calorias eram restaurados do disco sem data — amanheciam com o valor de ontem até a pulseira mandar o primeiro passo. Agora o dia vira: gravado em outro dia, zera.",
+      "versao": "1.0.4 (5)",
+      "em": "2026-08-21T09:48:39"
     }
   }
 }
