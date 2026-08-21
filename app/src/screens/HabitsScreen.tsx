@@ -14,6 +14,7 @@ import { Card } from '../components/ui/Card';
 import { Sheet } from '../components/ui/Dialog';
 import { MAX_ML, MIN_ML, STEP_ML, type Container } from '../domain/containers';
 import * as api from '../services/api.service';
+import { WaterRing } from '../components/WaterRing';
 import { useHabitsStore } from '../store/habits.store';
 import { useUserStore } from '../store/user.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -103,43 +104,23 @@ export function HabitsScreen() {
   const remaining = Math.max(0, goalMl - today.waterMl);
 
   return (
-    <DetailScreen title="Hábitos">
+    <DetailScreen title="Água">
       {/*
-        Respiro maior no topo porque o título da tela também é um rótulo em
-        caixa alta: sem a distância, os dois se leem como um par gaguejado.
+        O anel, como no ciclo (decisão da fundadora, ago/2026): o dia inteiro
+        num círculo, e dentro dele a conta em mililitros. Saíram o "faltam X
+        copos" e a fórmula da meta — ela continua existindo (é a meta), só não
+        precisa ser lida todo dia. Quem quiser saber de onde vem, a Ajuda diz.
       */}
-      <Label marginTop="$md" marginBottom="$md">
-        água hoje
-      </Label>
-
-      {/* Número e unidade na mesma linha de base — a unidade é sub-label. */}
-      <XStack alignItems="baseline" gap="$sm">
-        <Display>{liters(today.waterMl)}</Display>
-        <MetricSm color="$faint">L</MetricSm>
-      </XStack>
-      <RatingText marginTop="$md" marginBottom="$xxl">
-        {remainingLabel(remaining, containers[0].ml)}
-      </RatingText>
-
-      {/* Aqui a barra de PREENCHIMENTO é a certa, ao contrário da energia na
-          home: água acumula rumo a uma meta, e a meta é o fim da régua. A escala
-          embaixo existe para a barra não flutuar sem referência — sem ela, um
-          traço cheio pela metade não diz metade de quê. */}
-      <YStack gap="$sm">
-        <YStack height={6} borderRadius={3} backgroundColor="$track" overflow="hidden">
-          <YStack height={6} borderRadius={3} backgroundColor="$primary" width={`${pct * 100}%`} />
-        </YStack>
-        <XStack justifyContent="space-between">
-          <Data>0</Data>
-          {/* A meta mostra DE ONDE veio: é a conta da pessoa, e ela pode
-              conferir — sem isso, um número novo na tela é só um número. */}
-          <Data>
-            meta {liters(goalMl)} L{goalReason ? ` · ${goalReason}` : ' · referência'}
-          </Data>
-        </XStack>
+      <YStack marginTop="$lg" marginBottom="$xxl">
+        <WaterRing ml={today.waterMl} metaMl={goalMl} />
+        {remaining === 0 ? (
+          <RatingText textAlign="center" marginTop="$md">
+            Meta batida
+          </RatingText>
+        ) : null}
       </YStack>
 
-      <XStack gap="$sm" marginTop="$xl">
+      <XStack gap="$sm">
         {containers.map((pour) => (
           <YStack key={pour.key} flex={1}>
             {/* Card é o vocabulário de AÇÃO no novo sistema. Três colunas
@@ -163,39 +144,40 @@ export function HabitsScreen() {
         ))}
       </XStack>
 
-      {/* O ajuste fica ao lado do desfazer: os dois são correções do
-          registro, e quem erra o volume percebe no mesmo instante em que
-          erraria o toque. */}
-      <XStack alignItems="center" justifyContent="space-between" gap="$md">
+      {/* Desfazer fica logo abaixo dos recipientes, discreto: é correção do
+          último toque. */}
+      <XStack alignItems="center" marginTop="$sm">
         {today.pours.length > 0 ? (
           <Pressable
-          style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
-          onPress={undo}
-          accessibilityRole="button"
-        >
-            <XStack alignItems="center" gap="$sm" paddingVertical="$lg">
+            style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
+            onPress={undo}
+            accessibilityRole="button"
+          >
+            <XStack alignItems="center" gap="$sm" paddingVertical="$md">
               <Icon name="back" size={14} color={colors.textFaint} />
               <Data>Desfazer {today.pours[today.pours.length - 1]} ml</Data>
             </XStack>
           </Pressable>
         ) : (
-          <Data paddingVertical="$lg" flexShrink={1}>
+          <Data paddingVertical="$md" flexShrink={1}>
             Toque no recipiente que você acabou de beber.
           </Data>
         )}
-
-        <Pressable
-          onPress={() => setAjustando(true)}
-          accessibilityRole="button"
-          accessibilityLabel="Ajustar o volume dos recipientes"
-          style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
-        >
-          <XStack alignItems="center" gap="$sm" paddingVertical="$lg" flexShrink={0}>
-            <Icon name="ruler" size={14} color={colors.textFaint} />
-            <Data>Ajustar volumes</Data>
-          </XStack>
-        </Pressable>
       </XStack>
+
+      {/*
+        "Ajustar volumes" é um BOTÃO, e parece um — com distância dos cards de
+        registro. Como linha de texto colada ao desfazer, não se percebia que
+        era tocável (fundadora, ago/2026).
+      */}
+      <YStack marginTop="$xl">
+        <Button
+          title="Ajustar volumes"
+          variant="secondary"
+          icon={<Icon name="ruler" size={16} color={colors.text} />}
+          onPress={() => setAjustando(true)}
+        />
+      </YStack>
 
       {/*
         Só o lembrete de ÁGUA: o alerta de sedentarismo saiu daqui (decisão da
