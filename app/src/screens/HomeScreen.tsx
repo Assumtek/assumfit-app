@@ -26,6 +26,7 @@ import { supportsGattInspection } from '../services/ble';
 import { useAmbientStore } from '../store/ambient.store';
 import { useInsightStore } from '../store/insight.store';
 import { useBiometricStore } from '../store/biometric.store';
+import { useHoraLocal } from '../hooks/useHoraLocal';
 import { useUiStore } from '../store/ui.store';
 import { greeting, useUserStore } from '../store/user.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -53,7 +54,7 @@ export function HomeScreen() {
   const model = useInsightStore((s) => s.model);
   const insightStatus = useInsightStore((s) => s.status);
   const refreshInsight = useInsightStore((s) => s.refresh);
-  const hour = new Date().getHours();
+  const hour = useHoraLocal();
   const { width } = useWindowDimensions();
   // Largura útil do gráfico: tela − margem da home − respiro interno do card.
   const larguraGrafico = width - 48 - 40;

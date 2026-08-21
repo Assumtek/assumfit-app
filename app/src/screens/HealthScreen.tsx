@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect } from 'react';
-import { RefreshControl } from 'react-native';
+import { Pressable, RefreshControl } from 'react-native';
 
 import { LineChart } from '../components/charts/LineChart';
 import { DetailScreen } from '../components/DetailScreen';
@@ -26,6 +26,7 @@ import {
   type Rating,
 } from '../domain/ratings';
 import { useBioAge } from '../hooks/useBioAge';
+import { useHoraLocal } from '../hooks/useHoraLocal';
 import * as api from '../services/api.service';
 import { deepSleepPct, useBiometricStore } from '../store/biometric.store';
 import { useInsightStore } from '../store/insight.store';
@@ -148,6 +149,12 @@ export function HealthScreen() {
    30 dias. É esse que precisava de um lugar para ser lido inteiro.
   */
   const leituraDoDia = useInsightStore((s) => s.model)?.insight ?? null;
+  const insightStatus = useInsightStore((s) => s.status);
+  const refreshInsight = useInsightStore((s) => s.refresh);
+  const hora = useHoraLocal();
+  useEffect(() => {
+    void refreshInsight(hora);
+  }, [refreshInsight, hora]);
 
   return (
     <DetailScreen
@@ -180,12 +187,51 @@ export function HealthScreen() {
         métricas e nenhuma frase. Aqui não há corte, e é o lugar certo, porque
         o texto explica exatamente os números que vêm logo abaixo.
       */}
-      {leituraDoDia ? (
-        <YStack marginBottom="$xl" gap="$sm">
-          <RatingText>{leituraDoDia.headline}</RatingText>
-          <Body>{leituraDoDia.detail}</Body>
+      {/*
+        O parágrafo ATUALIZA de hora em hora com a tela aberta (relógio do
+        `useHoraLocal`) e a pessoa pode pedir agora: "Analisar agora" força a
+        releitura do dia — horário, medições, treinos, refeições e água já
+        entram no modelo — e rediz a frase (fundadora, ago/2026). À direita, o
+        compartilhar como ícone discreto, não como botão.
+      */}
+      <XStack alignItems="flex-start" justifyContent="space-between" gap="$md" marginBottom={leituraDoDia ? '$sm' : '$xl'}>
+        <YStack flex={1} gap="$sm">
+          {leituraDoDia ? (
+            <>
+              <RatingText>{leituraDoDia.headline}</RatingText>
+              <Body>{leituraDoDia.detail}</Body>
+            </>
+          ) : (
+            <Data>{insightStatus === 'loading' ? 'analisando o seu dia…' : 'sem leitura do dia ainda'}</Data>
+          )}
         </YStack>
-      ) : null}
+        <Pressable
+          onPress={() =>
+            (navigation as any).push('WorkoutShare', {
+              titulo: 'Minha saúde hoje',
+              metricas: [
+                sleep ? { valor: String(sleep.score), rotulo: 'sono' } : null,
+                bio ? { valor: String(bio.bioAge), rotulo: 'idade biológica' } : null,
+                latest?.hrvMs ? { valor: `${Math.round(latest.hrvMs)} ms`, rotulo: 'HRV' } : null,
+              ].filter(Boolean),
+            })
+          }
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Compartilhar minha saúde"
+          style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
+        >
+          <Icon name="share" size={18} color={colors.textMuted} strokeWidth={1.5} />
+        </Pressable>
+      </XStack>
+      <YStack alignSelf="flex-start" marginBottom="$xl">
+        <Button
+          title={insightStatus === 'loading' ? 'Analisando…' : 'Analisar agora'}
+          variant="ghost"
+          disabled={insightStatus === 'loading'}
+          onPress={() => void refreshInsight(hora, { force: true })}
+        />
+      </YStack>
 
       {/*
         UMA medição para três números.
@@ -259,28 +305,6 @@ export function HealthScreen() {
             ) : null}
           </HeroCard>
 
-          {/*
-            Compartilhar a saúde de hoje como story — o mesmo canvas do treino
-            e do esporte. Pedido de um testador (ago/2026): "compartilhar de
-            forma instagramável". Só números medidos entram; o que está em
-            traço fica de fora do card.
-          */}
-          <YStack alignSelf="flex-start" marginTop="$sm">
-            <Button
-              title="Compartilhar minha saúde"
-              variant="ghost"
-              onPress={() =>
-                (navigation as any).push('WorkoutShare', {
-                  titulo: 'Minha saúde hoje',
-                  metricas: [
-                    sleep ? { valor: String(sleep.score), rotulo: 'sono' } : null,
-                    bio ? { valor: String(bio.bioAge), rotulo: 'idade biológica' } : null,
-                    latest?.hrvMs ? { valor: `${Math.round(latest.hrvMs)} ms`, rotulo: 'HRV' } : null,
-                  ].filter(Boolean),
-                })
-              }
-            />
-          </YStack>
 
           {bateria ? (
             <YStack marginTop="$xxl">

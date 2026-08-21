@@ -60,6 +60,7 @@ import {
   Thermometer,
   Watch,
   Waves,
+  Share2,
 } from 'lucide-react-native';
 import React from 'react';
 
@@ -124,6 +125,7 @@ export type IconName =
   | 'ruler'
   | 'flame'
   | 'up'
+  | 'share'
   | 'down'
   | 'dumbbell'
   | 'check'
@@ -213,6 +215,7 @@ const GLYPH = {
   ruler: Ruler,
   flame: Flame,
   up: ChevronUp,
+  share: Share2,
   down: ChevronDown,
   dumbbell: Dumbbell,
   check: Check,
