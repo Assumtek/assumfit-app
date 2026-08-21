@@ -1,5 +1,6 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Text } from '@tamagui/core';
+import { LinearGradient } from '@tamagui/linear-gradient';
 import { XStack, YStack } from '@tamagui/stacks';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
@@ -262,15 +263,23 @@ export function WorkoutShareScreen() {
               <RadialHalo layers={CORNER_HALO} />
             )}
             {foto ? (
-              <YStack
-                position="absolute"
-                top={0}
-                left={0}
-                right={0}
-                bottom={0}
-                backgroundColor="rgba(14,10,34,0.45)"
-                pointerEvents="none"
-              />
+              /*
+               O véu sobre a foto tem DOIS pesos: uniforme, para o título no
+               alto, e mais denso embaixo, onde ficam os números. Com 0,45
+               uniforme, foto de fundo claro deixava o texto branco ilegível
+               (relato de testador, ago/2026). Gradiente vem do pacote que o
+               HeroCard já usa — nada nativo novo.
+              */
+              <YStack position="absolute" top={0} left={0} right={0} bottom={0} pointerEvents="none">
+                <YStack position="absolute" top={0} left={0} right={0} bottom={0} backgroundColor="rgba(14,10,34,0.5)" />
+                <LinearGradient
+                  colors={['rgba(14,10,34,0)', 'rgba(14,10,34,0.55)']}
+                  locations={[0.45, 1]}
+                  start={[0, 0]}
+                  end={[0, 1]}
+                  style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                />
+              </YStack>
             ) : null}
 
             <BlocoEditavel

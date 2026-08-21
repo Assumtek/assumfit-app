@@ -411,7 +411,16 @@ Não são limitação — são escolha, e reverter é fácil se aparecer necessi
 
 - **`react-native-reanimated`** — a sidebar é um overlay próprio com o
   `Animated` do RN (`components/Sidebar.tsx`), o que dispensa
-  `@react-navigation/drawer` e o Reanimated junto.
+  `@react-navigation/drawer` e o Reanimated junto. **Mas ele ESTÁ no binário**,
+  transitivo: `@tamagui/config` → `@tamagui/animations-reanimated` →
+  `react-native-reanimated` (e `react-native-worklets` vem pelo
+  `expo-modules-core`). Consequência que custou dois crashes em produção
+  (ago/2026): com o Reanimated presente, o `react-native-gesture-handler`
+  entrega os callbacks de `Gesture.*` ao runtime de worklets, e callback que
+  não é worklet lança lá — em release, o app fecha no primeiro toque. **Todo
+  `Gesture.Pan()/Pinch()/Rotation()/…` precisa de `.runOnJS(true)`** (ver
+  `components/ShareCanvas.tsx`). O diagnóstico saiu do dSYM do archive:
+  `touchesBegan → sendEventForReanimated → WorkletRuntime::runSync`.
 - **`@shopify/react-native-skia`** — os gráficos são `react-native-svg`
   (`components/HrvChart.tsx`). Para uma polyline de ~90 pontos dá no mesmo.
   Skia passa a valer se surgir desenho por frame.

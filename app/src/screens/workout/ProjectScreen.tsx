@@ -1,5 +1,6 @@
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useCallback, useEffect, useState } from 'react';
+import { Pressable } from 'react-native';
 
 import { Note, Row, Section } from '../../components/Card';
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
@@ -47,6 +48,7 @@ const ICONE: Record<FatoDoProjeto['chave'], IconName> = {
 };
 
 export function ProjectScreen() {
+  const { colors } = useTheme();
   const plan = useWorkoutStore((s) => s.plan);
   const [treinos, setTreinos] = useState<TreinoDoProjeto[] | null>(null);
   const [detalhes, setDetalhes] = useState(false);
@@ -184,13 +186,15 @@ export function ProjectScreen() {
           ) : (
             <Body>O texto completo de quem montou o plano — método, faixas e progressão.</Body>
           )}
-          <YStack alignSelf="flex-start" marginTop="$md">
-            <Button
-              title={detalhes ? 'Ocultar detalhes técnicos' : 'Ver detalhes técnicos'}
-              variant="ghost"
-              onPress={() => setDetalhes((d) => !d)}
-            />
-          </YStack>
+          <Pressable
+            onPress={() => setDetalhes((d) => !d)}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: detalhes }}
+            style={({ pressed }) => [{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }, pressed && { opacity: 0.6 }]}
+          >
+            <Data color="$foreground">{detalhes ? 'Ocultar detalhes técnicos' : 'Ver detalhes técnicos'}</Data>
+            <Icon name={detalhes ? 'up' : 'down'} size={12} color={colors.textMuted} />
+          </Pressable>
         </Section>
       ) : null}
     </DetailScreen>

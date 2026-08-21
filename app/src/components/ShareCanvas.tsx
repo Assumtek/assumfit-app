@@ -58,7 +58,18 @@ export function BlocoEditavel({
   const escala = useRef(new Animated.Value(1)).current;
   const giro = useRef(new Animated.Value(0)).current;
 
+  /*
+   `.runOnJS(true)` em TODOS os gestos deste arquivo, e não é opcional.
+
+   O Reanimated está no binário — chega por dependência, não por escolha nossa
+   — e, quando está, o gesture-handler entrega os callbacks ao runtime de
+   worklets. Estes callbacks são closures comuns (mexem em estado do React):
+   rodando lá, lançam, e em release o app fecha no primeiro toque num bloco.
+   Foi o crash do "compartilhar minha saúde" e o do "incluir foto" (ago/2026),
+   confirmado no dSYM: touchesBegan → sendEventForReanimated → WorkletRuntime.
+  */
   const arrastar = Gesture.Pan()
+    .runOnJS(true)
     .onBegin(() => onSelecionar())
     .onUpdate((e) => {
       tx.setValue(baseX.current + e.translationX);
@@ -70,6 +81,7 @@ export function BlocoEditavel({
     });
 
   const beliscar = Gesture.Pinch()
+    .runOnJS(true)
     .onUpdate((e) => {
       // Piso de 0,4 e teto de 3: abaixo disso o bloco some sem querer, acima
       // ele cobre o canvas inteiro e não há como pegá-lo de volta.
@@ -80,6 +92,7 @@ export function BlocoEditavel({
     });
 
   const girar = Gesture.Rotation()
+    .runOnJS(true)
     .onUpdate((e) => giro.setValue(baseGiro.current + e.rotation))
     .onEnd((e) => {
       baseGiro.current += e.rotation;
@@ -144,6 +157,7 @@ export function FotoDeFundo({ uri, ativa }: { uri: string; ativa: boolean }) {
   const zoom = useRef(new Animated.Value(1)).current;
 
   const arrastar = Gesture.Pan()
+    .runOnJS(true)
     .enabled(ativa)
     .onUpdate((e) => {
       tx.setValue(baseX.current + e.translationX);
@@ -155,6 +169,7 @@ export function FotoDeFundo({ uri, ativa }: { uri: string; ativa: boolean }) {
     });
 
   const beliscar = Gesture.Pinch()
+    .runOnJS(true)
     .enabled(ativa)
     .onUpdate((e) => zoom.setValue(Math.min(4, Math.max(1, baseZoom.current * e.scale))))
     .onEnd((e) => {

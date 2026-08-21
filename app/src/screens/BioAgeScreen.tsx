@@ -1,11 +1,12 @@
 import { useNavigation } from '@react-navigation/native';
 import { YStack } from '@tamagui/stacks';
 import React, { useCallback, useEffect, useState } from 'react';
-import { LayoutChangeEvent } from 'react-native';
+import { LayoutChangeEvent, Pressable } from 'react-native';
 
 import { EmptyMetric } from '../components/BandStatus';
 import { Note, Row, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
+import { Icon } from '../components/Icon';
 import { MeasureButton } from '../components/MeasureButton';
 import { DivergingBar } from '../components/charts/DivergingBar';
 import { Button, Body, Data, Display, MetricSm, RatingText } from '../components/ui';
@@ -14,6 +15,7 @@ import { useBioAge } from '../hooks/useBioAge';
 import * as api from '../services/api.service';
 import { deepSleepPct, useBiometricStore } from '../store/biometric.store';
 import { useUserStore } from '../store/user.store';
+import { useTheme } from '../theme/ThemeProvider';
 
 /**
  * Idade biológica — idade fisiológica estimada a partir de literatura.
@@ -35,6 +37,7 @@ export function BioAgeScreen() {
   const sleep = useBiometricStore((s) => s.sleep);
   const user = useUserStore((s) => s.user);
   const age = useUserStore((s) => s.age());
+  const { colors } = useTheme();
   const [chartWidth, setChartWidth] = useState(0);
   const [referencias, setReferencias] = useState(false);
 
@@ -150,13 +153,15 @@ export function BioAgeScreen() {
           quer conferir, abre — e sem divisória entre uma e outra, que é peso
           visual sem informação.
         */}
-        <YStack alignSelf="flex-start" marginTop="$md">
-          <Button
-            title={referencias ? 'Ocultar referências' : 'Ver referências científicas (4)'}
-            variant="ghost"
-            onPress={() => setReferencias((r) => !r)}
-          />
-        </YStack>
+        <Pressable
+          onPress={() => setReferencias((r) => !r)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: referencias }}
+          style={({ pressed }) => [{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }, pressed && { opacity: 0.6 }]}
+        >
+          <Data color="$foreground">{referencias ? 'Ocultar referências' : 'Ver referências científicas'}</Data>
+          <Icon name={referencias ? 'up' : 'down'} size={12} color={colors.textMuted} />
+        </Pressable>
         {referencias ? (
           <YStack gap="$md" marginTop="$sm">
             <Data lineHeight={17}>
