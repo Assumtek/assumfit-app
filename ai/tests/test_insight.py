@@ -229,3 +229,11 @@ def test_plausivel_aceita_escala_e_numeros_de_relogio():
 def test_plausivel_continua_recusando_medicao_inventada():
     dados = {"eyebrow": "x", "headline": "y", "detail": "Seu HRV está em 52 ms, abaixo do habitual."}
     assert not _plausivel(dados, _fatos())
+
+
+def test_prompt_leva_as_frases_recentes_para_nao_repetir():
+    from models.insight_llm import _prompt
+    f = _fatos(recent=("Seu corpo pede movimento agora", "Levante para recuperar o corpo"))
+    texto = _prompt(f)
+    assert "Levante para recuperar o corpo" in texto
+    assert "NÃO repita" in texto

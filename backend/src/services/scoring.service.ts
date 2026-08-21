@@ -233,9 +233,28 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
     return cached.insight as unknown as EnergyResponse;
   }
 
+  /*
+   As frases das últimas horas vão junto, para o modelo NÃO repetir. Com os
+   mesmos fatos e o mesmo prompt ele convergia para o mesmo conselho hora após
+   hora — "levante por cinco minutos" às 9h, às 10h, às 11h (ago/2026). Só as
+   do modelo: molde repetido não ensina nada a ele.
+  */
+  const recentes = await prisma.energyScore.findMany({
+    where: { userId, hourStart: { lt: hourStart() } },
+    orderBy: { hourStart: 'desc' },
+    take: 6,
+    select: { insight: true },
+  });
+  const recentInsights = recentes
+    .map((r) => (r.insight as { insight?: { headline?: string; detail?: string; source?: string } } | null)?.insight)
+    .filter((i): i is { headline?: string; detail?: string; source?: string } => !!i && i.source === 'llm')
+    .map((i) => `${i.headline ?? ''} — ${i.detail ?? ''}`.trim())
+    .slice(0, 4);
+
   const { data } = await axios.post<EnergyResponse>(
     `${env.AI_SERVICE_URL}/energy/insight`,
     {
+      recent_insights: recentInsights,
       hrv_ms: reading.hrvMs,
       // Ausente é ausente. O valor fixo de 80 que ficava aqui deslocava um
       // quarto do score em cima de um número que ninguém mediu.

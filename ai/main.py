@@ -49,6 +49,10 @@ class EnergyInput(BaseModel):
     weekday: int | None = Field(default=None, ge=0, le=6)
     lifestyle: LifestyleInput | None = None
     today: TodayInput | None = None
+    #: As frases das últimas horas, para o modelo NÃO repetir. Sem isto ele
+    #: convergia para o mesmo conselho hora após hora ("levante por cinco
+    #: minutos") — fatos iguais, prompt igual, texto igual (ago/2026).
+    recent_insights: list[str] = Field(default_factory=list, max_length=6)
 
 
 class TodaySportInput(BaseModel):
@@ -158,6 +162,7 @@ def _redigir(energy, hour, *, calibration_days=7, lifestyle=None, weekday=None, 
             hour=hour,
             routine=molde.context,
             day_notes=day_notes(today, hour),
+            recent=tuple(r[:200] for r in data.recent_insights[:4]),
         ),
         molde,
     )

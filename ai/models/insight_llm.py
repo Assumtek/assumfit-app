@@ -119,6 +119,8 @@ class Facts:
     #: Fatos do DIA já apurados (treino, esporte, refeições, passos),
     #: em frases curtas separadas por "; ". `None` quando não há nada medido.
     day_notes: str | None = None
+    #: O que já foi dito nas últimas horas — para variar, não para citar.
+    recent: tuple[str, ...] = ()
 
 
 def _prompt(f: Facts) -> str:
@@ -158,6 +160,15 @@ def _prompt(f: Facts) -> str:
             f"Fatos do dia da pessoa: {f.day_notes}. "
             "Teça NO MÁXIMO um deles no texto — o mais relevante para a orientação "
             "de agora. Não liste todos; não cobre o que não foi feito, apenas oriente."
+        )
+
+    if f.recent:
+        linhas.append(
+            "Frases mostradas nas últimas horas: "
+            + " | ".join(f"\"{r}\"" for r in f.recent)
+            + ". NÃO repita a forma nem o conselho delas: mude o ângulo (o que o "
+            "corpo está fazendo, o que o horário pede, o que a rotina permite) e a "
+            "ação sugerida. Ler a mesma frase de novo ensina a pessoa a ignorar a tela."
         )
 
     return "\n".join(linhas)
