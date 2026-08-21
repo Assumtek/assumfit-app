@@ -10,7 +10,7 @@ import { WeekRail } from '../../components/WeekRail';
 import { Body, Button, Data, Headline } from '../../components/ui';
 import { QuickMenu } from './QuickMenu';
 import { movementMinutes } from '../../domain/movement';
-import { montarSemanaDeTreino, type DiaDeTreino } from '../../domain/trainingWeek';
+import { treinoPendente, montarSemanaDeTreino, type DiaDeTreino } from '../../domain/trainingWeek';
 import {
   DAY_LABEL,
   isSportDay,
@@ -147,7 +147,8 @@ export function PlanScreen() {
             dia={aberto}
             execucao={execution}
             onVoltarParaHoje={() => setEscolhido(null)}
-            onCheckin={() => navigation.push('Checkin')}
+            pendente={treinoPendente(semana)}
+            onCheckin={(dia) => navigation.push('Checkin', dia ? { dayOfWeek: dia.weekday } : undefined)}
             onContinuar={() => navigation.push('Training')}
           />
         ) : null}
@@ -174,14 +175,18 @@ export function PlanScreen() {
 function Leitura({
   dia,
   execucao,
+  pendente,
   onVoltarParaHoje,
   onCheckin,
   onContinuar,
 }: {
   dia: DiaDeTreino;
   execucao: { workoutName: string } | null;
+  /** O treino desta semana que ficou para trás, se houver. */
+  pendente: DiaDeTreino | null;
   onVoltarParaHoje: () => void;
-  onCheckin: () => void;
+  /** Sem argumento: o treino de hoje. Com dia: o treino DAQUELE dia, hoje. */
+  onCheckin: (dia?: DiaDeTreino) => void;
   onContinuar: () => void;
 }) {
   const registrado = dia.cumprido > 0 ? `${dia.cumprido} min registrados` : null;
@@ -224,7 +229,7 @@ function Leitura({
         acao={null}
         secundaria={
           dia.ehHoje
-            ? { title: 'Treinar mesmo assim', onPress: onCheckin, variant: 'secondary' }
+            ? { title: 'Treinar mesmo assim', onPress: () => onCheckin(), variant: 'secondary' }
             : voltar
         }
       />
@@ -262,13 +267,37 @@ function Leitura({
    destaca o CRONÔMETRO e desce o guiado a secundário. Quem escolhe continua
    vendo as duas opções; o que mudou é qual delas a tela recomenda.
   */
+  /*
+   O treino que FICOU. Um testador (21/08) não fez o de ontem, a tela já
+   mostrava o de hoje, e ele queria um jeito fácil de fazer o que passou.
+   Dois caminhos, os dois sem sair desta tela: no dia passado aberto na régua,
+   a ação principal vira "Fazer este treino hoje"; e no painel de hoje, se
+   ainda não há registro, a secundária oferece o pendente mais recente pelo
+   nome do dia. Recuperar vale só dentro da semana — semana anterior é
+   reorganizar o plano, não um atalho.
+  */
+  const recuperar =
+    dia.ehHoje && pendente && dia.cumprido === 0
+      ? {
+          title: `Fazer o de ${DAY_LABEL[pendente.weekday]} que ficou`,
+          onPress: () => onCheckin(pendente),
+          variant: 'secondary' as const,
+        }
+      : null;
+
   return (
     <TrainingPanel
       titulo={treino.name}
       icone={modalityMeta(treino.modality).icon as never}
-      meta={meta}
-      acao={dia.ehHoje ? { title: 'Começar treino', onPress: onCheckin, icon: 'play' } : null}
-      secundaria={voltar}
+      meta={dia.pendente ? `${meta} · não registrado` : meta}
+      acao={
+        dia.ehHoje
+          ? { title: 'Começar treino', onPress: () => onCheckin(), icon: 'play' }
+          : dia.pendente
+            ? { title: 'Fazer este treino hoje', onPress: () => onCheckin(dia), icon: 'play' }
+            : null
+      }
+      secundaria={recuperar ?? voltar}
     />
   );
 }

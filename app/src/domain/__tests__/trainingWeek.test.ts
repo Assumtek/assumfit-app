@@ -1,4 +1,5 @@
-import { diaCorrente, montarSemanaDeTreino } from '../trainingWeek';
+import {
+  treinoPendente, diaCorrente, montarSemanaDeTreino } from '../trainingWeek';
 import type { DiaDoPlano } from '../trainingWeek';
 
 // Quarta-feira, 12 de agosto de 2026, meio-dia local. A semana desta data vai
@@ -166,5 +167,39 @@ describe('planDayId', () => {
     const semana = montarSemanaDeTreino(plano([treino('MONDAY', 'Pernas')]), mapa(), QUARTA);
     expect(semana.dias[1].planDayId).toBeNull();
     expect(montarSemanaDeTreino(null, mapa(), QUARTA).dias[0].planDayId).toBeNull();
+  });
+});
+
+describe('treinoPendente', () => {
+  // Quarta-feira 2026-08-19 como hoje; plano treina seg/qua/sex.
+  const plano = {
+    today: 'WEDNESDAY',
+    days: [treino('MONDAY', 'Peito'), treino('WEDNESDAY', 'Costas'), treino('FRIDAY', 'Pernas')],
+  };
+  const hoje = new Date(2026, 7, 19, 10);
+
+  it('o treino de um dia passado sem registro é pendente; hoje e futuro não', () => {
+    const semana = montarSemanaDeTreino(plano, new Map(), hoje);
+    const porDia = Object.fromEntries(semana.dias.map((d) => [d.weekday, d.pendente]));
+    expect(porDia.MONDAY).toBe(true);
+    expect(porDia.WEDNESDAY).toBe(false);
+    expect(porDia.FRIDAY).toBe(false);
+    expect(treinoPendente(semana)?.weekday).toBe('MONDAY');
+  });
+
+  it('registro no dia tira a pendência', () => {
+    const semana = montarSemanaDeTreino(plano, new Map([['2026-08-17', 40]]), hoje);
+    expect(treinoPendente(semana)).toBeNull();
+  });
+
+  it('com dois pendentes, devolve o mais recente', () => {
+    const doisDias = { ...plano, today: 'FRIDAY', days: [...plano.days] };
+    const semana = montarSemanaDeTreino(doisDias, new Map(), new Date(2026, 7, 21, 10));
+    expect(treinoPendente(semana)?.weekday).toBe('WEDNESDAY');
+  });
+
+  it('dia de descanso passado nunca é pendente', () => {
+    const semana = montarSemanaDeTreino(plano, new Map(), hoje);
+    expect(semana.dias.find((d) => d.weekday === 'TUESDAY')?.pendente).toBe(false);
   });
 });

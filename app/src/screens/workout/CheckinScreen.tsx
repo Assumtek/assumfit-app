@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -33,6 +33,7 @@ import { useTheme } from '../../theme/ThemeProvider';
 export function CheckinScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation<any>();
+  const route = useRoute();
 
   const plan = useWorkoutStore((s) => s.plan);
   const execution = useWorkoutStore((s) => s.execution);
@@ -69,9 +70,18 @@ export function CheckinScreen() {
     });
   }, [days, todayDay]);
 
+  /*
+   Dia pedido pela tela de Treino ("fazer o de ontem que ficou") tem precedência
+   sobre o de hoje: a pessoa acabou de escolher. Sem pedido, vale o hoje.
+  */
+  const diaPedido = (route.params as { dayOfWeek?: string } | undefined)?.dayOfWeek;
   useEffect(() => {
-    if (todayDay) setSelected(todayDay);
-  }, [todayDay]);
+    const pedido = diaPedido
+      ? days.find((d) => d.dayOfWeek === diaPedido && d.dayType === 'WORKOUT' && d.workout) ?? null
+      : null;
+    if (pedido) setSelected(pedido);
+    else if (todayDay) setSelected(todayDay);
+  }, [todayDay, diaPedido, days]);
 
   const togglePreview = useCallback(
     async (day: PlanDay) => {

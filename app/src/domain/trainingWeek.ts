@@ -50,6 +50,13 @@ export type DiaDeTreino = {
   ehHoje: boolean;
   /** Ainda não chegou: não conta como falta. */
   futuro: boolean;
+  /**
+   * Tinha treino, já passou e nada foi registrado — o treino "que ficou".
+   * Um testador (21/08/2026) não fez o de ontem, o app já mostrava o de hoje, e
+   * ele queria um jeito fácil de fazer o que ficou para trás. É este campo que
+   * dá à tela o direito de oferecer isso.
+   */
+  pendente: boolean;
 };
 
 export type SemanaDeTreino = {
@@ -99,7 +106,15 @@ export function montarSemanaDeTreino(
       cumprido: minutosPorDia.get(chave) ?? 0,
       ehHoje: plano ? weekday === diaCorrente : chave === chaveHoje,
       futuro: chave > chaveHoje,
+      pendente: false,
     };
+  });
+
+  // Pendente depende de `ehHoje`, que o plano pode deslocar do calendário
+  // perto da meia-noite — por isso é marcado depois, olhando a posição de hoje.
+  const posicaoDeHoje = dias.findIndex((d) => d.ehHoje);
+  dias.forEach((d, i) => {
+    d.pendente = !!d.planejado && d.cumprido === 0 && !d.futuro && posicaoDeHoje >= 0 && i < posicaoDeHoje;
   });
 
   return {
@@ -113,4 +128,15 @@ export function montarSemanaDeTreino(
 /** O dia que a leitura abre por padrão: hoje. */
 export function diaCorrente(semana: SemanaDeTreino): DiaDeTreino {
   return semana.dias.find((d) => d.ehHoje) ?? semana.dias[0];
+}
+
+/**
+ * O treino que ficou para trás nesta semana — o mais RECENTE, quando há mais
+ * de um: é o que a pessoa tem mais chance de lembrar e de querer recuperar.
+ * `null` quando não há nada pendente. Semana anterior não entra: recuperar
+ * treino de duas semanas atrás é reorganizar o plano, não um atalho.
+ */
+export function treinoPendente(semana: SemanaDeTreino): DiaDeTreino | null {
+  const pendentes = semana.dias.filter((d) => d.pendente);
+  return pendentes.length > 0 ? pendentes[pendentes.length - 1] : null;
 }
