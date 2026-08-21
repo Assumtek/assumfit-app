@@ -132,7 +132,16 @@ def _dia(data: EnergyInput) -> DayContext | None:
     )
 
 
-def _redigir(energy, hour, *, calibration_days=7, lifestyle=None, weekday=None, today=None):
+def _redigir(
+    energy,
+    hour,
+    *,
+    calibration_days=7,
+    lifestyle=None,
+    weekday=None,
+    today=None,
+    recent: list[str] | tuple[str, ...] = (),
+):
     """Molde primeiro, LLM por cima — nesta ordem, sempre.
 
     O determinístico é calculado ANTES de qualquer chamada de rede, e é o que
@@ -141,6 +150,13 @@ def _redigir(energy, hour, *, calibration_days=7, lifestyle=None, weekday=None, 
 
     O LLM não recalcula nada: recebe os fatos que o molde já apurou — score,
     sinal dominante com o valor formatado, transição — e apenas os redige.
+
+    `recent` chega por parâmetro, e isto tem história: a primeira versão do
+    anti-repetição leu `data.recent_insights` aqui dentro, onde `data` não
+    existe. `NameError` em TODA chamada de `/energy/insight` por um dia
+    inteiro (21/08) — o backend recebia 500, o app caía no molde local, e a
+    home mostrou a mesma frase para todo mundo. Nenhum teste chamava o
+    endpoint de ponta a ponta; agora `tests/test_main_insight.py` chama.
     """
     molde = build_insight(
         energy,
@@ -162,7 +178,7 @@ def _redigir(energy, hour, *, calibration_days=7, lifestyle=None, weekday=None, 
             hour=hour,
             routine=molde.context,
             day_notes=day_notes(today, hour),
-            recent=tuple(r[:200] for r in data.recent_insights[:4]),
+            recent=tuple(r[:200] for r in list(recent)[:4]),
         ),
         molde,
     )
@@ -197,6 +213,7 @@ def energy_insight(data: EnergyInput) -> dict:
             lifestyle=_lifestyle(data),
             weekday=data.weekday,
             today=_dia(data),
+            recent=data.recent_insights,
         ).to_dict(),
     }
 
