@@ -1285,7 +1285,14 @@ const SUSTENTADO_MS = 2 * 60_000;
 let passosVistos: { steps: number; at: number } | null = null;
 let batimentoAltoDesde: number | null = null;
 const MOVIMENTO_RECENTE_MS = 10 * 60_000;
-const BATIMENTO_SUSTENTADO_MS = 10 * 60_000;
+/*
+ Cinco minutos, não dez. Eram dez; um testador (21/08) achou longo demais para
+ quem está parado — e tem razão: batimento de alerta que se mantém por cinco
+ minutos com a pessoa sentada já não é pico de escada nem susto. O que protege
+ contra o falso aviso é a exigência de REPOUSO (sem treino, sem sessão, sem
+ passos), não a duração.
+*/
+const BATIMENTO_SUSTENTADO_MS = 5 * 60_000;
 
 function emMovimento(reading: Reading, agora: number): boolean {
   if (reading.steps == null) return false;
@@ -1304,7 +1311,7 @@ function vigiarLeitura(reading: Reading) {
    Um testador se mexeu um pouco e recebeu "sua frequência cardíaca merece
    atenção" (21/08). Batimento alto durante exercício é o exercício — o aviso
    só faz sentido com a pessoa PARADA e por um tempo: batimento acima da
-   faixa por dez minutos sem passos.
+   faixa por cinco minutos sem passos.
   */
   const treinando =
     useWorkoutStore.getState().execution !== null || lerEmCurso(agora) !== null || emMovimento(reading, agora);
@@ -1329,7 +1336,7 @@ function vigiarLeitura(reading: Reading) {
     batimentoAltoDesde = null;
     return; // durante treino, tudo oscila por definição
   }
-  // Batimento só alerta SUSTENTADO: dez minutos acima da faixa, parado.
+  // Batimento só alerta SUSTENTADO: cinco minutos acima da faixa, parado.
   if (rateHeartRate(reading.heartRate).state === 'alert') {
     batimentoAltoDesde = batimentoAltoDesde ?? agora;
   } else {
