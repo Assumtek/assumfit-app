@@ -298,14 +298,38 @@ export function kcalRangeLabel(met: number, elapsedMs: number): string {
   return `${min}–${max}`;
 }
 
-/** `5'32"/km` — o ritmo do corredor. `null` sem distância que preste. */
-export function paceMinPerKm(distanceMeters: number, elapsedMs: number): string | null {
-  if (distanceMeters < 100) return null;
-  const minPorKm = elapsedMs / 60_000 / (distanceMeters / 1000);
-  if (!Number.isFinite(minPorKm) || minPorKm > 60) return null;
+/** `5'32"` — minutos por km, sem a unidade (quem mostra decide onde ela vai). */
+export function formatPace(minPorKm: number): string | null {
+  if (!Number.isFinite(minPorKm) || minPorKm <= 0 || minPorKm > 60) return null;
   const min = Math.floor(minPorKm);
   const seg = Math.round((minPorKm - min) * 60);
-  return `${min}'${String(seg).padStart(2, '0')}"/km`;
+  return seg === 60 ? `${min + 1}'00"` : `${min}'${String(seg).padStart(2, '0')}"`;
+}
+
+/** `5'32"/km` — o ritmo MÉDIO da sessão. `null` sem distância que preste. */
+export function paceMinPerKm(distanceMeters: number, elapsedMs: number): string | null {
+  if (distanceMeters < 100) return null;
+  const p = formatPace(elapsedMs / 60_000 / (distanceMeters / 1000));
+  return p ? `${p}/km` : null;
+}
+
+/**
+ * O ritmo AGORA: distância percorrida nos últimos `janelaMs`, pelos pontos de
+ * GPS. É o número que o corredor olha durante a corrida — o médio só diz como
+ * foi. Janela curta demais treme com o ruído do GPS; longa demais atrasa.
+ * Sessenta segundos é o compromisso dos relógios de corrida.
+ *
+ * `null` quando a janela não tem dois pontos ou não saiu do lugar (parado no
+ * semáforo): "ritmo infinito" não é informação.
+ */
+export function paceAtualMinPerKm(points: GeoPoint[], agoraMs: number, janelaMs = 60_000): string | null {
+  const desde = agoraMs - janelaMs;
+  const recentes = points.filter((p) => p.at >= desde && p.at <= agoraMs);
+  if (recentes.length < 2) return null;
+  const metros = trackDistanceM(recentes);
+  const ms = recentes[recentes.length - 1].at - recentes[0].at;
+  if (metros < 15 || ms < 10_000) return null;
+  return formatPace(ms / 60_000 / (metros / 1000));
 }
 
 /** `47:32` ou `1:07:32` — relógio de sessão. */

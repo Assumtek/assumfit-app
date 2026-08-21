@@ -54,6 +54,7 @@ import {
   trackDistanceM,
   type GeoPoint,
   type Sport,
+  paceAtualMinPerKm,
 } from '../domain/sport';
 import { File, Paths } from 'expo-file-system';
 
@@ -955,6 +956,7 @@ export function SportScreen() {
     const elapsed = elapsedOf(sessao, now);
     const dist = trackDistanceM(sessao.points);
     const pace = paceMinPerKm(dist, elapsed);
+    const paceAgora = sessao.sport.gps ? paceAtualMinPerKm(sessao.points, now) : null;
     const pausado = sessao.pausedSince !== null;
     const ultimo = sessao.points[sessao.points.length - 1];
     // "ao vivo" é alegação: sem leitura fresca, o valor vira traço em vez de
@@ -1021,6 +1023,12 @@ export function SportScreen() {
             </Display>
           </YStack>
 
+          {/*
+            Com GPS, o RITMO é mostrador de primeira classe — o de agora, com
+            o médio como sub-rótulo. Era sub-rótulo da distância, e quem corre
+            olha o ritmo a cada curva (pedido da fundadora, ago/2026). Sem GPS,
+            a fileira de sempre.
+          */}
           <ReadoutCluster>
             {/* "0,00 km" com GPS negado pareceria medição. Medido ou traço. */}
             <Readout
@@ -1030,23 +1038,35 @@ export function SportScreen() {
                 !sessao.sport.gps
                   ? 'sem GPS'
                   : gpsAtivo
-                    ? (pace ?? 'distância')
+                    ? 'distância'
                     : rastreando
                       ? 'aguardando GPS'
                       : 'sem GPS'
               }
             />
+            {sessao.sport.gps ? (
+              <Readout
+                valor={paceAgora ?? '—'}
+                unidade="/km"
+                rotulo={pace ? `agora · médio ${pace.replace('/km', '')}` : gpsAtivo ? 'ritmo' : 'sem GPS'}
+              />
+            ) : null}
             <Readout
               valor={bpmFresco ? String(Math.round(latest!.heartRate)) : '—'}
               unidade="bpm"
               rotulo={bpmFresco ? 'ao vivo' : 'sem sinal da pulseira'}
             />
-            <Readout
-              valor={kcalRangeLabel(sessao.sport.met, elapsed)}
-              unidade="kcal"
-              rotulo="estimadas"
-            />
+            {!sessao.sport.gps ? (
+              <Readout
+                valor={kcalRangeLabel(sessao.sport.met, elapsed)}
+                unidade="kcal"
+                rotulo="estimadas"
+              />
+            ) : null}
           </ReadoutCluster>
+          {sessao.sport.gps ? (
+            <Data marginTop="$sm">~{kcalRangeLabel(sessao.sport.met, elapsed)} kcal estimadas</Data>
+          ) : null}
         </YStack>
 
         {/*

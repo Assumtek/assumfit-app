@@ -13,8 +13,7 @@ import {
   trackDistanceM,
   type GeoPoint,
   type SportKind,
-  valeRetomar,
-} from '../sport';
+  valeRetomar, paceAtualMinPerKm, formatPace } from '../sport';
 
 describe('esporte', () => {
   it('distância acumulada descarta salto de GPS', () => {
@@ -194,5 +193,37 @@ describe('valeRetomar', () => {
     expect(valeRetomar(AGORA + 60_000, AGORA)).toBe(false);
     expect(valeRetomar(null, AGORA)).toBe(false);
     expect(valeRetomar(undefined, AGORA)).toBe(false);
+  });
+});
+
+describe('ritmo atual', () => {
+  // 100 m a cada 30 s para leste ≈ 5'00\"/km. Um grau de longitude no equador
+  // tem ~111 km; 100 m ≈ 0,0009°.
+  const corrida = (n: number, passoSeg: number, passoGraus: number, inicio = 0) =>
+    Array.from({ length: n }, (_, i) => ({ lat: 0, lon: i * passoGraus, at: inicio + i * passoSeg * 1000 }));
+
+  it('usa só a janela recente', () => {
+    // Começo rápido (~30 m a cada 10 s ≈ 5'30"/km); fim lento (~30 m a cada
+    // 30 s ≈ 16'40"/km). Passos abaixo de 50 m para não caírem no filtro de
+    // salto de GPS do `trackDistanceM`.
+    const pontos = [...corrida(10, 10, 0.00027), ...corrida(3, 30, 0.00027, 300_000)];
+    const agora = paceAtualMinPerKm(pontos, 360_000);
+    expect(agora).toMatch(/^1[5-7]'/);
+    // E a janela no começo da corrida lê o ritmo rápido.
+    expect(paceAtualMinPerKm(pontos, 90_000)).toMatch(/^5'/);
+  });
+
+  it('parado no semáforo não tem ritmo', () => {
+    const parado = Array.from({ length: 5 }, (_, i) => ({ lat: 0, lon: 0, at: i * 15_000 }));
+    expect(paceAtualMinPerKm(parado, 60_000)).toBeNull();
+  });
+
+  it('sem dois pontos na janela, nada', () => {
+    expect(paceAtualMinPerKm(corrida(1, 30, 0.0009), 60_000)).toBeNull();
+  });
+
+  it('formata arredondando os segundos sem virar 60', () => {
+    expect(formatPace(5.999)).toBe("6'00\"");
+    expect(formatPace(0)).toBeNull();
   });
 });
