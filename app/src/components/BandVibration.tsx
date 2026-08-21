@@ -5,27 +5,29 @@ import { Switch } from 'react-native';
 import { Row, Section } from './Card';
 import { Body, Button, Data } from './ui';
 import {
-  assumfitVibra,
   comAssumfit,
-  nomeadasLigadas,
+  comCategoria,
+  comTodas,
+  linhasParaTela,
+  todasLigadas,
   type CategoriaDeAviso,
 } from '../domain/bandNotifications';
 import { ble } from '../services/ble';
 import { useTheme } from '../theme/ThemeProvider';
 
 /**
- * Fazer a pulseira vibrar com os avisos do AssumFit.
+ * Com o que a pulseira vibra — categoria a categoria.
  *
- * O que a tela precisa comunicar, e é a razão de este componente existir em vez
- * de um interruptor solto: **não dá para escolher só o AssumFit**. O filtro do
- * firmware é por categoria de app, de um vocabulário fixo, sem identificador —
- * o AssumFit cai no balde de "outros", e ligar esse balde faz a pulseira vibrar
- * com todo app que o firmware não reconhece.
+ * Era um interruptor só ("vibrar com os avisos do AssumFit"). Um testador pediu
+ * para escolher: só o app, ou todas as notificações do celular (21/08). A
+ * metade "só o app" o hardware não oferece, e a tela continua dizendo por quê:
+ * o filtro do firmware é por categoria de app, de um vocabulário fixo, sem
+ * identificador — o AssumFit cai no balde de "outros", e ligar esse balde faz
+ * a pulseira vibrar com todo app que o firmware não reconhece.
  *
- * Esconder isso produziria a pior versão do problema: a pessoa liga esperando
- * avisos do AssumFit, começa a receber vibração de aplicativos aleatórios e não
- * tem como ligar uma coisa à outra. Então a consequência é dita ANTES, e com os
- * nomes do que já está ligado na pulseira, não em abstrato.
+ * A outra metade ele oferece, e agora a tela também: cada categoria que a
+ * pulseira reporta vira uma linha com o próprio interruptor, e um mestre no
+ * topo liga ou desliga tudo de uma vez.
  */
 export function BandVibration() {
   const { colors } = useTheme();
@@ -51,58 +53,75 @@ export function BandVibration() {
   */
   if (filtro === null || filtro.length === 0) return null;
 
-  const ligado = assumfitVibra(filtro);
-  const acompanham = nomeadasLigadas(filtro);
+  const linhas = linhasParaTela(filtro);
+  if (linhas.length === 0) return null;
+  const tudo = todasLigadas(filtro);
+  const outrosLigado = linhas.find((l) => l.outros)?.enabled ?? false;
 
-  const aplicar = async (valor: boolean) => {
+  const aplicar = async (novo: CategoriaDeAviso[], ligandoAlgo: boolean) => {
     setSalvando(true);
     setErro(null);
-    const novo = comAssumfit(filtro, valor);
     /*
      Ligar o ANCS junto, e só ao LIGAR: é ele que faz o iOS oferecer o
      emparelhamento de sistema, sem o qual o filtro está certo e mesmo assim
      nada chega ao pulso. Desligar não precisa mexer nisso — o emparelhamento
      serve a outras coisas da pulseira.
     */
-    if (valor) await ble.enableAncs?.().catch(() => false);
+    if (ligandoAlgo) await ble.enableAncs?.().catch(() => false);
     const ok = await ble.setNotificationFilter?.(novo).catch(() => false);
     if (ok) setFiltro(novo);
     else setErro('A pulseira não aceitou a mudança. Aproxime o pulso e tente de novo.');
     setSalvando(false);
   };
 
+  const mudarLinha = (key: string, valor: boolean) => {
+    if (key === 'outros') return aplicar(comAssumfit(filtro, valor), valor);
+    return aplicar(comCategoria(filtro, Number(key.slice(4)), valor), valor);
+  };
+
   return (
     <YStack gap="$md">
       <Section label="Avisos no pulso">
-        <Row last>
+        <Row>
           <YStack flex={1} paddingRight="$md">
-            <Body color="$foreground">Vibrar com os avisos do AssumFit</Body>
-            <Data>{ligado ? 'ligado' : 'desligado'}</Data>
+            <Body color="$foreground">Todas as notificações do celular</Body>
+            <Data>{tudo ? 'ligado' : 'escolha abaixo'}</Data>
           </YStack>
           <Switch
-            value={ligado}
-            onValueChange={(v) => void aplicar(v)}
+            value={tudo}
+            onValueChange={(v) => void aplicar(comTodas(filtro, v), v)}
             trackColor={{ true: colors.accent }}
             disabled={salvando}
           />
         </Row>
+        {linhas.map((l, i) => (
+          <Row key={l.key} last={i === linhas.length - 1}>
+            <YStack flex={1} paddingRight="$md">
+              <Body color="$foreground">{l.nome}</Body>
+              <Data>{l.outros ? 'inclui o AssumFit' : l.enabled ? 'ligado' : 'desligado'}</Data>
+            </YStack>
+            <Switch
+              value={l.enabled}
+              onValueChange={(v) => void mudarLinha(l.key, v)}
+              trackColor={{ true: colors.accent }}
+              disabled={salvando}
+            />
+          </Row>
+        ))}
       </Section>
 
+      {/*
+        A limitação dita ANTES de a pessoa sentir o efeito: não dá para ligar
+        SÓ o AssumFit. Escondê-la produziria vibração de app aleatório sem
+        explicação — a pior versão do problema.
+      */}
       <Body>
-        {ligado
-          ? 'A pulseira também vibra com qualquer outro app que o firmware dela não reconheça — ela não sabe separar um do outro.'
-          : 'A pulseira agrupa todo app que não conhece numa categoria só. Ligando isto, ela vibra com os avisos do AssumFit e com os desses outros apps junto.'}
+        {outrosLigado
+          ? 'Os avisos do AssumFit chegam pela categoria "Outros apps" — a pulseira não sabe separar um app desconhecido de outro, então ela vibra com todos eles.'
+          : 'A pulseira não tem uma categoria só para o AssumFit: os avisos dele chegam por "Outros apps", junto com os de qualquer app que o firmware não reconhece.'}
       </Body>
 
-      {/*
-        Os nomes do que já está ligado tornam a consequência verificável. Sem
-        eles a frase acima é abstrata, e abstrato ninguém consegue avaliar.
-      */}
-      {acompanham.length > 0 ? (
-        <Data>Categorias já ligadas na pulseira: {acompanham.join(', ')}.</Data>
-      ) : null}
-
-      {ligado ? (
+      {outrosLigado ? (
         <Data>
           Se o iPhone perguntar se você quer emparelhar a pulseira, aceite — sem isso o sistema não
           entrega os avisos a ela.

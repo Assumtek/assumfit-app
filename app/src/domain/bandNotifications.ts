@@ -110,3 +110,57 @@ export const NOME_DA_CATEGORIA: Record<number, string> = {
   41: 'YouTube',
   42: 'Gmail',
 };
+
+/** Uma linha da tela: categoria nomeada, ou o balde único de "outros apps". */
+export type LinhaDeAviso = {
+  /** `cat:<type>` para as nomeadas; `outros` para o balde. Chave de lista. */
+  key: string;
+  nome: string;
+  enabled: boolean;
+  /** Verdadeiro na linha que agrupa os baldes — é onde o AssumFit mora. */
+  outros: boolean;
+};
+
+/**
+ * O filtro traduzido para a tela, uma linha por escolha que a pessoa pode fazer.
+ *
+ * Um testador pediu (21/08) para escolher COM O QUÊ a pulseira vibra — só o
+ * AssumFit, ou tudo do celular. A metade "só o AssumFit" o hardware não oferece
+ * (ver cabeçalho), mas a outra metade sim, categoria a categoria, e é isto.
+ *
+ * Três regras: a ordem é a do firmware, porque é a que o app do fabricante
+ * também mostra; categoria que a pulseira reportou mas o vocabulário não nomeia
+ * fica de fora, já que um interruptor chamado "31" não é escolha; e os três
+ * baldes de "outros" viram UMA linha, porque a pessoa não tem como distinguir
+ * o que cai em cada um — nem nós.
+ */
+export function linhasParaTela(atual: CategoriaDeAviso[]): LinhaDeAviso[] {
+  const nomeadas = atual
+    .filter((c) => !BALDES_DE_OUTROS.includes(c.type) && NOME_DA_CATEGORIA[c.type])
+    .map((c) => ({
+      key: `cat:${c.type}`,
+      nome: NOME_DA_CATEGORIA[c.type],
+      enabled: c.enabled,
+      outros: false,
+    }));
+  const temBalde = atual.some((c) => BALDES_DE_OUTROS.includes(c.type));
+  return temBalde
+    ? [...nomeadas, { key: 'outros', nome: 'Outros apps', enabled: assumfitVibra(atual), outros: true }]
+    : nomeadas;
+}
+
+/** Liga ou desliga UMA categoria nomeada, preservando o resto do conjunto. */
+export function comCategoria(atual: CategoriaDeAviso[], type: number, ligado: boolean): CategoriaDeAviso[] {
+  return atual.map((c) => (c.type === type ? { ...c, enabled: ligado } : c));
+}
+
+/** Tudo ligado ou tudo desligado — o atalho "todas as notificações do celular". */
+export function comTodas(atual: CategoriaDeAviso[], ligado: boolean): CategoriaDeAviso[] {
+  return atual.map((c) => ({ ...c, enabled: ligado }));
+}
+
+/** Verdadeiro se toda linha da tela está ligada — o estado do interruptor-mestre. */
+export function todasLigadas(atual: CategoriaDeAviso[]): boolean {
+  const linhas = linhasParaTela(atual);
+  return linhas.length > 0 && linhas.every((l) => l.enabled);
+}

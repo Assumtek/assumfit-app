@@ -2,7 +2,11 @@ import {
   assumfitVibra,
   BALDES_DE_OUTROS,
   comAssumfit,
+  comCategoria,
+  comTodas,
+  linhasParaTela,
   nomeadasLigadas,
+  todasLigadas,
 } from '../bandNotifications';
 
 const filtro = (entradas: [number, boolean][]) =>
@@ -76,5 +80,48 @@ describe('nomeadasLigadas', () => {
 
   it('categoria fora do vocabulário conhecido não vira texto vazio na tela', () => {
     expect(nomeadasLigadas(filtro([[99, true]]))).toEqual([]);
+  });
+});
+
+describe('linhasParaTela', () => {
+  it('uma linha por categoria nomeada, na ordem do firmware, e os baldes viram uma só', () => {
+    const atual = filtro([
+      [0, true],
+      [5, false],
+      [15, false],
+      [16, true],
+      [17, false],
+    ]);
+    expect(linhasParaTela(atual)).toEqual([
+      { key: 'cat:0', nome: 'Telefone', enabled: true, outros: false },
+      { key: 'cat:5', nome: 'WhatsApp', enabled: false, outros: false },
+      { key: 'outros', nome: 'Outros apps', enabled: true, outros: true },
+    ]);
+  });
+
+  it('categoria que o vocabulário não nomeia não vira interruptor', () => {
+    expect(linhasParaTela(filtro([[99, true]]))).toEqual([]);
+  });
+
+  it('sem balde reportado, não há linha de "outros"', () => {
+    expect(linhasParaTela(filtro([[0, true]])).some((l) => l.outros)).toBe(false);
+  });
+});
+
+describe('comCategoria / comTodas / todasLigadas', () => {
+  it('muda só a categoria pedida', () => {
+    const novo = comCategoria(filtro([[0, false], [5, false]]), 5, true);
+    expect(novo).toEqual(filtro([[0, false], [5, true]]));
+  });
+
+  it('"todas" liga inclusive os baldes, e desliga tudo de volta', () => {
+    const atual = filtro([[0, false], [15, false], [17, false]]);
+    expect(todasLigadas(comTodas(atual, true))).toBe(true);
+    expect(assumfitVibra(comTodas(atual, true))).toBe(true);
+    expect(comTodas(atual, false).some((c) => c.enabled)).toBe(false);
+  });
+
+  it('filtro vazio nunca conta como "todas ligadas"', () => {
+    expect(todasLigadas([])).toBe(false);
   });
 });
