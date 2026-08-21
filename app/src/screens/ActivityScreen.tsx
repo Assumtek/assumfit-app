@@ -58,9 +58,19 @@ export function ActivityScreen() {
   const rating = rateActivity(activity);
   const remaining = Math.max(0, activity.goal - activity.steps);
 
+  /*
+   Distância e calorias vêm da pulseira no mesmo evento dos passos — mas há
+   firmware que quase não emite esse evento (a memória traz só os passos). Sem
+   eles, a tela dizia "0,0 km" ao lado de milhares de passos. Quando a pulseira
+   não mandou, ESTIMA pelos passos e diz que é estimativa: 0,75 m por passo e
+   ~0,04 kcal por passo são as aproximações de pedômetro, não medição.
+  */
+  const distanciaKm = activity.distanceKm > 0 ? activity.distanceKm : (activity.steps * 0.75) / 1000;
+  const kcal = activity.activeKcal > 0 ? activity.activeKcal : Math.round(activity.steps * 0.04);
+  const estimado = activity.steps > 0 && (activity.distanceKm <= 0 || activity.activeKcal <= 0);
   const rows = [
-    { label: 'Distância', value: `${activity.distanceKm.toFixed(1).replace('.', ',')} km` },
-    { label: 'Calorias ativas', value: `${activity.activeKcal} kcal` },
+    { label: activity.distanceKm > 0 ? 'Distância' : 'Distância (estimada)', value: `${distanciaKm.toFixed(1).replace('.', ',')} km` },
+    { label: activity.activeKcal > 0 ? 'Calorias ativas' : 'Calorias (estimadas)', value: `${kcal} kcal` },
     { label: 'Minutos ativos', value: `${minutosHoje ?? activity.activeMin} min` },
   ];
 
@@ -75,8 +85,8 @@ export function ActivityScreen() {
                 titulo: 'Minha atividade hoje',
                 metricas: [
                   { valor: activity.steps.toLocaleString('pt-BR'), rotulo: 'passos' },
-                  activity.distanceKm > 0 ? { valor: activity.distanceKm.toFixed(1).replace('.', ','), rotulo: 'km' } : null,
-                  activity.activeKcal > 0 ? { valor: String(activity.activeKcal), rotulo: 'kcal' } : null,
+                  activity.steps > 0 ? { valor: distanciaKm.toFixed(1).replace('.', ','), rotulo: 'km' } : null,
+                  activity.steps > 0 ? { valor: String(kcal), rotulo: 'kcal' } : null,
                 ].filter(Boolean),
               })
             }
@@ -128,6 +138,9 @@ export function ActivityScreen() {
       </Section>
 
       <Section label="Resumo do dia">
+        {estimado ? (
+          <Data marginBottom="$sm">Sua pulseira não enviou distância e calorias hoje; os valores marcados são estimados pelos passos.</Data>
+        ) : null}
         {rows.map((row, i) => (
           <Row key={row.label} last={i === rows.length - 1}>
             <Body flex={1}>{row.label}</Body>

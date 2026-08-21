@@ -73,6 +73,9 @@ let sonoRetroativoDoDia: string | null = null;
 
 /** Última tentativa de buscar noite vencida — o garrote do ciclo de 4 min. */
 let ultimaBuscaDeSono = 0;
+/** Último envio da memória de hoje ao servidor; e o dia civil da varredura dos dias anteriores. */
+let ultimoEnvioDaMemoria = 0;
+let varreduraDaMemoriaDoDia: string | null = null;
 
 /**
  * A leitura de memória em curso, para que pedidos simultâneos a compartilhem.
@@ -598,6 +601,39 @@ async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
   // Marcado só com dado na mão: leitura que falhou não deve bloquear a próxima
   // tentativa pelo intervalo mínimo.
   ultimaSincronia = Date.now();
+
+  /*
+   A memória de HOJE também vai ao servidor.
+
+   O servidor só recebia o que chegava AO VIVO — e as pulseiras variam muito no
+   que emitem ao vivo: em 24 h, uma mandou 13.539 batimentos e 13 eventos de
+   passos, 38 de oxigênio, 28 de estresse; outra manda tudo em cada evento
+   (ago/2026). O histórico, o insight e o score do servidor ficavam cegos
+   para o que a tela já via pela memória. A cada meia hora, as séries do dia
+   sobem; o servidor ignora instante repetido, então reenviar não duplica.
+  */
+  if (api.isAuthenticated() && Date.now() - ultimoEnvioDaMemoria > 30 * 60_000) {
+    const amostras: api.MemoryReading[] = [
+      ...historico.heartRate.map((a) => ({ recordedAt: a.at, heartRate: a.value })),
+      ...historico.stress.map((a) => ({ recordedAt: a.at, stressScore: a.value })),
+      ...historico.spo2.map((a) => ({ recordedAt: a.at, spo2Pct: a.value })),
+      ...historico.steps.map((p) => ({ recordedAt: p.at, steps: p.steps })),
+    ];
+    if (amostras.length) {
+      ultimoEnvioDaMemoria = Date.now();
+      api.ingestMemory(amostras).catch(() => {
+        // Falhou a rede: a próxima meia hora tenta de novo.
+        ultimoEnvioDaMemoria = 0;
+      });
+    }
+  }
+
+  // Os dias ANTERIORES (1–6) uma vez por dia civil — não só 20 s depois de
+  // conectar, porque uma sessão que atravessa dias nunca reconecta.
+  if (varreduraDaMemoriaDoDia !== hojeLocal()) {
+    varreduraDaMemoriaDoDia = hojeLocal();
+    void get().recoverBandMemory();
+  }
 }
 
 export const useBiometricStore = create<BiometricState>((set, get) => ({
