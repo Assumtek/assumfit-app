@@ -226,6 +226,12 @@ Duas coisas que quebravam isso e foram desligadas:
 A 1.0.1 saiu com build 13 por causa desse erro e fica como está — o número já
 está na App Store Connect. A 1.0.2 começa em 1.
 
+**O `buildNumber` do `app.json` é o ÚLTIMO build gerado, não o próximo.** Ao
+abrir uma versão nova (a anterior foi para revisão), ele vai a `"0"`: é o que
+faz o fluxo de bugs responder "sobe na 1.0.5 (1)" — ele lê `build + 1`. O
+próprio pipeline de build sobe o número antes de arquivar. Convenção de
+ago/2026, quando a 1.0.4 (7) entrou em revisão.
+
 ### O caminho que funcionou em ago/2026 (versão 1.0.1, build 13)
 
 A cota de iOS do EAS renovou e o build na nuvem **rodou** — e ainda assim o
