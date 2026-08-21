@@ -24,6 +24,356 @@
       "commit": "b386f2f",
       "nota": "agente sem responder — teto de 10 s no cliente",
       "em": "2026-08-20T22:30:00"
+    },
+    "slack:1787273293.670859": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Silvia Beatriz Sousa",
+      "trecho": "tornou o canal *público*. Qualquer membro do workspace pode vê-lo e entrar nele."
+    },
+    "slack:1787268433.988869": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Sugestao: possibilitar o modo fitness ao iniciar treino automaticamente, se for "
+    },
+    "slack:1787268152.121019": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Showww"
+    },
+    "slack:1787268130.880779": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Silvia Beatriz Sousa",
+      "trecho": "Recebi sim"
+    },
+    "slack:1787258050.255619": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Esqueci de perguntar "
+    },
+    "slack:1787258033.358709": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Quando eu printei a tela eu vi que tinha a opção de reportar direto"
+    },
+    "slack:1787258020.152369": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Sil, reportei ums bugs pelo beta ali do TF vc recebeu esses prints?"
+    },
+    "slack:1787224756.327309": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Mais um ponto: o app fica deslogando igual era o MUVX"
+    },
+    "slack:1787224743.897219": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": ":saluting_face::saluting_face:"
+    },
+    "slack:1787197639.291529": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Silvia Beatriz Sousa",
+      "trecho": "Tudo que estava aqui no canal foi resolvido\n\n1.0.3 (4) no testflight, versão agu"
+    },
+    "slack:1787184043.076949": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Bruno Martins",
+      "trecho": "Ele entendeu “ótimo, entendi que você quer ganhar massa”"
+    },
+    "slack:1787184038.385739": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Bruno Martins",
+      "trecho": "Na anamnese eu falei que meu objetivo era ficar grande rápido "
+    },
+    "slack:1787183377.635509": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Ta azeitado kkkkkkk"
+    },
+    "slack:1787182989.568749": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Silvia Beatriz Sousa",
+      "trecho": "Olha que louco identificou os picoles pelo papel kkk"
+    },
+    "slack:1787182750.589319": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Acredito que isso pode gerar embasamento e autoridade pra prescrição "
+    },
+    "slack:1787182738.119139": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Igual aquele que montei no passado "
+    },
+    "slack:1787182728.128849": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Tipo montar como se fosse um documento mesmo do projeto"
+    },
+    "slack:1787182714.439389": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Ah esse é um ponto bacana, o app mostrar o projeto de treino, qual o racional po"
+    },
+    "slack:1787182628.893039": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Bruno Martins",
+      "trecho": "Não sei qual a metodologia, mas ele tá intercalando entre exercício de peito e c"
+    },
+    "slack:1787182478.503399": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Bruno Martins",
+      "trecho": "Três botões levando para o mesmo lugar \n\nTroca\nSinalizar &gt; aparelho ocupado d"
+    },
+    "slack:1787182377.350149": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Bruno Martins",
+      "trecho": "Não consigo selecionar o exercício no checklist"
+    },
+    "slack:1787182320.591729": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Bruno Martins",
+      "trecho": "Teclado sobrepondo "
+    },
+    "slack:1787182246.299789": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Bruno Martins",
+      "trecho": "Válido aquele ajuste que íamos fazer no MUVX \n\nEu que conheço cliquei no treino "
+    },
+    "slack:1787182164.091639": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Bruno Martins",
+      "trecho": "Gerou mesmo"
+    },
+    "slack:1787182134.827839": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Silvia Beatriz Sousa",
+      "trecho": "Veja se gerou o treino, já corrigi pra não dar esse erro"
+    },
+    "slack:1787182032.121869": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Bruno Martins",
+      "trecho": "Pode ser realmente que seja minha conexão "
+    },
+    "slack:1787182020.329079": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Bruno Martins",
+      "trecho": "Foi até 95% e caiu "
+    },
+    "slack:1787181727.370969": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Bruno Martins",
+      "trecho": "Fui gerar o treino e enquanto estava carregando,  bloquei a tela e gerou esse er"
+    },
+    "slack:1787181636.862489": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": ""
+    },
+    "slack:1787181629.000369": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "O TF deu ruim, tinha tentado ja cedo"
+    },
+    "slack:1787181589.899789": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Sem registro do bpm durante treino"
+    },
+    "slack:1787155436.922249": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": ""
+    },
+    "slack:1787152591.653969": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Silvia Beatriz Sousa",
+      "trecho": "Vamo testar mais um pouco, validar a nossa proposta não vamos enviar assim ainda"
+    },
+    "slack:1787152500.160349": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Bruno Martins",
+      "trecho": "falei pra ele que enviaremos essa semana"
+    },
+    "slack:1787152490.106559": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Bruno Martins",
+      "trecho": "deixa comigo, só falta compilar os feedbacks e mandar aqui"
+    },
+    "slack:1787152224.222249": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "vai dando feedback ai tbm Brunao"
+    },
+    "slack:1787152215.834539": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "só fazer os ajustes que temos pq tem algumas coisas ainda ali que nao estao bate"
+    },
+    "slack:1787152200.291959": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "vamos mandar essa semana"
+    },
+    "slack:1787152014.876519": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Bruno Martins",
+      "trecho": "esse maluco usando vai encher de feedback"
+    },
+    "slack:1787141471.895829": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Hoje registrei o meu treino durante o tenis, ele nao gravou, o app deslogou e pa"
+    },
+    "slack:1787136821.303829": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "fyi - ainda n estou no TF nao apareceu"
+    },
+    "slack:1787136808.452689": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "App nao atualizou minha noite de sono"
+    },
+    "slack:1787109020.636009": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Silvia Beatriz Sousa",
+      "trecho": "Tem uma versão nova no TF + uma versão em revisão 1.0.2 que resolve todos os pon"
+    },
+    "slack:1787101356.956459": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": ""
+    },
+    "slack:1787084773.688079": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Achei a anamnese um pouco repetitiva, alguns botoes nao estão disponíveis ai tem"
+    },
+    "slack:1787084701.932479": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": ""
+    },
+    "slack:1787083662.507429": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Sil me\nColoca no testflight?"
+    },
+    "slack:1787063587.538919": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Outra coisa, será que da pra gente controlar para que tipo de notificação a puls"
+    },
+    "slack:1787063359.282199": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Um ponto que notei hoje Sil, é que a questão da agua ele nao resetou de ontem pr"
+    },
+    "slack:1787063339.735789": {
+      "commit": "3403f24",
+      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "em": "2026-08-20T22:50:00",
+      "autor": "Leonardo Assumpção",
+      "trecho": "Criando esse canal pra centralizarmos os feedbacks de uso e correções"
     }
   }
 }
