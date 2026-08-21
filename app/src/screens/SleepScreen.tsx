@@ -9,14 +9,12 @@ import { SleepPlanner } from '../components/SleepPlanner';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
 import { formatDateBR } from '../domain/birthDate';
 import { Hypnogram } from '../components/charts/Hypnogram';
-import { LineChart } from '../components/charts/LineChart';
 import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
 import { rateSleep } from '../domain/ratings';
 import type { SleepPhase } from '../domain/types';
 import { useBiometricStore } from '../store/biometric.store';
 import * as api from '../services/api.service';
 import { useLifestyleStore } from '../store/lifestyle.store';
-import { useTheme } from '../theme/ThemeProvider';
 
 /**
  * As fases são um único matiz em quatro valores. Quatro cores diferentes
@@ -31,7 +29,6 @@ const PHASES: { key: SleepPhase; label: string; opacity: number }[] = [
 ];
 
 export function SleepScreen() {
-  const { colors } = useTheme();
   const sleep = useBiometricStore((s) => s.sleep);
   const connectHealth = useBiometricStore((s) => s.connectHealth);
   // Puxar para atualizar busca a noite de novo — "opção de atualização em
@@ -144,36 +141,11 @@ export function SleepScreen() {
       </Section>
 
       {/*
-        A seção só existe quando HÁ medição.
-
-        Ela desenhava um gráfico permanentemente vazio: a noite vem da pulseira
-        sem SpO₂, e ninguém preenchia o campo. Área em branco sob o título
-        "Oxigênio durante a noite" não lê como ausência — lê como oxigênio que
-        deu zero, que numa tela de saúde é a leitura mais alarmante possível.
+        Oxigênio durante a noite SAIU desta tela (decisão da fundadora, 21/08).
+        A pulseira raramente entrega a série noturna de SpO₂, e a seção vivia
+        entre dois estados ruins: gráfico vazio ou um aviso de "sem medição"
+        que lia como defeito. O oxigênio continua com tela própria.
       */}
-      {sleep.spo2Night.length >= 2 ? (
-      <Section label="Oxigênio durante a noite">
-        <LineChart
-          data={sleep.spo2Night}
-          width={chartWidth}
-          height={120}
-          domain={[92, 100]}
-          thresholds={[{ value: 95, label: 'limite', color: colors.alert }]}
-          xLabels={['início', 'meio', 'fim']}
-          id="spo2night"
-        />
-      </Section>
-      ) : (
-        <Section label="Oxigênio durante a noite">
-          <Row last>
-            <Body flex={1}>
-              Sem medição de oxigênio nesta noite. A pulseira mede em janelas
-              agendadas — se o monitoramento estiver desligado, não há o que mostrar.
-            </Body>
-          </Row>
-        </Section>
-      )}
-
       <UltimasNoites />
 
       <SleepPlanner horaDeDormirHabitual={bedtime} />
