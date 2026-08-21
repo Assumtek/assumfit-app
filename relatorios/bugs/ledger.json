@@ -530,6 +530,18 @@
       "nota": "Feito: arrastar da borda esquerda na home abre o menu. Uma faixa fina na borda pega o gesto; o resto da tela rola normal.",
       "versao": "1.0.4 (3)",
       "em": "2026-08-20T23:37:52"
+    },
+    "slack:1787279733.775769": {
+      "commit": "b19a038",
+      "nota": "Feito: no Progresso, o seletor de período ganhou \"Outro\" — você digita de/até e os números, gráficos e histórico passam a valer pra esse intervalo.",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:44:28"
+    },
+    "slack:1787279777.536529": {
+      "commit": "b19a038",
+      "nota": "Sim! Na aba Evolução do Progresso tem agora \"Fotos de evolução\": câmera ou galeria, fica só no seu aparelho (como a foto de perfil), e tocando em duas elas aparecem lado a lado com as datas.",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:44:29"
     }
   }
 }
