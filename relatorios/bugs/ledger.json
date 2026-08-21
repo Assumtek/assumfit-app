@@ -890,6 +890,12 @@
       "nota": "Valeu, Leo! Continue mandando — cada ideia dessas vira build.",
       "versao": "1.0.5 (1)",
       "em": "2026-08-21T20:12:18"
+    },
+    "slack:1787355294.565619": {
+      "commit": "79cb57a",
+      "nota": "Widget de água simplificado: anel + botão redondo com +.",
+      "versao": "1.0.5 (2)",
+      "em": "2026-08-21T20:35:49"
     }
   }
 }
