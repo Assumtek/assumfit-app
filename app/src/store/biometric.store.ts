@@ -214,7 +214,10 @@ function persistirDerivado(e: {
 
 function gravarDerivado(d: Derivado) {
   try {
-    new File(Paths.document, ARQUIVO_DERIVADO).write(JSON.stringify(d));
+    // A data é carimbada AQUI, no único escritor. Ficava só em
+    // `persistirDerivado`, e o caminho da leitura ao vivo gravava sem ela: todo
+    // arranque frio lia "outro dia" e zerava os passos de hoje (build 5).
+    new File(Paths.document, ARQUIVO_DERIVADO).write(JSON.stringify({ ...d, dia: d.dia ?? hojeLocal() }));
   } catch {
     // Falha de disco não pode interromper a coleta ao vivo.
   }
@@ -521,6 +524,16 @@ async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
   const passos = historico.steps.length
     ? historico.steps.map((p) => p.steps).slice(-17)
     : get().stepsByHour;
+  /*
+   O TOTAL de hoje também vem da memória: a soma das horas. Sem isto, um app
+   aberto de manhã mostrava zero até a pulseira mandar o próximo evento de
+   passos — e quem já tinha andado muito lia "zerado" (relato de 21/08).
+   Só sobe: o evento ao vivo pode estar à frente da memória.
+  */
+  const totalDaMemoria = historico.steps.reduce((s, p) => s + (p.steps > 0 ? p.steps : 0), 0);
+  const atividade = get().activity;
+  const atividadeAtualizada =
+    totalDaMemoria > atividade.steps ? { ...atividade, steps: totalDaMemoria } : atividade;
   const fc = historico.heartRate.length ? historico.heartRate.slice(-90) : get().hrHistory;
   /*
      A curva de HRV vem da MEMÓRIA, como todas as outras.
@@ -538,6 +551,7 @@ async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
     stressHistory: estresseCru,
     pressureHistory: pressao,
     stepsByHour: passos,
+    activity: atividadeAtualizada,
     hrHistory: fc,
     hrvHistory: variabilidade,
     spo2History: oxigenio,
