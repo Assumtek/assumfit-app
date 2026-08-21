@@ -165,14 +165,53 @@ def slack_feedbacks() -> list[dict]:
     return out
 
 
+def proxima_versao() -> str:
+    """`1.0.3 (7)`: a versão do app.json com o PRÓXIMO build — o que ainda não saiu."""
+    cfg = json.loads((REPO / "app/app.json").read_text())["expo"]
+    return f'{cfg["version"]} ({int(cfg["ios"]["buildNumber"]) + 1})'
+
+
+def slack_responder(fid: str, texto: str) -> None:
+    """Responde NA THREAD da mensagem original. Exige `chat:write` no bot."""
+    env = slack_env()
+    token, canal = env.get("SLACK_TOKEN"), env.get("SLACK_CHANNEL", "assumfit-qa-feedback")
+    if not token or not fid.startswith("slack:"):
+        return
+    ts = fid.split(":", 1)[1]
+    d = slack_get(token, "conversations.list", types="public_channel,private_channel", limit=200)
+    cid = next(c["id"] for c in d["channels"] if c["name"] == canal.lstrip("#"))
+    body = json.dumps({"channel": cid, "thread_ts": ts, "text": texto}).encode()
+    req = urllib.request.Request(
+        "https://slack.com/api/chat.postMessage", data=body,
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json; charset=utf-8"},
+    )
+    with urllib.request.urlopen(req, timeout=30) as r:
+        resp = json.load(r)
+    if not resp.get("ok"):
+        raise RuntimeError(f"slack chat.postMessage: {resp.get('error')}")
+
+
 def main() -> None:
     args = sys.argv[1:]
+    if args[:1] == ["--responder"]:
+        _, fid, *texto = args
+        slack_responder(fid, " ".join(texto))
+        print(f"respondido em {fid}")
+        return
     if args[:1] == ["--done"]:
         _, fid, sha, *nota = args
         l = ledger()
-        l["tratados"][fid] = {"commit": sha, "nota": " ".join(nota), "em": time.strftime("%Y-%m-%dT%H:%M:%S")}
+        versao = proxima_versao()
+        l["tratados"][fid] = {"commit": sha, "nota": " ".join(nota), "versao": versao, "em": time.strftime("%Y-%m-%dT%H:%M:%S")}
         LEDGER.write_text(json.dumps(l, ensure_ascii=False, indent=2) + "\n")
-        print(f"registrado {fid} → {sha}")
+        print(f"registrado {fid} → {sha} · sobe na {versao}")
+        # Regra da fundadora (ago/2026): resolveu, avisa NA MENSAGEM, com a versão.
+        if fid.startswith("slack:"):
+            try:
+                slack_responder(fid, f"Resolvido ✅ ({sha}) — sobe na {versao}. {' '.join(nota)}".strip())
+                print("  respondido na thread")
+            except Exception as e:  # noqa: BLE001
+                print(f"  sem resposta na thread: {e}", file=sys.stderr)
         return
     l = ledger()["tratados"]
     todos = feedbacks()

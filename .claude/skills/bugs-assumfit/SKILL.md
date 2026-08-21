@@ -94,6 +94,13 @@ Qualquer vermelho: não commita, registra no relatório o que travou.
 - Para cada feedback resolvido (ou classificado como não-defeito):
   `python3 .claude/skills/bugs-assumfit/scripts/feedback.py --done <id> <sha> "<nota>"`
   e commite o `relatorios/bugs/ledger.json` junto.
+- **Regra da fundadora (ago/2026): resolveu, responde NA MENSAGEM** — o `--done`
+  já faz isso para itens do Slack, na thread, com o commit e a versão em que
+  sobe (`1.0.3 (N+1)`, lida do `app.json`). Para item do TestFlight não há
+  thread: a versão vai no relatório, e ela avisa o testador. A nota do `--done`
+  vira a frase da resposta — escreva-a para o testador ler, não para o git.
+- Classificado como "recurso já existe" ou "elogio" também responde: diz onde
+  o recurso está. Silêncio numa mensagem respondida lê como ignorada.
 
 ## 7. Relatório da rodada
 
