@@ -142,7 +142,21 @@ def slack_feedbacks() -> list[dict]:
     h = slack_get(token, "conversations.history", channel=cid, limit=200)
     usuarios: dict[str, str] = {}
     out = []
-    for m in h["messages"]:
+    # RESPOSTAS DENTRO DE THREAD também são relatos — um testador respondeu nas
+    # threads e o fluxo não viu (ago/2026). A lista do canal só traz o primeiro
+    # nível; cada mensagem com respostas é aberta, e as respostas de gente (não
+    # do bot) entram na fila com o texto da mensagem original como contexto.
+    mensagens = list(h["messages"])
+    for m in list(h["messages"]):
+        if (m.get("reply_count") or 0) > 0:
+            try:
+                r = slack_get(token, "conversations.replies", channel=cid, ts=m["ts"], limit=100)
+                for resp in r.get("messages", [])[1:]:
+                    resp["_em_resposta_a"] = (m.get("text") or "")[:140]
+                    mensagens.append(resp)
+            except Exception as e:  # noqa: BLE001
+                print(f"thread {m['ts']} indisponível: {e}", file=sys.stderr)
+    for m in mensagens:
         # O que o PRÓPRIO fluxo escreve não volta como relato: bot moderno posta
         # com `bot_id` e sem subtype — o filtro antigo só via o legado.
         if m.get("subtype") in ("channel_join", "channel_leave", "bot_message") or m.get("bot_id"):
@@ -163,6 +177,8 @@ def slack_feedbacks() -> list[dict]:
             "comentario": m.get("text", ""),
             "capturas": [f.get("url_private") for f in m.get("files", []) if f.get("url_private")],
             "thread": f"https://slack.com/archives/{cid}/p{m['ts'].replace('.', '')}",
+            "em_resposta_a": m.get("_em_resposta_a"),
+            "thread_ts": m.get("thread_ts") if m.get("thread_ts") and m.get("thread_ts") != m["ts"] else None,
         })
     return out
 
@@ -182,7 +198,10 @@ def slack_responder(fid: str, texto: str) -> None:
     ts = fid.split(":", 1)[1]
     d = slack_get(token, "conversations.list", types="public_channel,private_channel", limit=200)
     cid = next(c["id"] for c in d["channels"] if c["name"] == canal.lstrip("#"))
-    body = json.dumps({"channel": cid, "thread_ts": ts, "text": texto}).encode()
+    # Resposta a uma mensagem que já está numa thread vai na thread RAIZ —
+    # o Slack não aninha threads.
+    raiz = next((f.get("thread_ts") for f in slack_feedbacks() if f["id"] == fid and f.get("thread_ts")), None)
+    body = json.dumps({"channel": cid, "thread_ts": raiz or ts, "text": texto}).encode()
     req = urllib.request.Request(
         "https://slack.com/api/chat.postMessage", data=body,
         headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json; charset=utf-8"},
