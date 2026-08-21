@@ -14,6 +14,7 @@ import { MealsScreen } from '../screens/MealsScreen';
 import { SportScreen } from '../screens/SportScreen';
 import { WaterReminderScreen } from '../screens/WaterReminderScreen';
 import { MealReminderScreen } from '../screens/MealReminderScreen';
+import { MetricDayScreen } from '../screens/MetricDayScreen';
 import { CycleScreen } from '../screens/CycleScreen';
 import { AlertsScreen } from '../screens/AlertsScreen';
 import { BodyBatteryScreen } from '../screens/BodyBatteryScreen';
@@ -103,6 +104,7 @@ const linking = {
       Habits: 'habitos',
       WaterReminder: 'lembrete-agua',
       MealReminder: 'lembrete-refeicoes',
+      MetricDay: 'historico-dia',
       Onboarding: 'perfil-rotina',
       Profile: 'perfil',
       Settings: 'configuracoes',
@@ -223,6 +225,7 @@ export function Navigation() {
         <Stack.Screen name="Habits" component={HabitsScreen} />
         <Stack.Screen name="WaterReminder" component={WaterReminderScreen} />
         <Stack.Screen name="MealReminder" component={MealReminderScreen} />
+        <Stack.Screen name="MetricDay" component={MetricDayScreen} />
         <Stack.Screen name="Meals" component={MealsScreen} />
         <Stack.Screen name="Sport" component={SportScreen} />
         <Stack.Screen name="BioAge" component={BioAgeScreen} />

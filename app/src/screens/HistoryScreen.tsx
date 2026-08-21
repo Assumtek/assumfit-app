@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView } from 'react-native';
@@ -170,7 +171,8 @@ export function HistoryScreen() {
 function ResumoDoDia({ dia }: { dia: api.DailySummary }) {
   const { colors } = useTheme();
 
-  const linhas: { label: string; rating: Rating; detalhe: string }[] = [];
+  const navigation = useNavigation<any>();
+  const linhas: { label: string; rating: Rating; detalhe: string; metric: string }[] = [];
 
   // Sono abre a lista, como abre a tela de Saúde: é a métrica que mais explica
   // o resto do dia. Score e duração juntos — `rateSleep` exige os dois, porque
@@ -178,14 +180,14 @@ function ResumoDoDia({ dia }: { dia: api.DailySummary }) {
   if (dia.sleep_score != null && dia.sleep_minutes != null) {
     const rating = rateSleep(dia.sleep_score, dia.sleep_minutes);
     linhas.push({
-      label: 'Sono',
+      label: 'Sono', metric: 'sleep',
       rating,
       detalhe: `${rating.detail} · score ${dia.sleep_score}`,
     });
   }
   if (dia.heart_rate != null) {
     linhas.push({
-      label: 'Coração',
+      label: 'Coração', metric: 'hr',
       rating: rateHeartRate(dia.heart_rate),
       detalhe:
         dia.heart_rate_min != null && dia.heart_rate_max != null
@@ -194,11 +196,11 @@ function ResumoDoDia({ dia }: { dia: api.DailySummary }) {
     });
   }
   if (dia.hrv_ms != null) {
-    linhas.push({ label: 'HRV', rating: rateHrv(dia.hrv_ms), detalhe: `${dia.hrv_ms} ms em média` });
+    linhas.push({ label: 'HRV', metric: 'hrv', rating: rateHrv(dia.hrv_ms), detalhe: `${dia.hrv_ms} ms em média` });
   }
   if (dia.spo2_pct != null) {
     linhas.push({
-      label: 'Oxigênio',
+      label: 'Oxigênio', metric: 'spo2',
       rating: rateSpo2(dia.spo2_pct),
       // A MÍNIMA do dia importa mais que a média: dessaturação é episódica, e
       // uma média de 96% pode esconder uma queda a 88% durante o sono.
@@ -206,11 +208,11 @@ function ResumoDoDia({ dia }: { dia: api.DailySummary }) {
     });
   }
   if (dia.stress_score != null) {
-    linhas.push({ label: 'Estresse', rating: rateStress(dia.stress_score), detalhe: `${dia.stress_score} de 100` });
+    linhas.push({ label: 'Estresse', metric: 'stress', rating: rateStress(dia.stress_score), detalhe: `${dia.stress_score} de 100` });
   }
   if (dia.bp_systolic != null && dia.bp_diastolic != null) {
     linhas.push({
-      label: 'Pressão',
+      label: 'Pressão', metric: 'pressure',
       rating: ratePressure(dia.bp_systolic, dia.bp_diastolic),
       detalhe: `${dia.bp_systolic}/${dia.bp_diastolic} mmHg em média`,
     });
@@ -233,7 +235,14 @@ function ResumoDoDia({ dia }: { dia: api.DailySummary }) {
       {linhas.length ? (
         <Section label="Métricas do dia">
           {linhas.map((l, i) => (
-            <Row key={l.label} last={i === linhas.length - 1}>
+            <Pressable
+              key={l.label}
+              onPress={() => navigation.push('MetricDay', { metric: l.metric, dia: dia.day })}
+              accessibilityRole="button"
+              accessibilityLabel={`${l.label}, ${l.rating.label}. Abrir o dia inteiro`}
+              style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
+            >
+            <Row last={i === linhas.length - 1}>
               {/* `flex: 1` no rótulo e `flexShrink: 0` no valor: a avaliação
                   ("Pode melhorar") é mais larga que o rótulo e não pode ser
                   espremida — quem cede espaço é o nome da métrica. */}
@@ -249,15 +258,18 @@ function ResumoDoDia({ dia }: { dia: api.DailySummary }) {
                 </Data>
               </YStack>
             </Row>
+            </Pressable>
           ))}
         </Section>
       ) : null}
 
       <Section label="Atividade">
+        <Pressable onPress={() => navigation.push('MetricDay', { metric: 'steps', dia: dia.day })} accessibilityRole="button">
         <Row last>
           <Body flex={1} color="$foreground">Passos</Body>
           <Data color="$foreground">{dia.steps != null ? dia.steps.toLocaleString('pt-BR') : '—'}</Data>
         </Row>
+        </Pressable>
       </Section>
 
     </>
