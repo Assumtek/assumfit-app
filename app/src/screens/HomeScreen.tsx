@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, useWindowDimensions } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { PanResponder, Pressable, RefreshControl, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BandStatusLine } from '../components/BandStatus';
@@ -429,7 +429,17 @@ export function HomeScreen() {
     onPress: () => abrir('Health'),
   };
 
+  const bordaParaMenu = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) => g.dx > 12 && Math.abs(g.dy) < Math.abs(g.dx),
+      onPanResponderRelease: (_, g) => {
+        if (g.dx > 48) useUiStore.getState().openSidebar();
+      },
+    }),
+  ).current;
+
   return (
+    <View style={{ flex: 1 }}>
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.ink }}
       contentContainerStyle={{
@@ -565,6 +575,17 @@ export function HomeScreen() {
       </YStack>
 
     </ScrollView>
+    {/*
+      Arrastar da borda esquerda abre o menu — o gesto de "voltar" do iPhone,
+      que na home não tem para onde voltar (pedido de testador, ago/2026). Uma
+      faixa fina por cima da borda; o resto da tela continua rolando normal.
+    */}
+    <View
+      {...bordaParaMenu.panHandlers}
+      style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 22 }}
+      accessibilityElementsHidden
+    />
+    </View>
   );
 }
 

@@ -1,6 +1,6 @@
 import { XStack, YStack } from '@tamagui/stacks';
 import React from 'react';
-import { Modal, Pressable } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable } from 'react-native';
 
 import { Body, SectionTitle } from './Type';
 import { Button } from './Button';
@@ -54,7 +54,15 @@ export function Sheet({
 }) {
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <YStack flex={1} justifyContent="flex-end">
+      {/*
+        A folha SOBE com o teclado. Sem isto, um campo de texto no fim da folha
+        (o volume do recipiente, ago/2026) ficava embaixo do teclado — e a
+        folha é exatamente o lugar onde campos curtos moram.
+      */}
+      <KeyboardAvoidingView
+        style={{ flex: 1, justifyContent: 'flex-end' }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <Scrim onPress={onClose} />
         <YStack
           backgroundColor="$backgroundStrong"
@@ -69,7 +77,7 @@ export function Sheet({
         >
           {children}
         </YStack>
-      </YStack>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

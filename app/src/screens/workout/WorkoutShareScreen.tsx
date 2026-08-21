@@ -1,6 +1,7 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
@@ -73,6 +74,26 @@ function chipGenerico(
   return m ? { id: chip.id, rotulo: m.rotulo.charAt(0).toUpperCase() + m.rotulo.slice(1) } : chip;
 }
 
+/**
+ * A foto entra REDIMENSIONADA — nunca a original.
+ *
+ * Uma foto de câmera tem 12 MP e mais; desenhada no canvas e depois capturada
+ * em 1080×1920, ela estourava a memória e o app fechava "depois de alguns
+ * segundos" (relato de testador, ago/2026). O story sai em 1080 de largura —
+ * nada acima disso serve para nada. Falhou o preparo, vale a original: pior
+ * do que o risco de memória é não ter foto nenhuma.
+ */
+async function fotoLeve(asset: { uri: string; width?: number }): Promise<string> {
+  try {
+    if ((asset.width ?? 0) <= 1080) return asset.uri;
+    const renderizada = await ImageManipulator.manipulate(asset.uri).resize({ width: 1080 }).renderAsync();
+    const pronta = await renderizada.saveAsync({ compress: 0.85, format: SaveFormat.JPEG });
+    return pronta.uri;
+  } catch {
+    return asset.uri;
+  }
+}
+
 export function WorkoutShareScreen() {
   const navigation = useNavigation();
   const params = (useRoute().params ?? {}) as Params;
@@ -114,7 +135,7 @@ export function WorkoutShareScreen() {
         origem === 'camera'
           ? await ImagePicker.launchCameraAsync(opcoes)
           : await ImagePicker.launchImageLibraryAsync({ ...opcoes, mediaTypes: ['images'] });
-      if (!r.canceled && r.assets[0]) setFoto(r.assets[0].uri);
+      if (!r.canceled && r.assets[0]) setFoto(await fotoLeve(r.assets[0]));
     } catch {
       Alert.alert(
         origem === 'camera' ? 'Não foi possível abrir a câmera' : 'Não foi possível abrir a galeria',
