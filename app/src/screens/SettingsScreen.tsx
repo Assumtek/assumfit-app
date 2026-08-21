@@ -3,7 +3,7 @@ import { styled, Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import { mensagemDaFalha } from '../domain/apiErrors';
 import React, { useEffect, useState } from 'react';
-import { Alert, Linking, Pressable } from 'react-native';
+import { Alert, Linking, Pressable, Switch } from 'react-native';
 
 import { Row, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
@@ -18,6 +18,8 @@ import { usingSecureStorage } from '../services/tokenStorage';
 import { useAuthStore } from '../store/auth.store';
 import { useBiometricStore } from '../store/biometric.store';
 import { useUserStore } from '../store/user.store';
+import { useLocalReminderStore } from '../services/local-reminder';
+import { usePersonalizacaoStore } from '../store/personalizacao.store';
 import { useTheme } from '../theme/ThemeProvider';
 
 const APP_VERSION = '1.0.0';
@@ -32,6 +34,19 @@ const APP_VERSION = '1.0.0';
  * desfazer.
  */
 export function SettingsScreen() {
+  const { colors } = useTheme();
+  const personalizadas = usePersonalizacaoStore((s) => s.ligado);
+  const aprendido = usePersonalizacaoStore((s) => s.aprendido);
+  const ligarPersonalizadas = usePersonalizacaoStore((s) => s.ligar);
+  const carregarPersonalizadas = usePersonalizacaoStore((s) => s.carregar);
+  const porLocal = useLocalReminderStore((s) => s.ligado);
+  const lugares = useLocalReminderStore((s) => s.lugares);
+  const ligarPorLocal = useLocalReminderStore((s) => s.ligar);
+  const carregarLocal = useLocalReminderStore((s) => s.carregar);
+  useEffect(() => {
+    void carregarPersonalizadas();
+    void carregarLocal();
+  }, [carregarPersonalizadas, carregarLocal]);
   const navigation = useNavigation();
   const profile = useUserStore((s) => s.profile);
   const signOut = useAuthStore((s) => s.signOut);
@@ -134,6 +149,52 @@ export function SettingsScreen() {
         {supportsGattInspection ? (
           <LinkRow label="Diagnóstico GATT" onPress={() => (navigation as any).push('Gatt' as never)} />
         ) : null}
+      </Section>
+
+      {/*
+        Os dois são OPCIONAIS e dizem o que fazem: um aprende horários do uso,
+        o outro pede localização "sempre" — que é mais do que a sessão de
+        esporte pede, e por isso só é solicitada quando a pessoa liga.
+      */}
+      <Section label="Notificações">
+        <Row>
+          <YStack flex={1} gap={2}>
+            <RowLabel>Notificações personalizadas</RowLabel>
+            <Data>
+              {personalizadas
+                ? [
+                    aprendido.refeicoes.length ? `refeições às ${aprendido.refeicoes.map((h) => h.replace(':00', 'h').replace(':', 'h')).join(', ')}` : null,
+                    aprendido.treino ? `treino ~${aprendido.treino.replace(':', 'h')}` : null,
+                    aprendido.cama ? `cama ${aprendido.cama.replace(':', 'h')}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ') || 'aprendendo com o seu uso…'
+                : 'quanto mais você usa, mais ele aprende'}
+            </Data>
+          </YStack>
+          <Switch value={personalizadas} onValueChange={(v) => void ligarPersonalizadas(v)} trackColor={{ true: colors.accent }} />
+        </Row>
+        <Row last>
+          <YStack flex={1} gap={2}>
+            <RowLabel>Lembrar ao chegar no lugar do treino</RowLabel>
+            <Data>
+              {porLocal
+                ? lugares.length
+                  ? `${lugares.length} ${lugares.length === 1 ? 'lugar reconhecido' : 'lugares reconhecidos'}`
+                  : 'ainda aprendendo os lugares das suas sessões'
+                : 'usa a localização em segundo plano'}
+            </Data>
+          </YStack>
+          <Switch
+            value={porLocal}
+            onValueChange={(v) => {
+              void ligarPorLocal(v).then((ok) => {
+                if (v && !ok) Alert.alert('Sem permissão', 'Para lembrar ao chegar, o app precisa de localização "Sempre" nos Ajustes do iPhone.');
+              });
+            }}
+            trackColor={{ true: colors.accent }}
+          />
+        </Row>
       </Section>
 
       <Section label="Privacidade e dados">

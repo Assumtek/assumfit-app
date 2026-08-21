@@ -45,6 +45,8 @@ type HabitsState = {
    * a tela abre mostrando o total de ontem até alguém remontá-la.
    */
   rolarDia: () => void;
+  removePour: (indice: number) => void;
+  setWaterTotal: (ml: number) => void;
   /** Recarrega semana e dia do servidor — é o que sobrevive ao app fechar. */
   hydrate: () => Promise<void>;
 };
@@ -167,6 +169,40 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
     get().rolarDia();
     const today = get().today;
     const next = { ...today, waterMl: today.waterMl + ml, pours: [...today.pours, ml] };
+    set({ today: next, week: comHoje(get().week, next) });
+    void persist(next);
+    void reagendarLembrete();
+  },
+
+  /**
+   * Tira UM registro, o que a pessoa apontar — não só o último.
+   *
+   * "Não consigo tirar um registro caso tenha feito ele antes" (fundadora,
+   * 21/08). O desfazer só alcançava o último gole; quem percebeu o erro dois
+   * goles depois ficava com o total errado o dia inteiro.
+   */
+  removePour: (indice) => {
+    get().rolarDia();
+    const today = get().today;
+    if (indice < 0 || indice >= today.pours.length) return;
+    const ml = today.pours[indice];
+    const pours = today.pours.filter((_, i) => i !== indice);
+    const next = { ...today, waterMl: Math.max(0, today.waterMl - ml), pours };
+    set({ today: next, week: comHoje(get().week, next) });
+    void persist(next);
+    void reagendarLembrete();
+  },
+
+  /**
+   * Acerta o TOTAL do dia à mão — para quando os goles não estão mais na
+   * memória (o app reabriu e o servidor só guarda o total) e o número está
+   * errado. A lista de goles é esquecida: ela não descreve mais o total.
+   */
+  setWaterTotal: (ml) => {
+    get().rolarDia();
+    const today = get().today;
+    const total = Math.max(0, Math.min(10_000, Math.round(ml)));
+    const next = { ...today, waterMl: total, pours: [] };
     set({ today: next, week: comHoje(get().week, next) });
     void persist(next);
     void reagendarLembrete();

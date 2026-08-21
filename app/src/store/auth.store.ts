@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 import * as api from '../services/api.service';
 import { KeychainSaveError } from '../services/tokenStorage';
+import { useHabitsStore } from './habits.store';
 import { useUserStore } from './user.store';
 
 type AuthState = {
@@ -74,7 +75,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     set({ status: ok ? 'signedIn' : 'signedOut' });
-    if (ok) void useUserStore.getState().load();
+    if (ok) {
+      void useUserStore.getState().load();
+      // A água de hoje vem do servidor; a tela de Água só pedia ao montar, e
+      // antes da sessão o pedido era ignorado — ficava 0 com registro feito.
+      void useHabitsStore.getState().hydrate();
+    }
   },
 
   signIn: async (email, password) => {
@@ -86,6 +92,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await api.login(email.trim().toLowerCase(), password);
       set({ status: 'signedIn', loading: false });
       void useUserStore.getState().load();
+      void useHabitsStore.getState().hydrate();
       return true;
     } catch (err) {
       set({ error: message(err), loading: false });

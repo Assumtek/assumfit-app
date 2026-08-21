@@ -269,7 +269,17 @@ def _plausivel(dados: dict, facts: Facts) -> bool:
     # Todo número no texto tem que ter vindo dos fatos. É a checagem que impede
     # a falha mais grave possível aqui: um valor biométrico inventado com cara
     # de medição.
-    return all(n in permitidos for n in _numeros(dados["detail"]))
+    # Números GENÉRICOS passam: "37 de 100", "por cinco minutos", "às 5h",
+    # "8 horas sentado". A guarda existe contra medição inventada ("HRV de 52
+    # ms" quando é 48) — e medição nunca é 100 nem cabe em um relógio. Antes
+    # disto, 217 textos em 14 h foram recusados por causa do "de 100", e o app
+    # mostrava o molde quase sempre (ago/2026).
+    return all(n in permitidos or _generico(n) for n in _numeros(dados["detail"]))
+
+
+def _generico(n: str) -> bool:
+    """Escala (100) e números de relógio/duração curta (0–24) não são medição."""
+    return n == "100" or (n.isdigit() and int(n) <= 24)
 
 
 def _numeros(texto: str) -> set[str]:

@@ -68,6 +68,7 @@ import {
 import * as api from '../services/api.service';
 import { ble } from '../services/ble';
 import * as outbox from '../services/sport-outbox';
+import { useLocalReminderStore } from '../services/local-reminder';
 import { iniciarRastreio, pararRastreio, useSportTrackStore } from '../services/sport-track';
 import { SportShare } from '../components/SportShare';
 import { useBiometricStore } from '../store/biometric.store';
@@ -496,6 +497,9 @@ export function SportScreen() {
     encerrarIlhaDeEsporte();
     // Fecha a da pulseira e religa a leitura contínua da home.
     void ble.setSportState?.(sessao.sport.kind, 'stop');
+    // Onde a sessão começou vira memória de lugar — é o que o lembrete por
+    // local usa para reconhecer "chegou na academia". Só coordenadas, só aqui.
+    if (sessao.points[0]) void useLocalReminderStore.getState().registrarInicio(sessao.points[0]);
     const execucaoId = execucaoVinculada.current;
     execucaoVinculada.current = null;
     vinculo.current = null;

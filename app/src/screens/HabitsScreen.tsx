@@ -46,6 +46,10 @@ export function HabitsScreen() {
   const hydrate = useHabitsStore((s) => s.hydrate);
   const containers = useHabitsStore((s) => s.containers);
   const setContainerMl = useHabitsStore((s) => s.setContainerMl);
+  const removePour = useHabitsStore((s) => s.removePour);
+  const setWaterTotal = useHabitsStore((s) => s.setWaterTotal);
+  const [editandoTotal, setEditandoTotal] = useState(false);
+  const [totalRascunho, setTotalRascunho] = useState('');
   const [chartWidth, setChartWidth] = useState(0);
   const [ajustando, setAjustando] = useState(false);
   /** `null` enquanto a anamnese não respondeu — só depois dá para dizer o que falta. */
@@ -144,26 +148,66 @@ export function HabitsScreen() {
         ))}
       </XStack>
 
-      {/* Desfazer fica logo abaixo dos recipientes, discreto: é correção do
-          último toque. */}
-      <XStack alignItems="center" marginTop="$sm">
-        {today.pours.length > 0 ? (
-          <Pressable
-            style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
-            onPress={undo}
-            accessibilityRole="button"
-          >
-            <XStack alignItems="center" gap="$sm" paddingVertical="$md">
-              <Icon name="back" size={14} color={colors.textFaint} />
-              <Data>Desfazer {today.pours[today.pours.length - 1]} ml</Data>
-            </XStack>
-          </Pressable>
-        ) : (
+      {/*
+        Os registros de HOJE, cada um com o seu X — tirar um gole errado não
+        pode depender de ele ser o último (fundadora, 21/08). Quando o app
+        reabriu e só o total voltou do servidor, a lista está vazia: aí o
+        total é editável pelo toque no número.
+      */}
+      {today.pours.length > 0 ? (
+        <XStack flexWrap="wrap" gap="$sm" marginTop="$md">
+          {today.pours.map((ml, i) => (
+            <Pressable
+              key={`${i}-${ml}`}
+              onPress={() => removePour(i)}
+              accessibilityRole="button"
+              accessibilityLabel={`Remover registro de ${ml} mililitros`}
+              style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
+            >
+              <XStack alignItems="center" gap={6} paddingHorizontal="$md" paddingVertical={6} borderRadius={999} borderWidth={1} borderColor="$border">
+                <Data color="$foreground">{ml} ml</Data>
+                <Icon name="x" size={11} color={colors.textMuted} />
+              </XStack>
+            </Pressable>
+          ))}
+        </XStack>
+      ) : (
+        <XStack alignItems="center" justifyContent="space-between" marginTop="$sm">
           <Data paddingVertical="$md" flexShrink={1}>
             Toque no recipiente que você acabou de beber.
           </Data>
-        )}
-      </XStack>
+          {today.waterMl > 0 ? (
+            <Pressable onPress={() => setEditandoTotal(true)} accessibilityRole="button" hitSlop={8}>
+              <Data color="$foreground">corrigir total</Data>
+            </Pressable>
+          ) : null}
+        </XStack>
+      )}
+
+      <Sheet open={editandoTotal} onClose={() => setEditandoTotal(false)}>
+        <YStack gap="$xs">
+          <SectionTitle fontSize={18}>Total de hoje</SectionTitle>
+          <Data>Em mililitros. Os registros individuais de hoje são esquecidos — vale o total.</Data>
+        </YStack>
+        <TextInput
+          value={totalRascunho}
+          onChangeText={setTotalRascunho}
+          keyboardType="number-pad"
+          maxLength={5}
+          placeholder={String(today.waterMl)}
+          placeholderTextColor={colors.textMuted}
+          accessibilityLabel="Total de água de hoje, em mililitros"
+          style={{ fontSize: 28, fontWeight: '200', color: colors.text, fontVariant: ['tabular-nums'], paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.hairlineStrong }}
+        />
+        <Button
+          title="Salvar total"
+          onPress={() => {
+            const ml = Number(totalRascunho);
+            if (Number.isFinite(ml)) setWaterTotal(ml);
+            setEditandoTotal(false);
+          }}
+        />
+      </Sheet>
 
       {/*
         "Ajustar volumes" é um BOTÃO, e parece um — com distância dos cards de

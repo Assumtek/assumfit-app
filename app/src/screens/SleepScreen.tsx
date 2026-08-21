@@ -97,7 +97,13 @@ export function SleepScreen() {
           de quatro dias atrás exibida sem ela se lê como a de ontem, que foi o
           que o app do fabricante mostrava.
         */}
-        <Data marginTop="$xs">noite de {formatDateBR(sleep.date)}</Data>
+        {/*
+          As DUAS pontas da noite. O rótulo dizia só o dia em que começou, e a
+          fundadora leu "20/08" como a noite anterior quando era a de 20 para 21
+          (ago/2026); um testador, antes, tinha lido o contrário. Dormiu X,
+          acordou Y resolve as duas leituras.
+        */}
+        <Data marginTop="$xs">noite de {formatDateBR(sleep.date).slice(0, 5)} para {formatDateBR(diaSeguinte(sleep.date))}</Data>
         <RatingText
           marginTop="$lg"
           color={rating.state === 'alert' ? '$destructive' : '$foreground'}
@@ -221,7 +227,7 @@ function UltimasNoites() {
           style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
         >
           <HistoryRow
-            time={formatDateBR(n.date.slice(0, 10)).slice(0, 5)}
+            time={`${formatDateBR(n.date.slice(0, 10)).slice(0, 2)}→${formatDateBR(diaSeguinte(n.date.slice(0, 10))).slice(0, 5)}`}
             fraction={(n.sleepScore ?? 0) / 100}
             value={`${n.sleepScore} · ${duracao(n.sleepMinutes ?? 0)}`}
             last={i === noites.length - 1}
@@ -230,4 +236,11 @@ function UltimasNoites() {
       ))}
     </Section>
   );
+}
+
+/** `2026-08-20` → `2026-08-21`, em calendário local. */
+function diaSeguinte(iso: string): string {
+  const [a, m, d] = iso.split('-').map(Number);
+  const x = new Date(a, m - 1, d + 1);
+  return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
 }

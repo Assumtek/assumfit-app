@@ -221,7 +221,15 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
   });
   // `force` é o botão Atualizar da home: ignora o cache e rediz a frase com o
   // dia relido — é o que faz o toque ter efeito visível.
-  if (!options.force && cached?.inputsHash === inputsHash && cached.insight) {
+  /*
+   Cache só vale quando o texto é do MODELO. O job da hora e a rota gravam no
+   mesmo ponto, e o que ficasse ali era o que a tela lia — inclusive o molde
+   (`source: "model"`), quando o modelo tinha sido recusado naquela tentativa.
+   Metade das horas de um dia saíram molde (ago/2026). Molde em cache é
+   convite a tentar o modelo de novo; texto do modelo em cache é definitivo.
+  */
+  const fonteEmCache = (cached?.insight as { insight?: { source?: string } } | null)?.insight?.source;
+  if (!options.force && cached?.inputsHash === inputsHash && cached.insight && fonteEmCache === 'llm') {
     return cached.insight as unknown as EnergyResponse;
   }
 

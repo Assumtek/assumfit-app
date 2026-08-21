@@ -210,3 +210,22 @@ class TestNotasDoDia:
 
         assert day_notes(DayContext(), hour=10) is None
         assert day_notes(None, hour=10) is None
+
+
+from models.insight_llm import Facts, _plausivel  # noqa: E402
+
+
+def _fatos(**kw):
+    base = dict(score=37, level="low", calibrating=False, driver=None, lift=None, next_label=None, hour=4, routine=None, day_notes=None)
+    base.update(kw)
+    return Facts(**base)
+
+
+def test_plausivel_aceita_escala_e_numeros_de_relogio():
+    dados = {"eyebrow": "prontidão baixa", "headline": "Corpo ainda em repouso", "detail": "Sua prontidão está em 37 de 100, esperado para as 4 da manhã. Levante-se por 5 minutos."}
+    assert _plausivel(dados, _fatos())
+
+
+def test_plausivel_continua_recusando_medicao_inventada():
+    dados = {"eyebrow": "x", "headline": "y", "detail": "Seu HRV está em 52 ms, abaixo do habitual."}
+    assert not _plausivel(dados, _fatos())

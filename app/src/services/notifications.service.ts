@@ -259,6 +259,74 @@ export async function cancelMealNotifications() {
   }
 }
 
+/**
+ * Lembretes PERSONALIZADOS — os horários vêm do uso, não de uma lista fixa.
+ *
+ * Mesma mecânica dos de água e refeição: notificação de data fixa, três dias
+ * à frente, refeita a cada volta ao primeiro plano. `prefixo` separa as
+ * famílias (treino, cama, relatório) para cancelar uma sem tocar nas outras.
+ */
+export async function scheduleDailyAt(
+  prefixo: string,
+  hhmm: string,
+  conteudo: { title: string; body: string; route: string },
+  dias = 3,
+) {
+  if (!(await ensurePermission())) return;
+  await cancelPrefix(prefixo, dias + 2);
+  const agora = new Date();
+  const [hour, minute] = hhmm.split(':').map(Number);
+  for (let dia = 0; dia < dias; dia++) {
+    const quando = new Date(agora);
+    quando.setDate(quando.getDate() + dia);
+    quando.setHours(hour, minute, 0, 0);
+    if (quando <= agora) continue;
+    await Notifications.scheduleNotificationAsync({
+      identifier: `${prefixo}${dia}`,
+      content: { title: conteudo.title, body: conteudo.body, sound: false, data: { route: conteudo.route } },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: quando },
+    });
+  }
+}
+
+/** Uma notificação no próximo `weekday` (0 = domingo) às `hhmm`. */
+export async function scheduleWeeklyAt(
+  id: string,
+  weekday: number,
+  hhmm: string,
+  conteudo: { title: string; body: string; route: string },
+) {
+  if (!(await ensurePermission())) return;
+  await Notifications.cancelScheduledNotificationAsync(id).catch(() => undefined);
+  const agora = new Date();
+  const [hour, minute] = hhmm.split(':').map(Number);
+  const quando = new Date(agora);
+  quando.setDate(quando.getDate() + ((weekday - quando.getDay() + 7) % 7));
+  quando.setHours(hour, minute, 0, 0);
+  if (quando <= agora) quando.setDate(quando.getDate() + 7);
+  await Notifications.scheduleNotificationAsync({
+    identifier: id,
+    content: { title: conteudo.title, body: conteudo.body, sound: false, data: { route: conteudo.route } },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: quando },
+  });
+}
+
+export async function cancelPrefix(prefixo: string, ate = 8) {
+  for (let i = 0; i < ate; i++) {
+    await Notifications.cancelScheduledNotificationAsync(`${prefixo}${i}`).catch(() => undefined);
+  }
+}
+
+/** Dispara agora — usado pelo lembrete por local, que nasce de um evento e não de um horário. */
+export async function notifyNow(id: string, conteudo: { title: string; body: string; route: string }) {
+  if (!(await ensurePermission())) return;
+  await Notifications.scheduleNotificationAsync({
+    identifier: id,
+    content: { title: conteudo.title, body: conteudo.body, sound: false, data: { route: conteudo.route } },
+    trigger: null,
+  });
+}
+
 export async function cancelWaterNotifications() {
   // O teto acompanha AGUA_DIAS × MAX_HORARIOS do lembrete (8), com folga:
   // cancelar id inexistente é no-op, deixar um vivo é notificação fantasma.
