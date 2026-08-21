@@ -1,17 +1,22 @@
-import { YStack } from '@tamagui/stacks';
+import { useNavigation } from '@react-navigation/native';
+import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
-import { LayoutChangeEvent } from 'react-native';
+import { LayoutChangeEvent, Pressable } from 'react-native';
 
 import { Note, Row, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
+import { Icon } from '../components/Icon';
 import { LineChart } from '../components/charts/LineChart';
 import { MeasuredAt } from '../components/MeasuredAt';
 import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
 import { rateActivity } from '../domain/ratings';
 import * as api from '../services/api.service';
 import { useBiometricStore } from '../store/biometric.store';
+import { useTheme } from '../theme/ThemeProvider';
 
 export function ActivityScreen() {
+  const navigation = useNavigation<any>();
+  const { colors } = useTheme();
   const activity = useBiometricStore((s) => s.activity);
 
   /*
@@ -62,6 +67,27 @@ export function ActivityScreen() {
   return (
     <DetailScreen title="Atividade">
       <YStack marginBottom="$xxl">
+        {/* Compartilhar a atividade do dia como story — ícone discreto, como na Saúde. */}
+        <XStack justifyContent="flex-end">
+          <Pressable
+            onPress={() =>
+              navigation.push('WorkoutShare', {
+                titulo: 'Minha atividade hoje',
+                metricas: [
+                  { valor: activity.steps.toLocaleString('pt-BR'), rotulo: 'passos' },
+                  activity.distanceKm > 0 ? { valor: activity.distanceKm.toFixed(1).replace('.', ','), rotulo: 'km' } : null,
+                  activity.activeKcal > 0 ? { valor: String(activity.activeKcal), rotulo: 'kcal' } : null,
+                ].filter(Boolean),
+              })
+            }
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Compartilhar minha atividade"
+            style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
+          >
+            <Icon name="share" size={18} color={colors.textMuted} strokeWidth={1.5} />
+          </Pressable>
+        </XStack>
         <Display>{activity.steps.toLocaleString('pt-BR')}</Display>
         <Data marginTop="$sm">passos de {activity.goal.toLocaleString('pt-BR')}</Data>
         {/* Passos vêm da pulseira e param quando ela sai do pulso — a hora da

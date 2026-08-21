@@ -46,10 +46,11 @@ export function DetailScreen({ title, children, refreshControl, onBack }: Props)
   return (
     <YStack flex={1} backgroundColor="$background">
       <ScrollView
-        // Campo de texto no fim da tela não fica embaixo do teclado — vale
-        // para TODA tela construída aqui ("testem todos os campos digitáveis",
-        // pedido de testador, ago/2026). O iOS ajusta o inset sozinho.
-        automaticallyAdjustKeyboardInsets
+        // `keyboardShouldPersistTaps`, sem `automaticallyAdjustKeyboardInsets`:
+        // este último entrou por um dia e coincidiu com "a tela fica vazia e
+        // travada ao rolar" numa tela curta (relato de testador, 21/08). As
+        // folhas têm KeyboardAvoidingView próprio e a execução também; o resto
+        // fica como estava até a causa ser isolada num aparelho.
         keyboardShouldPersistTaps="handled"
         style={{ flex: 1 }}
         refreshControl={refreshControl}

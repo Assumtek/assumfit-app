@@ -67,6 +67,10 @@ export function BarChart({ bars, width, height = 140, max, reference, labelEvery
         </>
       ) : null}
 
+      {/* Eixo vertical: o topo da escala, à esquerda. */}
+      <SvgText x={2} y={10} fill={colors.textFaint} fontSize={9} textAnchor="start">
+        {String(Math.round(top))}
+      </SvgText>
       {bars.map((bar, i) => {
         const barY = y(bar.value);
         return (

@@ -110,6 +110,8 @@ function gravarAparelhoPareado(id: string | null) {
 }
 
 type Derivado = {
+  /** Dia civil LOCAL em que foi gravado — passos e atividade são do dia, e não podem amanhecer com o valor de ontem. */
+  dia?: string;
   sleep: SleepNight | null;
   stressByHour: { hour: string; value: number }[];
   /**
@@ -197,6 +199,7 @@ function persistirDerivado(e: {
   hrHistory: Sample[];
 }) {
   gravarDerivado({
+    dia: hojeLocal(),
     sleep: e.sleep,
     stressByHour: e.stressByHour,
     spo2History: e.spo2History,
@@ -451,6 +454,18 @@ async function varrerSonoRetroativo(): Promise<void> {
     'memória de sono',
   ).catch(() => [] as const);
   for (const n of noites) api.pushSleepNight(n);
+  /*
+   A varredura TAMBÉM atualiza a tela. Ela só empurrava para o servidor, e o
+   efeito era o relato de 21/08: a lista de noites (do servidor) já dizia 20/08
+   enquanto o topo da tela (o store) seguia em 19/08. A noite mais recente da
+   memória vale como a atual quando é mais nova do que a que está na tela.
+  */
+  const maisNova = [...noites].sort((a, b) => (a.date < b.date ? 1 : -1))[0];
+  const atual = useBiometricStore.getState().sleep;
+  if (maisNova && (!atual || maisNova.date > atual.date)) {
+    useBiometricStore.setState({ sleep: comOxigenioDaNoite(maisNova, useBiometricStore.getState().spo2History) });
+    persistirDerivado(useBiometricStore.getState());
+  }
   // O portão só fecha com noite na mão: zero tanto pode ser memória vazia
   // quanto o SDK mudo naquele instante — visto em produção — e neste caso
   // a tentativa seguinte merece nova chance.
@@ -729,16 +744,26 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     // O derivado vem junto: sono e séries que só a leitura ao vivo preenche.
     const derivado = await lerDerivado();
     if (derivado) {
+      /*
+       O que é DO DIA não atravessa a meia-noite. Passos, distância, calorias
+       e a curva de passos eram restaurados como estavam — e às 9h da manhã a
+       tela dizia os passos de ontem até a pulseira mandar o primeiro passo
+       de hoje (relato de testador, 21/08). Gravado em outro dia, zera; a
+       pulseira preenche o dia novo conforme anda.
+      */
+      const mesmoDia = derivado.dia === hojeLocal();
       set({
         sleep: derivado.sleep ?? get().sleep,
-        stressByHour: derivado.stressByHour ?? [],
+        stressByHour: mesmoDia ? (derivado.stressByHour ?? []) : [],
         spo2History: derivado.spo2History ?? [],
         stressHistory: derivado.stressHistory ?? [],
         pressureHistory: derivado.pressureHistory ?? [],
-        stepsByHour: derivado.stepsByHour ?? [],
+        stepsByHour: mesmoDia ? (derivado.stepsByHour ?? []) : [],
         hrvHistory: derivado.hrvHistory ?? [],
         hrHistory: derivado.hrHistory ?? [],
-        activity: derivado.activity ?? get().activity,
+        activity: mesmoDia
+          ? (derivado.activity ?? get().activity)
+          : { ...(derivado.activity ?? get().activity), steps: 0, distanceKm: 0, activeKcal: 0, activeMin: 0 },
       });
     }
 

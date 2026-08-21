@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
+import { PanResponder, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Line, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
 import { GridPaper } from './GridPaper';
@@ -31,6 +32,14 @@ type Props = {
   band?: Band;
   /** Força o domínio vertical em vez de derivar dos dados. */
   domain?: [number, number];
+  /**
+   * Como ler um valor quando a pessoa ARRASTA o dedo sobre a curva (o "Stocks"
+   * da Apple — pedido de testador, ago/2026). Sem isto, o valor sai cru com
+   * uma casa. Os números do eixo vertical usam a mesma função.
+   */
+  formatValue?: (v: number) => string;
+  /** Esconde os números do eixo vertical (mín e máx à esquerda). */
+  hideAxis?: boolean;
   /** Marca o último ponto — usado quando o dado é ao vivo. */
   markLast?: boolean;
   /** Rótulos do eixo X, distribuídos uniformemente. */
@@ -61,9 +70,35 @@ export function LineChart({
   markLast = false,
   xLabels,
   id = 'line',
+  formatValue,
+  hideAxis = false,
 }: Props) {
   const { colors } = useTheme();
   color = color ?? colors.accent;
+  const fmt = (v: number) => (formatValue ? formatValue(v) : Number.isInteger(v) ? String(v) : v.toFixed(1).replace('.', ','));
+  /*
+   ARRASTAR para ler cada medição.
+
+   O dedo escolhe o ponto mais próximo no eixo X; uma linha vertical e o valor
+   aparecem enquanto ele estiver ali, e somem ao soltar. É o gesto do Stocks e
+   dos relógios de corrida — e o pedido veio com a observação certa: em série
+   de 90 pontos a curva diz a forma, não o número.
+  */
+  const [scrub, setScrub] = useState<number | null>(null);
+  const larguraRef = useRef(width);
+  larguraRef.current = width;
+  const pontosRef = useRef(data.length);
+  pontosRef.current = data.length;
+  const pan = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (e) => setScrub(indiceEm(e.nativeEvent.locationX, larguraRef.current, pontosRef.current)),
+      onPanResponderMove: (e) => setScrub(indiceEm(e.nativeEvent.locationX, larguraRef.current, pontosRef.current)),
+      onPanResponderRelease: () => setScrub(null),
+      onPanResponderTerminate: () => setScrub(null),
+    }),
+  ).current;
   const padBottom = xLabels ? 18 : 0;
   const plotH = height - padBottom;
 
@@ -106,14 +141,18 @@ export function LineChart({
       // Área sob um ponto só seria um triângulo que não representa nada.
       areaPath: data.length === 1 ? '' : `${line} L${plotW} ${plotH} L0 ${plotH} Z`,
       y,
+      x,
+      min,
+      max,
       lastX: x(data.length - 1),
       lastY: y(data[data.length - 1]),
     };
   }, [data, width, plotH, thresholds, band, domain, markLast]);
 
   if (!geom) return <Svg width={Math.max(width, 0)} height={height} />;
-
+  const i = scrub != null && data.length > 0 ? Math.min(data.length - 1, Math.max(0, scrub)) : null;
   return (
+    <View {...pan.panHandlers} style={{ width, height }}>
     <Svg width={width} height={height}>
       <Defs>
         <LinearGradient id={`${id}-fill`} x1="0" y1="0" x2="0" y2="1">
@@ -173,18 +212,53 @@ export function LineChart({
         </>
       ) : null}
 
-      {xLabels?.map((label, i) => (
+      {xLabels?.map((label, k) => (
         <SvgText
-          key={label + i}
-          x={(i / (xLabels.length - 1)) * width}
+          key={label + k}
+          x={(k / (xLabels.length - 1)) * width}
           y={height - 4}
           fill={colors.textFaint}
           fontSize={9}
-          textAnchor={i === 0 ? 'start' : i === xLabels.length - 1 ? 'end' : 'middle'}
+          textAnchor={k === 0 ? 'start' : k === xLabels.length - 1 ? 'end' : 'middle'}
         >
           {label}
         </SvgText>
       ))}
+      {/* Eixo vertical: o máximo no alto e o mínimo embaixo, à esquerda — o
+          suficiente para a curva ter escala sem virar planilha. */}
+      {!hideAxis && data.length > 1 ? (
+        <>
+          <SvgText x={2} y={10} fill={colors.textFaint} fontSize={9} textAnchor="start">
+            {fmt(domain ? geom.max : Math.max(...data))}
+          </SvgText>
+          <SvgText x={2} y={plotH - 3} fill={colors.textFaint} fontSize={9} textAnchor="start">
+            {fmt(domain ? geom.min : Math.min(...data))}
+          </SvgText>
+        </>
+      ) : null}
+      {i != null ? (
+        <>
+          <Line x1={geom.x(i)} y1={0} x2={geom.x(i)} y2={plotH} stroke={colors.text} strokeWidth={1} opacity={0.5} />
+          <Circle cx={geom.x(i)} cy={geom.y(data[i])} r={4} fill={color} stroke={colors.ink} strokeWidth={1.5} />
+          <SvgText
+            x={Math.min(Math.max(geom.x(i), 28), width - 28)}
+            y={Math.max(12, geom.y(data[i]) - 12)}
+            fill={colors.text}
+            fontSize={12}
+            fontWeight="600"
+            textAnchor="middle"
+          >
+            {fmt(data[i])}
+          </SvgText>
+        </>
+      ) : null}
     </Svg>
+    </View>
   );
+}
+
+/** O índice do ponto mais próximo do dedo. */
+function indiceEm(x: number, width: number, n: number): number {
+  if (n <= 1 || width <= 0) return 0;
+  return Math.round((Math.min(Math.max(x, 0), width) / width) * (n - 1));
 }

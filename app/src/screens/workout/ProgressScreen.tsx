@@ -79,6 +79,8 @@ const PERIODOS = [
 type Linha = MovementEntry<ExecutionHistoryItem, SportSession>;
 
 export function ProgressScreen() {
+  const { colors } = useTheme();
+  const navigation = useNavigation<any>();
   const [aba, setAba] = useState<'movimento' | 'evolucao'>('movimento');
   const [dias, setDias] = useState<1 | 7 | 30 | 90>(30);
   /*
@@ -170,6 +172,29 @@ export function ProgressScreen() {
         ))}
       </XStack>
 
+      {/* Compartilhar o progresso do período como story (pedido de testador, 21/08). */}
+      <XStack justifyContent="flex-end" marginBottom="$sm">
+        <Pressable
+          onPress={() =>
+            navigation.push('WorkoutShare', {
+              titulo: janela ? 'Meu progresso' : dias === 1 ? 'Meu dia' : `Meus últimos ${dias} dias`,
+              metricas: [
+                { valor: String(Math.round(totais.minutos)), rotulo: 'min ativos' },
+                musculacao ? { valor: String(musculacao.summary.totalWorkouts), rotulo: 'treinos' } : null,
+                musculacao && musculacao.summary.volumeLoad > 0
+                  ? { valor: `${Math.round(musculacao.summary.volumeLoad / 1000)} t`, rotulo: 'carga' }
+                  : null,
+              ].filter(Boolean),
+            })
+          }
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Compartilhar meu progresso"
+          style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
+        >
+          <Icon name="share" size={18} color={colors.textMuted} strokeWidth={1.5} />
+        </Pressable>
+      </XStack>
       <SeletorDePeriodo
         atual={janela ? 'outro' : dias}
         onEscolher={(d) => {

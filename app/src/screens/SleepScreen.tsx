@@ -1,11 +1,12 @@
 import { YStack } from '@tamagui/stacks';
+import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { LayoutChangeEvent } from 'react-native';
+import { LayoutChangeEvent, Pressable } from 'react-native';
 
 import { HistoryRow, Note, Row, Section } from '../components/Card';
 import { SyncSleepButton } from '../components/MeasureButton';
 import { SleepPlanner } from '../components/SleepPlanner';
-import { DetailScreen } from '../components/DetailScreen';
+import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
 import { formatDateBR } from '../domain/birthDate';
 import { Hypnogram } from '../components/charts/Hypnogram';
 import { LineChart } from '../components/charts/LineChart';
@@ -32,6 +33,12 @@ const PHASES: { key: SleepPhase; label: string; opacity: number }[] = [
 export function SleepScreen() {
   const { colors } = useTheme();
   const sleep = useBiometricStore((s) => s.sleep);
+  const connectHealth = useBiometricStore((s) => s.connectHealth);
+  // Puxar para atualizar busca a noite de novo — "opção de atualização em
+  // todas as telas" (testador, 21/08). É o mesmo caminho do botão de buscar.
+  const puxar = usePullRefresh(async () => {
+    await connectHealth();
+  });
   const rating = rateSleep(sleep?.score ?? null, sleep?.totalMin ?? null);
   const [chartWidth, setChartWidth] = useState(0);
   // A hora habitual de dormir vem do perfil de rotina, quando respondida.
@@ -48,7 +55,7 @@ export function SleepScreen() {
    */
   if (!sleep) {
     return (
-      <DetailScreen title="Sono">
+      <DetailScreen title="Sono" refreshControl={puxar}>
         <Note
           title="Nenhuma noite registrada"
           body="A pulseira precisa ser usada durante o sono. Na manhã seguinte, os estágios aparecem aqui."
@@ -78,7 +85,7 @@ export function SleepScreen() {
   const pct = (min: number) => Math.round((min / sleep.totalMin) * 100);
 
   return (
-    <DetailScreen title="Sono">
+    <DetailScreen title="Sono" refreshControl={puxar}>
       <YStack marginBottom="$xxl">
         <Display>{sleep.score}</Display>
         <Data marginTop="$sm">score · {duration(sleep.totalMin)} de sono</Data>
@@ -178,6 +185,7 @@ export function SleepScreen() {
  * aparece: traço numa lista de noites leria como noite em claro.
  */
 function UltimasNoites() {
+  const navigation = useNavigation<any>();
   const [noites, setNoites] = useState<api.DailyHabitRow[] | null>(null);
 
   useEffect(() => {
@@ -205,13 +213,20 @@ function UltimasNoites() {
   return (
     <Section label="Últimas noites">
       {noites.map((n, i) => (
-        <HistoryRow
+        <Pressable
           key={n.date}
-          time={formatDateBR(n.date.slice(0, 10)).slice(0, 5)}
-          fraction={(n.sleepScore ?? 0) / 100}
-          value={`${n.sleepScore} · ${duracao(n.sleepMinutes ?? 0)}`}
-          last={i === noites.length - 1}
-        />
+          onPress={() => navigation.push('MetricDay', { metric: 'sleep', dia: n.date.slice(0, 10) })}
+          accessibilityRole="button"
+          accessibilityLabel={`Noite de ${formatDateBR(n.date.slice(0, 10))}, score ${n.sleepScore}. Abrir o detalhe`}
+          style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
+        >
+          <HistoryRow
+            time={formatDateBR(n.date.slice(0, 10)).slice(0, 5)}
+            fraction={(n.sleepScore ?? 0) / 100}
+            value={`${n.sleepScore} · ${duracao(n.sleepMinutes ?? 0)}`}
+            last={i === noites.length - 1}
+          />
+        </Pressable>
       ))}
     </Section>
   );
