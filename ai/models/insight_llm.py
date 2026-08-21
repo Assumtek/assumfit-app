@@ -199,15 +199,22 @@ def write(facts: Facts, fallback: HomeInsight) -> HomeInsight | None:
     """
     global _avisou_sem_chave
 
-    if os.environ.get("OPENAI_API_KEY"):
-        dados = _redigir_openai(facts)
-    elif os.environ.get("ANTHROPIC_API_KEY"):
-        dados = _redigir_anthropic(facts)
-    else:
+    tem_openai = bool(os.environ.get("OPENAI_API_KEY"))
+    tem_anthropic = bool(os.environ.get("ANTHROPIC_API_KEY"))
+    if not tem_openai and not tem_anthropic:
         if not _avisou_sem_chave:
             print("[insight_llm] sem OPENAI_API_KEY nem ANTHROPIC_API_KEY: a home fica no molde", flush=True)
             _avisou_sem_chave = True
         return None
+
+    # OpenAI primeiro; se ela FALHAR (não só se faltar a chave), a Anthropic
+    # tenta antes de entregar o molde. A primeira versão só caía na segunda via
+    # quando a chave da OpenAI estava ausente — e no primeiro dia a conta da
+    # OpenAI estava sem créditos (429 insufficient_quota): chave presente,
+    # chamada falhando, e a home no molde com a Anthropic parada ao lado.
+    dados = _redigir_openai(facts) if tem_openai else None
+    if dados is None and tem_anthropic:
+        dados = _redigir_anthropic(facts)
 
     if dados is None:
         return None
