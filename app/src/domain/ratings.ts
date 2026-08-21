@@ -190,13 +190,22 @@ export type PressureZone = {
   abnormal: boolean;
 };
 
-/** Zonas da tabela de pressão, de baixo para cima. */
+/**
+ * Zonas da tabela de pressão, de baixo para cima — **Diretrizes Brasileiras de
+ * Hipertensão (SBC, 2020)**.
+ *
+ * Era a tabela americana (AHA 2017), em que diastólica 80 já é "elevada". Um
+ * testador mediu 11 por 8 e perguntou qual era a base — e pela diretriz
+ * brasileira 110/80 é NORMAL (ótima < 120/80; normal até 129/84;
+ * pré-hipertensão 130–139 ou 85–89; hipertensão a partir de 140/90). Produto
+ * brasileiro, não médico: a referência é a daqui, e a tela de Ajuda diz qual é.
+ */
 export const pressureZones: PressureZone[] = [
   { label: 'Baixa', range: '< 90/60', matches: (s, d) => s < 90 || d < 60, abnormal: true },
-  { label: 'Ótima', range: '90–119 / 60–79', matches: (s, d) => s <= 119 && d <= 79, abnormal: false },
-  { label: 'Normal', range: '120–129 / < 80', matches: (s, d) => s <= 129 && d < 80, abnormal: false },
-  { label: 'Elevada', range: '130–139 / 80–89', matches: (s, d) => s <= 139 && d <= 89, abnormal: true },
-  { label: 'Alta', range: '> 140/90', matches: () => true, abnormal: true },
+  { label: 'Ótima', range: '< 120/80', matches: (s, d) => s < 120 && d < 80, abnormal: false },
+  { label: 'Normal', range: '120–129 / 80–84', matches: (s, d) => s <= 129 && d <= 84, abnormal: false },
+  { label: 'Elevada', range: '130–139 / 85–89', matches: (s, d) => s <= 139 && d <= 89, abnormal: true },
+  { label: 'Alta', range: '≥ 140/90', matches: () => true, abnormal: true },
 ];
 
 export function ratePressure(sys: number | null, dia: number | null): Rating & { zone: PressureZone } {

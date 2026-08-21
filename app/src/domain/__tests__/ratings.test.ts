@@ -114,7 +114,13 @@ describe('alerta é reservado para fora da faixa saudável', () => {
 describe('pressão arterial', () => {
   it('classifica o par, não cada valor isolado', () => {
     expect(ratePressure(118, 76).zone.label).toBe('Ótima');
+    // 11 por 8 é NORMAL pela diretriz brasileira — era "Elevada" pela americana,
+    // e foi exatamente a pergunta de um testador.
+    expect(ratePressure(110, 80).zone.label).toBe('Normal');
+    expect(ratePressure(110, 80).state).toBe('normal');
+    expect(ratePressure(125, 84).zone.label).toBe('Normal');
     expect(ratePressure(135, 85).zone.label).toBe('Elevada');
+    expect(ratePressure(128, 86).zone.label).toBe('Elevada');
     expect(ratePressure(150, 95).zone.label).toBe('Alta');
     expect(ratePressure(85, 55).zone.label).toBe('Baixa');
   });

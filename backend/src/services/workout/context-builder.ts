@@ -59,6 +59,7 @@ const AnamnesisParse = z
     equipment: z.string().nullish(),
     /** O que o plano cobre (slugs de modalidade), decidido na anamnese. */
     planModalities: z.array(z.string()).nullish(),
+    planSportLabel: z.string().nullish(),
     notes: z.string().nullish(),
   })
   .passthrough();
@@ -178,6 +179,8 @@ export function buildContext(
       // O que o plano deve COBRIR — decisão da pessoa na anamnese. Anamnese
       // antiga não tem a resposta, e aí vale o comportamento de sempre.
       modalidades: answers.planModalities ?? ['musculacao'],
+      // O esporte com o nome que a pessoa deu — é como a sessão deve se chamar.
+      esporte_declarado: answers.planSportLabel ?? undefined,
       // O que ela pratica por fora: contexto de carga e recuperação, não
       // ordem de prescrição.
       esportes_praticados: user.activities ?? [],

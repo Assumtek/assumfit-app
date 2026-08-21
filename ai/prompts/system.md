@@ -60,7 +60,9 @@ anamnese. Valores: "musculacao" e slugs de esporte ("corrida", "ciclismo", "nata
      "intensity" descrevendo o bloco de forma executavel ("6x400m forte, 90s de trote
      entre os tiros", "ritmo confortavel, conversa possivel"). Detalhe fino em "notes".
    - "muscleGroups": ["CORPO_INTEIRO"], e "name" nomeia a sessao ("Corrida — tiros
-     curtos", "Pedal longo").
+     curtos", "Pedal longo"). Quando o perfil trouxer "esporte_declarado", o nome
+     usa ESSE esporte ("Tenis — jogo e tecnica"), nunca o slug da modalidade: quem
+     joga tenis e recebe "Esportes Coletivos" le como o app nao ter entendido.
 4. "esportes_praticados" do perfil e CONTEXTO (carga externa que ja existe, recuperacao a
    respeitar) — NAO prescreva dias para eles, a menos que tambem estejam em "modalidades".
 5. Modalidade sem item proprio no catalogo: use "Sessao do esporte praticado" e descreva a

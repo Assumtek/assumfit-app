@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-import { nightFrom } from '../domain/sleep';
+import { dataDaNoite, nightFrom } from '../domain/sleep';
 import type { SleepNight, SleepPhase, SleepSegment } from '../domain/types';
 
 /**
@@ -185,8 +185,9 @@ export async function fetchLastNight(now = new Date()): Promise<SleepNight | nul
 
     // A data é a do INÍCIO da noite: quem dormiu 28/07 às 23h e acordou 29/07
     // reconhece aquela como a noite do dia 28.
-    const data = new Date(ultima[0].startDate);
-    const noite = nightFrom(data.toISOString().slice(0, 10), segments);
+    // Local, pela tarde em que começou — `toISOString` é UTC e empurrava 23h
+    // de Brasília para o dia seguinte.
+    const noite = nightFrom(dataDaNoite(new Date(ultima[0].startDate).getTime()), segments);
     console.log(
       `[health] noites encontradas: ${noites.length} — usando ${noite.date}, ${noite.totalMin} min`,
     );

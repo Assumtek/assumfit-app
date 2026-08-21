@@ -591,6 +591,14 @@ export function traduzirParaAnamnese(r: Answers) {
     // O que o plano cobre — decisão da pessoa, não inferência. O leitor
     // (context-builder) repassa à IA como `modalidades` do perfil.
     planModalities: modalidadesDoPlano(r),
+    /*
+     O NOME do esporte, além do slug. "Tênis ou padel" vira `esportes-coletivos`
+     na modalidade — e o gerador batizava a sessão de "Esportes Coletivos", o
+     que para quem joga tênis lê como o app não ter entendido (relato de
+     ago/2026). A modalidade continua decidindo a referência; o nome decide
+     como a pessoa vê o próprio dia.
+    */
+    planSportLabel: dito(r.esporteDoPlano) ?? dito(r.qualEsporte) ?? null,
     notes: notas.join(' | ') || null,
   };
 }

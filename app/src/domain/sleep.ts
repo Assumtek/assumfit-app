@@ -155,3 +155,20 @@ export function spo2DaNoite(
     .sort((a, b) => a.at - b.at)
     .map((a) => a.value);
 }
+
+/**
+ * A que dia pertence uma noite — pela TARDE em que ela começou.
+ *
+ * A data vinha do início do primeiro segmento de sono, e isso dava 19/08 a
+ * quem adormeceu às 23h30 e 20/08 a quem adormeceu à 0h30 — a mesma noite,
+ * duas datas, conforme o lado da meia-noite. Um testador (ago/2026) viu "última
+ * noite em 20/08" e perguntou se não deveria ser 19/08; e o histórico dele
+ * ficou com um buraco no dia 19. Início antes do meio-dia é madrugada: a noite
+ * é do dia anterior. `inicio` é instante LOCAL (epoch ms) — nunca converta via
+ * `toISOString`, que é UTC e empurra 23h de Brasília para o dia seguinte.
+ */
+export function dataDaNoite(inicio: number): string {
+  const d = new Date(inicio);
+  if (d.getHours() < 12) d.setDate(d.getDate() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}

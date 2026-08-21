@@ -6,6 +6,7 @@ import {
   type QCState,
 } from '../../../modules/qcband';
 import { nightFrom } from '../../domain/sleep';
+import { dataDaNoite } from '../../domain/sleep';
 import type { SportKind } from '../../domain/sport';
 import type { Reading, SleepNight, SleepPhase, SleepSegment } from '../../domain/types';
 import { comTeto, eTempoEsgotado, TETO_CONSULTA_MS, TETO_MEDICAO_MS } from './timeout';
@@ -994,9 +995,11 @@ function montarNoite(bruto: { type: number; minutes: number; start: string }[]):
     .map((s) => ({ phase: fases[s.type], minutes: s.minutes }));
   if (!segments.length) return null;
 
-  // A data vem do início do primeiro segmento: quem dormiu dia 28 às 23h e
-  // acordou dia 29 reconhece aquela como a noite do dia 28.
-  const data = (bruto[0].start ?? '').slice(0, 10) || new Date().toISOString().slice(0, 10);
+  // A noite pertence à TARDE em que começou — inclusive quando o sono só veio
+  // depois da meia-noite (ver `dataDaNoite`). Sem início legível, fica a de
+  // ontem à noite, que é a única resposta que não inventa uma data futura.
+  const inicioLocal = instanteDoFirmware(bruto[0].start ?? '');
+  const data = dataDaNoite(inicioLocal > 0 ? inicioLocal : Date.now() - 12 * 3_600_000);
 
   /*
    A JANELA da noite, que a pulseira já entrega e a gente descartava.

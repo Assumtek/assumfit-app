@@ -1,4 +1,4 @@
-import { deepSleepContinuity, nightFrom, sleepScore, spo2DaNoite } from '../sleep';
+import { deepSleepContinuity, nightFrom, sleepScore, spo2DaNoite, dataDaNoite } from '../sleep';
 import type { SleepSegment } from '../types';
 
 /**
@@ -149,5 +149,28 @@ describe('spo2DaNoite', () => {
   it('janela inválida ou sem amostra devolve vazio, e a tela mostra ausência', () => {
     expect(spo2DaNoite(fim, inicio, [amostra(1, 96)])).toEqual([]);
     expect(spo2DaNoite(inicio, fim, [])).toEqual([]);
+  });
+});
+
+describe('dataDaNoite', () => {
+  const local = (y: number, m: number, d: number, h: number, min = 0) => new Date(y, m - 1, d, h, min).getTime();
+
+  it('noite que começa à noite fica com o dia em que começou', () => {
+    expect(dataDaNoite(local(2026, 8, 19, 23, 30))).toBe('2026-08-19');
+  });
+
+  it('noite que começa depois da meia-noite pertence ao dia anterior', () => {
+    // O caso do testador: adormeceu 0h30 de 20/08 e viu "última noite em 20/08".
+    expect(dataDaNoite(local(2026, 8, 20, 0, 30))).toBe('2026-08-19');
+    expect(dataDaNoite(local(2026, 8, 20, 3, 0))).toBe('2026-08-19');
+  });
+
+  it('vira o mês e o ano para trás', () => {
+    expect(dataDaNoite(local(2026, 9, 1, 1, 0))).toBe('2026-08-31');
+    expect(dataDaNoite(local(2027, 1, 1, 2, 0))).toBe('2026-12-31');
+  });
+
+  it('soneca da tarde não é madrugada', () => {
+    expect(dataDaNoite(local(2026, 8, 20, 14, 0))).toBe('2026-08-20');
   });
 });
