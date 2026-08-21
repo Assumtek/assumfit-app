@@ -30,7 +30,7 @@ export function HelpScreen() {
         <Explica termo="Frequência cardíaca" texto="Batimentos por minuto, lidos pelo sensor óptico ao longo do dia." />
         <Explica
           termo="HRV"
-          texto="Variabilidade entre um batimento e o seguinte, em milissegundos. Quanto maior, mais folga o sistema nervoso tem. É pessoal: compare você com você."
+          texto="Variabilidade entre um batimento e o seguinte, em milissegundos — a pulseira mede nas janelas agendadas, de hora em hora, e o número é a média dessas diferenças (RMSSD). Coração que varia mais tem mais folga no sistema nervoso: acima de 70 ms é excelente, acima de 50 bom, abaixo disso pode melhorar, e abaixo de 20 vale atenção. É o componente de maior peso no score de energia. E é pessoal — idade, genética e treino mudam a base —, então compare você com você: o app guarda a sua linha de base e lê cada medição contra ela."
         />
         <Explica termo="Oxigênio (SpO₂)" texto="Saturação de oxigênio no sangue, em porcentagem." />
         <Explica

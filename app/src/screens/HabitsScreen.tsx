@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
-import { LayoutChangeEvent, Pressable } from 'react-native';
+import { LayoutChangeEvent, Pressable, TextInput } from 'react-native';
 
 import { Note, Row, Section } from '../components/Card';
 import { WaterReminder } from '../components/SedentaryReminder';
@@ -273,6 +273,9 @@ function AjusteDeVolume({
   container: Container;
   onChange: (ml: number) => void;
 }) {
+  const { colors } = useTheme();
+  const [rascunho, setRascunho] = useState(String(container.ml));
+  useEffect(() => setRascunho(String(container.ml)), [container.ml]);
   const noMinimo = container.ml <= MIN_ML;
   const noMaximo = container.ml >= MAX_ML;
 
@@ -292,17 +295,38 @@ function AjusteDeVolume({
           desativado={noMinimo}
           onPress={() => onChange(container.ml - STEP_ML)}
         />
-        {/* Tabular para o número não tremer a cada toque. */}
-        <Text
-          fontSize={17}
-          fontWeight="600"
-          color="$foreground"
-          fontVariant={['tabular-nums']}
-          width={54}
-          textAlign="center"
-        >
-          {container.ml}
-        </Text>
+        {/*
+          O número é EDITÁVEL, além dos passos de 50.
+
+          "Tenho uma garrafa de 610 ml" (testador, ago/2026) — com passo fixo
+          ela não existe. Digita-se o volume; os botões continuam para quem
+          prefere o toque. A faixa (50 ml a 2 L) é a mesma, aplicada ao sair
+          do campo, e texto que não é número volta ao valor anterior.
+        */}
+        <TextInput
+          value={rascunho}
+          onChangeText={setRascunho}
+          onFocus={() => setRascunho('')}
+          onBlur={() => {
+            const ml = Number(rascunho.replace(',', '.'));
+            if (Number.isFinite(ml) && ml > 0) onChange(ml);
+            setRascunho(String(container.ml));
+          }}
+          keyboardType="number-pad"
+          returnKeyType="done"
+          selectTextOnFocus
+          maxLength={4}
+          accessibilityLabel={`Volume do ${container.label}, em mililitros`}
+          style={{
+            width: 64,
+            textAlign: 'center',
+            fontSize: 17,
+            fontWeight: '600',
+            fontVariant: ['tabular-nums'],
+            color: colors.text,
+            paddingVertical: 4,
+          }}
+        />
         <PassoDeVolume
           rotulo={`Aumentar ${container.label}`}
           icone="up"
