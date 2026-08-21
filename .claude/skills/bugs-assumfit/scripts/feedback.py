@@ -143,7 +143,9 @@ def slack_feedbacks() -> list[dict]:
     usuarios: dict[str, str] = {}
     out = []
     for m in h["messages"]:
-        if m.get("subtype") in ("channel_join", "channel_leave", "bot_message"):
+        # O que o PRÓPRIO fluxo escreve não volta como relato: bot moderno posta
+        # com `bot_id` e sem subtype — o filtro antigo só via o legado.
+        if m.get("subtype") in ("channel_join", "channel_leave", "bot_message") or m.get("bot_id"):
             continue
         uid = m.get("user", "")
         if uid and uid not in usuarios:
