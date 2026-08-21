@@ -250,11 +250,13 @@ import { fetchLastNight, isHealthAvailable, requestSleepAccess } from '../servic
 import {
   notifyAttention,
   notifyBreathing,
+  notifyExerciseDetected,
   setupAndroidChannel,
   type MetricaDeAtencao,
 } from '../services/notifications.service';
 import { spo2DaNoite } from '../domain/sleep';
 import { noiteSustentaODia } from '../domain/bodyBattery';
+import { avaliarInicioDeExercicio, ESTADO_INICIAL, type EstadoDeExercicio } from '../domain/exerciseOnset';
 import { lerEmCurso } from '../services/sport-outbox';
 import { syncQueue } from '../services/sync.service';
 import { rateHeartRate, ratePressure, rateSpo2 } from '../domain/ratings';
@@ -1285,6 +1287,8 @@ const SUSTENTADO_MS = 2 * 60_000;
 let passosVistos: { steps: number; at: number } | null = null;
 let batimentoAltoDesde: number | null = null;
 const MOVIMENTO_RECENTE_MS = 10 * 60_000;
+/** "Parece exercício?" — o estado mora em `domain/exerciseOnset.ts`; aqui só se guarda. */
+let exercicio: EstadoDeExercicio = ESTADO_INICIAL;
 /*
  Cinco minutos, não dez. Eram dez; um testador (21/08) achou longo demais para
  quem está parado — e tem razão: batimento de alerta que se mantém por cinco
@@ -1313,8 +1317,23 @@ function vigiarLeitura(reading: Reading) {
    só faz sentido com a pessoa PARADA e por um tempo: batimento acima da
    faixa por cinco minutos sem passos.
   */
-  const treinando =
-    useWorkoutStore.getState().execution !== null || lerEmCurso(agora) !== null || emMovimento(reading, agora);
+  const emAtividadeRegistrada = useWorkoutStore.getState().execution !== null || lerEmCurso(agora) !== null;
+  // Uma chamada só por leitura: `emMovimento` guarda o último total de passos.
+  const movendo = emMovimento(reading, agora);
+  const treinando = emAtividadeRegistrada || movendo;
+
+  // -- batimento alto COM movimento, sem nada aberto → "começou a treinar?" --
+  // Antes do resto, e antes do `return` de "treinando": o movimento que define
+  // exercício é o mesmo que silencia as outras vigias. Pedido de um testador
+  // (21/08): a pessoa esquece de registrar; o app percebe e pergunta.
+  const inicio = avaliarInicioDeExercicio(exercicio, {
+    heartRate: reading.heartRate,
+    emMovimento: movendo,
+    emAtividadeRegistrada,
+    agora,
+  });
+  exercicio = inicio.estado;
+  if (inicio.perguntar) void notifyExerciseDetected();
 
   // -- ritmo acelerado → respiração guiada --
   if (treinando || reading.heartRate <= BPM_ALTO) {

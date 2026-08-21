@@ -485,6 +485,25 @@ export async function notifyBreathing() {
 }
 
 /**
+ * "Parece que você começou a se exercitar" — pergunta, não afirma.
+ *
+ * Pedido de um testador (21/08/2026): batimento que sobe de repente com
+ * movimento costuma ser atividade começando. Quem decide que PARECE exercício
+ * é `domain/exerciseOnset.ts`; aqui só se pergunta, e o toque abre a tela de
+ * esporte, onde registrar é um botão. Sem som: é um convite, não um alerta.
+ */
+export async function notifyExerciseDetected() {
+  if (!(await ensurePermission())) return;
+  const titulo = 'Começou a treinar?';
+  const corpo = 'Seu batimento subiu e você está em movimento. Se for exercício, registre para contar no seu dia.';
+  const id = await Notifications.scheduleNotificationAsync({
+    content: { title: titulo, body: corpo, sound: false, data: { route: 'Sport' } },
+    trigger: null,
+  });
+  registrarNoFeed(id, titulo, corpo, 'Sport');
+}
+
+/**
  * Registro no feed da tela de Avisos, na hora do envio.
  *
  * Só para as IMEDIATAS: as agendadas (água, treino, bom-dia) são registradas
