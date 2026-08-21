@@ -392,6 +392,96 @@
       "nota": "mensagem da fundadora sobre o fluxo — conversa",
       "versao": "1.0.4 (1)",
       "em": "2026-08-20T22:12:14"
+    },
+    "slack:1787275906.349279": {
+      "commit": "b6d0165",
+      "nota": "Respondo sim, Leo. O que vem pelo TestFlight entra na mesma fila que este canal; como lá não tem thread, quando resolver eu aviso aqui, citando o relato e a versão em que sobe. Os três que você mandou há pouco (pressão, data da noite e o agente) já estão na fila.",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T22:34:38"
+    },
+    "AEVVUDm5AQBO0Gpp5enPc60": {
+      "commit": "5cce484",
+      "nota": "A régua era a americana, em que 80 de mínima já conta como elevada. Trocamos pela Diretriz Brasileira de Hipertensão: 11 por 8 é normal, e a Ajuda passa a dizer qual referência o app usa.",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T22:42:23"
+    },
+    "ABU0OPqni1VqNJrWmKBwbGM": {
+      "commit": "5cce484",
+      "nota": "Era isso mesmo: você adormeceu depois da meia-noite e a noite ganhou a data do dia seguinte (por isso o 19 sumiu do histórico). Agora a noite pertence à tarde em que começou — dormiu de madrugada do dia 20, a noite é de 19/08.",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T22:42:26"
+    },
+    "ABSgjDABuVtp_TIFE6cWo68": {
+      "commit": "5cce484",
+      "nota": "Dois ajustes: quando você insiste em algo que a proposta já atende, o agente diz \"já está assim\" e só pede confirmação em vez de repetir; e o dia de esporte passa a se chamar pelo seu esporte (Tênis), não \"Esportes Coletivos\" — esse nome era o que fazia parecer que ele não tinha entendido. O plano que você já tem mantém o nome até ser regenerado ou até o agente renomear numa próxima conversa.",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T22:42:28"
+    },
+    "slack:1787276516.255149": {
+      "commit": "8b78089",
+      "nota": "Valeu pela análise, Bruno — foi direto pro código. Três mudanças: o gerador passa a escrever a fundamentação em quatro frases curtas, pra pessoa, como decisão e sem palavras de sistema (tier, flag, siglas); a supervisão aparece no máximo uma vez, no fim, como cuidado; e a tela dobra o texto completo atrás de \"Ver detalhes técnicos\". Seu plano atual mantém o texto antigo até ser regenerado — a regra nova vale pra geração daqui em diante.",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T22:50:37"
+    },
+    "AFwc_1dmPxkBcoNbJj_FQ3s": {
+      "commit": "8b78089",
+      "nota": "Eram duas contas diferentes: o card calculava sem IMC e sem minutos ativos, o detalhe com os dois. Agora é uma montagem só pras duas telas — o número bate.",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T22:50:38"
+    },
+    "AO8EL4NJuhkJR59zDy9WQuc": {
+      "commit": "8b78089",
+      "nota": "A pulseira manda distância e calorias junto com os passos, e o app guardava só os passos. Agora os três entram; minutos ativos passam a ser os de treino e esporte registrados no dia.",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T22:50:40"
+    },
+    "AOaUcxzY2hRU4_r4GNgmDB0": {
+      "commit": "8b78089",
+      "nota": "A explicação do sono entrou na Ajuda (é onde o app explica cada número): o score é metade duração, um quarto sono profundo, 15% REM e 10% continuidade. Sobe na 1.0.4 (2).",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T22:50:43"
+    },
+    "ABK-ucLCSMu3r1xy0YvjBG8": {
+      "commit": "8b78089",
+      "nota": "Explicação do estresse na Ajuda: o firmware converte a variabilidade entre batimentos (HRV) numa escala 0–100 — calmo abaixo de 30, moderado até 59, elevado a partir de 60. Sobe na 1.0.4 (2).",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T22:50:46"
+    },
+    "slack:1787276821.259859": {
+      "commit": "eceb4d0",
+      "nota": "Feito, Bruno: o número do recipiente virou um campo — toca, digita 610, pronto. Os botões de 50 em 50 continuam.",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T22:53:05"
+    },
+    "AL5jnKzCNDtQiDJMZ-E640k": {
+      "commit": "eceb4d0",
+      "nota": "HRV explicado na Ajuda: o que a pulseira mede, as faixas (acima de 70 ms excelente, acima de 50 bom, abaixo de 20 atenção), o peso no score de energia e por que a comparação é de você com você. Sobe na 1.0.4 (2).",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T22:53:05"
+    },
+    "AAIVkLq3nXxD1l4HWRmpLso": {
+      "commit": "b386f2f",
+      "nota": "Já é assim: a meta de água é 35 ml por kg do seu peso da anamnese, menos a parte que vem dos alimentos, mais o treino do dia — e desde a 1.0.4 a linha da meta mostra essa conta (\"80 kg × 35 ml + 40 min de treino\").",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T22:53:41"
+    },
+    "slack:1787277030.597219": {
+      "commit": "eceb4d0",
+      "nota": "Anotado como proposta, Bruno: lembrete a cada N minutos dentro de uma janela (ex.: 30 em 30 das 8h às 21h). Hoje o lembrete é por lista de horários; o modo por intervalo é uma tela nova e vai pra decisão da Silvia com os outros pedidos de recurso — não entra por rodada de bugs.",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T22:53:44"
+    },
+    "ACpJpVPVS6Nzucb0BZFoHVM": {
+      "commit": "eceb4d0",
+      "nota": "Anotado como proposta: horários habituais das refeições com lembrete de registrar (o loop do hábito). É recurso novo, vai pra decisão da Silvia junto com os outros pedidos.",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T22:53:44"
+    },
+    "AH6e7PkaL2J7M5Edft6yPjc": {
+      "commit": "eceb4d0",
+      "nota": "Anotado como proposta de design: imagens no banner da visão geral alinhadas à identidade visual. Vai pra decisão da Silvia — é escolha de marca, não correção.",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T22:53:47"
     }
   }
 }
