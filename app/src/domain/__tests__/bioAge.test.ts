@@ -175,3 +175,25 @@ describe('formatYears', () => {
     expect(formatYears(0)).toBe('−0,0a');
   });
 });
+
+describe('composição fecha com o total', () => {
+  it('as contribuições somam o desvio antes do teto e do arredondamento', () => {
+    // O caso real (ago/2026): um testador somou os anos de cada marcador
+    // (+0,9 +2,6 +4,3 = 7,8) contra um título que dizia +2. A idade é MÉDIA
+    // ponderada; o que soma é a contribuição (anos × peso).
+    const bio = calcBioAge({ realAge: 29, sex: 'm', hrvMs: 32, restingHr: 72, deepSleepPct: 0.1, bmi: 27, weeklyActiveMin: 30 });
+    const soma = bio.factors.reduce((s, f) => s + f.contribution, 0);
+    const pesos = bio.factors.reduce((s, f) => s + f.weight, 0);
+    expect(pesos).toBeCloseTo(1, 6);
+    // bioAge = round(realAge + clamp(soma)); sem clamp atuando, a diferença é só arredondamento.
+    expect(Math.abs(bio.bioAge - bio.realAge - soma)).toBeLessThanOrEqual(0.5 + 1e-9);
+  });
+
+  it('marcador ausente tem peso zero e o resto redistribui', () => {
+    const bio = calcBioAge({ realAge: 40, sex: 'f', hrvMs: null, restingHr: 60, deepSleepPct: null });
+    const hrv = bio.factors.find((f) => f.key === 'hrv')!;
+    const apt = bio.factors.find((f) => f.key === 'fitness')!;
+    expect(hrv.weight).toBe(0);
+    expect(apt.weight).toBeCloseTo(1, 6);
+  });
+});

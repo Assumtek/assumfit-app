@@ -108,8 +108,17 @@ export type BioAgeFactor = {
   value: string;
   /** O típico da idade da pessoa, formatado — a régua contra a qual ela é lida. */
   reference: string;
-  /** Quanto este marcador desloca a idade estimada. Negativo rejuvenesce. */
+  /** A idade que ESTE marcador sugere, em anos a mais ou a menos que a real. Negativo rejuvenesce. */
   years: number;
+  /**
+   * Quanto do desvio final vem deste marcador: `years × peso`. As contribuições
+   * SOMAM o desvio; os `years` não — e um testador somou (+0,9 +2,6 +4,3 = 7,8)
+   * contra um título que dizia +2 (ago/2026). A idade é média ponderada das
+   * idades sugeridas, e a tela precisa mostrar o número que fecha a conta.
+   */
+  contribution: number;
+  /** Peso efetivo deste marcador na média (0–1; 0 para o que não entra). */
+  weight: number;
 };
 
 export type BioAge = {

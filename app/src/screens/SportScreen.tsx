@@ -42,7 +42,6 @@ import { buildMovementWeek, movementMinutes, weeklySeries } from '../domain/move
 import { batimentoAoVivo } from '../domain/series';
 import { montarSemanaDeTreino } from '../domain/trainingWeek';
 import { formatDuration, isSportDay, modalityMeta, workoutMeta } from '../domain/workout';
-import { QuickMenu } from './workout/QuickMenu';
 import {
   SPORTS,
   kcalFor,
@@ -1260,44 +1259,6 @@ export function SportScreen() {
     <YStack flex={1}>
       <DetailScreen title="Esporte" refreshControl={refresh}>
        <YStack gap="$xl" paddingTop="$lg">
-        {/*
-          A régua abre a tela, como em Treino. Aqui ela não seleciona dia — não
-          há leitura por dia nesta tela —, ela RESUME e abre o Progresso, que é
-          onde a semana continua.
-        */}
-        {semanaDeTreino && (semanaDeTreino.previstos > 0 || semanaDeTreino.minutos > 0) ? (
-          <WeekRail
-            semana={semanaDeTreino}
-            selecionado={semanaDeTreino.dias.find((d) => d.ehHoje)?.weekday ?? ''}
-            onSelect={() => (navigation as any).push('Progress')}
-            streak={movimento?.streak}
-          />
-        ) : null}
-
-        {/*
-          A sessão de HOJE do plano continua sendo a peça de destaque (decisão
-          da fundadora, ago/2026) — mas sem botão próprio: a ação preenchida
-          desta tela é UMA, o botão flutuante. A peça inteira é o alvo, e a
-          seta diz isso.
-        */}
-        {execucaoGuiada ? (
-          <TrainingPanel
-            ativo
-            titulo={execucaoGuiada.workoutName}
-            meta="Em andamento — continue de onde parou."
-            onPress={() => (navigation as any).push('Training')}
-            accessibilityLabel={`Treino em andamento: ${execucaoGuiada.workoutName}. Continuar`}
-          />
-        ) : treinoDeHoje ? (
-          <TrainingPanel
-            titulo={treinoDeHoje.name}
-            icone={modalityMeta(treinoDeHoje.modality).icon as never}
-            meta={metaDoTreino}
-            onPress={() => (navigation as any).push('Checkin')}
-            accessibilityLabel={`Treino de hoje: ${treinoDeHoje.name}, ${metaDoTreino}. Abrir check-in`}
-          />
-        ) : null}
-
         {temConstancia ? (
           <Card>
             <Label marginBottom="$md">constância · minutos por semana</Label>
@@ -1315,9 +1276,6 @@ export function SportScreen() {
             />
           </Card>
         ) : null}
-
-        {/* Os quatro destinos do módulo de treino, os mesmos do plano. */}
-        <QuickMenu />
 
         {aviso ? <Note title="Aviso" body={aviso} /> : null}
 
@@ -1374,6 +1332,49 @@ export function SportScreen() {
             </Card>
           );
         })()}
+
+        {/*
+          O PLANO entra por último, como rodapé — não como abertura.
+
+          Abrindo com a régua da semana, o painel do treino de hoje e o menu do
+          módulo, esta tela era indistinguível da de Treino no primeiro quadro
+          ("Treino e Esporte têm levado exatamente pra mesma tela", testador,
+          ago/2026). A identidade daqui são as sessões e a constância; o que
+          o plano reserva para hoje continua visível, mas depois delas.
+        */}
+        {semanaDeTreino && (semanaDeTreino.previstos > 0 || semanaDeTreino.minutos > 0) ? (
+          <WeekRail
+            semana={semanaDeTreino}
+            selecionado={semanaDeTreino.dias.find((d) => d.ehHoje)?.weekday ?? ''}
+            onSelect={() => (navigation as any).push('Progress')}
+            streak={movimento?.streak}
+          />
+        ) : null}
+
+        {/*
+          A sessão de HOJE do plano continua sendo a peça de destaque (decisão
+          da fundadora, ago/2026) — mas sem botão próprio: a ação preenchida
+          desta tela é UMA, o botão flutuante. A peça inteira é o alvo, e a
+          seta diz isso.
+        */}
+        {execucaoGuiada ? (
+          <TrainingPanel
+            ativo
+            titulo={execucaoGuiada.workoutName}
+            meta="Em andamento — continue de onde parou."
+            onPress={() => (navigation as any).push('Training')}
+            accessibilityLabel={`Treino em andamento: ${execucaoGuiada.workoutName}. Continuar`}
+          />
+        ) : treinoDeHoje ? (
+          <TrainingPanel
+            titulo={treinoDeHoje.name}
+            icone={modalityMeta(treinoDeHoje.modality).icon as never}
+            meta={metaDoTreino}
+            onPress={() => (navigation as any).push('Checkin')}
+            accessibilityLabel={`Treino de hoje: ${treinoDeHoje.name}, ${metaDoTreino}. Abrir check-in`}
+          />
+        ) : null}
+
 
         {/*
           Respiro para o favo nunca ficar sob o botão flutuante.

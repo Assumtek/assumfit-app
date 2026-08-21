@@ -95,15 +95,21 @@ export function BioAgeScreen() {
               .filter((f) => f.key !== 'activity')
               .map((f) => ({
                 label: f.label,
-                value: f.years,
-                display: formatYears(f.years),
+                // A CONTRIBUIÇÃO (anos × peso), não a idade sugerida: é o número
+                // que soma o desvio. Um testador somou as idades sugeridas
+                // (+7,8) contra um título de +2 e leu como inconsistência.
+                value: f.contribution,
+                display: formatYears(f.contribution),
               }))}
             id="factors"
           />
         </YStack>
         <Data marginTop="$md" lineHeight={17}>
-          Cada barra é a idade que aquele marcador sugere, comparada à sua idade real. Para a
-          esquerda, mais jovem.
+          Cada barra é quanto aquele marcador puxa a sua idade — já com o peso dele na conta
+          (aptidão {Math.round((bio.factors.find((f) => f.key === 'fitness')?.weight ?? 0) * 100)}%,
+          HRV {Math.round((bio.factors.find((f) => f.key === 'hrv')?.weight ?? 0) * 100)}%, sono{' '}
+          {Math.round((bio.factors.find((f) => f.key === 'sleep')?.weight ?? 0) * 100)}%). As barras
+          somam o desvio do título; para a esquerda, mais jovem.
         </Data>
       </Section>
 

@@ -249,27 +249,43 @@ export function calcBioAge(input: BioAgeInput): BioAge {
   const nivel = activityLevel(input.weeklyActiveMin);
   const descricaoAtividade = ATIVIDADE.find((f) => f.nivel === nivel)!.descricao;
 
+  // Peso efetivo de cada marcador presente — o ausente vale zero e o seu peso
+  // já foi redistribuído em `pesoTotal`.
+  const pesoDe = (p: number, presente: boolean) => (presente ? p / pesoTotal : 0);
+  const wAptidao = pesoDe(PESOS.aptidao, true);
+  const wHrv = pesoDe(PESOS.hrv, idadeHrv != null);
+  const wSono = pesoDe(PESOS.sono, idadeSono != null);
+  const anosAptidao = idadeAptidao - realAge;
+  const anosHrv = idadeHrv == null ? 0 : idadeHrv - realAge;
+  const anosSono = idadeSono == null ? 0 : idadeSono - realAge;
+
   const factors: BioAgeFactor[] = [
     {
       key: 'fitness',
       label: 'Aptidão cardiorrespiratória',
       value: `VO₂máx ${vo2.toFixed(1).replace('.', ',')} ml/kg/min`,
       reference: `mediana da sua idade: ${medianaNaIdade(realAge, sex).toFixed(1).replace('.', ',')}`,
-      years: idadeAptidao - realAge,
+      years: anosAptidao,
+      weight: wAptidao,
+      contribution: anosAptidao * wAptidao,
     },
     {
       key: 'hrv',
       label: 'HRV',
       value: hrvMs == null ? DASH : `${Math.round(hrvMs)} ms`,
       reference: `típico aos ${realAge}: ${Math.round(hrvTipico(realAge, sex))} ms`,
-      years: idadeHrv == null ? 0 : idadeHrv - realAge,
+      years: anosHrv,
+      weight: wHrv,
+      contribution: anosHrv * wHrv,
     },
     {
       key: 'sleep',
       label: 'Sono profundo',
       value: deepSleepPct == null ? DASH : `${Math.round(deepSleepPct * 100)}%`,
       reference: `típico aos ${realAge}: ${Math.round(sonoTipico(realAge) * 100)}%`,
-      years: idadeSono == null ? 0 : idadeSono - realAge,
+      years: anosSono,
+      weight: wSono,
+      contribution: anosSono * wSono,
     },
     {
       key: 'activity',
@@ -278,6 +294,8 @@ export function calcBioAge(input: BioAgeInput): BioAge {
       reference: descricaoAtividade,
       // A atividade ENTRA na aptidão; somá-la de novo seria contar duas vezes.
       years: 0,
+      weight: 0,
+      contribution: 0,
     },
   ];
 
