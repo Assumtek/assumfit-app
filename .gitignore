@@ -31,5 +31,7 @@ app/assets/brand/Manual-de-Marca-Assumfit.pdf
 /ios/
 
 # ferramentas locais de IA (config de máquina, não do produto)
-.claude/
+# Sessão local fora; o que é do PROJETO (skills) entra — é código do fluxo de bugs.
+.claude/*
+!.claude/skills/
 .impeccable/

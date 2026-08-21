@@ -1,0 +1,29 @@
+{
+  "tratados": {
+    "AL6V34ogjfycc6HXb867YeA": {
+      "commit": "b386f2f",
+      "nota": "batimento no treino livre — modo esporte na pulseira",
+      "em": "2026-08-20T22:30:00"
+    },
+    "AOHbMvj-m7VDJl2Vbfm-Xlo": {
+      "commit": "b386f2f",
+      "nota": "meta calórica por objetivo — lia só a anamnese (recurso existia)",
+      "em": "2026-08-20T22:30:00"
+    },
+    "AKcVIMKRuqEeWb3oITR95BM": {
+      "commit": "b386f2f",
+      "nota": "água pelo peso — regra passou a ser mostrada (recurso existia)",
+      "em": "2026-08-20T22:30:00"
+    },
+    "AAflwXjUWO0kWYsb9XET4IQ": {
+      "commit": "b386f2f",
+      "nota": "sono não sincronizava (a18fba4, build 5) + histórico de noites",
+      "em": "2026-08-20T22:30:00"
+    },
+    "AI-4BFnTP3xdZoJCvdWqEOM": {
+      "commit": "b386f2f",
+      "nota": "agente sem responder — teto de 10 s no cliente",
+      "em": "2026-08-20T22:30:00"
+    }
+  }
+}
