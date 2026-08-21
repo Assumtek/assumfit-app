@@ -12,20 +12,22 @@ describe('waterGoalMl', () => {
     expect(pesado).toBeGreaterThan(leve);
   });
 
-  it('70 kg dá ~2,0 L de bebida (70 × 35 ml menos a água da comida)', () => {
-    // 70 × 35 = 2450 ml totais; 80% disso = 1960 → 2000 arredondado.
-    expect(waterGoalMl({ weightKg: 70, sex: 'm' })).toBe(2000);
+  it('70 kg dá 70 × 35 ml, arredondado à centena — a conta da tela é a conta da meta', () => {
+    // 70 × 35 = 2450 → 2500. Sem desconto: a explicação diz "70 kg × 35 ml" e
+    // o número tem que ser esse.
+    expect(waterGoalMl({ weightKg: 70, sex: 'm' })).toBe(2500);
+    expect(waterGoalMl({ weightKg: 60, sex: 'f' })).toBe(2100);
   });
 
   it('sem peso declarado, usa a referência do sexo', () => {
-    // EFSA: 2,0 L (f) e 2,5 L (m) de água TOTAL; 80% vira bebida.
-    expect(waterGoalMl({ weightKg: null, sex: 'f' })).toBe(1600);
-    expect(waterGoalMl({ weightKg: null, sex: 'm' })).toBe(2000);
+    // EFSA: 2,0 L (f) e 2,5 L (m).
+    expect(waterGoalMl({ weightKg: null, sex: 'f' })).toBe(2000);
+    expect(waterGoalMl({ weightKg: null, sex: 'm' })).toBe(2500);
   });
 
   it('pessoa leve não desce abaixo da referência populacional', () => {
-    // 45 kg × 35 = 1575 → 1260 de bebida, abaixo do piso da EFSA para mulher.
-    expect(waterGoalMl({ weightKg: 45, sex: 'f' })).toBe(1600);
+    // 45 kg × 35 = 1575, abaixo do piso da EFSA para mulher (2,0 L).
+    expect(waterGoalMl({ weightKg: 45, sex: 'f' })).toBe(2000);
   });
 
   it('treino de hoje aumenta a meta', () => {

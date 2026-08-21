@@ -16,9 +16,12 @@
  *
  * Duas consequências para um app que conta copos:
  *
- * 1. **O que se bebe é menos que o total.** Parte da água vem da comida, e
- *    contar a meta total contra o que foi bebido cobraria da pessoa uma água
- *    que ela já ingeriu no almoço. Descontamos essa fração.
+ * 1. **A meta é a regra inteira, sem desconto.** Houve uma versão que tirava
+ *    20 % por "água que vem da comida": 70 kg viravam 2,0 L na tela enquanto a
+ *    explicação dizia "70 kg × 35 ml" — a conta mostrada não batia com o
+ *    número. A fundadora leu como erro (21/08), e é: mostrar uma regra e
+ *    entregar outra é incoerência, não precisão. A pessoa bebe por sede além
+ *    da meta; a meta não precisa antecipar a sopa.
  * 2. **Treinar muda a conta.** O próprio documento condiciona os valores à
  *    atividade moderada; quem treina perde mais no suor.
  *
@@ -34,12 +37,6 @@ import type { Sex } from './types';
 
 /** Regra de bolso da nutrição clínica para adultos. */
 export const ML_POR_KG = 35;
-
-/**
- * Fração da água total que vem dos ALIMENTOS. A meta do app conta o que a
- * pessoa bebe, então o restante é o que ela precisa levar ao copo.
- */
-const FRACAO_DA_COMIDA = 0.2;
 
 /** EFSA 2010: ingestão adequada de água total, por sexo. */
 const AI_TOTAL_ML: Record<Sex, number> = { f: 2000, m: 2500 };
@@ -58,7 +55,7 @@ export const ML_POR_HORA_DE_TREINO = 350;
 export const META_MINIMA_ML = 1500;
 export const META_MAXIMA_ML = 4000;
 
-/** Meta padrão de quem ainda não declarou peso. */
+/** Meta padrão de quem ainda não declarou peso — o valor inicial do store, até o cálculo rodar. */
 export const META_PADRAO_ML = 2500;
 
 export type WaterGoalInput = {
@@ -71,11 +68,9 @@ export type WaterGoalInput = {
 
 /** A meta do dia, em mililitros, arredondada para 100 — copo não tem precisão de 1 mL. */
 export function waterGoalMl({ weightKg, sex, activeMinToday = 0 }: WaterGoalInput): number {
-  const porBebida = (base: number) => base * (1 - FRACAO_DA_COMIDA);
-
-  const base = weightKg && weightKg > 0 ? porBebida(weightKg * ML_POR_KG) : porBebida(AI_TOTAL_ML[sex]);
   // O piso da referência populacional: pessoa leve não desce abaixo dele.
-  const piso = porBebida(AI_TOTAL_ML[sex]);
+  const piso = AI_TOTAL_ML[sex];
+  const base = weightKg && weightKg > 0 ? weightKg * ML_POR_KG : piso;
   const comTreino = Math.max(base, piso) + (activeMinToday / 60) * ML_POR_HORA_DE_TREINO;
 
   const limitada = Math.min(META_MAXIMA_ML, Math.max(META_MINIMA_ML, comTreino));
