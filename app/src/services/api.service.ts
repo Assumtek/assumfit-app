@@ -2,7 +2,14 @@ import axios, { AxiosInstance } from 'axios';
 import { umaPorVez } from '../domain/singleFlight';
 
 import type { Reading } from '../domain/types';
-import { clearTokens, loadTokens, saveTokens, type Tokens } from './tokenStorage';
+import {
+  clearTokens,
+  flushPendingSave,
+  KeychainSaveError,
+  loadTokens,
+  saveTokens,
+  type Tokens,
+} from './tokenStorage';
 
 /**
  * Endereço da API, fixado no build por `eas.json`.
@@ -81,18 +88,37 @@ api.interceptors.response.use(
       */
       const data = await renovacaoCompartilhada(async () => {
         const r = await axios.post<Tokens>(`${BASE_URL}/auth/refresh`, { refreshToken });
-        await setSession(r.data);
+        /*
+         A renovação DEU CERTO quando o servidor respondeu — a gravação no
+         Keychain é outra etapa, e pode falhar com o aparelho bloqueado. Antes a
+         falha da gravação estourava aqui, a requisição original morria e o
+         token novo ficava só na memória (o Keychain guarda o pendente e refaz
+         ao voltar ao primeiro plano).
+        */
+        await setSession(r.data).catch((err) => {
+          if (!(err instanceof KeychainSaveError)) throw err;
+          console.warn('[api] Keychain recusou gravar o token renovado; fica pendente');
+        });
         return r.data;
       });
       if (!data) throw error;
       return api(original);
-    } catch {
+    } catch (falha) {
       /*
        Limpa só se a sessão ainda for a que falhou. Sem esta checagem, um 401 de
        requisição atrasada apagaria a sessão que a renovação bem-sucedida acabou
        de gravar — trocando o defeito de lugar em vez de resolvê-lo.
+
+       E AVISA: o servidor recusar a renovação é o fim da sessão, e ninguém
+       além deste interceptor fica sabendo. Sem o aviso o app continuava com
+       cara de logado — perfil sem carregar, toda requisição falhando — em vez
+       de mandar para o login. Foi o "me relogou como outra pessoa" de ago/2026.
       */
-      if (tokens?.refreshToken === refreshToken) await setSession(null);
+      if (tokens?.refreshToken === refreshToken) {
+        await setSession(null);
+        const status = axios.isAxiosError(falha) ? falha.response?.status : undefined;
+        if (status === 401 || status === 403) for (const ouvinte of ouvintesDeSessaoPerdida) ouvinte();
+      }
       throw error;
     }
   },
@@ -103,6 +129,17 @@ async function setSession(next: Tokens | null) {
   if (next) await saveTokens(next);
   else await clearTokens();
 }
+
+const ouvintesDeSessaoPerdida = new Set<() => void>();
+
+/** Chamado quando o servidor recusa a renovação — a sessão acabou, e a tela precisa saber. */
+export function onSessionLost(ouvinte: () => void): () => void {
+  ouvintesDeSessaoPerdida.add(ouvinte);
+  return () => ouvintesDeSessaoPerdida.delete(ouvinte);
+}
+
+/** Refaz uma gravação de token que o Keychain recusou. Barato; chame ao voltar ao primeiro plano. */
+export const flushSessionSave = flushPendingSave;
 
 /**
  * Recarrega a sessão do Keychain. Chamado na subida do app.

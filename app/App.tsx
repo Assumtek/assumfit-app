@@ -11,6 +11,7 @@ import tamaguiConfig from './tamagui.config';
 // exige que ela exista antes de o SO entregar qualquer lote de localização,
 // inclusive quando o Android religa o serviço com o app morto.
 import './src/services/sport-track';
+import * as api from './src/services/api.service';
 import { Navigation } from './src/navigation';
 import { navigate } from './src/navigation/ref';
 import { IntroScreen } from './src/screens/IntroScreen';
@@ -84,6 +85,14 @@ function Root() {
        então roda a cada volta ao primeiro plano.
       */
       useHabitsStore.getState().rolarDia();
+
+      /*
+       Token renovado com o aparelho bloqueado pode não ter chegado ao Keychain.
+       Voltar ao primeiro plano é o momento em que ele está desbloqueado — refaz
+       a gravação, barato e idempotente. Sem isso o token novo vivia só na
+       memória, e o próximo arranque apresentava o velho.
+      */
+      void api.flushSessionSave();
     });
     return () => sub.remove();
   }, []);

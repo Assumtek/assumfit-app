@@ -17,24 +17,51 @@ type UserState = {
   setMood: (mood: Mood) => void;
   age: () => number;
   load: () => Promise<void>;
+  /** Esquece o perfil — ao sair da conta ou quando o servidor encerra a sessão. */
+  clear: () => void;
   save: (patch: api.ProfilePatch) => Promise<boolean>;
   setAvatar: (pickedUri: string) => Promise<void>;
 };
 
 /**
- * Perfil de demonstração.
+ * O que vale antes de o perfil chegar.
  *
- * Continua existindo depois da autenticação porque as telas de métrica precisam
- * de idade e sexo para escolher a faixa de referência CERTA — sem eles, a idade
- * biológica compara contra a população errada. Enquanto o servidor não responde,
- * é melhor calcular com um perfil declaradamente fictício do que não desenhar
- * tela nenhuma; assim que `/auth/me` volta, ele é substituído.
+ * SEM NOME. Havia um "Rafael" aqui — um perfil de demonstração que ficava na
+ * tela enquanto `/auth/me` não respondia, e que em ago/2026 apareceu para a
+ * fundadora depois de uma atualização do TestFlight como se o app a tivesse
+ * logado em outra conta. Nome inventado numa tela de saúde é exatamente o dado
+ * de exemplo que este projeto baniu. Idade e sexo continuam com um padrão
+ * porque as faixas de referência precisam de algum — e, diferente do nome,
+ * ninguém os lê como identidade; e o perfil REAL agora é guardado em disco, de
+ * modo que este padrão só vale na primeira abertura de uma conta nova.
  */
 const DEFAULT_USER: User = {
-  name: 'Rafael',
+  name: '',
   birthYear: 1994,
   sex: 'm',
 };
+
+/** Cópia local do último perfil carregado — a tela não espera a rede para saber quem é a pessoa. */
+const ARQUIVO_PERFIL = 'perfil.v1.json';
+
+async function lerPerfilLocal(): Promise<api.Profile | null> {
+  try {
+    const f = new File(Paths.document, ARQUIVO_PERFIL);
+    return f.exists ? (JSON.parse(await f.text()) as api.Profile) : null;
+  } catch {
+    return null;
+  }
+}
+
+function gravarPerfilLocal(profile: api.Profile | null): void {
+  try {
+    const f = new File(Paths.document, ARQUIVO_PERFIL);
+    if (profile) f.write(JSON.stringify(profile));
+    else if (f.exists) f.delete();
+  } catch {
+    // Disco é conveniência: sem ele o perfil volta pela rede na próxima carga.
+  }
+}
 
 /** `1994-03-12` → 1994. Só o ano importa para a faixa de referência. */
 const yearOf = (isoDate: string): number => Number(isoDate.slice(0, 4)) || DEFAULT_USER.birthYear;
@@ -65,22 +92,31 @@ export const useUserStore = create<UserState>((set, get) => ({
 
   load: async () => {
     if (!api.isAuthenticated()) return;
+    // Primeiro o disco, na hora: é o que evita a tela sem nome (ou, antes, com
+    // nome alheio) enquanto a rede não responde.
+    const local = await lerPerfilLocal();
+    if (local && !get().profile) set({ profile: local, user: toUser(local) });
     set({ loading: true });
     try {
       const profile = await api.fetchProfile();
+      gravarPerfilLocal(profile);
       set({ profile, user: toUser(profile), loading: false });
     } catch {
-      // Sem rede a tela segue com o que já tem. Perfil não é dado crítico de
-      // funcionamento — o que quebraria o app é ficar sem idade e sexo, e o
-      // padrão cobre isso.
+      // Sem rede a tela segue com o que já tem — o perfil local, quando houver.
       set({ loading: false });
     }
+  },
+
+  clear: () => {
+    gravarPerfilLocal(null);
+    set({ profile: null, user: DEFAULT_USER, loading: false });
   },
 
   save: async (patch) => {
     set({ loading: true });
     try {
       const profile = await api.updateProfile(patch);
+      gravarPerfilLocal(profile);
       set({ profile, user: toUser(profile), loading: false });
       return true;
     } catch {

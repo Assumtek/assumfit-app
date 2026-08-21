@@ -108,13 +108,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signOut: async () => {
     await api.logout();
+    // O perfil da conta que saiu não fica para a próxima que entrar.
+    useUserStore.getState().clear();
     set({ status: 'signedOut' });
   },
 
   deleteAccount: async () => {
     await api.deleteAccount();
+    useUserStore.getState().clear();
     set({ status: 'signedOut' });
   },
 
   clearError: () => set({ error: null }),
 }));
+
+/*
+ O servidor recusou a renovação → a sessão acabou → tela de login.
+
+ Até aqui só o interceptor sabia; o store continuava `signedIn`, o perfil não
+ carregava e a home mostrava o placeholder com cara de outra pessoa.
+*/
+api.onSessionLost(() => {
+  useUserStore.getState().clear();
+  useAuthStore.setState({ status: 'signedOut' });
+});

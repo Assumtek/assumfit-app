@@ -20,6 +20,7 @@ type SecureStoreModule = {
   getItemAsync: (key: string) => Promise<string | null>;
   deleteItemAsync: (key: string) => Promise<void>;
   WHEN_UNLOCKED_THIS_DEVICE_ONLY?: unknown;
+  AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY?: unknown;
 };
 
 const secureStore: SecureStoreModule | null = (() => {
@@ -62,6 +63,18 @@ export class KeychainSaveError extends Error {
   }
 }
 
+/**
+ * A gravação que o Keychain recusou e ainda não foi refeita.
+ *
+ * O caso real (ago/2026): a renovação de token roda de hora em hora em segundo
+ * plano, com o iPhone bloqueado. A memória ficava com o token novo e o Keychain
+ * com o velho — e bastava o processo reiniciar (a atualização do TestFlight,
+ * no caso) para o app apresentar o token velho, o servidor ler REUSO e derrubar
+ * a sessão inteira por segurança. A escrita não pode ser perdida: fica aqui e é
+ * refeita na primeira oportunidade.
+ */
+let gravacaoPendente: string | null = null;
+
 export async function saveTokens(tokens: Tokens): Promise<void> {
   const serialized = JSON.stringify(tokens);
   if (!secureStore) {
@@ -70,10 +83,34 @@ export async function saveTokens(tokens: Tokens): Promise<void> {
   }
   try {
     await secureStore.setItemAsync(KEY, serialized, {
-      keychainAccessible: secureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+      /*
+       AFTER_FIRST_UNLOCK, não WHEN_UNLOCKED: o item precisa ser lido E escrito
+       com o aparelho bloqueado, que é quando as renovações de fundo acontecem.
+       "Depois do primeiro desbloqueio" é a classe que a Apple indica para
+       exatamente isso — e continua presa a este aparelho.
+      */
+      keychainAccessible:
+        secureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY ?? secureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
     });
+    gravacaoPendente = null;
   } catch (err) {
+    gravacaoPendente = serialized;
     throw new KeychainSaveError(err);
+  }
+}
+
+/** Refaz a gravação recusada, se houver. Barato e idempotente: chame ao voltar ao primeiro plano. */
+export async function flushPendingSave(): Promise<boolean> {
+  if (!gravacaoPendente || !secureStore) return false;
+  try {
+    await secureStore.setItemAsync(KEY, gravacaoPendente, {
+      keychainAccessible:
+        secureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY ?? secureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+    });
+    gravacaoPendente = null;
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -102,6 +139,8 @@ export class KeychainReadError extends Error {
  */
 export async function loadTokens(): Promise<Tokens | null> {
   let raw: string | null;
+  // O que não coube no Keychain é mais novo do que o que está lá.
+  if (gravacaoPendente) return JSON.parse(gravacaoPendente) as Tokens;
   try {
     raw = secureStore ? await secureStore.getItemAsync(KEY) : devFallback;
   } catch (err) {

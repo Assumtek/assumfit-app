@@ -201,6 +201,10 @@ def main() -> None:
         print(f"respondido em {fid}")
         return
     if args[:1] == ["--done"]:
+        # `--done --silencioso <id> <sha> nota`: registra sem responder na thread —
+        # para conversa e mensagens da própria fundadora, onde resposta é ruído.
+        silencioso = "--silencioso" in args
+        args = [a for a in args if a != "--silencioso"]
         _, fid, sha, *nota = args
         l = ledger()
         versao = proxima_versao()
@@ -208,7 +212,7 @@ def main() -> None:
         LEDGER.write_text(json.dumps(l, ensure_ascii=False, indent=2) + "\n")
         print(f"registrado {fid} → {sha} · sobe na {versao}")
         # Regra da fundadora (ago/2026): resolveu, avisa NA MENSAGEM, com a versão.
-        if fid.startswith("slack:"):
+        if fid.startswith("slack:") and not silencioso:
             try:
                 slack_responder(fid, f"Resolvido ✅ ({sha}) — sobe na {versao}. {' '.join(nota)}".strip())
                 print("  respondido na thread")
