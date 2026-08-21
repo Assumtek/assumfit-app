@@ -193,6 +193,25 @@ def slack_responder(fid: str, texto: str) -> None:
         raise RuntimeError(f"slack chat.postMessage: {resp.get('error')}")
 
 
+def slack_anunciar(texto: str) -> None:
+    """Mensagem nova no canal — para itens do TestFlight, que não têm thread."""
+    env = slack_env()
+    token, canal = env.get("SLACK_TOKEN"), env.get("SLACK_CHANNEL", "assumfit-qa-feedback")
+    if not token:
+        return
+    d = slack_get(token, "conversations.list", types="public_channel,private_channel", limit=200)
+    cid = next(c["id"] for c in d["channels"] if c["name"] == canal.lstrip("#"))
+    body = json.dumps({"channel": cid, "text": texto}).encode()
+    req = urllib.request.Request(
+        "https://slack.com/api/chat.postMessage", data=body,
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json; charset=utf-8"},
+    )
+    with urllib.request.urlopen(req, timeout=30) as r:
+        resp = json.load(r)
+    if not resp.get("ok"):
+        raise RuntimeError(f"slack chat.postMessage: {resp.get('error')}")
+
+
 def main() -> None:
     args = sys.argv[1:]
     if args[:1] == ["--responder"]:
@@ -204,7 +223,8 @@ def main() -> None:
         # `--done --silencioso <id> <sha> nota`: registra sem responder na thread —
         # para conversa e mensagens da própria fundadora, onde resposta é ruído.
         silencioso = "--silencioso" in args
-        args = [a for a in args if a != "--silencioso"]
+        so_resposta = "--so-resposta" in args
+        args = [a for a in args if a not in ("--silencioso", "--so-resposta")]
         _, fid, sha, *nota = args
         l = ledger()
         versao = proxima_versao()
@@ -212,12 +232,23 @@ def main() -> None:
         LEDGER.write_text(json.dumps(l, ensure_ascii=False, indent=2) + "\n")
         print(f"registrado {fid} → {sha} · sobe na {versao}")
         # Regra da fundadora (ago/2026): resolveu, avisa NA MENSAGEM, com a versão.
-        if fid.startswith("slack:") and not silencioso:
-            try:
-                slack_responder(fid, f"Resolvido ✅ ({sha}) — sobe na {versao}. {' '.join(nota)}".strip())
+        # `--so-resposta`: pergunta ou elogio — a nota vai sem o prefixo de correção.
+        texto = " ".join(nota).strip() if so_resposta else f"Resolvido ✅ ({sha}) — sobe na {versao}. {' '.join(nota)}".strip()
+        if silencioso:
+            return
+        try:
+            if fid.startswith("slack:"):
+                slack_responder(fid, texto)
                 print("  respondido na thread")
-            except Exception as e:  # noqa: BLE001
-                print(f"  sem resposta na thread: {e}", file=sys.stderr)
+            else:
+                # TestFlight não tem thread: o aviso vai no canal, citando o relato.
+                f = next((x for x in feedbacks() if x["id"] == fid), None)
+                citacao = f'"{f["comentario"][:120]}"' if f else "relato do TestFlight"
+                quem = f" ({f['testador']})" if f and f.get("testador") else ""
+                slack_anunciar(f"TestFlight{quem}: {citacao} — {texto}")
+                print("  anunciado no canal")
+        except Exception as e:  # noqa: BLE001
+            print(f"  sem aviso no Slack: {e}", file=sys.stderr)
         return
     l = ledger()["tratados"]
     todos = feedbacks()

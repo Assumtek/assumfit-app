@@ -100,7 +100,11 @@ Qualquer vermelho: não commita, registra no relatório o que travou.
   thread: a versão vai no relatório, e ela avisa o testador. A nota do `--done`
   vira a frase da resposta — escreva-a para o testador ler, não para o git.
 - Classificado como "recurso já existe" ou "elogio" também responde: diz onde
-  o recurso está. Silêncio numa mensagem respondida lê como ignorada.
+  o recurso está. Silêncio numa mensagem respondida lê como ignorada. Para
+  pergunta ou elogio use `--done --so-resposta` — a nota vai sem o prefixo
+  "Resolvido"; para conversa da própria fundadora, `--silencioso`.
+- Item do TestFlight: o `--done` **anuncia no canal** (mensagem nova, citando o
+  relato e o testador) — foi a pergunta do Leo, e a resposta é sim.
 
 ## 7. Relatório da rodada
 
