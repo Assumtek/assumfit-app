@@ -506,6 +506,30 @@
       "nota": "Não era só por ter um esporte: as duas telas abriam com o mesmo primeiro quadro (régua da semana, treino de hoje, menu). A Esporte agora abre com o que é dela — suas sessões e a constância — e o plano vira rodapé.",
       "versao": "1.0.4 (2)",
       "em": "2026-08-20T23:12:10"
+    },
+    "slack:1787278788.839099": {
+      "commit": "1c11fac",
+      "nota": "Valeu, Bruno! Boa parte desse 'cada vez melhor' veio daqui do canal — seus relatos tinham causa, passo a passo e o que fazer, e isso encurta tudo. A 1.0.4 (2) já está subindo com a leva de hoje. Segue mandando que a gente segue fechando.",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:22:40"
+    },
+    "slack:1787279654.083289": {
+      "commit": "2887268",
+      "nota": "Era memória: a foto entrava no tamanho original (12 MP) e estourava ao gerar o story. Agora ela é redimensionada pra 1080 ao entrar — é o tamanho que o story usa mesmo.",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:37:51"
+    },
+    "slack:1787279287.872199": {
+      "commit": "2887268",
+      "nota": "Valeu — o campo novo morava numa folha que não subia com o teclado. Toda folha de ajuste passa a subir; o volume fica visível enquanto você digita.",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:37:51"
+    },
+    "slack:1787279386.586989": {
+      "commit": "2887268",
+      "nota": "Feito: arrastar da borda esquerda na home abre o menu. Uma faixa fina na borda pega o gesto; o resto da tela rola normal.",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:37:52"
     }
   }
 }
