@@ -8,6 +8,8 @@ import { Row, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
 import { TimeWheel } from '../components/TimeWheel';
+import { HoraDigitada } from '../components/HoraDigitada';
+import { normalizarHorario } from '../domain/horario';
 import { Body, Button, Data } from '../components/ui';
 import { INTERVALOS_MIN } from '../domain/water';
 import {
@@ -47,6 +49,10 @@ export function WaterReminderScreen() {
   const [editando, setEditando] = useState(false);
   const [hora, setHora] = useState('10');
   const [minuto, setMinuto] = useState('00');
+  /** Digitado à mão — vence a roda quando é uma hora válida. */
+  const [digitado, setDigitado] = useState('');
+  const manual = normalizarHorario(digitado);
+  const escolhido = manual ?? `${hora}:${minuto}`;
   /** Qual ponta da janela a roda está editando, no modo por intervalo. */
   const [ponta, setPonta] = useState<'inicio' | 'fim' | null>(null);
 
@@ -60,7 +66,8 @@ export function WaterReminderScreen() {
   };
 
   const confirmarNovo = () => {
-    const novo = `${hora}:${minuto}`;
+    const novo = escolhido;
+    setDigitado('');
     setEditando(false);
     if (ponta) {
       const proxima = { ...janela, [ponta]: novo };
@@ -243,8 +250,11 @@ export function WaterReminderScreen() {
             <Text fontSize={26} fontWeight="300" color="$mutedForeground">:</Text>
             <TimeWheel items={MINUTOS} value={minuto} onChange={setMinuto} />
           </XStack>
+          {/* Ou digitar: a roda anda de 10 em 10; quem quer 07:55 digita.
+              Pedido de um testador (21/08). */}
+          <HoraDigitada valor={digitado} onChange={setDigitado} valido={manual !== null} />
           <YStack marginTop="$lg">
-            <Button title={ponta ? `Usar ${hora}:${minuto}` : `Lembrar às ${hora}:${minuto}`} onPress={confirmarNovo} />
+            <Button title={ponta ? `Usar ${escolhido}` : `Lembrar às ${escolhido}`} onPress={confirmarNovo} />
           </YStack>
         </YStack>
       </Modal>
