@@ -202,6 +202,7 @@ struct TreinoWidgetView: View {
 struct AssumFitWidgets: WidgetBundle {
   var body: some Widget {
     TreinoWidget()
+    AguaWidget()
     if #available(iOS 16.2, *) {
       SportLiveActivity()
     }

@@ -87,6 +87,10 @@ function Root() {
        então roda a cada volta ao primeiro plano.
       */
       useHabitsStore.getState().rolarDia();
+      // Goles do botão do widget entram ANTES da releitura do servidor — o
+      // hydrate troca o total pelo do servidor quando não há gole local, e
+      // apagaria o que o widget somou enquanto o app estava fechado.
+      useHabitsStore.getState().absorverGolesDoWidget();
       // E relê o total do servidor: registro feito em outro aparelho, ou antes
       // de a sessão existir, aparece sem precisar abrir a tela de Água.
       void useHabitsStore.getState().hydrate();

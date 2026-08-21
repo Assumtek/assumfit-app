@@ -109,10 +109,36 @@ public class WidgetBridgeModule: Module {
       }
     }
 
+    /**
+     A água de hoje para o widget de água (`targets/treino/AguaWidget.swift`).
+     JSON já serializado, pela mesma razão do treino: a forma é do Swift do
+     widget. Recarrega só a linha do tempo da água — a do treino não mudou.
+     */
+    Function("setTodayWater") { (json: String) -> Void in
+      guard let defaults = UserDefaults(suiteName: self.suite) else { return }
+      defaults.set(json, forKey: "aguaDeHoje")
+      if #available(iOS 14.0, *) {
+        WidgetCenter.shared.reloadTimelines(ofKind: "AguaWidget")
+      }
+    }
+
+    /**
+     Os goles registrados pelo botão do widget desde a última vez — devolve e
+     APAGA numa chamada só, para o mesmo copo nunca entrar duas vezes.
+     */
+    Function("consumeWaterPours") { () -> [[String: Any]] in
+      guard let defaults = UserDefaults(suiteName: self.suite) else { return [] }
+      let fila = defaults.array(forKey: "golesDoWidget") as? [[String: Any]] ?? []
+      defaults.removeObject(forKey: "golesDoWidget")
+      return fila
+    }
+
     /** Limpa. Usado ao sair da conta — o widget não pode sobreviver ao logout. */
     Function("clear") { () -> Void in
       guard let defaults = UserDefaults(suiteName: self.suite) else { return }
       defaults.removeObject(forKey: self.chave)
+      defaults.removeObject(forKey: "aguaDeHoje")
+      defaults.removeObject(forKey: "golesDoWidget")
       if #available(iOS 14.0, *) {
         WidgetCenter.shared.reloadAllTimelines()
       }

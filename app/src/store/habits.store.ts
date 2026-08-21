@@ -12,6 +12,7 @@ import {
   type Container,
   type ContainerKey,
 } from '../domain/containers';
+import { consumirGolesDoWidget, publicarAguaDeHoje } from '../../modules/widgetbridge';
 
 /** Meta padrão. Vira cálculo por peso corporal quando o cadastro tiver peso. */
 const DEFAULT_GOAL_ML = 2500;
@@ -49,6 +50,14 @@ type HabitsState = {
   setWaterTotal: (ml: number) => void;
   /** Recarrega semana e dia do servidor — é o que sobrevive ao app fechar. */
   hydrate: () => Promise<void>;
+  /**
+   * Traz para o dia os goles registrados pelo botão do WIDGET desde a última
+   * volta ao primeiro plano. Chamar ANTES de `hydrate`: com `pours` vazio, o
+   * hydrate troca o total pelo do servidor — e apagaria o que o widget somou.
+   */
+  absorverGolesDoWidget: () => void;
+  /** Espelha o dia no widget de água. Chamado por quem muda o total. */
+  publicarNoWidget: () => void;
 };
 
 const ROTULO_DIA = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
@@ -172,6 +181,7 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
     set({ today: next, week: comHoje(get().week, next) });
     void persist(next);
     void reagendarLembrete();
+    get().publicarNoWidget();
   },
 
   /**
@@ -189,6 +199,7 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
     const pours = today.pours.filter((_, i) => i !== indice);
     const next = { ...today, waterMl: Math.max(0, today.waterMl - ml), pours };
     set({ today: next, week: comHoje(get().week, next) });
+    get().publicarNoWidget();
     void persist(next);
     void reagendarLembrete();
   },
@@ -204,6 +215,7 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
     const total = Math.max(0, Math.min(10_000, Math.round(ml)));
     const next = { ...today, waterMl: total, pours: [] };
     set({ today: next, week: comHoje(get().week, next) });
+    get().publicarNoWidget();
     void persist(next);
     void reagendarLembrete();
   },
@@ -216,10 +228,30 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
     const last = today.pours[today.pours.length - 1];
     const next = { ...today, waterMl: Math.max(0, today.waterMl - last), pours };
     set({ today: next, week: comHoje(get().week, next) });
+    get().publicarNoWidget();
     void persist(next);
     void reagendarLembrete();
   },
 
+
+  publicarNoWidget: () => {
+    const { today, goalMl, containers } = get();
+    publicarAguaDeHoje({ ml: today.waterMl, metaMl: goalMl, copoMl: containers[0]?.ml ?? 200, data: today.date });
+  },
+
+  absorverGolesDoWidget: () => {
+    const goles = consumirGolesDoWidget();
+    if (goles.length === 0) return;
+    get().rolarDia();
+    const hoje = get().today.date;
+    for (const g of goles) {
+      // Gole de outro dia (o app ficou fechado até virar a data) não entra em
+      // hoje: gravar na data errada corrompe o histórico, que é pior que perder
+      // um copo. `isoHoje` de quando foi registrado decide.
+      if (isoHoje(new Date(g.atMs)) !== hoje) continue;
+      if (Number.isFinite(g.ml) && g.ml > 0) get().addWater(g.ml);
+    }
+  },
 
   hydrate: async () => {
     /*
@@ -266,6 +298,7 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
         hoje && atual.pours.length === 0 ? { ...atual, waterMl: hoje.waterMl } : atual;
 
       set({ week, today });
+      get().publicarNoWidget();
     } catch {
       // Sem servidor a semana fica zerada — vazio honesto, não exemplo.
     }

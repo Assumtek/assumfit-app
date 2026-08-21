@@ -13,6 +13,8 @@ import { requireOptionalNativeModule } from 'expo';
 declare class WidgetBridgeNativeModule {
   isSupported(): boolean;
   setTodayWorkout(json: string): void;
+  setTodayWater?(json: string): void;
+  consumeWaterPours?(): { ml: number; atMs: number }[];
   clear(): void;
   startSportActivity?(label: string, symbol: string, startedAtMs: number, endsAtMs: number | null): boolean;
   updateSportActivity?(
@@ -48,6 +50,38 @@ export function publicarTreinoDeHoje(treino: TreinoDoWidget | null) {
 
 export function limparWidget() {
   if (nativo?.isSupported()) nativo.clear();
+}
+
+// ============================================================================
+// Widget de água — o total de hoje, e os goles que o botão dele registrou.
+// ============================================================================
+
+/** O que o widget de água desenha. Precisa casar com `AguaDeHoje` do Swift. */
+export type AguaDoWidget = {
+  ml: number;
+  metaMl: number;
+  copoMl: number;
+  /** `yyyy-MM-dd` local — o widget zera o total quando a data não é hoje. */
+  data: string;
+};
+
+export function publicarAguaDeHoje(agua: AguaDoWidget) {
+  if (!nativo?.isSupported()) return;
+  try {
+    nativo.setTodayWater?.(JSON.stringify({ ...agua, gravadoEm: Date.now() / 1000 }));
+  } catch {
+    // Widget é enfeite: falha aqui não pode derrubar o registro de água.
+  }
+}
+
+/** Drena os goles do botão do widget. Chamar UMA vez por volta ao primeiro plano. */
+export function consumirGolesDoWidget(): { ml: number; atMs: number }[] {
+  if (!nativo?.isSupported()) return [];
+  try {
+    return nativo.consumeWaterPours?.() ?? [];
+  } catch {
+    return [];
+  }
 }
 
 // ============================================================================
