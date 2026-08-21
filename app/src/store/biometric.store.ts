@@ -255,10 +255,11 @@ import {
 } from '../services/notifications.service';
 import { spo2DaNoite } from '../domain/sleep';
 import { noiteSustentaODia } from '../domain/bodyBattery';
+import { lerEmCurso } from '../services/sport-outbox';
 import { syncQueue } from '../services/sync.service';
 import { rateHeartRate, ratePressure, rateSpo2 } from '../domain/ratings';
 import { textoDaFalha } from '../domain/bandErrors';
-import { comAmostraDeHrv, ultimoInstante } from '../domain/series';
+import { comAmostraDeHrv, mesclarSeries, ultimoInstante } from '../domain/series';
 import { useWorkoutStore } from './workout.store';
 import type {
   BandActivity,
@@ -537,7 +538,9 @@ async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
   const atividade = get().activity;
   const atividadeAtualizada =
     totalDaMemoria > atividade.steps ? { ...atividade, steps: totalDaMemoria } : atividade;
-  const fc = historico.heartRate.length ? historico.heartRate.slice(-90) : get().hrHistory;
+  // Memória como base, e o que chegou ao vivo DEPOIS dela continua: o pico de
+  // agora não some quando a memória (atrasada, grão de 5 min) chega.
+  const fc = mesclarSeries(historico.heartRate, get().hrHistory, 90);
   /*
      A curva de HRV vem da MEMÓRIA, como todas as outras.
 
@@ -546,7 +549,7 @@ async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
      se acumulava era a mesma medição repetida. A pulseira já guardava a série
      de verdade, com os instantes das janelas agendadas; era só perguntar.
     */
-  const variabilidade = historico.hrv.length ? historico.hrv.slice(-90) : get().hrvHistory;
+  const variabilidade = mesclarSeries(historico.hrv, get().hrvHistory, 90);
   const oxigenio = historico.spo2.length ? historico.spo2 : get().spo2History;
 
   set({
@@ -1278,9 +1281,33 @@ const SUSTENTADO_MS = 2 * 60_000;
  *   treino. Convite, não alarme — e nunca durante exercício, onde batimento
  *   alto é o objetivo, não um problema.
  */
+/** Último total de passos visto e quando — movimento recente desarma o aviso de batimento. */
+let passosVistos: { steps: number; at: number } | null = null;
+let batimentoAltoDesde: number | null = null;
+const MOVIMENTO_RECENTE_MS = 10 * 60_000;
+const BATIMENTO_SUSTENTADO_MS = 10 * 60_000;
+
+function emMovimento(reading: Reading, agora: number): boolean {
+  if (reading.steps == null) return false;
+  const anterior = passosVistos;
+  passosVistos = { steps: reading.steps, at: agora };
+  if (!anterior) return false;
+  // Mais de ~150 passos em dez minutos é caminhada, não repouso.
+  return reading.steps - anterior.steps > 150 && agora - anterior.at <= MOVIMENTO_RECENTE_MS;
+}
+
 function vigiarLeitura(reading: Reading) {
-  const treinando = useWorkoutStore.getState().execution !== null;
   const agora = Date.now();
+  /*
+   "Em atividade" é treino guiado, sessão de esporte OU movimento recente.
+
+   Um testador se mexeu um pouco e recebeu "sua frequência cardíaca merece
+   atenção" (21/08). Batimento alto durante exercício é o exercício — o aviso
+   só faz sentido com a pessoa PARADA e por um tempo: batimento acima da
+   faixa por dez minutos sem passos.
+  */
+  const treinando =
+    useWorkoutStore.getState().execution !== null || lerEmCurso(agora) !== null || emMovimento(reading, agora);
 
   // -- ritmo acelerado → respiração guiada --
   if (treinando || reading.heartRate <= BPM_ALTO) {
@@ -1298,11 +1325,21 @@ function vigiarLeitura(reading: Reading) {
   }
 
   // -- medição fora da faixa → atenção --
-  if (treinando) return; // durante treino, tudo oscila por definição
+  if (treinando) {
+    batimentoAltoDesde = null;
+    return; // durante treino, tudo oscila por definição
+  }
+  // Batimento só alerta SUSTENTADO: dez minutos acima da faixa, parado.
+  if (rateHeartRate(reading.heartRate).state === 'alert') {
+    batimentoAltoDesde = batimentoAltoDesde ?? agora;
+  } else {
+    batimentoAltoDesde = null;
+  }
+  const batimentoSustentado = batimentoAltoDesde != null && agora - batimentoAltoDesde >= BATIMENTO_SUSTENTADO_MS;
   const alertas: [MetricaDeAtencao, boolean][] = [
     ['spo2', rateSpo2(reading.spo2Pct).state === 'alert'],
     ['pressao', ratePressure(reading.bpSystolic, reading.bpDiastolic).state === 'alert'],
-    ['hr', rateHeartRate(reading.heartRate).state === 'alert'],
+    ['hr', batimentoSustentado],
   ];
   for (const [metrica, alerta] of alertas) {
     if (!alerta) continue;

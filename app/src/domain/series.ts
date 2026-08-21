@@ -194,3 +194,19 @@ export function batimentoMedidoEm(
   if (!reading) return null;
   return reading.heartRateAt ?? reading.recordedAt;
 }
+
+/**
+ * Mescla a série da MEMÓRIA do aparelho com o que chegou AO VIVO depois dela.
+ *
+ * A sincronização de 4 min substituía a série da tela pela da memória — que
+ * chega atrasada e em grão de 5 min. Quem acabava de se exercitar via o pico
+ * "sumir do nada" ao abrir a tela (relato de testador, 21/08). A memória é a
+ * base; os pontos ao vivo mais novos que o último ponto dela continuam. O
+ * teto mantém a janela de ~90 pontos que os gráficos desenham.
+ */
+export function mesclarSeries(memoria: Ponto[], vivo: Ponto[], teto = 90): Ponto[] {
+  if (memoria.length === 0) return vivo.slice(-teto);
+  const ultimoDaMemoria = memoria[memoria.length - 1].at;
+  const novos = vivo.filter((p) => p.at > ultimoDaMemoria);
+  return [...memoria, ...novos].slice(-teto);
+}

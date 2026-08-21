@@ -8,8 +8,7 @@ import {
   rotulosDoPeriodo,
   type Ponto,
   batimentoAoVivo,
-  batimentoMedidoEm,
-} from '../series';
+  batimentoMedidoEm, mesclarSeries } from '../series';
 
 const AGORA = new Date('2026-08-17T12:00:00Z').getTime();
 const H = 3600_000;
@@ -251,5 +250,24 @@ describe('batimentoMedidoEm', () => {
     expect(batimentoMedidoEm({ heartRateAt: 111, recordedAt: 999 })).toBe(111);
     expect(batimentoMedidoEm({ recordedAt: 999 })).toBe(999);
     expect(batimentoMedidoEm(null)).toBeNull();
+  });
+});
+
+describe('mesclarSeries', () => {
+  const p = (at: number, value: number) => ({ at, value });
+
+  it('mantém o que chegou ao vivo depois do último ponto da memória', () => {
+    const memoria = [p(1000, 70), p(2000, 72)];
+    const vivo = [p(1500, 71), p(2500, 150), p(3000, 160)];
+    expect(mesclarSeries(memoria, vivo)).toEqual([p(1000, 70), p(2000, 72), p(2500, 150), p(3000, 160)]);
+  });
+
+  it('sem memória, vale o vivo', () => {
+    expect(mesclarSeries([], [p(1, 60)])).toEqual([p(1, 60)]);
+  });
+
+  it('respeita o teto', () => {
+    const memoria = Array.from({ length: 100 }, (_, i) => p(i, 60));
+    expect(mesclarSeries(memoria, [p(200, 90)], 90)).toHaveLength(90);
   });
 });
