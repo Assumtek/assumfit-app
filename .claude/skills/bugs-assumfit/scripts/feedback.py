@@ -90,6 +90,81 @@ def feedbacks() -> list[dict]:
     return out
 
 
+SLACK_ENV = Path.home() / ".credenciais/assumfit/slack.env"
+
+
+def slack_env() -> dict:
+    """`SLACK_TOKEN=xoxb-…` e `SLACK_CHANNEL=assumfit-qa-feedback`, um por linha."""
+    if not SLACK_ENV.exists():
+        return {}
+    out = {}
+    for linha in SLACK_ENV.read_text().splitlines():
+        if "=" in linha and not linha.lstrip().startswith("#"):
+            k, v = linha.split("=", 1)
+            out[k.strip()] = v.strip().strip('"')
+    return out
+
+
+def slack_get(token: str, method: str, **params) -> dict:
+    from urllib.parse import urlencode
+    req = urllib.request.Request(
+        f"https://slack.com/api/{method}?{urlencode(params)}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    with urllib.request.urlopen(req, timeout=30) as r:
+        d = json.load(r)
+    if not d.get("ok"):
+        raise RuntimeError(f"slack {method}: {d.get('error')}")
+    return d
+
+
+def slack_feedbacks() -> list[dict]:
+    """
+    O canal onde os relatos do WhatsApp são colados. O espaço de trabalho do
+    AssumFit é outro — o conector da sessão não o enxerga —, então a leitura é
+    por token de bot, guardado fora do repositório. Sem o arquivo, a fonte
+    simplesmente não existe; não é erro.
+    """
+    env = slack_env()
+    token, canal = env.get("SLACK_TOKEN"), env.get("SLACK_CHANNEL", "assumfit-qa-feedback")
+    if not token:
+        return []
+    cid = None
+    cursor = None
+    while cid is None:
+        d = slack_get(token, "conversations.list", types="public_channel,private_channel", limit=200, **({"cursor": cursor} if cursor else {}))
+        for c in d["channels"]:
+            if c["name"] == canal.lstrip("#"):
+                cid = c["id"]
+        cursor = d.get("response_metadata", {}).get("next_cursor") or None
+        if cid is None and not cursor:
+            raise RuntimeError(f"canal #{canal} não encontrado — o bot foi convidado?")
+    h = slack_get(token, "conversations.history", channel=cid, limit=200)
+    usuarios: dict[str, str] = {}
+    out = []
+    for m in h["messages"]:
+        if m.get("subtype") in ("channel_join", "channel_leave", "bot_message"):
+            continue
+        uid = m.get("user", "")
+        if uid and uid not in usuarios:
+            try:
+                usuarios[uid] = slack_get(token, "users.info", user=uid)["user"].get("real_name", uid)
+            except Exception:  # noqa: BLE001
+                usuarios[uid] = uid
+        out.append({
+            "id": f"slack:{m['ts']}",
+            "em": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(float(m["ts"]))),
+            "build": None,
+            "testador": usuarios.get(uid, uid),
+            "email": None,
+            "aparelho": "(Slack)",
+            "comentario": m.get("text", ""),
+            "capturas": [f.get("url_private") for f in m.get("files", []) if f.get("url_private")],
+            "thread": f"https://slack.com/archives/{cid}/p{m['ts'].replace('.', '')}",
+        })
+    return out
+
+
 def main() -> None:
     args = sys.argv[1:]
     if args[:1] == ["--done"]:
@@ -101,6 +176,11 @@ def main() -> None:
         return
     l = ledger()["tratados"]
     todos = feedbacks()
+    try:
+        todos += slack_feedbacks()
+    except Exception as e:  # noqa: BLE001 — a fila do TestFlight não morre por causa da do Slack
+        print(f"slack indisponível: {e}", file=sys.stderr)
+    todos.sort(key=lambda f: f["em"] or "", reverse=True)
     if args[:1] == ["--all"]:
         for f in todos:
             f["tratado"] = l.get(f["id"])

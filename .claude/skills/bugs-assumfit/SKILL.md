@@ -25,6 +25,17 @@ python3 .claude/skills/bugs-assumfit/scripts/feedback.py          # pendentes
 python3 .claude/skills/bugs-assumfit/scripts/feedback.py --all    # com os tratados
 ```
 
+Duas fontes, na mesma fila:
+
+- **TestFlight** (sempre): capturas de tela e crashes, pela API da Apple.
+- **Slack `#assumfit-qa-feedback`** (quando `~/.credenciais/assumfit/slack.env`
+  existir, com `SLACK_TOKEN=xoxb-…` e `SLACK_CHANNEL=assumfit-qa-feedback`):
+  é onde os relatos do WhatsApp são colados. O espaço de trabalho do AssumFit
+  é outro — o conector da sessão não o enxerga —, por isso o token de bot
+  (escopos `channels:history`, `channels:read`, `users:read`; `groups:*` se o
+  canal for privado), com o bot convidado ao canal. Itens vêm com `id`
+  `slack:<ts>` e `thread` (link da mensagem).
+
 Cada item traz `id`, `em`, `build`, `testador`, `aparelho`, `comentario` e
 `capturas` (URLs, válidas por pouco tempo — baixe na hora se precisar).
 Lista vazia → registre "sem pendências" e encerre. Não invente trabalho.
