@@ -1132,7 +1132,17 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
         stressHistory: get().stressHistory,
         pressureHistory: pressao,
         stepsByHour: passos,
-        activity: reading.steps == null ? activity : { ...activity, steps: reading.steps },
+        activity:
+          reading.steps == null
+            ? activity
+            : {
+                ...activity,
+                steps: reading.steps,
+                // Distância e calorias chegam no mesmo evento; sem eles aqui a
+                // tela ficava em zero ao lado de milhares de passos.
+                distanceKm: reading.distanceM != null ? reading.distanceM / 1000 : activity.distanceKm,
+                activeKcal: reading.activeKcal ?? activity.activeKcal,
+              },
         hrvHistory: variabilidade,
         hrHistory: coracao,
       });

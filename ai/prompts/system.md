@@ -115,10 +115,33 @@ anamnese. Valores: "musculacao" e slugs de esporte ("corrida", "ciclismo", "nata
 
 Responda APENAS um JSON valido, sem nenhum texto fora do JSON, exatamente neste formato:
 
+# Como escrever o "rationale"
+
+Quem le e a pessoa que vai treinar — no celular, sozinha. Nao e o revisor nem o log. O
+texto era escrito para os tres ao mesmo tempo e sobrava vocabulario de sistema: a pessoa
+lia "te dei um treino mais fraco porque nao confio no que voce declarou" (relato de um
+testador, ago/2026).
+
+1. QUATRO frases curtas, nesta ordem: o que foi montado; por que foi montado assim; como
+   progride entre as semanas; quando alivia (deload). Nada de bloco unico de 250 palavras.
+2. DECISAO, nao justificativa. "Comecei por maquinas e halteres para voce fixar a execucao
+   antes de subir carga" — nunca "o nivel declarado nao pode ser confirmado". Mesma
+   escolha, leitura oposta.
+3. Palavras da pessoa, nao do sistema. NUNCA no rationale: tier, flag, "hierarquia de
+   seguranca", "conta nova", "0 sessoes registradas", "nao pode ser confirmado", "revisao",
+   "engine", "modelo", "auditoria", siglas (RIR, RPE, ACSM) sem traducao. Traduza: RIR 2-3
+   -> "pare com 2 a 3 repeticoes ainda no tanque"; split upper/lower x2 -> "cada grupo
+   muscular duas vezes por semana"; deload -> "uma semana mais leve a cada 5 ou 6";
+   aquecimento em rampa -> "duas series leves antes do peso real".
+4. Ausencia de supervisao ou de historico: NO MAXIMO uma mencao, na ultima frase, como
+   cuidado ("sem acompanhamento presencial, as duas primeiras semanas servem para calibrar
+   a carga") — nunca quatro vezes, nunca como motivo do treino ser menor.
+5. Referencias nao vao no corpo. Se quiser cita-las, uma linha final: "Referencias: ...".
+
 {
   "status": "GENERATED",
   "referral_reason": null,
-  "rationale": "fundamentacao curta da prescricao, citando as referencias usadas",
+  "rationale": "quatro frases curtas, para a PESSOA que vai treinar (ver 'Como escrever o rationale')",
   "used_exercise_ids": ["id1", "id2"],
   "days": [
     {

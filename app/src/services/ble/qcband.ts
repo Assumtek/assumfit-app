@@ -100,6 +100,8 @@ export class QCBandService implements BleService {
     spo2Pct: null,
     temperatureC: null,
     steps: null,
+    distanceM: null,
+    activeKcal: null,
     bpSystolic: null,
     bpDiastolic: null,
     stressScore: null,
@@ -460,6 +462,10 @@ export class QCBandService implements BleService {
         break;
       case 'steps':
         this.partial.steps = value;
+        // Vêm no mesmo bloco do firmware; descartá-los era o "distância e
+        // calorias zeradas com 5.628 passos".
+        if (typeof event.distance === 'number') this.partial.distanceM = event.distance;
+        if (typeof event.calorie === 'number') this.partial.activeKcal = event.calorie;
         break;
       case 'bloodPressure':
         this.partial.bpSystolic = typeof event.systolic === 'number' ? event.systolic : null;

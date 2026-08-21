@@ -11,7 +11,6 @@ import { MeasureButton } from '../components/MeasureButton';
 import { Note } from '../components/Card';
 import { SyncProgress } from '../components/SyncProgress';
 import { Body, Card, Data, HeroCard, Label, Metric, MetricSm, RatingText, SectionTitle } from '../components/ui';
-import { calcBioAge } from '../domain/bioAge';
 import { calcBodyBattery } from '../domain/bodyBattery';
 import { isoHoje } from '../domain/water';
 import {
@@ -26,6 +25,7 @@ import {
   ratingTextColor,
   type Rating,
 } from '../domain/ratings';
+import { useBioAge } from '../hooks/useBioAge';
 import * as api from '../services/api.service';
 import { deepSleepPct, useBiometricStore } from '../store/biometric.store';
 import { useInsightStore } from '../store/insight.store';
@@ -111,17 +111,9 @@ export function HealthScreen() {
       .catch(() => setDiasMedidos(null));
   }, []);
 
-  const bio = latest
-    ? calcBioAge({
-        realAge: age,
-        sex: user.sex,
-        hrvMs: latest.hrvMs,
-        restingHr: latest.heartRate,
-        spo2Pct: latest.spo2Pct,
-        deepSleepPct: sleep ? deepSleepPct(sleep) : null,
-        tempRangeC: null,
-      })
-    : null;
+  // A MESMA montagem do detalhe — ver `useBioAge`. Duas montagens davam dois
+  // números para a mesma pessoa.
+  const { bio } = useBioAge();
 
   const pressao = latest ? ratePressure(latest.bpSystolic, latest.bpDiastolic) : null;
 

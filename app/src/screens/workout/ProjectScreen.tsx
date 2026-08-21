@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Note, Row, Section } from '../../components/Card';
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon, type IconName } from '../../components/Icon';
-import { Body, Data, Headline, HeroCard, SectionTitle } from '../../components/ui';
+import { Body, Button, Data, Headline, HeroCard, SectionTitle } from '../../components/ui';
 import { fatosDoProjeto, type FatoDoProjeto, type TreinoDoProjeto } from '../../domain/planProject';
 import { DAY_LABEL } from '../../domain/workout';
 import * as api from '../../services/api.service';
@@ -49,6 +49,7 @@ const ICONE: Record<FatoDoProjeto['chave'], IconName> = {
 export function ProjectScreen() {
   const plan = useWorkoutStore((s) => s.plan);
   const [treinos, setTreinos] = useState<TreinoDoProjeto[] | null>(null);
+  const [detalhes, setDetalhes] = useState(false);
 
   const carregar = useCallback(async () => {
     const dias = (plan?.days ?? []).filter((d) => d.workout);
@@ -166,13 +167,30 @@ export function ProjectScreen() {
         esconder o raciocínio de quem quer segui-lo até o fim, que é exatamente
         quem chega a esta tela.
       */}
+      {/*
+        A fundamentação completa fica DOBRADA, atrás de um toque.
+
+        Um testador (ago/2026) leu o texto inteiro e descreveu o efeito: 250
+        palavras em bloco único, vocabulário de sistema, tom de justificativa —
+        "te dei um treino mais fraco porque não confio no que você declarou". A
+        geração passou a escrever para a pessoa; mas planos já gerados guardam o
+        texto antigo, e mesmo o novo é detalhe, não abertura. As decisões acima
+        são a camada que se lê; isto é a que se consulta.
+      */}
       {plan.rationale ? (
         <Section label="a fundamentação">
-          <Body>{plan.rationale}</Body>
-          <Data marginTop="$lg">
-            Escrito pelo modelo que montou o plano, e guardado como está — é o que permite
-            auditar depois por que o treino ficou assim.
-          </Data>
+          {detalhes ? (
+            <Body>{plan.rationale}</Body>
+          ) : (
+            <Body>O texto completo de quem montou o plano — método, faixas e progressão.</Body>
+          )}
+          <YStack alignSelf="flex-start" marginTop="$md">
+            <Button
+              title={detalhes ? 'Ocultar detalhes técnicos' : 'Ver detalhes técnicos'}
+              variant="ghost"
+              onPress={() => setDetalhes((d) => !d)}
+            />
+          </YStack>
         </Section>
       ) : null}
     </DetailScreen>

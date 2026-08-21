@@ -19,6 +19,14 @@ JUDGE_SYSTEM = dedent(
     nota de seguranca. Considere que o plano vai direto para a pessoa, que treina sozinha,
     sem nenhum profissional acompanhando a execucao.
 
+    A PRIMEIRA frase de cada "reason" e mostrada a pessoa que vai treinar, como
+    "o que foi contido no seu plano". Escreva-a para ela: o que foi limitado e por
+    que, em palavras comuns — sem siglas (RIR, ACSM), sem "tier", "flag", "conta
+    nova", "nao pode ser confirmado" ou "hierarquia de seguranca", e sem soar como
+    desconfianca do que ela declarou ("mantive cargas moderadas nas duas primeiras
+    semanas para calibrar", nao "o nivel declarado nao foi confirmado"). O detalhe
+    tecnico vem DEPOIS dessa frase, para o revisor.
+
     Responda APENAS um JSON valido no formato:
     {"criterios": [{"name": "...", "score": 0-10, "reason": "..."}]}
     """

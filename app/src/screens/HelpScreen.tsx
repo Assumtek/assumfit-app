@@ -35,9 +35,12 @@ export function HelpScreen() {
         <Explica termo="Oxigênio (SpO₂)" texto="Saturação de oxigênio no sangue, em porcentagem." />
         <Explica
           termo="Estresse"
-          texto="De 0 a 100, calculado pelo firmware a partir da sua variabilidade cardíaca. É carga do sistema nervoso, não humor."
+          texto="De 0 a 100, calculado pelo firmware da pulseira a partir da variabilidade entre um batimento e outro (HRV): intervalos mais irregulares indicam o corpo em recuperação; mais uniformes, carga. Abaixo de 30 é calmo, até 59 moderado, a partir de 60 elevado. É carga do sistema nervoso, não humor — um treino pesado e uma briga podem dar o mesmo número."
         />
-        <Explica termo="Sono" texto="Fases da noite — profundo, leve, REM e desperto — na ordem em que aconteceram." />
+        <Explica
+          termo="Sono"
+          texto="O score (0 a 100) é calculado a partir das fases medidas: metade é a duração total, um quarto é o sono profundo, 15% o REM e 10% a continuidade (quantas vezes você acordou). Por isso uma noite longa e picada pode pontuar menos que uma mais curta e inteira. O hipnograma mostra as fases na ordem em que aconteceram; a data é a da noite em que você deitou."
+        />
         <Explica
           termo="Pressão"
           texto="Estimada pelo sensor óptico da pulseira: serve para acompanhar TENDÊNCIA, não substitui a medição de braçadeira. As faixas seguem a Diretriz Brasileira de Hipertensão (SBC 2020): ótima abaixo de 120/80, normal até 129/84, elevada de 130/85 a 139/89. Fora da faixa esperada, meça no aparelho de verdade."

@@ -1,5 +1,5 @@
 import { YStack } from '@tamagui/stacks';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { LayoutChangeEvent } from 'react-native';
 
 import { Note, Row, Section } from '../components/Card';
@@ -8,10 +8,45 @@ import { LineChart } from '../components/charts/LineChart';
 import { MeasuredAt } from '../components/MeasuredAt';
 import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
 import { rateActivity } from '../domain/ratings';
+import * as api from '../services/api.service';
 import { useBiometricStore } from '../store/biometric.store';
 
 export function ActivityScreen() {
   const activity = useBiometricStore((s) => s.activity);
+
+  /*
+   Minutos ativos são os de TREINO e ESPORTE registrados hoje — a pulseira não
+   manda esse número no bloco de passos (só passos, distância e calorias), e o
+   campo ficava em zero para sempre. Sessão vinculada a uma execução conta uma
+   vez só, a mesma regra da agenda de movimento e da bateria.
+  */
+  const [minutosHoje, setMinutosHoje] = useState<number | null>(null);
+  useEffect(() => {
+    let vivo = true;
+    const inicioDoDia = new Date();
+    inicioDoDia.setHours(0, 0, 0, 0);
+    void Promise.all([
+      api.fetchExecutionHistory(1).catch(() => []),
+      api.fetchSportSessions(1).catch(() => []),
+    ]).then(([execucoes, sessoes]) => {
+      if (!vivo) return;
+      const vinculadas = new Set(
+        sessoes.map((se) => se.workoutExecutionId).filter((id): id is string => !!id),
+      );
+      const minutos =
+        execucoes
+          .filter((e) => e.status === 'FINISHED' && new Date(e.startedAt) >= inicioDoDia)
+          .filter((e) => !vinculadas.has(e.id))
+          .reduce((soma, e) => soma + (e.durationSec ?? 0) / 60, 0) +
+        sessoes
+          .filter((se) => new Date(se.startedAt) >= inicioDoDia)
+          .reduce((soma, se) => soma + se.durationS / 60, 0);
+      setMinutosHoje(Math.round(minutos));
+    });
+    return () => {
+      vivo = false;
+    };
+  }, []);
   const latest = useBiometricStore((s) => s.latest);
   const stepsByHour = useBiometricStore((s) => s.stepsByHour);
   const [chartWidth, setChartWidth] = useState(0);
@@ -21,7 +56,7 @@ export function ActivityScreen() {
   const rows = [
     { label: 'Distância', value: `${activity.distanceKm.toFixed(1).replace('.', ',')} km` },
     { label: 'Calorias ativas', value: `${activity.activeKcal} kcal` },
-    { label: 'Minutos ativos', value: `${activity.activeMin} min` },
+    { label: 'Minutos ativos', value: `${minutosHoje ?? activity.activeMin} min` },
   ];
 
   return (

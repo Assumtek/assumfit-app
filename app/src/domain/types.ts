@@ -42,6 +42,14 @@ export type Reading = {
   spo2Pct: number | null;
   temperatureC: number | null;
   steps: number | null;
+  /**
+   * Distância (m) e calorias ativas do dia, do MESMO evento que traz os passos.
+   *
+   * A pulseira manda os três juntos; a ponte guardava só os passos e a tela de
+   * atividade mostrava "0,0 km · 0 kcal" ao lado de 5.628 passos (ago/2026).
+   */
+  distanceM?: number | null;
+  activeKcal?: number | null;
   bpSystolic: number | null;
   bpDiastolic: number | null;
   stressScore: number | null;

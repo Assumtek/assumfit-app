@@ -9,7 +9,8 @@ import { DetailScreen } from '../components/DetailScreen';
 import { MeasureButton } from '../components/MeasureButton';
 import { DivergingBar } from '../components/charts/DivergingBar';
 import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
-import { calcBioAge, formatYears } from '../domain/bioAge';
+import { formatYears } from '../domain/bioAge';
+import { useBioAge } from '../hooks/useBioAge';
 import * as api from '../services/api.service';
 import { deepSleepPct, useBiometricStore } from '../store/biometric.store';
 import { useUserStore } from '../store/user.store';
@@ -41,42 +42,8 @@ export function BioAgeScreen() {
    * os minutos de movimento da semana (o que foi registrado). `null` enquanto
    * não carrega — o cálculo sabe seguir sem eles.
    */
-  const [imc, setImc] = useState<number | null>(null);
-  const [minutosAtivos, setMinutosAtivos] = useState<number | null>(null);
-
-  const carregar = useCallback(async () => {
-    const desde = Date.now() - 7 * 86_400_000;
-    const [anamnese, execucoes, sessoes] = await Promise.all([
-      api.fetchAnamnesis().catch(() => null),
-      api.fetchExecutionHistory(7).catch(() => []),
-      api.fetchSportSessions(7).catch(() => []),
-    ]);
-
-    // O tipo das respostas é aberto (o grafo de perguntas evolui sem passar
-    // por aqui), então peso e altura são estreitados antes de virar conta.
-    const respostas = anamnese?.answers as { weightKg?: number; heightCm?: number } | undefined;
-    const peso = typeof respostas?.weightKg === 'number' ? respostas.weightKg : null;
-    const altura = typeof respostas?.heightCm === 'number' ? respostas.heightCm : null;
-    if (peso && altura && altura >= 100) setImc(peso / (altura / 100) ** 2);
-
-    // Sessão vinculada a uma execução é o mesmo ato: vale a sessão, e a
-    // execução sai da soma — a mesma regra da agenda de movimento.
-    const vinculadas = new Set(
-      sessoes.map((s) => s.workoutExecutionId).filter((id): id is string => !!id),
-    );
-    const minTreino = execucoes
-      .filter((e) => e.status === 'FINISHED' && Date.parse(e.startedAt) >= desde)
-      .filter((e) => !vinculadas.has(e.id))
-      .reduce((soma, e) => soma + (e.durationSec ?? 0) / 60, 0);
-    const minEsporte = sessoes
-      .filter((s) => Date.parse(s.startedAt) >= desde)
-      .reduce((soma, s) => soma + s.durationS / 60, 0);
-    setMinutosAtivos(Math.round(minTreino + minEsporte));
-  }, []);
-
-  useEffect(() => {
-    void carregar();
-  }, [carregar]);
+  // Montagem compartilhada com o card da tela Saúde — ver `useBioAge`.
+  const { bio: bioCalculada, imc, minutosAtivos, recarregar: carregar } = useBioAge();
 
   if (!latest)
     return (
@@ -85,15 +52,7 @@ export function BioAgeScreen() {
       </DetailScreen>
     );
 
-  const bio = calcBioAge({
-    realAge: age,
-    sex: user.sex,
-    hrvMs: latest.hrvMs,
-    restingHr: latest.heartRate,
-    deepSleepPct: sleep ? deepSleepPct(sleep) : null,
-    bmi: imc,
-    weeklyActiveMin: minutosAtivos,
-  });
+  const bio = bioCalculada!;
 
   const deltaText =
     bio.delta > 0
