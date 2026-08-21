@@ -374,6 +374,24 @@
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Criando esse canal pra centralizarmos os feedbacks de uso e correções"
+    },
+    "slack:1787274315.457289": {
+      "commit": "8a326b6",
+      "nota": "Não era outra conta: o Keychain perdia o token renovado com o iPhone bloqueado e, ao atualizar, o app apresentava o antigo — o servidor derrubava a sessão por segurança, e o \"Rafael\" era um nome de exemplo que ficava na tela enquanto o perfil não carregava. Os três pontos corrigidos.",
+      "versao": "1.0.3 (7)",
+      "em": "2026-08-20T22:12:13"
+    },
+    "slack:1787274090.210839": {
+      "commit": "8a326b6",
+      "nota": "Valeu, Leo! Esse mesmo canal agora recebe resposta automática em cada relato resolvido.",
+      "versao": "1.0.3 (7)",
+      "em": "2026-08-20T22:12:13"
+    },
+    "slack:1787274022.107979": {
+      "commit": "8a326b6",
+      "nota": "mensagem da fundadora sobre o fluxo — conversa",
+      "versao": "1.0.3 (7)",
+      "em": "2026-08-20T22:12:14"
     }
   }
 }
