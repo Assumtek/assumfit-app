@@ -878,6 +878,12 @@
       "nota": "Feito. Na tela de Treino, quando o de ontem ficou sem registro, o painel de hoje mostra 'Fazer o de ontem que ficou' — um toque e o check-in abre já com aquele treino selecionado. E se você abrir o dia passado na régua da semana, o botão vira 'Fazer este treino hoje'. Vale dentro da semana corrente.",
       "versao": "1.0.5 (1)",
       "em": "2026-08-21T20:06:52"
+    },
+    "AIWVvYYZmaLE2lJD44jYFwQ": {
+      "commit": "0146075",
+      "nota": "Feito: widget 'Água de hoje' para a tela de início, com o anel do dia e um botão '+ copo' que registra sem abrir o app (iOS 17+). O gole entra no seu histórico na próxima vez que o app abrir. É código nativo, então chega só com o build 1.0.5 (1) — depois de instalar, segure a tela de início → + → AssumFit.",
+      "versao": "1.0.5 (1)",
+      "em": "2026-08-21T20:07:40"
     }
   }
 }
