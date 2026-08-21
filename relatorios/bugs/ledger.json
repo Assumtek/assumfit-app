@@ -818,6 +818,36 @@
       "nota": "Passos, distância e calorias eram restaurados do disco sem data — amanheciam com o valor de ontem até a pulseira mandar o primeiro passo. Agora o dia vira: gravado em outro dia, zera.",
       "versao": "1.0.4 (5)",
       "em": "2026-08-21T09:48:39"
+    },
+    "slack:1787317637.685769": {
+      "commit": "ff902be",
+      "nota": "Kkkk sem processo, Bruno — aqui o pagamento é relato bem escrito, e você tá adiantado.",
+      "versao": "1.0.4 (6)",
+      "em": "2026-08-21T10:41:27"
+    },
+    "slack:1787317413.934939": {
+      "commit": "ff902be",
+      "nota": "Valeu, Leo! Vi o dos passos zerados no build 5 — já estou em cima.",
+      "versao": "1.0.4 (6)",
+      "em": "2026-08-21T10:41:34"
+    },
+    "ABPNIQhsN0E-BnHOwAcI0vc": {
+      "commit": "8dd7616",
+      "nota": "Foi regressão minha da correção dos \"passos de ontem\": um dos caminhos gravava o estado sem a data, e todo arranque frio zerava os passos de hoje até a pulseira mandar o próximo evento. Corrigido na origem, e o total do dia agora volta da memória da pulseira na primeira sincronização. Até o build novo: andar alguns passos com o app aberto traz o número certo.",
+      "versao": "1.0.4 (6)",
+      "em": "2026-08-21T10:42:08"
+    },
+    "slack:1787319801.841279": {
+      "commit": "0b4029b",
+      "nota": "conversa",
+      "versao": "1.0.4 (6)",
+      "em": "2026-08-21T10:48:40"
+    },
+    "slack:1787319956.005739": {
+      "commit": "dbbd3f7",
+      "nota": "Dois acertos, Bruno. O aviso de batimento agora só dispara com você PARADO — sem treino, sem sessão, sem passos nos últimos 10 min — e com o batimento alto por 10 minutos seguidos; exercício não conta. E o histórico que sumiu: a sincronização com a memória da pulseira (a cada 4 min, grão de 5 min, atrasada) substituía a curva ao vivo e apagava o pico recente; agora ela é a base e o que chegou ao vivo depois continua.",
+      "versao": "1.0.4 (6)",
+      "em": "2026-08-21T10:49:17"
     }
   }
 }
