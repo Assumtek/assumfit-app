@@ -860,6 +860,12 @@
       "nota": "Feito, com uma ressalva de hardware. Em Configurações → Avisos no pulso, agora cada categoria que a pulseira conhece (Telefone, WhatsApp, Instagram, Telegram…) tem o próprio interruptor, e um mestre no topo liga ou desliga todas as notificações do celular de uma vez. A parte 'só o AssumFit' o firmware não permite: o filtro dele é por categoria de app, sem identificador, e o AssumFit só existe no balde 'Outros apps' — ligando esse balde, ela vibra com qualquer app que o firmware não reconhece. A tela diz isso antes de você ligar.",
       "versao": "1.0.4 (7)",
       "em": "2026-08-21T11:16:26"
+    },
+    "slack:1787346794.437769": {
+      "commit": "1924ffa",
+      "nota": "Feito. Quando o batimento passa de 110 com você em movimento por três minutos e não há treino nem sessão aberta, chega uma notificação perguntando 'Começou a treinar?' — tocar abre a tela de esporte para registrar. Sem som, uma por episódio, no máximo uma a cada duas horas; parado com batimento alto continua sendo o convite de respiração, não essa.",
+      "versao": "1.0.4 (7)",
+      "em": "2026-08-21T18:15:36"
     }
   }
 }
