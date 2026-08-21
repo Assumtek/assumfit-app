@@ -482,6 +482,18 @@
       "nota": "Anotado como proposta de design: imagens no banner da visão geral alinhadas à identidade visual. Vai pra decisão da Silvia — é escolha de marca, não correção.",
       "versao": "1.0.4 (2)",
       "em": "2026-08-20T22:53:47"
+    },
+    "slack:1787277324.040929": {
+      "commit": "a1f4d47",
+      "nota": "Feito, Bruno: as quatro referências ficam atrás de \"Ver referências científicas (4)\", sem divisória entre elas, e o botão de atualizar subiu. A fundamentação do treino já tinha ganhado o mesmo padrão mais cedo (\"Ver detalhes técnicos\").",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T23:07:44"
+    },
+    "AO44SYWf9ndhLGEFMNpbuhM": {
+      "commit": "a1f4d47",
+      "nota": "Treino e esporte já tinham story pra compartilhar; a saúde não — agora a tela Saúde tem \"Compartilhar minha saúde\", com sono, idade biológica e HRV no mesmo card 9:16, direto pro Instagram ou galeria.",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T23:07:45"
     }
   }
 }
