@@ -13,7 +13,7 @@
       "appleTeamId": "5695J86AVD",
       "supportsTablet": false,
       "bundleIdentifier": "br.com.assumtek.assumfit",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "O AssumFit usa Bluetooth para ler os dados do seu AssumFit Watch.",
         "NSLocationWhenInUseUsageDescription": "O AssumFit usa sua localização para a temperatura e a umidade do ambiente e, durante uma sessão de esporte, para medir distância e desenhar o percurso das suas sessões de esporte.",

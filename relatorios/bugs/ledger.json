@@ -542,6 +542,228 @@
       "nota": "Sim! Na aba Evolução do Progresso tem agora \"Fotos de evolução\": câmera ou galeria, fica só no seu aparelho (como a foto de perfil), e tocando em duas elas aparecem lado a lado com as datas.",
       "versao": "1.0.4 (3)",
       "em": "2026-08-20T23:44:29"
+    },
+    "ACsUuyjt8yfvb3292hw4ru8": {
+      "commit": "1f1b985",
+      "nota": "Achei pelo log de falha com o dSYM: o gesto de arrastar os blocos do story rodava no runtime errado (o Reanimated entra por dependência e o gesture-handler manda os callbacks pra lá). Tocar num bloco derrubava o app — valia pro compartilhar saúde e pro compartilhar com foto. Corrigido na origem, nos cinco gestos do canvas.",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-21T00:04:28"
+    },
+    "slack:1787275833.784459": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787187301.358549": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787184409.198909": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787184395.149539": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787184371.964019": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787184360.597049": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787184257.812369": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787181790.872759": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787181750.793569": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787143941.314439": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787143700.604729": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787090209.383189": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787090205.109759": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787090196.588849": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787090132.285019": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787089599.654429": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787086205.307109": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787086197.173749": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:41"
+    },
+    "slack:1787086185.091699": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:42"
+    },
+    "slack:1787086114.242569": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:42"
+    },
+    "slack:1787084811.734369": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:42"
+    },
+    "slack:1787084778.311959": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:42"
+    },
+    "slack:1787084727.137919": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:42"
+    },
+    "slack:1787084688.015569": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:42"
+    },
+    "slack:1787084685.731749": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:42"
+    },
+    "slack:1787084679.041769": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:42"
+    },
+    "slack:1787084670.032259": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:42"
+    },
+    "slack:1787084641.660449": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:42"
+    },
+    "slack:1787084176.890959": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:42"
+    },
+    "slack:1787063655.315009": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:42"
+    },
+    "slack:1787063624.656009": {
+      "commit": "b19a038",
+      "nota": "conversa em thread anterior ao fluxo",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:42"
+    },
+    "slack:1787276103.674679": {
+      "commit": "b19a038",
+      "nota": "Valeu, Leo! Quem tá top é quem testa de verdade — segue mandando.",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-20T23:46:42"
+    },
+    "slack:1787280032.373699": {
+      "commit": "1f1b985",
+      "nota": "Boa: o véu sobre a foto ganhou um gradiente mais denso embaixo, onde ficam os números — texto branco fica legível mesmo com fundo claro.",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-21T00:04:31"
+    },
+    "slack:1787279983.364899": {
+      "commit": "1f1b985",
+      "nota": "Feito de forma geral: toda tela com rolagem passa a subir o conteúdo com o teclado, e toda folha de ajuste também — não é mais caso a caso.",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-21T00:04:39"
+    },
+    "slack:1787279946.059239": {
+      "commit": "1f1b985",
+      "nota": "Ajustado: \"Ver referências científicas\" virou linha de texto alinhada com os demais tópicos, sem o número entre parênteses. O \"Ver detalhes técnicos\" do treino seguiu o mesmo padrão.",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-21T00:04:46"
+    },
+    "slack:1787280435.572349": {
+      "commit": "1f1b985",
+      "nota": "Combinado, chef. E agora eu escuto o canal em tempo real — mensagem nova aqui já entra na fila na hora.",
+      "versao": "1.0.4 (3)",
+      "em": "2026-08-21T00:04:54"
     }
   }
 }
