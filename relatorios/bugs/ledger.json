@@ -494,6 +494,18 @@
       "nota": "Treino e esporte já tinham story pra compartilhar; a saúde não — agora a tela Saúde tem \"Compartilhar minha saúde\", com sono, idade biológica e HRV no mesmo card 9:16, direto pro Instagram ou galeria.",
       "versao": "1.0.4 (2)",
       "em": "2026-08-20T23:07:45"
+    },
+    "slack:1787277577.805849": {
+      "commit": "9812abf",
+      "nota": "Boa pegada, Bruno. Eram dois problemas: (1) card e detalhe montavam entradas diferentes — isso já tinha sido unificado hoje; (2) a composição mostrava a idade que cada marcador sugere, e a idade final é MÉDIA ponderada dessas idades, não soma — a tela não dizia, e somar era a leitura natural. Agora cada barra é a contribuição (anos × peso), e elas somam o desvio do título; o texto mostra os pesos (aptidão 60%, HRV 25%, sono 15%). Terceira fonte não existe — o servidor calcula pro score, mas nenhuma tela mostra. Não movi pra um endpoint: o cálculo é offline de propósito e a paridade com o modelo é testada.",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T23:12:09"
+    },
+    "slack:1787277785.327589": {
+      "commit": "9812abf",
+      "nota": "Não era só por ter um esporte: as duas telas abriam com o mesmo primeiro quadro (régua da semana, treino de hoje, menu). A Esporte agora abre com o que é dela — suas sessões e a constância — e o plano vira rodapé.",
+      "versao": "1.0.4 (2)",
+      "em": "2026-08-20T23:12:10"
     }
   }
 }
