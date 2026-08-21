@@ -848,6 +848,18 @@
       "nota": "Dois acertos, Bruno. O aviso de batimento agora só dispara com você PARADO — sem treino, sem sessão, sem passos nos últimos 10 min — e com o batimento alto por 10 minutos seguidos; exercício não conta. E o histórico que sumiu: a sincronização com a memória da pulseira (a cada 4 min, grão de 5 min, atrasada) substituía a curva ao vivo e apagava o pico recente; agora ela é a base e o que chegou ao vivo depois continua.",
       "versao": "1.0.4 (6)",
       "em": "2026-08-21T10:49:17"
+    },
+    "slack:1787320481.918809": {
+      "commit": "489668b",
+      "nota": "Fechado: parado, o aviso agora dispara com 5 minutos de batimento alto, não 10. O que segura o falso alarme é a exigência de repouso (sem treino, sem sessão, sem passos), então dá pra encurtar sem medo.",
+      "versao": "1.0.4 (7)",
+      "em": "2026-08-21T11:16:15"
+    },
+    "slack:1787321592.707449": {
+      "commit": "ae56de9",
+      "nota": "Feito, com uma ressalva de hardware. Em Configurações → Avisos no pulso, agora cada categoria que a pulseira conhece (Telefone, WhatsApp, Instagram, Telegram…) tem o próprio interruptor, e um mestre no topo liga ou desliga todas as notificações do celular de uma vez. A parte 'só o AssumFit' o firmware não permite: o filtro dele é por categoria de app, sem identificador, e o AssumFit só existe no balde 'Outros apps' — ligando esse balde, ela vibra com qualquer app que o firmware não reconhece. A tela diz isso antes de você ligar.",
+      "versao": "1.0.4 (7)",
+      "em": "2026-08-21T11:16:26"
     }
   }
 }
