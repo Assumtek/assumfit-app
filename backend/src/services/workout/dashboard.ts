@@ -51,16 +51,22 @@ export type WorkoutDashboard = {
   volumeEvolution: { day: string; volume: number; series: number }[];
 };
 
+/** Intervalo explícito de datas — o pedido "escolher no calendário" (ago/2026). */
+export type Janela = { from: Date; to: Date };
+
 export async function buildDashboard(
   userId: string,
   days: DashboardPeriod,
+  janela?: Janela,
 ): Promise<WorkoutDashboard> {
-  const since = new Date(Date.now() - days * 86_400_000);
+  // Com janela explícita, `days` só rotula; a consulta é pelo intervalo.
+  const since = janela?.from ?? new Date(Date.now() - days * 86_400_000);
+  const until = janela?.to;
 
   const execucoes = await prisma.workoutExecution.findMany({
     where: {
       userId,
-      startedAt: { gte: since },
+      startedAt: until ? { gte: since, lte: until } : { gte: since },
       // Sessões em andamento ficam fora: o volume delas ainda está mudando, e
       // incluí-las faria o número do dia oscilar enquanto a pessoa treina.
       status: { in: [WorkoutExecutionStatus.FINISHED, WorkoutExecutionStatus.AUTO_CLOSED] },

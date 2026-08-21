@@ -30,6 +30,29 @@ import {
 } from '../services/workout/execution';
 import { messageFor, requestGeneration } from '../services/workout/orchestrator';
 
+/**
+ * `from`/`to` (AAAA-MM-DD) opcionais, além de `days`: o pedido de "escolher um
+ * intervalo de datas no calendário" (ago/2026). `to` é inclusivo até o fim do
+ * dia. Intervalo invertido ou maior que um ano é recusado — não silenciado.
+ */
+const janelaSchema = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+});
+function janelaDeDatas(query: unknown): { from: Date; to: Date } | undefined {
+  const { from, to } = janelaSchema.parse(query);
+  if (!from && !to) return undefined;
+  const inicio = new Date(`${from ?? to}T00:00:00`);
+  const fim = new Date(`${to ?? from}T23:59:59.999`);
+  if (Number.isNaN(inicio.getTime()) || Number.isNaN(fim.getTime()) || fim < inicio) {
+    throw Object.assign(new Error('Intervalo de datas inválido'), { status: 400 });
+  }
+  if (fim.getTime() - inicio.getTime() > 366 * 86_400_000) {
+    throw Object.assign(new Error('Intervalo maior que um ano'), { status: 400 });
+  }
+  return { from: inicio, to: fim };
+}
+
 export const workoutRoutes = Router();
 workoutRoutes.use(requireAuth);
 
@@ -361,9 +384,10 @@ workoutRoutes.get(
     const { days } = z
       .object({ days: z.coerce.number().int().min(1).max(365).default(30) })
       .parse(req.query);
-    const since = new Date(Date.now() - days * 86_400_000);
+    const janela = janelaDeDatas(req.query);
+    const since = janela?.from ?? new Date(Date.now() - days * 86_400_000);
     const rows = await prisma.workoutExecution.findMany({
-      where: { userId: req.userId, startedAt: { gte: since } },
+      where: { userId: req.userId, startedAt: janela ? { gte: since, lte: janela.to } : { gte: since } },
       orderBy: { startedAt: 'desc' },
       include: { workout: { select: { name: true, muscleGroups: true } } },
     });
@@ -513,7 +537,7 @@ workoutRoutes.get(
     const { days } = z
       .object({ days: z.coerce.number().int().refine((d) => [1, 7, 30, 90].includes(d)).default(30) })
       .parse(req.query);
-    res.json(await buildDashboard(req.userId, days as 1 | 7 | 30 | 90));
+    res.json(await buildDashboard(req.userId, days as 1 | 7 | 30 | 90, janelaDeDatas(req.query)));
   }),
 );
 

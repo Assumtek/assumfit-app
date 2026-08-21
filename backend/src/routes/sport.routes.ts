@@ -107,10 +107,19 @@ sportRoutes.patch(
 sportRoutes.get(
   '/sessions',
   asyncRoute<AuthedRequest>(async (req, res) => {
-    const { days } = z.object({ days: z.coerce.number().int().min(1).max(365).default(30) }).parse(req.query);
+    const { days, from, to } = z
+      .object({
+        days: z.coerce.number().int().min(1).max(365).default(30),
+        from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      })
+      .parse(req.query);
+    // Intervalo explícito (calendário) tem precedência sobre `days`.
+    const inicio = from || to ? new Date(`${from ?? to}T00:00:00`) : new Date(Date.now() - days * 86_400_000);
+    const fim = from || to ? new Date(`${to ?? from}T23:59:59.999`) : undefined;
     res.json(
       await prisma.sportSession.findMany({
-        where: { userId: req.userId, startedAt: { gte: new Date(Date.now() - days * 86_400_000) } },
+        where: { userId: req.userId, startedAt: fim ? { gte: inicio, lte: fim } : { gte: inicio } },
         orderBy: { startedAt: 'desc' },
         // A trilha fica FORA da listagem de propósito: 90 dias de sessões com
         // percurso passariam de meio megabyte, e a home só quer datas e somas.

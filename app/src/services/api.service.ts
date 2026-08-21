@@ -854,8 +854,11 @@ export type WorkoutDashboard = {
   volumeEvolution: { day: string; volume: number; series: number }[];
 };
 
-export async function fetchDashboard(days: 1 | 7 | 30 | 90): Promise<WorkoutDashboard> {
-  const { data } = await api.get<WorkoutDashboard>('/workout/dashboard', { params: { days } });
+/** Intervalo explícito (AAAA-MM-DD, inclusivo) — o "escolher no calendário" (ago/2026). */
+export type JanelaDeDatas = { from: string; to: string };
+
+export async function fetchDashboard(days: 1 | 7 | 30 | 90, janela?: JanelaDeDatas): Promise<WorkoutDashboard> {
+  const { data } = await api.get<WorkoutDashboard>('/workout/dashboard', { params: { days, ...janela } });
   return data;
 }
 
@@ -948,9 +951,9 @@ export async function fetchExecutionDetail(id: string): Promise<ExecutionDetail>
   return data;
 }
 
-export async function fetchExecutionHistory(days = 30): Promise<ExecutionHistoryItem[]> {
+export async function fetchExecutionHistory(days = 30, janela?: JanelaDeDatas): Promise<ExecutionHistoryItem[]> {
   const { data } = await api.get<ExecutionHistoryItem[]>('/workout/execution/history', {
-    params: { days },
+    params: { days, ...janela },
   });
   return data;
 }
@@ -1142,7 +1145,7 @@ export async function saveSportSession(input: {
   return data;
 }
 
-export async function fetchSportSessions(days = 30): Promise<SportSession[]> {
-  const { data } = await api.get<SportSession[]>('/sport/sessions', { params: { days } });
+export async function fetchSportSessions(days = 30, janela?: JanelaDeDatas): Promise<SportSession[]> {
+  const { data } = await api.get<SportSession[]>('/sport/sessions', { params: { days, ...janela } });
   return data;
 }

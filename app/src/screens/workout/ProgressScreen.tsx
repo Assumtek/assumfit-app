@@ -5,6 +5,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable } from 'react-native';
 
 import { Note } from '../../components/Card';
+import { ProgressPhotos } from '../../components/ProgressPhotos';
+import { RangeSheet } from '../../components/RangeSheet';
 import { BarChart } from '../../components/charts/BarChart';
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon, type IconName } from '../../components/Icon';
@@ -79,6 +81,16 @@ type Linha = MovementEntry<ExecutionHistoryItem, SportSession>;
 export function ProgressScreen() {
   const [aba, setAba] = useState<'movimento' | 'evolucao'>('movimento');
   const [dias, setDias] = useState<1 | 7 | 30 | 90>(30);
+  /*
+   Período PERSONALIZADO — "escolher um intervalo de datas" (pedido de testador,
+   ago/2026). Com janela, `dias` vira o tamanho dela, para as médias por dia e
+   a série continuarem certas; sem janela, os botões mandam como sempre.
+  */
+  const [janela, setJanela] = useState<{ from: string; to: string } | null>(null);
+  const [escolhendoPeriodo, setEscolhendoPeriodo] = useState(false);
+  const diasDaJanela = janela
+    ? Math.max(1, Math.round((Date.parse(`${janela.to}T12:00:00`) - Date.parse(`${janela.from}T12:00:00`)) / 86_400_000) + 1)
+    : null;
   const [dados, setDados] = useState<WorkoutDashboard | null>(null);
   const [historico, setHistorico] = useState<ExecutionHistoryItem[]>([]);
   const [esportes, setEsportes] = useState<SportSession[]>([]);
@@ -90,14 +102,14 @@ export function ProgressScreen() {
   */
   const carregar = React.useCallback(async () => {
     const [d, h, e] = await Promise.all([
-      fetchDashboard(dias).catch(() => null),
-      fetchExecutionHistory(dias).catch(() => []),
-      fetchSportSessions(dias).catch(() => []),
+      fetchDashboard(dias, janela ?? undefined).catch(() => null),
+      fetchExecutionHistory(dias, janela ?? undefined).catch(() => []),
+      fetchSportSessions(dias, janela ?? undefined).catch(() => []),
     ]);
     setDados(d);
     setHistorico(h);
     setEsportes(e);
-  }, [dias]);
+  }, [dias, janela]);
 
   useEffect(() => {
     setCarregando(true);
@@ -109,7 +121,8 @@ export function ProgressScreen() {
   const linhas = useMemo(() => consolidateMovement(historico, esportes), [historico, esportes]);
   const totais = useMemo(() => movementTotals(linhas), [linhas]);
   const modalidades = useMemo(() => sportBreakdown(esportes), [esportes]);
-  const movimento = rateMovement({ minutes: totais.minutos, days: dias });
+  const diasEfetivos = diasDaJanela ?? dias;
+  const movimento = rateMovement({ minutes: totais.minutos, days: diasEfetivos });
   const maiorModalidade = Math.max(...modalidades.map((m) => m.minutos), 1);
   const maiorGrupo = Math.max(...(dados?.muscleDistribution ?? []).map((g) => g.volume), 1);
 
@@ -157,7 +170,26 @@ export function ProgressScreen() {
         ))}
       </XStack>
 
-      <SeletorDePeriodo atual={dias} onEscolher={setDias} />
+      <SeletorDePeriodo
+        atual={janela ? 'outro' : dias}
+        onEscolher={(d) => {
+          setJanela(null);
+          setDias(d);
+        }}
+        onOutro={() => setEscolhendoPeriodo(true)}
+      />
+      {janela ? (
+        <Data marginTop="$sm">
+          de {janela.from.split('-').reverse().join('/')} a {janela.to.split('-').reverse().join('/')} ·{' '}
+          {diasDaJanela} {diasDaJanela === 1 ? 'dia' : 'dias'}
+        </Data>
+      ) : null}
+      <RangeSheet
+        open={escolhendoPeriodo}
+        onClose={() => setEscolhendoPeriodo(false)}
+        onApply={setJanela}
+        inicial={janela}
+      />
 
       {carregando ? (
         <Body marginTop="$xl">Carregando…</Body>
@@ -167,7 +199,7 @@ export function ProgressScreen() {
           body="Treino concluído e sessão de esporte aparecem aqui, com minutos, calorias e volume. Troque o período acima para olhar mais para trás."
         />
       ) : aba === 'evolucao' ? (
-        <Evolucao dados={musculacao} linhas={linhas} dias={dias} />
+        <Evolucao dados={musculacao} linhas={linhas} dias={diasEfetivos} />
       ) : (
         <>
           <YStack marginTop="$xl" gap="$md">
@@ -374,18 +406,21 @@ export function ProgressScreen() {
 function SeletorDePeriodo({
   atual,
   onEscolher,
+  onOutro,
 }: {
-  atual: number;
+  atual: number | 'outro';
   onEscolher: (dias: 1 | 7 | 30 | 90) => void;
+  onOutro: () => void;
 }) {
+  const opcoes: { dias: 1 | 7 | 30 | 90 | 'outro'; rotulo: string }[] = [...PERIODOS, { dias: 'outro', rotulo: 'Outro' }];
   return (
     <XStack borderRadius={10} borderWidth={1} borderColor="$border" overflow="hidden">
-      {PERIODOS.map((periodo) => {
+      {opcoes.map((periodo) => {
         const ativo = periodo.dias === atual;
         return (
           <Pressable
             key={periodo.dias}
-            onPress={() => onEscolher(periodo.dias)}
+            onPress={() => (periodo.dias === 'outro' ? onOutro() : onEscolher(periodo.dias))}
             accessibilityRole="tab"
             accessibilityState={{ selected: ativo }}
             style={({ pressed }) => [{ flex: 1 }, pressed && { opacity: 0.6 }]}
@@ -656,6 +691,7 @@ function Evolucao({
           );
         })}
       </YStack>
+      <ProgressPhotos />
     </YStack>
   );
 }
