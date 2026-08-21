@@ -1,4 +1,4 @@
-import { diaCorrente, isoHoje, waterNudge } from '../water';
+import { diaCorrente, isoHoje, waterNudge, horariosPorIntervalo } from '../water';
 
 const META = 2500;
 const COPO = 200;
@@ -89,5 +89,24 @@ describe('diaCorrente', () => {
   it('a data nova é a de hoje, e é nela que o próximo gole será gravado', () => {
     // Errar a data corrompe o histórico — é pior que mostrar número errado.
     expect(diaCorrente(ontem, '2026-08-18').date).toBe('2026-08-18');
+  });
+});
+
+describe('horariosPorIntervalo', () => {
+  it('gera de 30 em 30 das 8h às 21h, inclusivo', () => {
+    const h = horariosPorIntervalo('08:00', '21:00', 30);
+    expect(h[0]).toBe('08:00');
+    expect(h[h.length - 1]).toBe('21:00');
+    expect(h).toHaveLength(27);
+  });
+
+  it('janela invertida ou passo absurdo não gera nada', () => {
+    expect(horariosPorIntervalo('21:00', '08:00', 30)).toEqual([]);
+    expect(horariosPorIntervalo('08:00', '21:00', 0)).toEqual([]);
+    expect(horariosPorIntervalo('xx', '21:00', 30)).toEqual([]);
+  });
+
+  it('respeita o teto de horários', () => {
+    expect(horariosPorIntervalo('00:00', '23:59', 5).length).toBeLessThanOrEqual(30);
   });
 });

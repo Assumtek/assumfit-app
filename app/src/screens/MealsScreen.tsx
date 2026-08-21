@@ -15,6 +15,7 @@ import { Body, Button, Data, Display, HeroCard, Label } from '../components/ui';
 import { ageFromBirthDate, calorieGoal, toMeasure, type CalorieGoal } from '../domain/nutritionGoal';
 import { mensagemDaFalha } from '../domain/apiErrors';
 import * as api from '../services/api.service';
+import { MealReminder } from '../components/MealReminder';
 import { useWorkoutStore } from '../store/workout.store';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -877,6 +878,8 @@ export function MealsScreen() {
           })}
         </Section>
       ) : null}
+      <MealReminder />
+
     </DetailScreen>
   );
 }

@@ -18,6 +18,7 @@ import { IntroScreen } from './src/screens/IntroScreen';
 import { useAlertsStore } from './src/store/alerts.store';
 import { useAmbientStore } from './src/store/ambient.store';
 import { useHabitsStore } from './src/store/habits.store';
+import { reagendarLembreteDeRefeicao } from './src/store/meal-reminder.store';
 import { useBiometricStore } from './src/store/biometric.store';
 import { ThemeProvider, useTheme } from './src/theme/ThemeProvider';
 
@@ -93,6 +94,10 @@ function Root() {
        memória, e o próximo arranque apresentava o velho.
       */
       void api.flushSessionSave();
+
+      // Lembrete de refeições: notificação de data fixa cobre três dias, e a
+      // volta ao primeiro plano é quando se estende a janela.
+      void reagendarLembreteDeRefeicao();
     });
     return () => sub.remove();
   }, []);

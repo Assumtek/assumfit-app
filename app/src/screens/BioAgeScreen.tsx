@@ -8,7 +8,7 @@ import { Note, Row, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
 import { MeasureButton } from '../components/MeasureButton';
 import { DivergingBar } from '../components/charts/DivergingBar';
-import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
+import { Button, Body, Data, Display, MetricSm, RatingText } from '../components/ui';
 import { formatYears } from '../domain/bioAge';
 import { useBioAge } from '../hooks/useBioAge';
 import * as api from '../services/api.service';
@@ -36,6 +36,7 @@ export function BioAgeScreen() {
   const user = useUserStore((s) => s.user);
   const age = useUserStore((s) => s.age());
   const [chartWidth, setChartWidth] = useState(0);
+  const [referencias, setReferencias] = useState(false);
 
   /**
    * As duas entradas que não vêm da pulseira: o IMC (declarado na anamnese) e
@@ -132,36 +133,44 @@ export function BioAgeScreen() {
         em quê. Explicação de método completa fica na Ajuda.
       */}
       <Section label="De onde vem este número">
-        <Row>
-          <Body flex={1} lineHeight={18}>
-            A aptidão sai de uma equação que estima o VO₂máx sem teste de esforço, a partir de
-            sexo, idade, IMC, frequência cardíaca de repouso e movimento da semana.
-          </Body>
-        </Row>
-        <Row>
-          <Data flex={1} lineHeight={17}>
-            Jurca R, et al. Assessing cardiorespiratory fitness without performing exercise testing.
-            Am J Prev Med. 2005;29(3):185-193.
-          </Data>
-        </Row>
-        <Row>
-          <Data flex={1} lineHeight={17}>
-            Kaminsky LA, Arena R, Myers J. Reference standards for cardiorespiratory fitness. Mayo
-            Clin Proc. 2015;90(11):1515-1523 — as medianas por idade e sexo.
-          </Data>
-        </Row>
-        <Row>
-          <Data flex={1} lineHeight={17}>
-            Natarajan A, et al. Heart rate variability with photoplethysmography in 8 million
-            individuals. Lancet Digit Health. 2020;2(12):e650-e657 — a curva de HRV por idade.
-          </Data>
-        </Row>
-        <Row last>
-          <Data flex={1} lineHeight={17}>
-            Ohayon MM, et al. Meta-analysis of quantitative sleep parameters. Sleep.
-            2004;27(7):1255-1273 — o sono profundo esperado por idade.
-          </Data>
-        </Row>
+        <Body lineHeight={18}>
+          A aptidão sai de uma equação que estima o VO₂máx sem teste de esforço, a partir de
+          sexo, idade, IMC, frequência cardíaca de repouso e movimento da semana.
+        </Body>
+        {/*
+          As quatro referências ficam DOBRADAS. Abertas por padrão ocupavam uma
+          tela inteira de citação acadêmica que ninguém lia, e soterravam o
+          botão de atualizar (crítica de um testador, ago/2026). Nada sai: quem
+          quer conferir, abre — e sem divisória entre uma e outra, que é peso
+          visual sem informação.
+        */}
+        <YStack alignSelf="flex-start" marginTop="$md">
+          <Button
+            title={referencias ? 'Ocultar referências' : 'Ver referências científicas (4)'}
+            variant="ghost"
+            onPress={() => setReferencias((r) => !r)}
+          />
+        </YStack>
+        {referencias ? (
+          <YStack gap="$md" marginTop="$sm">
+            <Data lineHeight={17}>
+              Jurca R, et al. Assessing cardiorespiratory fitness without performing exercise testing.
+              Am J Prev Med. 2005;29(3):185-193.
+            </Data>
+            <Data lineHeight={17}>
+              Kaminsky LA, Arena R, Myers J. Reference standards for cardiorespiratory fitness. Mayo
+              Clin Proc. 2015;90(11):1515-1523 — as medianas por idade e sexo.
+            </Data>
+            <Data lineHeight={17}>
+              Natarajan A, et al. Heart rate variability with photoplethysmography in 8 million
+              individuals. Lancet Digit Health. 2020;2(12):e650-e657 — a curva de HRV por idade.
+            </Data>
+            <Data lineHeight={17}>
+              Ohayon MM, et al. Meta-analysis of quantitative sleep parameters. Sleep.
+              2004;27(7):1255-1273 — o sono profundo esperado por idade.
+            </Data>
+          </YStack>
+        ) : null}
       </Section>
 
       <MeasureButton kind="oneKey" label="Atualizar medidas" />

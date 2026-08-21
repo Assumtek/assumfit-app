@@ -2,6 +2,7 @@ import { File, Paths } from 'expo-file-system';
 import { create } from 'zustand';
 
 import { QCBand } from '../../modules/qcband';
+import { horariosPorIntervalo } from '../domain/water';
 import { useHabitsStore } from './habits.store';
 import {
   cancelWaterNotifications,
@@ -30,18 +31,41 @@ export const SLOTS_PULSEIRA = 4;
 /** Teto do celular — além disso vira ruído, não hábito. */
 export const MAX_HORARIOS = 8;
 
+export type ModoDoLembrete = 'horarios' | 'intervalo';
+
 type WaterReminderState = {
   ligado: boolean;
+  /** A lista escolhida à mão — vale no modo `horarios`. */
   horarios: string[];
+  /**
+   * Modo por INTERVALO: "a cada 30 min das 8h às 21h" (pedido de um testador,
+   * ago/2026). A lista efetiva é gerada da janela; a pulseira continua
+   * espelhando só os quatro primeiros.
+   */
+  modo: ModoDoLembrete;
+  intervaloMin: number;
+  janela: { inicio: string; fim: string };
+  /** O que está de fato agendado, em qualquer modo. */
+  horariosEfetivos: () => string[];
   /** A pulseira aceitou a última escrita? Decide o texto honesto da tela. */
   pulseiraOk: boolean;
   carregado: boolean;
   salvando: boolean;
   carregar: () => Promise<void>;
   aplicar: (ligado: boolean, horarios?: string[]) => Promise<void>;
+  aplicarIntervalo: (config: { intervaloMin: number; janela: { inicio: string; fim: string } }) => Promise<void>;
+  setModo: (modo: ModoDoLembrete) => Promise<void>;
 };
 
-function gravar(estado: { ligado: boolean; horarios: string[] }) {
+type Gravado = {
+  ligado: boolean;
+  horarios: string[];
+  modo?: ModoDoLembrete;
+  intervaloMin?: number;
+  janela?: { inicio: string; fim: string };
+};
+
+function gravar(estado: Gravado) {
   try {
     new File(Paths.document, ARQUIVO).write(JSON.stringify(estado));
   } catch {
@@ -52,20 +76,34 @@ function gravar(estado: { ligado: boolean; horarios: string[] }) {
 export const useWaterReminderStore = create<WaterReminderState>((set, get) => ({
   ligado: false,
   horarios: PADRAO,
+  modo: 'horarios',
+  intervaloMin: 60,
+  janela: { inicio: '08:00', fim: '21:00' },
   pulseiraOk: false,
   carregado: false,
   salvando: false,
+
+  horariosEfetivos: () => {
+    const { modo, horarios, intervaloMin, janela } = get();
+    return modo === 'intervalo' ? horariosPorIntervalo(janela.inicio, janela.fim, intervaloMin) : horarios;
+  },
 
   carregar: async () => {
     if (get().carregado) return;
     let horarios = PADRAO;
     let ligado = false;
+    let modo: ModoDoLembrete = 'horarios';
+    let intervaloMin = 60;
+    let janela = { inicio: '08:00', fim: '21:00' };
     try {
       const f = new File(Paths.document, ARQUIVO);
       if (f.exists) {
-        const salvo = JSON.parse(await f.text()) as { ligado: boolean; horarios: string[] };
+        const salvo = JSON.parse(await f.text()) as Gravado;
         horarios = salvo.horarios?.length ? salvo.horarios : PADRAO;
         ligado = salvo.ligado;
+        modo = salvo.modo ?? 'horarios';
+        intervaloMin = salvo.intervaloMin ?? 60;
+        janela = salvo.janela ?? janela;
       } else {
         // Primeira vez: herda o que já estiver agendado no celular — o
         // interruptor antigo gravava direto, sem este arquivo.
@@ -74,14 +112,27 @@ export const useWaterReminderStore = create<WaterReminderState>((set, get) => ({
     } catch {
       // Arquivo corrompido = começa do padrão.
     }
-    set({ ligado, horarios, carregado: true });
+    set({ ligado, horarios, modo, intervaloMin, janela, carregado: true });
+  },
+
+  aplicarIntervalo: async ({ intervaloMin, janela }) => {
+    set({ intervaloMin, janela, modo: 'intervalo' });
+    await get().aplicar(true);
+  },
+
+  setModo: async (modo) => {
+    set({ modo });
+    await get().aplicar(get().ligado);
   },
 
   aplicar: async (ligado, horarios) => {
     if (get().salvando) return;
-    const lista = ordenar(horarios ?? get().horarios);
-    set({ salvando: true, ligado, horarios: lista });
-    gravar({ ligado, horarios: lista });
+    // Lista passada à mão é escolha do modo `horarios`.
+    if (horarios) set({ horarios: ordenar(horarios), modo: 'horarios' });
+    const { modo, intervaloMin, janela } = get();
+    const lista = get().horariosEfetivos();
+    set({ salvando: true, ligado });
+    gravar({ ligado, horarios: get().horarios, modo, intervaloMin, janela });
 
     try {
       // Celular primeiro — é o canal que sempre existe. O consumo de hoje
@@ -130,7 +181,8 @@ function consumoDeHoje() {
  * lembrete genérico.
  */
 export async function reagendarLembreteDeAgua() {
-  const { ligado, horarios } = useWaterReminderStore.getState();
-  if (!ligado || horarios.length === 0) return;
-  await scheduleWaterNotifications(horarios, consumoDeHoje()).catch(() => undefined);
+  const estado = useWaterReminderStore.getState();
+  const lista = estado.horariosEfetivos();
+  if (!estado.ligado || lista.length === 0) return;
+  await scheduleWaterNotifications(lista, consumoDeHoje()).catch(() => undefined);
 }

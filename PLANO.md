@@ -372,3 +372,10 @@ Assinatura com aparelho enviado pelo correio cai no CDC: direito de arrependimen
 ## Fora de escopo
 
 Qualquer visão agregada entre usuários, dashboard para terceiros, SSO corporativo ou relatório institucional. O produto expõe os dados de uma pessoa para essa pessoa e mais ninguém.
+
+## Pendência de marca (ago/2026)
+
+- **Imagens do banner da visão geral** — pedido de testador (Leo): imagens
+  alinhadas à identidade visual. A fundadora decidiu: "deixar anotado pra
+  trocarmos as imagens depois". Escolha de marca, não de código — quando os
+  assets existirem, entram em `app/assets/brand/` e o banner os consome.

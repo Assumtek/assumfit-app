@@ -183,7 +183,11 @@ export async function scheduleWaterNotifications(
     : WATER_NUDGE_PADRAO;
 
   let slot = 0;
-  for (let dia = 0; dia < AGUA_DIAS; dia++) {
+  // Lista longa (modo por intervalo: até 30 por dia) cabe em menos dias — o
+  // sistema aceita poucas dezenas de notificações pendentes. A volta ao
+  // primeiro plano reagenda, então um dia de cobertura já basta.
+  const dias = Math.max(1, Math.min(AGUA_DIAS, Math.floor(60 / Math.max(1, times.length))));
+  for (let dia = 0; dia < dias; dia++) {
     for (const hhmm of times) {
       const [hour, minute] = hhmm.split(':').map(Number);
       const quando = new Date(agora);
@@ -205,10 +209,60 @@ export async function scheduleWaterNotifications(
   }
 }
 
+const REFEICAO_PREFIXO = 'refeicao-';
+const REFEICAO_DIAS = 3;
+export const MAX_HORARIOS_REFEICAO = 6;
+
+/**
+ * Que refeição é, pela hora — só para o texto do lembrete ter nome.
+ * O loop do hábito (pedido de um testador, ago/2026): o aviso chega na hora
+ * em que a pessoa costuma comer e abre a tela de Refeições para registrar.
+ */
+function nomeDaRefeicao(hhmm: string): string {
+  const h = Number(hhmm.slice(0, 2));
+  if (h < 10) return 'café da manhã';
+  if (h < 14) return 'almoço';
+  if (h < 18) return 'lanche';
+  return 'jantar';
+}
+
+export async function scheduleMealNotifications(times: string[]) {
+  if (!(await ensurePermission())) return;
+  await cancelMealNotifications();
+  const agora = new Date();
+  let slot = 0;
+  for (let dia = 0; dia < REFEICAO_DIAS; dia++) {
+    for (const hhmm of times) {
+      const [hour, minute] = hhmm.split(':').map(Number);
+      const quando = new Date(agora);
+      quando.setDate(quando.getDate() + dia);
+      quando.setHours(hour, minute, 0, 0);
+      if (quando <= agora) continue;
+      const nome = nomeDaRefeicao(hhmm);
+      await Notifications.scheduleNotificationAsync({
+        identifier: `${REFEICAO_PREFIXO}${slot++}`,
+        content: {
+          title: `Hora do ${nome}?`,
+          body: 'Registre o prato em dois toques — é o que mantém o hábito no loop.',
+          sound: false,
+          data: { route: 'Meals' },
+        },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: quando },
+      });
+    }
+  }
+}
+
+export async function cancelMealNotifications() {
+  for (let i = 0; i < REFEICAO_DIAS * MAX_HORARIOS_REFEICAO + 6; i++) {
+    await Notifications.cancelScheduledNotificationAsync(`${REFEICAO_PREFIXO}${i}`).catch(() => undefined);
+  }
+}
+
 export async function cancelWaterNotifications() {
   // O teto acompanha AGUA_DIAS × MAX_HORARIOS do lembrete (8), com folga:
   // cancelar id inexistente é no-op, deixar um vivo é notificação fantasma.
-  for (let i = 0; i < AGUA_DIAS * 8 + 8; i++) {
+  for (let i = 0; i < AGUA_DIAS * 30 + 8; i++) {
     await Notifications.cancelScheduledNotificationAsync(`${AGUA_PREFIXO}${i}`).catch(() => undefined);
   }
 }

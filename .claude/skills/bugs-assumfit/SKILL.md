@@ -48,7 +48,7 @@ Para cada pendente, decida e anote uma destas categorias:
 |---|---|
 | **defeito** | segue para o passo 3 |
 | **recurso que já existe** | a correção é de VISIBILIDADE (texto, posição, estado vazio que explica), não de função. Dois dos cinco primeiros relatos eram isso |
-| **recurso novo** | não implementa. Vai para o relatório como proposta, com estimativa |
+| **recurso novo / melhoria** | **implementa** (decisão da fundadora, ago/2026: "o agente pode fazer bugs e melhorias sugeridas também"). Só fica como proposta o que é escolha de marca (imagens, identidade) ou mexe em arquitetura/cobrança — e aí o relatório diz por quê |
 | **elogio / ambíguo** | não toca no código. Vai para o relatório com a pergunta a fazer ao testador |
 | **já corrigido** | aponte o commit/build e registre no ledger sem mexer em nada |
 

@@ -39,6 +39,14 @@ type Params = {
   durationSec?: number | null;
   exercises?: number | null;
   volumeKg?: number | null;
+  /**
+   * Uso GENÉRICO do canvas: qualquer tela manda um título e até três métricas
+   * prontas ("82", "score de sono") e ganha o mesmo story — foi o pedido de
+   * "compartilhar de forma instagramável" (ago/2026), que o treino e o esporte
+   * já tinham e a saúde não.
+   */
+  titulo?: string;
+  metricas?: { valor: string; rotulo: string }[];
 };
 
 type BlocoId = 'selo' | 'nome' | 'duracao' | 'exercicios' | 'volume' | 'data' | 'marca';
@@ -52,6 +60,18 @@ const CHIPS: { id: BlocoId; rotulo: string }[] = [
   { id: 'data', rotulo: 'Data' },
   { id: 'marca', rotulo: 'AssumFit' },
 ];
+
+/** Com métricas genéricas, os chips de Duração/Exerc./Carga passam a ter o rótulo de cada métrica. */
+function chipGenerico(
+  chip: { id: BlocoId; rotulo: string },
+  metricas?: { valor: string; rotulo: string }[],
+): { id: BlocoId; rotulo: string } {
+  if (!metricas) return chip;
+  const i = (['duracao', 'exercicios', 'volume'] as BlocoId[]).indexOf(chip.id);
+  if (i < 0) return chip;
+  const m = metricas[i];
+  return m ? { id: chip.id, rotulo: m.rotulo.charAt(0).toUpperCase() + m.rotulo.slice(1) } : chip;
+}
 
 export function WorkoutShareScreen() {
   const navigation = useNavigation();
@@ -175,7 +195,7 @@ export function WorkoutShareScreen() {
       {/* Os chips ligam e desligam blocos — publicar a carga é decisão, não padrão. */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 14 }}>
         <XStack gap="$sm">
-          {CHIPS.map((chip) => (
+          {CHIPS.map((chip) => chipGenerico(chip, params.metricas)).map((chip) => (
             <Pressable
               key={chip.id}
               onPress={() => alternar(chip.id)}
@@ -267,11 +287,24 @@ export function WorkoutShareScreen() {
                 letterSpacing={-0.6}
                 maxWidth={CANVAS_WIDTH - 48}
               >
-                {params.workoutName ?? 'Treino concluído'}
+                {params.titulo ?? params.workoutName ?? 'Treino concluído'}
               </Text>
             </BlocoEditavel>
 
-            {params.durationSec ? (
+            {(params.metricas ?? []).slice(0, 3).map((m, i) => (
+              <BlocoEditavel
+                key={m.rotulo}
+                x={[18, 110, 190][i]}
+                y={330}
+                visivel={ver((['duracao', 'exercicios', 'volume'] as BlocoId[])[i])}
+                selecionado={selecionado === (['duracao', 'exercicios', 'volume'] as BlocoId[])[i]}
+                onSelecionar={escolher((['duracao', 'exercicios', 'volume'] as BlocoId[])[i])}
+              >
+                <Metrica valor={m.valor} rotulo={m.rotulo} />
+              </BlocoEditavel>
+            ))}
+
+            {params.durationSec && !params.metricas ? (
               <BlocoEditavel
                 x={18}
                 y={330}
@@ -283,7 +316,7 @@ export function WorkoutShareScreen() {
               </BlocoEditavel>
             ) : null}
 
-            {params.exercises ? (
+            {params.exercises && !params.metricas ? (
               <BlocoEditavel
                 x={110}
                 y={330}
@@ -295,7 +328,7 @@ export function WorkoutShareScreen() {
               </BlocoEditavel>
             ) : null}
 
-            {params.volumeKg ? (
+            {params.volumeKg && !params.metricas ? (
               <BlocoEditavel
                 x={190}
                 y={330}

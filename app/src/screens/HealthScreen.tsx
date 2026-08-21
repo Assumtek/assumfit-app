@@ -10,7 +10,7 @@ import { Icon, type IconName } from '../components/Icon';
 import { MeasureButton } from '../components/MeasureButton';
 import { Note } from '../components/Card';
 import { SyncProgress } from '../components/SyncProgress';
-import { Body, Card, Data, HeroCard, Label, Metric, MetricSm, RatingText, SectionTitle } from '../components/ui';
+import { Button, Body, Card, Data, HeroCard, Label, Metric, MetricSm, RatingText, SectionTitle } from '../components/ui';
 import { calcBodyBattery } from '../domain/bodyBattery';
 import { isoHoje } from '../domain/water';
 import {
@@ -258,6 +258,29 @@ export function HealthScreen() {
               </Medido>
             ) : null}
           </HeroCard>
+
+          {/*
+            Compartilhar a saúde de hoje como story — o mesmo canvas do treino
+            e do esporte. Pedido de um testador (ago/2026): "compartilhar de
+            forma instagramável". Só números medidos entram; o que está em
+            traço fica de fora do card.
+          */}
+          <YStack alignSelf="flex-start" marginTop="$sm">
+            <Button
+              title="Compartilhar minha saúde"
+              variant="ghost"
+              onPress={() =>
+                (navigation as any).push('WorkoutShare', {
+                  titulo: 'Minha saúde hoje',
+                  metricas: [
+                    sleep ? { valor: String(sleep.score), rotulo: 'sono' } : null,
+                    bio ? { valor: String(bio.bioAge), rotulo: 'idade biológica' } : null,
+                    latest?.hrvMs ? { valor: `${Math.round(latest.hrvMs)} ms`, rotulo: 'HRV' } : null,
+                  ].filter(Boolean),
+                })
+              }
+            />
+          </YStack>
 
           {bateria ? (
             <YStack marginTop="$xxl">

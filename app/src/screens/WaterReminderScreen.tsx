@@ -9,6 +9,7 @@ import { DetailScreen } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
 import { TimeWheel } from '../components/TimeWheel';
 import { Body, Button, Data } from '../components/ui';
+import { INTERVALOS_MIN } from '../domain/water';
 import {
   MAX_HORARIOS,
   SLOTS_PULSEIRA,
@@ -36,10 +37,18 @@ export function WaterReminderScreen() {
   const salvando = useWaterReminderStore((s) => s.salvando);
   const carregar = useWaterReminderStore((s) => s.carregar);
   const aplicar = useWaterReminderStore((s) => s.aplicar);
+  const modo = useWaterReminderStore((s) => s.modo);
+  const intervaloMin = useWaterReminderStore((s) => s.intervaloMin);
+  const janela = useWaterReminderStore((s) => s.janela);
+  const setModo = useWaterReminderStore((s) => s.setModo);
+  const aplicarIntervalo = useWaterReminderStore((s) => s.aplicarIntervalo);
+  const efetivos = useWaterReminderStore((s) => s.horariosEfetivos)();
 
   const [editando, setEditando] = useState(false);
   const [hora, setHora] = useState('10');
   const [minuto, setMinuto] = useState('00');
+  /** Qual ponta da janela a roda está editando, no modo por intervalo. */
+  const [ponta, setPonta] = useState<'inicio' | 'fim' | null>(null);
 
   useEffect(() => {
     void carregar();
@@ -53,9 +62,23 @@ export function WaterReminderScreen() {
   const confirmarNovo = () => {
     const novo = `${hora}:${minuto}`;
     setEditando(false);
+    if (ponta) {
+      const proxima = { ...janela, [ponta]: novo };
+      setPonta(null);
+      void aplicarIntervalo({ intervaloMin, janela: proxima });
+      return;
+    }
     if (horarios.includes(novo)) return;
     // Escolher horário é declarar intenção — liga junto, sem segundo toque.
     void aplicar(true, [...horarios, novo]);
+  };
+
+  const editarPonta = (qual: 'inicio' | 'fim') => {
+    const [h, m] = janela[qual].split(':');
+    setHora(h);
+    setMinuto(MINUTOS.includes(m) ? m : '00');
+    setPonta(qual);
+    setEditando(true);
   };
 
   return (
@@ -66,7 +89,7 @@ export function WaterReminderScreen() {
             <Body color="$foreground">Lembrar de beber água</Body>
             <Data>
               {ligado
-                ? `${horarios.length} ${horarios.length === 1 ? 'horário' : 'horários'} por dia`
+                ? `${efetivos.length} ${efetivos.length === 1 ? 'horário' : 'horários'} por dia`
                 : 'desligado'}
             </Data>
           </YStack>
@@ -79,7 +102,77 @@ export function WaterReminderScreen() {
         </Row>
       </Section>
 
+      {/*
+        Dois jeitos de dizer quando: uma lista de horários, ou "a cada X min das
+        A às B" (pedido de um testador, ago/2026). Mesma notificação por trás;
+        o que muda é quem gera a lista.
+      */}
       <YStack marginTop="$xl">
+        <Section label="Como lembrar">
+          <Row>
+            <Pressable style={{ flex: 1 }} onPress={() => void setModo('horarios')} accessibilityRole="button">
+              <Body color={modo === 'horarios' ? '$foreground' : '$mutedForeground'}>Em horários escolhidos</Body>
+            </Pressable>
+            {modo === 'horarios' ? <Icon name="check" size={16} color={colors.accent} /> : null}
+          </Row>
+          <Row last>
+            <Pressable style={{ flex: 1 }} onPress={() => void setModo('intervalo')} accessibilityRole="button">
+              <Body color={modo === 'intervalo' ? '$foreground' : '$mutedForeground'}>A cada tanto tempo, numa janela</Body>
+            </Pressable>
+            {modo === 'intervalo' ? <Icon name="check" size={16} color={colors.accent} /> : null}
+          </Row>
+        </Section>
+      </YStack>
+
+      {modo === 'intervalo' ? (
+        <YStack marginTop="$xl">
+          <Section label="Intervalo">
+            <Row>
+              <XStack flex={1} gap="$sm" flexWrap="wrap">
+                {INTERVALOS_MIN.map((min) => (
+                  <Pressable
+                    key={min}
+                    onPress={() => void aplicarIntervalo({ intervaloMin: min, janela })}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: intervaloMin === min }}
+                  >
+                    <YStack
+                      paddingHorizontal="$md"
+                      paddingVertical={6}
+                      borderRadius={999}
+                      borderWidth={1}
+                      borderColor={intervaloMin === min ? '$primary' : '$border'}
+                    >
+                      <Text fontSize={13} color={intervaloMin === min ? '$foreground' : '$mutedForeground'}>
+                        {min >= 60 ? `${min / 60}h${min % 60 ? String(min % 60).padStart(2, '0') : ''}` : `${min} min`}
+                      </Text>
+                    </YStack>
+                  </Pressable>
+                ))}
+              </XStack>
+            </Row>
+            <Row>
+              <Pressable style={{ flex: 1 }} onPress={() => editarPonta('inicio')} accessibilityRole="button">
+                <Body color="$foreground">Começa às</Body>
+              </Pressable>
+              <Text fontSize={22} fontWeight="300" color="$foreground">{janela.inicio}</Text>
+            </Row>
+            <Row last>
+              <Pressable style={{ flex: 1 }} onPress={() => editarPonta('fim')} accessibilityRole="button">
+                <Body color="$foreground">Termina às</Body>
+              </Pressable>
+              <Text fontSize={22} fontWeight="300" color="$foreground">{janela.fim}</Text>
+            </Row>
+          </Section>
+          <Data marginTop="$md">
+            {efetivos.length > 0
+              ? `${efetivos.length} lembretes por dia, de ${efetivos[0]} a ${efetivos[efetivos.length - 1]}.`
+              : 'Janela invertida — o fim precisa vir depois do começo.'}
+          </Data>
+        </YStack>
+      ) : null}
+
+      <YStack marginTop="$xl" display={modo === 'intervalo' ? 'none' : 'flex'}>
         <Section label="Horários">
           {horarios.map((h, i) => (
             <Row key={h} last={i === horarios.length - 1}>
@@ -128,7 +221,7 @@ export function WaterReminderScreen() {
           : 'O celular avisa em todos os horários; a pulseira entra quando conectar.'}
       </Data>
 
-      <Modal visible={editando} transparent animationType="slide" onRequestClose={() => setEditando(false)}>
+      <Modal visible={editando} transparent animationType="slide" onRequestClose={() => { setEditando(false); setPonta(null); }}>
         <Pressable
           style={{ flex: 1, backgroundColor: colors.scrim }}
           onPress={() => setEditando(false)}
@@ -143,7 +236,7 @@ export function WaterReminderScreen() {
           paddingBottom={insets.bottom + 16}
         >
           <Body color="$foreground" marginBottom="$md">
-            Novo horário
+            {ponta === 'inicio' ? 'Começar a lembrar às' : ponta === 'fim' ? 'Parar de lembrar às' : 'Novo horário'}
           </Body>
           <XStack justifyContent="center" alignItems="center" gap="$md">
             <TimeWheel items={HORAS} value={hora} onChange={setHora} />
@@ -151,7 +244,7 @@ export function WaterReminderScreen() {
             <TimeWheel items={MINUTOS} value={minuto} onChange={setMinuto} />
           </XStack>
           <YStack marginTop="$lg">
-            <Button title={`Lembrar às ${hora}:${minuto}`} onPress={confirmarNovo} />
+            <Button title={ponta ? `Usar ${hora}:${minuto}` : `Lembrar às ${hora}:${minuto}`} onPress={confirmarNovo} />
           </YStack>
         </YStack>
       </Modal>

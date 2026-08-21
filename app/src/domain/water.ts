@@ -90,3 +90,28 @@ export const WATER_NUDGE_PADRAO: WaterNudge = {
   title: 'Hora da água',
   body: 'Um copo agora conta para a meta de hoje.',
 };
+
+/**
+ * Horários gerados por INTERVALO dentro de uma janela: "a cada 30 min das 8h às 21h".
+ *
+ * Pedido de um testador (ago/2026), além da lista de horários. Inclusivo nas
+ * duas pontas; janela invertida ou passo inválido devolvem lista vazia em vez
+ * de um laço sem fim. O teto protege o agendamento do sistema, que aceita
+ * poucas dezenas de notificações pendentes.
+ */
+export const INTERVALOS_MIN = [30, 45, 60, 90, 120] as const;
+export const MAX_HORARIOS_GERADOS = 30;
+
+export function horariosPorIntervalo(inicio: string, fim: string, passoMin: number): string[] {
+  const [hi, mi] = inicio.split(':').map(Number);
+  const [hf, mf] = fim.split(':').map(Number);
+  if (![hi, mi, hf, mf].every(Number.isFinite) || !Number.isFinite(passoMin) || passoMin < 5) return [];
+  const a = hi * 60 + mi;
+  const b = hf * 60 + mf;
+  if (b < a) return [];
+  const out: string[] = [];
+  for (let t = a; t <= b && out.length < MAX_HORARIOS_GERADOS; t += passoMin) {
+    out.push(`${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`);
+  }
+  return out;
+}
