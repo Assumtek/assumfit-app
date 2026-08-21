@@ -129,11 +129,6 @@ struct AguaWidgetView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text("ÁGUA DE HOJE")
-                .font(.system(size: 9, weight: .bold))
-                .tracking(1.6)
-                .foregroundStyle(acento)
-
             if let agua = entry.agua {
                 conteudo(agua)
             } else {
@@ -153,50 +148,53 @@ struct AguaWidgetView: View {
         }
     }
 
+    /*
+     Só duas peças: o anel e o "+". A primeira versão tinha um pill "+ 200 ml"
+     ao lado e ficou quebrada no tamanho pequeno (fundadora, 21/08). O volume
+     do copo não precisa estar escrito — é o copo configurado no app, e o anel
+     mostra o resultado do toque na hora.
+     */
     private func conteudo(_ agua: AguaDeHoje) -> some View {
-        HStack(alignment: .center, spacing: 12) {
-            // O anel: a mesma peça da tela de Água, reduzida.
+        HStack(alignment: .center, spacing: 0) {
+            Spacer(minLength: 0)
             ZStack {
-                Circle().stroke(Color.white.opacity(0.12), lineWidth: 6)
+                Circle().stroke(Color.white.opacity(0.12), lineWidth: 7)
                 Circle()
                     .trim(from: 0, to: fracao)
-                    .stroke(acento, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .stroke(acento, style: StrokeStyle(lineWidth: 7, lineCap: .round))
                     .rotationEffect(.degrees(-90))
-                VStack(spacing: 0) {
+                VStack(spacing: 1) {
                     Text(litros(agua.ml))
-                        .font(.system(size: 16, weight: .light))
+                        .font(.system(size: familia == .systemMedium ? 22 : 18, weight: .light))
                         .foregroundStyle(.white)
                     Text("de \(litros(agua.metaMl)) L")
-                        .font(.system(size: 8))
+                        .font(.system(size: 9))
                         .foregroundStyle(.white.opacity(0.56))
                 }
             }
-            .frame(width: 64, height: 64)
+            .frame(width: familia == .systemMedium ? 92 : 76, height: familia == .systemMedium ? 92 : 76)
+            Spacer(minLength: 0)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Spacer(minLength: 0)
-                if #available(iOS 17.0, *) {
-                    Button(intent: RegistrarAguaIntent()) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "plus")
-                                .font(.system(size: 10, weight: .bold))
-                            Text("\(agua.copoMl) ml")
-                                .font(.system(size: 11, weight: .semibold))
-                        }
+            if #available(iOS 17.0, *) {
+                Button(intent: RegistrarAguaIntent()) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 18, weight: .bold))
                         .foregroundStyle(tinta)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 7)
-                        .background(Capsule().fill(acento))
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    // Antes do iOS 17 não há botão em widget: o toque abre o app.
-                    Text("Toque para registrar")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.white.opacity(0.56))
+                        .frame(width: 44, height: 44)
+                        .background(Circle().fill(acento))
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Registrar um copo de água")
+            } else {
+                Image(systemName: "plus")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(tinta)
+                    .frame(width: 44, height: 44)
+                    .background(Circle().fill(acento))
             }
+            Spacer(minLength: 0)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var vazio: some View {
