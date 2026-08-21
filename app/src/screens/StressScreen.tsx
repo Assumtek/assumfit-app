@@ -10,7 +10,7 @@ import { DayPickerRow, useHistoricoDoDia } from '../components/DayPicker';
 import { DayChart } from '../components/charts/DayChart';
 import { MeasureButton } from '../components/MeasureButton';
 import { BarChart } from '../components/charts/BarChart';
-import { Data, Display, RatingText } from '../components/ui';
+import { Body, Data, Display, RatingText } from '../components/ui';
 import { rateStress, shown, stateColor } from '../domain/ratings';
 import { useBiometricStore } from '../store/biometric.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -43,6 +43,10 @@ export function StressScreen() {
         >
           {rating.label}
         </RatingText>
+        {/* Uma frase de abertura: o que este número É. O método inteiro fica na
+            Ajuda — pedido dos testadores (ago/2026), que queriam entender a
+            métrica sem sair da tela. */}
+        <Body marginTop="$md">O firmware da pulseira converte a variabilidade entre batimentos numa escala de 0 a 100. É carga do sistema nervoso, não humor — treino pesado e dia tenso dão número parecido.</Body>
       </YStack>
 
       <DayPickerRow

@@ -9,7 +9,7 @@ import { FetchFromBandButton, MeasureButton } from '../components/MeasureButton'
 import { MeasuredAt } from '../components/MeasuredAt';
 import { DayPickerRow, useHistoricoDoDia } from '../components/DayPicker';
 import { LineChart } from '../components/charts/LineChart';
-import { Data, Display, RatingText } from '../components/ui';
+import { Body, Data, Display, RatingText } from '../components/ui';
 import { rateHrv, shown } from '../domain/ratings';
 import { faixaInicial, FAIXAS, noPeriodo, rotulosDoPeriodo, type Faixa } from '../domain/series';
 import { useBiometricStore } from '../store/biometric.store';
@@ -84,6 +84,10 @@ export function HrvScreen() {
         >
           {rating.label}
         </RatingText>
+        {/* Uma frase de abertura: o que este número É. O método inteiro fica na
+            Ajuda — pedido dos testadores (ago/2026), que queriam entender a
+            métrica sem sair da tela. */}
+        <Body marginTop="$md">Variação entre um batimento e o seguinte, medida pela pulseira de hora em hora. Quanto maior, mais folga o corpo tem — e a comparação que vale é com a sua própria linha de base.</Body>
       </YStack>
 
       <DayPickerRow

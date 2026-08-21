@@ -601,3 +601,9 @@ jul/2026: **tela de métrica não carrega rodapé explicativo fixo.** Os blocos
 `<Note>` que sobrevivem nas telas são de ESTADO (erro, vazio, consentimento
 pendente, wearable simulado), nunca texto permanente de fim de página. Conteúdo
 novo que precise se explicar entra na Ajuda, não num rodapé.
+
+A nuance, decidida em ago/2026 depois de três pedidos de "explicar" dos
+testadores: **uma frase de abertura cabe na tela** — logo abaixo da avaliação,
+dizendo o que aquele número É ("o firmware converte a variabilidade entre
+batimentos numa escala de 0 a 100"). É abertura, não rodapé: uma frase, sem
+método, sem faixas, sem referência. O COMO continua na Ajuda.

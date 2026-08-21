@@ -97,6 +97,10 @@ export function SleepScreen() {
         >
           {rating.label}
         </RatingText>
+        {/* Uma frase de abertura: o que este número É. O método inteiro fica na
+            Ajuda — pedido dos testadores (ago/2026), que queriam entender a
+            métrica sem sair da tela. */}
+        <Body marginTop="$md">O score nasce das fases medidas: metade é quanto você dormiu, um quarto é o sono profundo, o resto é REM e continuidade — uma noite longa e picada pode pontuar menos que uma curta e inteira.</Body>
       </YStack>
 
       <YStack onLayout={(e: LayoutChangeEvent) => setChartWidth(e.nativeEvent.layout.width)}>
