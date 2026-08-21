@@ -73,6 +73,12 @@ services:
       # primeira chamada real. Já custou uma investigação em desenvolvimento;
       # em produção ela entra explícita, pelo .env da máquina.
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      # A frase da tela de Saúde é redigida pela OpenAI (decisão de 21/08/2026).
+      # A lista é explícita: sem esta linha a variável do .env NÃO chega ao
+      # contêiner, e o módulo cai na Anthropic ou no molde — em silêncio, não;
+      # ele loga uma vez por processo.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
     healthcheck:
       test: ['CMD', 'python', '-c', "import urllib.request;urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s

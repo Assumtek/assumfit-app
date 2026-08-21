@@ -17,6 +17,16 @@ O que este módulo NÃO faz, e por que:
 
 E se falhar — sem chave, sem rede, timeout, resposta fora do formato — devolve
 `None` e quem chama usa o molde determinístico. A tela nunca fica sem frase.
+
+## Fornecedor
+
+Desde 21/08/2026 (decisão da fundadora) a frase é redigida pela **API da
+OpenAI**. O motivo foi operacional: a tela mostrava o molde quase sempre, e o
+log não dizia nada — `write()` saía em silêncio por falta de chave no
+contêiner. A troca veio junto com duas regras novas: **chave ausente vira
+linha de log** (uma por processo, não uma por chamada), e a Anthropic fica
+como segunda via enquanto a chave da OpenAI não estiver em produção, para o
+deploy não piorar nada.
 """
 
 from __future__ import annotations
@@ -27,20 +37,19 @@ from dataclasses import dataclass
 
 from models.insight import HomeInsight
 
-#: Sonnet 5. Medido contra Opus 5 na mesma tarefa: a frase sai equivalente, e
-#: redigir duas frases a partir de fatos prontos não é trabalho de modelo de topo.
-#: Haiku pela mesma régua do resto (jul/2026): redigir duas frases sobre fatos
-#: prontos é exatamente o trabalho dele, e esta é a chamada mais FREQUENTE do
-#: produto — roda a cada abertura da Home. O molde determinístico continua
-#: sendo o fallback quando o modelo falha.
-MODEL = "claude-haiku-4-5"
+#: Modelo da OpenAI. A tarefa é redigir duas frases a partir de fatos prontos —
+#: a classe "mini" é a régua certa de custo e latência, e esta é a chamada mais
+#: FREQUENTE do produto (roda a cada abertura da Home). Troca-se por variável
+#: de ambiente, sem deploy de código.
+OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4.1-mini")
+
+#: Segunda via, enquanto a chave da OpenAI não estiver no contêiner.
+ANTHROPIC_MODEL = "claude-haiku-4-5"
 
 #: Teto de saída, com folga deliberada.
 #:
 #: Era 300, e isso truncava o JSON no meio — a resposta chegava sem fechar aspas,
-#: `json.loads` estourava, e a frase caía no molde sem nenhuma pista do motivo. A
-#: causa é que o thinking é LIGADO POR PADRÃO nos modelos 5 e consome o MESMO
-#: orçamento de `max_tokens`: o raciocínio comia os 300 tokens antes do texto.
+#: `json.loads` estourava, e a frase caía no molde sem nenhuma pista do motivo.
 MAX_TOKENS = 1500
 
 #: Segundos. A home mostra o cálculo local enquanto isso; passar disso é pior
@@ -96,7 +105,8 @@ com maiúscula. Isso é regra de design da tela, não preferência.
 de adivinhação: "sua recuperação está 27 ms abaixo da sua média" vale; "você \
 parece cansado" não.
 6. Se a mensagem disser que nenhum sinal se destaca, NÃO invente um culpado. \
-Diga que o dia está equilibrado e siga para a orientação."""
+Diga que o dia está equilibrado e siga para a orientação.
+7. Responda SOMENTE com o JSON pedido: chaves eyebrow, headline e detail."""
 
 
 @dataclass(frozen=True)
@@ -174,54 +184,32 @@ def _prompt(f: Facts) -> str:
     return "\n".join(linhas)
 
 
+#: Avisar UMA vez por processo que não há chave nenhuma. Antes, `write()` saía
+#: em silêncio, e "o modelo nunca foi chamado" e "o modelo falhou" eram
+#: indistinguíveis no log — foi assim que a home ficou dias no molde sem que
+#: nada acusasse (ago/2026).
+_avisou_sem_chave = False
+
+
 def write(facts: Facts, fallback: HomeInsight) -> HomeInsight | None:
     """Redige a frase. `None` em qualquer falha — quem chama usa o molde.
 
     `fallback` entra para preservar o que o modelo NÃO decide: a ação do botão
     e o rótulo de transição, ambos calculados.
     """
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    global _avisou_sem_chave
+
+    if os.environ.get("OPENAI_API_KEY"):
+        dados = _redigir_openai(facts)
+    elif os.environ.get("ANTHROPIC_API_KEY"):
+        dados = _redigir_anthropic(facts)
+    else:
+        if not _avisou_sem_chave:
+            print("[insight_llm] sem OPENAI_API_KEY nem ANTHROPIC_API_KEY: a home fica no molde", flush=True)
+            _avisou_sem_chave = True
         return None
 
-    try:
-        import anthropic
-    except ImportError:
-        return None
-
-    try:
-        client = anthropic.Anthropic(timeout=TIMEOUT_S, max_retries=1)
-        response = client.messages.create(
-            model=MODEL,
-            max_tokens=MAX_TOKENS,
-            system=SYSTEM,
-            # NEM `thinking` NEM `effort`: o Haiku 4.5 é anterior à família que
-            # aceita `output_config.effort` e REJEITA o parâmetro com 400 — em
-            # produção TODA chamada falhava e a frase caía no molde, em
-            # silêncio. Omitir `thinking` já significa "sem thinking" nesta
-            # geração (confirmado na referência da API, ago/2026). O controle
-            # de custo aqui é a escolha do próprio Haiku.
-            output_config={
-                "format": {"type": "json_schema", "schema": SCHEMA},
-            },
-            messages=[{"role": "user", "content": _prompt(facts)}],
-        )
-
-        # Classificador de segurança pode recusar. Numa tela de saúde isso é
-        # plausível, e a resposta certa é o molde — não uma tela vazia.
-        if response.stop_reason == "refusal":
-            return None
-
-        texto = next((b.text for b in response.content if b.type == "text"), None)
-        if not texto:
-            return None
-        dados = json.loads(texto)
-    except Exception as err:
-        # Rede, chave inválida, timeout, JSON quebrado: todos têm a mesma
-        # resposta correta — cair no molde. Mas o MOTIVO vai para o log: sem
-        # isso, "a frase não veio" e "a frase veio errada" ficam
-        # indistinguíveis, e não há como saber se o LLM está sequer sendo
-        # chamado.
-        print(f"[insight_llm] falhou: {type(err).__name__}: {err}", flush=True)
+    if dados is None:
         return None
 
     if not _plausivel(dados, facts):
@@ -245,6 +233,82 @@ def write(facts: Facts, fallback: HomeInsight) -> HomeInsight | None:
         # contra a outra depois.
         source="llm",
     )
+
+
+def _redigir_openai(facts: Facts) -> dict | None:
+    """Uma chamada à OpenAI com saída presa ao esquema. `None` em qualquer falha."""
+    try:
+        from openai import OpenAI
+    except ImportError:
+        print("[insight_llm] pacote openai não instalado", flush=True)
+        return None
+
+    try:
+        client = OpenAI(timeout=TIMEOUT_S, max_retries=1)
+        response = client.chat.completions.create(
+            model=OPENAI_MODEL,
+            max_tokens=MAX_TOKENS,
+            messages=[
+                {"role": "system", "content": SYSTEM},
+                {"role": "user", "content": _prompt(facts)},
+            ],
+            # `strict` faz a API garantir a FORMA: três chaves, sem extras. O
+            # CONTEÚDO continua passando por `_plausivel`, que é quem barra
+            # número inventado.
+            response_format={
+                "type": "json_schema",
+                "json_schema": {"name": "home_insight", "schema": SCHEMA, "strict": True},
+            },
+        )
+        escolha = response.choices[0]
+        # Recusa do classificador vem como campo próprio, com `content` vazio.
+        if getattr(escolha.message, "refusal", None):
+            print(f"[insight_llm] openai recusou: {escolha.message.refusal[:120]}", flush=True)
+            return None
+        texto = escolha.message.content
+        if not texto:
+            print(f"[insight_llm] openai sem texto (finish_reason={escolha.finish_reason})", flush=True)
+            return None
+        return json.loads(texto)
+    except Exception as err:
+        # Rede, chave inválida, timeout, JSON quebrado: todos têm a mesma
+        # resposta correta — cair no molde. Mas o MOTIVO vai para o log: sem
+        # isso, "a frase não veio" e "a frase veio errada" ficam
+        # indistinguíveis, e não há como saber se o modelo está sequer sendo
+        # chamado.
+        print(f"[insight_llm] openai falhou: {type(err).__name__}: {err}", flush=True)
+        return None
+
+
+def _redigir_anthropic(facts: Facts) -> dict | None:
+    """Segunda via, idêntica à versão anterior deste módulo."""
+    try:
+        import anthropic
+    except ImportError:
+        return None
+
+    try:
+        client = anthropic.Anthropic(timeout=TIMEOUT_S, max_retries=1)
+        response = client.messages.create(
+            model=ANTHROPIC_MODEL,
+            max_tokens=MAX_TOKENS,
+            system=SYSTEM,
+            # NEM `thinking` NEM `effort`: o Haiku 4.5 é anterior à família que
+            # aceita `output_config.effort` e REJEITA o parâmetro com 400.
+            output_config={
+                "format": {"type": "json_schema", "schema": SCHEMA},
+            },
+            messages=[{"role": "user", "content": _prompt(facts)}],
+        )
+        if response.stop_reason == "refusal":
+            return None
+        texto = next((b.text for b in response.content if b.type == "text"), None)
+        if not texto:
+            return None
+        return json.loads(texto)
+    except Exception as err:
+        print(f"[insight_llm] anthropic falhou: {type(err).__name__}: {err}", flush=True)
+        return None
 
 
 def _plausivel(dados: dict, facts: Facts) -> bool:
