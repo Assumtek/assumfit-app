@@ -1,7 +1,7 @@
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
-import { Modal, Pressable, Switch } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, Switch } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Row, Section } from '../components/Card';
@@ -118,6 +118,9 @@ export function MealReminderScreen() {
       </Data>
 
       <Modal visible={editando} transparent animationType="slide" onRequestClose={() => setEditando(false)}>
+        {/* O teclado cobria o campo "ou digite" (testador, 22/08): a folha
+            sobe junto com ele. */}
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <Pressable
           style={{ flex: 1, backgroundColor: colors.scrim }}
           onPress={() => setEditando(false)}
@@ -146,6 +149,7 @@ export function MealReminderScreen() {
             <Button title={`Lembrar às ${escolhido}`} onPress={confirmarNovo} />
           </YStack>
         </YStack>
+        </KeyboardAvoidingView>
       </Modal>
     </DetailScreen>
   );
