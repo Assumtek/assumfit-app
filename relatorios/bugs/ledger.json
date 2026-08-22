@@ -1046,6 +1046,12 @@
       "nota": "Alongamento unilateral agora roda o cronômetro uma vez por lado, com o botão Outro lado entre eles.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T15:59:00"
+    },
+    "slack:1787424929.229809": {
+      "commit": "46af878",
+      "nota": "Feito: o descanso agora corre também depois da última série e continua na tela do próximo exercício. Só não aparece depois do último exercício do treino.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T16:00:44"
     }
   }
 }
