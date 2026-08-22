@@ -310,7 +310,26 @@ export function CheckinScreen() {
                   onPress={handleStart}
                 />
               );
-              if (!esporte) return guiado;
+              /*
+               Ajustar o de hoje antes de começar — "hoje tenho só 30 minutos"
+               (testador, 22/08). Abre o personal com a frase pronta; ele
+               propõe o ajuste pontual e a pessoa confirma. Ação secundária:
+               o caminho principal continua sendo começar.
+              */
+              const personal = (
+                <Button
+                  key="personal"
+                  title="Ajustar o treino de hoje com o personal"
+                  variant="ghost"
+                  size="md"
+                  onPress={() =>
+                    (navigation as any).push('Personal', {
+                      mensagemInicial: `Sobre o treino de hoje (${selected.workout!.name}): hoje tenho só 30 minutos. Dá para adaptar só o de hoje?`,
+                    })
+                  }
+                />
+              );
+              if (!esporte) return [guiado, personal];
 
               const cronometro = (
                 <Button
@@ -328,7 +347,7 @@ export function CheckinScreen() {
                   }
                 />
               );
-              return [cronometro, guiado];
+              return [cronometro, guiado, personal];
             })()}
           </YStack>
         ) : null}

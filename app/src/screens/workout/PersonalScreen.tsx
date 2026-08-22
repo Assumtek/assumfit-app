@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useRef, useState } from 'react';
@@ -39,7 +39,14 @@ export function PersonalScreen() {
   const rolagem = useRef<ScrollView>(null);
 
   const [turnos, setTurnos] = useState<ChatTurn[]>([]);
-  const [texto, setTexto] = useState('');
+  /*
+   Texto inicial vindo do check-in ("hoje tenho só 30 minutos"): a caixa já
+   nasce com a frase, e a pessoa só confirma ou edita. Pedido de um testador
+   (22/08): falar com o personal NA HORA de começar, para ajustar o de hoje.
+  */
+  const route = useRoute();
+  const inicial = (route.params as { mensagemInicial?: string } | undefined)?.mensagemInicial ?? '';
+  const [texto, setTexto] = useState(inicial);
   const [pensando, setPensando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   /*

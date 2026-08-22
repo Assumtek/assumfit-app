@@ -1,7 +1,7 @@
 import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState , useRef} from 'react';
 import { Alert, AppState, KeyboardAvoidingView, Platform, Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -15,6 +15,10 @@ import {
 
 import { Icon } from '../../components/Icon';
 import { Button } from '../../components/ui';
+import { acumularKcal, type PerfilParaEnergia } from '../../domain/workoutEnergy';
+import { fetchAnamnesis } from '../../services/api.service';
+import { useBiometricStore } from '../../store/biometric.store';
+import { useUserStore } from '../../store/user.store';
 import { formatSessionClock } from '../../domain/workout';
 import type { WorkoutExercise } from '../../services/api.service';
 import { elapsedSeconds, useWorkoutStore } from '../../store/workout.store';
@@ -107,6 +111,44 @@ export function TrainingScreen() {
   */
   const [footerHeight, setFooterHeight] = useState(0);
 
+  /*
+   bpm e calorias DURANTE o treino (testador, 22/08). O batimento é o da
+   pulseira ao vivo; a caloria é estimada por Keytel a partir dele, do peso
+   (anamnese), do sexo e da idade — sem peso, só o batimento aparece. O
+   acúmulo soma o gasto de cada intervalo entre leituras, com teto por
+   intervalo para o app suspenso não cobrar uma hora de uma vez.
+  */
+  const bpmAoVivo = useBiometricStore((s) => s.latest?.heartRate ?? null);
+  const sexo = useUserStore((s) => s.user.sex);
+  const idade = useUserStore((s) => s.age)();
+  const [pesoKg, setPesoKg] = useState<number | null>(null);
+  const [kcal, setKcal] = useState(0);
+  const ultimaAmostra = useRef<number | null>(null);
+
+  useEffect(() => {
+    let vivo = true;
+    fetchAnamnesis()
+      .then((a) => {
+        const peso = (a?.answers as { weightKg?: number } | undefined)?.weightKg;
+        if (vivo && typeof peso === 'number' && peso > 0) setPesoKg(peso);
+      })
+      .catch(() => undefined);
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!execution || bpmAoVivo == null || pesoKg == null) return;
+    const agora = Date.now();
+    const anterior = ultimaAmostra.current;
+    ultimaAmostra.current = agora;
+    if (anterior == null) return;
+    const perfil: PerfilParaEnergia = { sex: sexo, age: idade, weightKg: pesoKg };
+    setKcal((acc) => acumularKcal(acc, bpmAoVivo, agora - anterior, perfil));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bpmAoVivo, execution?.id, pesoKg]);
+
   useEffect(() => {
     if (!execution || !workout) void refresh();
   }, [execution, workout, refresh]);
@@ -170,15 +212,23 @@ export function TrainingScreen() {
 
   const current = flat[index];
 
-  // A fase da ilha acompanha o exercício corrente.
+  /*
+   A fase da ilha acompanha o exercício corrente — e, no DESCANSO, vira a
+   contagem regressiva com o que vem a seguir (testador, 22/08: "na pausa o
+   widget deveria mostrar o tempo de descanso e o exercício"). `endsAtMs`
+   é o que faz a ilha contar para trás; sem ele, volta ao relógio da sessão.
+  */
   useEffect(() => {
     if (!execution || !current) return;
+    const proximo = restEndsAt ? (nextUpRef.current?.nextName ?? current.exercise.name) : null;
     atualizarIlhaDeEsporte({
       startedAtMs: Date.parse(execution.startedAt),
-      phase: current.exercise.name,
+      phase: restEndsAt ? `Descanso · a seguir: ${proximo}` : current.exercise.name,
+      endsAtMs: restEndsAt ?? null,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [execution?.id, current?.exercise.id]);
+  }, [execution?.id, current?.exercise.id, restEndsAt]);
+  const nextUpRef = useRef<{ nextName: string | null } | null>(null);
 
   /*
    Botões da ilha no treino guiado: "encerrar" abre o fim de treino. Pausa não
@@ -268,6 +318,7 @@ export function TrainingScreen() {
       : flat[index + 1]
         ? { nextLabel: 'A seguir', nextName: flat[index + 1].exercise.name }
         : { nextLabel: null, nextName: null };
+  nextUpRef.current = nextUp;
 
   useEffect(() => {
     if (!pedido || !workout) return;
@@ -391,6 +442,27 @@ export function TrainingScreen() {
               {formatSessionClock(elapsedSec)}
             </Text>
           </XStack>
+          {bpmAoVivo != null ? (
+            <XStack
+              alignItems="center"
+              gap={6}
+              borderRadius={999}
+              borderWidth={1}
+              borderColor="$border"
+              paddingHorizontal="$md"
+              paddingVertical="$md"
+            >
+              <Icon name="heart" size={16} color={colors.text} />
+              <Text fontSize={15} fontWeight="500" color="$foreground" fontVariant={['tabular-nums']}>
+                {bpmAoVivo}
+              </Text>
+              {pesoKg != null ? (
+                <Text fontSize={13} color="$mutedForeground" fontVariant={['tabular-nums']}>
+                  · {Math.round(kcal)} kcal
+                </Text>
+              ) : null}
+            </XStack>
+          ) : null}
         </XStack>
       </XStack>
 
