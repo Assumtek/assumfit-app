@@ -896,6 +896,12 @@
       "nota": "Widget de água simplificado: anel + botão redondo com +.",
       "versao": "1.0.5 (2)",
       "em": "2026-08-21T20:35:49"
+    },
+    "AGXmsO-bg55KxjCEdAB5Uqs": {
+      "commit": "961e28c",
+      "nota": "Era o 'Abrir Relógio' do planejador de sono: o atalho para o app Relógio não funciona no iOS 26 e a falha ficava muda. Agora, no iOS 26, o AssumFit marca o despertador sozinho — pede permissão uma vez e o alarme aparece como qualquer outro do iPhone. Em iOS anterior, abre o Relógio e avisa se não conseguir.",
+      "versao": "1.0.5 (2)",
+      "em": "2026-08-21T21:20:51"
     }
   }
 }
