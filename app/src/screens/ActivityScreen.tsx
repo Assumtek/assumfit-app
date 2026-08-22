@@ -10,6 +10,7 @@ import { LineChart } from '../components/charts/LineChart';
 import { MeasuredAt } from '../components/MeasuredAt';
 import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
 import { rateActivity } from '../domain/ratings';
+import { caloriasDoDia, distanciaDoDia } from '../domain/activityEstimates';
 import * as api from '../services/api.service';
 import { useBiometricStore } from '../store/biometric.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -65,12 +66,17 @@ export function ActivityScreen() {
    não mandou, ESTIMA pelos passos e diz que é estimativa: 0,75 m por passo e
    ~0,04 kcal por passo são as aproximações de pedômetro, não medição.
   */
-  const distanciaKm = activity.distanceKm > 0 ? activity.distanceKm : (activity.steps * 0.75) / 1000;
-  const kcal = activity.activeKcal > 0 ? activity.activeKcal : Math.round(activity.steps * 0.04);
-  const estimado = activity.steps > 0 && (activity.distanceKm <= 0 || activity.activeKcal <= 0);
+  /*
+   E quando a pulseira MANDOU, mas o valor não cabe nos passos (1.253 passos,
+   3,2 km e 886.149 kcal — testador, 22/08), também estima: quem decide é
+   `domain/activityEstimates.ts`, por passo.
+  */
+  const distancia = distanciaDoDia(activity.steps, activity.distanceKm * 1000);
+  const calorias = caloriasDoDia(activity.steps, activity.activeKcal);
+  const estimado = activity.steps > 0 && (distancia.fonte === 'estimada' || calorias.fonte === 'estimada');
   const rows = [
-    { label: activity.distanceKm > 0 ? 'Distância' : 'Distância (estimada)', value: `${distanciaKm.toFixed(1).replace('.', ',')} km` },
-    { label: activity.activeKcal > 0 ? 'Calorias ativas' : 'Calorias (estimadas)', value: `${kcal} kcal` },
+    { label: distancia.fonte === 'pulseira' ? 'Distância' : 'Distância (estimada)', value: `${distancia.valor.toFixed(1).replace('.', ',')} km` },
+    { label: calorias.fonte === 'pulseira' ? 'Calorias ativas' : 'Calorias (estimadas)', value: `${calorias.valor} kcal` },
     { label: 'Minutos ativos', value: `${minutosHoje ?? activity.activeMin} min` },
   ];
 
@@ -85,8 +91,8 @@ export function ActivityScreen() {
                 titulo: 'Minha atividade hoje',
                 metricas: [
                   { valor: activity.steps.toLocaleString('pt-BR'), rotulo: 'passos' },
-                  activity.steps > 0 ? { valor: distanciaKm.toFixed(1).replace('.', ','), rotulo: 'km' } : null,
-                  activity.steps > 0 ? { valor: String(kcal), rotulo: 'kcal' } : null,
+                  activity.steps > 0 ? { valor: distancia.valor.toFixed(1).replace('.', ','), rotulo: 'km' } : null,
+                  activity.steps > 0 ? { valor: String(calorias.valor), rotulo: 'kcal' } : null,
                 ].filter(Boolean),
               })
             }
