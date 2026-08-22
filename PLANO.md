@@ -376,6 +376,7 @@ Qualquer visão agregada entre usuários, dashboard para terceiros, SSO corporat
 ## Pendência de marca (ago/2026)
 
 - **Imagens do banner da visão geral** — pedido de testador (Leo): imagens
+- **Vídeos de exercício do MUVX no AssumFit** (pedido do Leo, 22/08/2026): é decisão de marca e licença — o material é do MUVX e o AssumFit é produto independente. Se liberado, a ligação por exercício é direta (o catálogo já tem id por exercício).
   alinhadas à identidade visual. A fundadora decidiu: "deixar anotado pra
   trocarmos as imagens depois". Escolha de marca, não de código — quando os
   assets existirem, entram em `app/assets/brand/` e o banner os consome.
