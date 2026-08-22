@@ -192,7 +192,7 @@ export function ProjectScreen() {
             accessibilityState={{ expanded: detalhes }}
             style={({ pressed }) => [{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }, pressed && { opacity: 0.6 }]}
           >
-            <Data color="$foreground">{detalhes ? 'Ocultar detalhes técnicos' : 'Ver detalhes técnicos'}</Data>
+            <Data color="$foreground">{detalhes ? 'Ocultar a explicação completa' : 'Ver a explicação completa'}</Data>
             <Icon name={detalhes ? 'up' : 'down'} size={12} color={colors.textMuted} />
           </Pressable>
         </Section>

@@ -13,6 +13,7 @@ import uuid
 from agent.generate import generate_plan
 from agent.knowledge import gather_knowledge
 from agent.models import AgentResult, WorkoutGenerationInput
+from agent.rationale import reescrever_para_pessoa
 from agent.validate import (
     catalog_errors,
     json_errors,
@@ -400,6 +401,13 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
             ],
             det_errors=errors[:10],
         )
+    # A fundamentação que vai ao app é reescrita para a pessoa; a técnica fica
+    # ao lado, para o log e o revisor. Só em plano entregue — bloqueado não
+    # tem leitor. Ver `agent/rationale.py` para o porquê de ser um passo à parte.
+    if not blocked and isinstance(plan, dict) and plan.get("rationale"):
+        tecnico = str(plan["rationale"])
+        plan = {**plan, "rationale": await reescrever_para_pessoa(tecnico), "rationale_technical": tecnico}
+
     return AgentResult(
         plan=plan,
         score=breakdown["score"],
