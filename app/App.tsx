@@ -22,6 +22,11 @@ import { reagendarLembreteDeRefeicao } from './src/store/meal-reminder.store';
 import { usePersonalizacaoStore } from './src/store/personalizacao.store';
 import { useBiometricStore } from './src/store/biometric.store';
 import { ThemeProvider, useTheme } from './src/theme/ThemeProvider';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
+import { instalarRelatorDeErros } from './src/services/crash-report';
+
+// Antes de qualquer render: erro que acontecer na montagem já é relatado.
+instalarRelatorDeErros();
 
 
 /**
@@ -168,7 +173,11 @@ function Root() {
               <StatusBar style={scheme === 'light' ? 'dark' : 'light'} />
               {/* A navegação monta por baixo desde o primeiro quadro: enquanto a
                   intro toca, a sessão é lida do Keychain e as fontes carregam. */}
-              <Navigation />
+              {/* Limite de erro por fora da navegação: erro de tela vira uma tela
+                  de recuperação, não a morte do app (crash de 22/08). */}
+              <ErrorBoundary>
+                <Navigation />
+              </ErrorBoundary>
               {!introDone ? <IntroScreen onFinish={() => setIntroDone(true)} /> : null}
             </View>
           </SafeAreaProvider>

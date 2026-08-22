@@ -12,6 +12,7 @@ import { createLimiters, TRUST_PROXY_HOPS } from './middleware/rateLimit';
 import { authRoutes } from './routes/auth.routes';
 import { biometricRoutes } from './routes/biometric.routes';
 import { habitsRoutes } from './routes/habits.routes';
+import { clientErrorsRoutes } from './routes/client-errors.routes';
 import { nutritionRoutes } from './routes/nutrition.routes';
 import { transcribeRoutes } from './routes/transcribe.routes';
 import { sportRoutes } from './routes/sport.routes';
@@ -105,6 +106,7 @@ function mountRoutes() {
   app.use('/auth', authRoutes);
 app.use('/biometric', biometricRoutes);
 app.use('/habits', habitsRoutes);
+app.use('/client-errors', clientErrorsRoutes);
 app.use('/nutrition', nutritionRoutes);
 app.use('/transcribe', transcribeRoutes);
 app.use('/sport', sportRoutes);

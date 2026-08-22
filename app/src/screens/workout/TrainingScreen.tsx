@@ -2,7 +2,7 @@ import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native'
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useMemo, useState } from 'react';
-import { AppState, KeyboardAvoidingView, Platform, Pressable, ScrollView } from 'react-native';
+import { Alert, AppState, KeyboardAvoidingView, Platform, Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -306,6 +306,10 @@ export function TrainingScreen() {
     try {
       await cancel();
       navigation.navigate('Plan');
+    } catch {
+      // Sem rede: a sessão continua viva no servidor. A pessoa fica na tela,
+      // com o diálogo fechado, e pode tentar de novo — sem rejeição solta.
+      Alert.alert('Não foi possível encerrar agora', 'Confira a conexão e tente de novo.');
     } finally {
       setCancelling(false);
       setCancelOpen(false);

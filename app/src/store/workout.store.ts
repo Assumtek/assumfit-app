@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { create } from 'zustand';
 
 import { publicarTreinoDeHoje, type TreinoDoWidget } from '../../modules/widgetbridge';
@@ -366,7 +367,19 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   cancel: async () => {
     const { execution } = get();
     if (!execution) return;
-    await apiCancel(execution.id);
+    try {
+      await apiCancel(execution.id);
+    } catch (erro) {
+      /*
+       409 "esta sessão já foi encerrada" (fechada pelo servidor, ou cancelada
+       de outro aparelho) e 404 significam a MESMA coisa para quem está na
+       tela: não há mais sessão. Antes o erro subia, o estado local ficava com
+       a execução viva e a pessoa não tinha saída. Outras falhas (rede)
+       continuam subindo — aí a sessão pode existir de verdade.
+      */
+      const status = axios.isAxiosError(erro) ? erro.response?.status : undefined;
+      if (status !== 409 && status !== 404) throw erro;
+    }
     set({ execution: null, progress: {}, restEndsAt: null, timerBase: 0, timerRunSince: null });
   },
 }));
