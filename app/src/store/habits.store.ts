@@ -137,13 +137,22 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
    para a meta não depender de uma rodada de rede a mais.
   */
   refreshGoal: ({ weightKg, sex, activeMinToday }) => {
+    const goalMl = waterGoalMl({ weightKg, sex, activeMinToday });
+    const mudou = goalMl !== get().goalMl;
     set({
-      goalMl: waterGoalMl({ weightKg, sex, activeMinToday }),
+      goalMl,
       // A regra inteira, não só o peso: "80 kg × 35 ml" responde sozinha à
       // pergunta "isso está calibrado pelo meu peso?", que chegou como pedido
       // de recurso quando o recurso já existia.
       goalReason: waterGoalReason({ weightKg, sex, activeMinToday }),
     });
+    /*
+     Meta nova vai ao widget na hora. Ele só era republicado ao registrar
+     gole, então ficava com a meta de QUANDO o gole foi dado — a padrão de
+     2,5 L, se foi antes de a anamnese carregar — enquanto o app já dizia
+     3,2 L ("widget mostrando o L total errado", Leonardo, 22/08).
+    */
+    if (mudou) get().publicarNoWidget();
   },
 
   setContainerMl: (key, ml) => {
@@ -164,6 +173,8 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
     // A semana também é remontada: ontem saiu de "hoje" e virou uma coluna do
     // histórico, e o molde de sete dias termina noutro dia.
     set({ today, week: comHoje(semanaVazia(), today) });
+    // Dia novo, widget zerado — senão ele amanhece com o total de ontem.
+    get().publicarNoWidget();
   },
 
   addWater: (ml) => {
