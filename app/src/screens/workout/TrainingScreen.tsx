@@ -322,6 +322,25 @@ export function TrainingScreen() {
     setIndex((i) => Math.min(flat.length - 1, i + 1));
   };
 
+  /*
+   "Concluir" num exercício POR TEMPO (alongamento, cardio com duração).
+
+   Esses exercícios não têm cartão de séries: recebem uma série implícita no
+   progresso e o botão só avançava o índice — a série ficava "não concluída",
+   a barra de fases não contava o exercício e o servidor nunca recebia a
+   conclusão. "Ao concluir os alongamentos não atualizou o progresso"
+   (testador, 22/08). Agora concluir marca o que está pendente e então
+   avança; "Pular" continua só avançando, que é a diferença entre os dois.
+  */
+  const concluirExercicio = async () => {
+    if (tempoAlvo !== null) {
+      for (let i = 0; i < sets.length; i++) {
+        if (!sets[i]?.completed) await completeSet(exercise.id, i);
+      }
+    }
+    goNext();
+  };
+
   return (
     <YStack flex={1} backgroundColor="$background">
       {/* Cabeçalho próprio: os controles são pílulas circulares, não ícones
@@ -520,7 +539,7 @@ export function TrainingScreen() {
           <Button
             title={isLast ? 'Concluir treino' : 'Concluir exercício'}
             icon={<Icon name="check" size={16} color={colors.ink} />}
-            onPress={goNext}
+            onPress={() => void concluirExercicio()}
           />
           <XStack gap="$sm">
             <YStack flex={1}>
