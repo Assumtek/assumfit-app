@@ -233,6 +233,16 @@ export function TrainingScreen() {
   const nextUpRef = useRef<{ nextName: string | null } | null>(null);
 
   /*
+   Trocar de exercício volta ao topo. Sem isto a tela ficava onde a pessoa
+   parou — no rodapé de séries do anterior —, e o exercício novo "não
+   aparecia": nome e descrição estavam acima da dobra (Bruno, 22/08).
+  */
+  const scrollRef = useRef<ScrollView | null>(null);
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, [index]);
+
+  /*
    Botões da ilha no treino guiado: "encerrar" abre o fim de treino. Pausa não
    existe aqui — o relógio é de parede — e a ação é DRENADA mesmo assim, para
    não ficar na fila e vazar para uma sessão de esporte futura.
@@ -526,6 +536,7 @@ export function TrainingScreen() {
         keyboardVerticalOffset={0}
       >
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={{
           paddingHorizontal: 20,
           paddingTop: 8,

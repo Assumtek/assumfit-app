@@ -121,8 +121,8 @@ export function BandVibration() {
       */}
       <Body>
         {outrosLigado
-          ? 'Os avisos do AssumFit chegam pela categoria "Outros apps" — a pulseira não sabe separar um app desconhecido de outro, então ela vibra com todos eles.'
-          : 'A pulseira não tem uma categoria só para o AssumFit: os avisos dele chegam por "Outros apps", junto com os de qualquer app que o firmware não reconhece.'}
+          ? 'Os avisos do AssumFit — fim do descanso, fim do alongamento, lembretes — chegam pela categoria "Outros apps". A pulseira não sabe separar um app desconhecido de outro, então ela vibra com todos eles.'
+          : 'Com o app aberto, a pulseira vibra no fim do descanso e do alongamento. Com a tela apagada, o aviso chega por "Outros apps" — a pulseira não tem uma categoria só para o AssumFit, e essa vem junto com qualquer app que o firmware não reconhece.'}
       </Body>
 
       {outrosLigado ? (

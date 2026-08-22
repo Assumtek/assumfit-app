@@ -11,7 +11,12 @@
  * de agendador — é o que permite testar cada faixa sem simular o relógio.
  */
 
-export type WaterNudge = { title: string; body: string };
+export type WaterNudge = {
+  title: string;
+  body: string;
+  /** A tela que o toque na notificação abre — a da água, não a do lembrete. */
+  route: 'Habits';
+};
 
 /** O consumo de um dia, com a data a que ele pertence. */
 export type DiaDeAgua = { date: string; waterMl: number; pours: number[] };
@@ -65,6 +70,7 @@ export function waterNudge(waterMl: number, goalMl: number, copoMl: number): Wat
   if (waterMl === 0) {
     return {
       title: 'Você ainda não bebeu água hoje',
+      route: 'Habits',
       body: `Um copo de ${copoMl} ml já tira do zero — a meta são ${litros(goalMl)} L.`,
     };
   }
@@ -75,12 +81,14 @@ export function waterNudge(waterMl: number, goalMl: number, copoMl: number): Wat
   if (falta <= goalMl / 3) {
     return {
       title: `Faltam ${litros(falta)} L para a meta`,
+      route: 'Habits',
       body: `São ${copos} ${copos === 1 ? 'copo' : 'copos'} — dá para fechar o dia.`,
     };
   }
 
   return {
     title: 'Hora da água',
+    route: 'Habits',
     body: `Você está em ${litros(waterMl)} L de ${litros(goalMl)} L. Faltam ${litros(falta)} L.`,
   };
 }
@@ -88,6 +96,7 @@ export function waterNudge(waterMl: number, goalMl: number, copoMl: number): Wat
 /** O lembrete genérico dos dias seguintes, onde o consumo ainda não existe. */
 export const WATER_NUDGE_PADRAO: WaterNudge = {
   title: 'Hora da água',
+  route: 'Habits',
   body: 'Um copo agora conta para a meta de hoje.',
 };
 

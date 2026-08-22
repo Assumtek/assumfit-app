@@ -1,4 +1,5 @@
 import { diaCorrente, isoHoje, waterNudge, horariosPorIntervalo } from '../water';
+import { WATER_NUDGE_PADRAO } from '../water';
 
 const META = 2500;
 const COPO = 200;
@@ -108,5 +109,18 @@ describe('horariosPorIntervalo', () => {
 
   it('respeita o teto de horários', () => {
     expect(horariosPorIntervalo('00:00', '23:59', 5).length).toBeLessThanOrEqual(30);
+  });
+});
+
+describe('lembrete de água abre a tela da água', () => {
+  // Leonardo (22/08): tocar na notificação não abria nada — o lembrete era a
+  // única notificação do app sem rota. `App.tsx` navega por `data.route`.
+  it('toda variante do lembrete carrega a rota de Hábitos', () => {
+    expect(WATER_NUDGE_PADRAO.route).toBe('Habits');
+    expect(waterNudge(0, 2100, 200)?.route).toBe('Habits');
+    expect(waterNudge(1900, 2100, 200)?.route).toBe('Habits');
+    expect(waterNudge(800, 2100, 200)?.route).toBe('Habits');
+    // Meta batida não lembra nada — e portanto não abre nada.
+    expect(waterNudge(2100, 2100, 200)).toBeNull();
   });
 });
