@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { waterGoalMl } from './water-goal';
 
 import axios from 'axios';
 
@@ -165,15 +166,19 @@ export type EnergyOptions = { hour?: number; persist?: boolean; force?: boolean 
  * mais vista do app.
  */
 export async function energyNow(userId: string, options: EnergyOptions = {}): Promise<EnergyResponse | null> {
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { tzOffsetMin: true } });
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { tzOffsetMin: true, sex: true } });
   const tz = user?.tzOffsetMin ?? DEFAULT_TZ_OFFSET_MIN;
 
-  const [reading, baseline, habits, lifestyle] = await Promise.all([
+  const [reading, baseline, habits, lifestyle, pesoKg] = await Promise.all([
     latestReading(userId),
     hrvBaseline(userId),
     habitsToday(userId, tz),
     prisma.lifestyleProfile.findUnique({ where: { userId } }),
+    pesoDaAnamnese(userId),
   ]);
+  // A meta de água com a MESMA regra da tela — sem ela o serviço de IA assumia
+  // 2.500 e a Saúde contradizia a tela de Água (rodada de testes, 22/08).
+  const waterGoal = waterGoalMl(pesoKg, (user?.sex as 'f' | 'm') ?? 'f');
 
   if (!reading?.hrvMs || !reading.heartRate) return null;
   const { waterMl: water, sleepScore: sleep } = habits;
@@ -264,6 +269,7 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
       hour,
       hrv_baseline: baseline,
       water_ml: water,
+      water_goal_ml: waterGoal,
       // Dia da semana no fuso da PESSOA. O modelo não tem relógio próprio — é
       // sem estado de propósito —, e mandar o dia em UTC faria a terça de quem
       // treina virar segunda depois das 21h.
@@ -418,6 +424,12 @@ export async function bioAgeNow(userId: string): Promise<BioAgeResponse | null> 
  * saudável nesse caso, e a tela diz que o dado melhora com a anamnese
  * preenchida. Inventar um peso aqui seria o mesmo erro do sono fixo em 20%.
  */
+async function pesoDaAnamnese(userId: string): Promise<number | null> {
+  const anamnese = await prisma.healthAnamnesis.findUnique({ where: { userId }, select: { answers: true } });
+  const peso = (anamnese?.answers as { weightKg?: number } | null)?.weightKg;
+  return typeof peso === 'number' && peso > 0 ? peso : null;
+}
+
 async function imcDaAnamnese(userId: string): Promise<number | null> {
   const anamnese = await prisma.healthAnamnesis.findUnique({
     where: { userId },

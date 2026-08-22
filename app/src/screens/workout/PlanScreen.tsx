@@ -229,7 +229,15 @@ function Leitura({
         acao={null}
         secundaria={
           dia.ehHoje
-            ? { title: 'Treinar mesmo assim', onPress: () => onCheckin(), variant: 'secondary' }
+            ? pendente
+              ? /*
+                 Dia de descanso com treino pendente na semana: o atalho de
+                 recuperar vale MAIS aqui do que "treinar mesmo assim" — a
+                 rodada de testes (22/08) mostrou o sábado sem o botão, com a
+                 sexta em aberto.
+                */
+                { title: `Fazer o de ${DAY_LABEL[pendente.weekday]} que ficou`, onPress: () => onCheckin(pendente), variant: 'secondary' }
+              : { title: 'Treinar mesmo assim', onPress: () => onCheckin(), variant: 'secondary' }
             : voltar
         }
       />

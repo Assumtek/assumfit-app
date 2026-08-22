@@ -1,4 +1,4 @@
-import { normalizarHorario } from '../horario';
+import { horaCurta, normalizarHorario } from '../horario';
 
 describe('normalizarHorario', () => {
   it.each([
@@ -24,4 +24,15 @@ describe('normalizarHorario', () => {
       expect(normalizarHorario(entrada)).toBeNull();
     },
   );
+});
+
+describe('horaCurta', () => {
+  it.each([
+    ['10:00', '10h'],
+    ['07:00', '7h'],
+    ['19:30', '19h30'],
+    ['07:55', '7h55'],
+  ])('%s → %s', (entrada, esperado) => {
+    expect(horaCurta(entrada)).toBe(esperado);
+  });
 });

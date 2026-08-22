@@ -1,3 +1,4 @@
+import { horaCurta } from '../domain/horario';
 import { useNavigation } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect } from 'react';
@@ -37,7 +38,7 @@ export function MealReminder() {
               <Body color="$foreground">Lembrar de registrar o que comi</Body>
               <Data>
                 {ligado
-                  ? `às ${horarios.map((h) => h.replace(':00', 'h').replace(':', 'h')).join(', ')}`
+                  ? `às ${horarios.map(horaCurta).join(', ')}`
                   : 'toque para escolher os horários'}
               </Data>
             </YStack>

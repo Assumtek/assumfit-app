@@ -1,3 +1,4 @@
+import { horaCurta } from '../domain/horario';
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
@@ -64,7 +65,7 @@ export function WaterReminder() {
               <Body color="$foreground">Lembrar de beber água</Body>
               <Data>
                 {ligado
-                  ? `às ${horarios.map((h) => `${Number(h.slice(0, 2))}h`).join(', ')}`
+                  ? `às ${horarios.map(horaCurta).join(', ')}`
                   : 'toque para escolher os horários'}
               </Data>
             </YStack>

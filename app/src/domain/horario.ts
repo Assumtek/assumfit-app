@@ -38,3 +38,17 @@ export function normalizarHorario(texto: string): string | null {
   if (hora < 0 || hora > 23 || minuto < 0 || minuto > 59) return null;
   return `${String(hora).padStart(2, '0')}:${String(minuto).padStart(2, '0')}`;
 }
+
+/**
+ * `HH:MM` → "10h", "19h30". A forma curta dos resumos ("às 10h, 13h, 19h30").
+ *
+ * O resumo da água cortava os minutos (`slice(0, 2)`): 19:00 e 19:30 viravam
+ * "19h, 19h" — achado na rodada de testes de 22/08/2026. Um ajudante só, para
+ * água, refeição e o que mais listar horários.
+ */
+export function horaCurta(hhmm: string): string {
+  const [h, m] = hhmm.split(':');
+  if (h == null) return hhmm;
+  const hora = String(Number(h));
+  return !m || m === '00' ? `${hora}h` : `${hora}h${m}`;
+}
