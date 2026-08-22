@@ -51,7 +51,6 @@ export function ProjectScreen() {
   const { colors } = useTheme();
   const plan = useWorkoutStore((s) => s.plan);
   const [treinos, setTreinos] = useState<TreinoDoProjeto[] | null>(null);
-  const [detalhes, setDetalhes] = useState(false);
 
   const carregar = useCallback(async () => {
     const dias = (plan?.days ?? []).filter((d) => d.workout);
@@ -162,41 +161,12 @@ export function ProjectScreen() {
       </Section>
 
       {/*
-        A fundamentação do modelo por ÚLTIMO, e inteira.
-
-        Ela é densa — tier de risco, referências, faixas de repetição,
-        progressão entre semanas — e não cabe como abertura. Mas cortá-la seria
-        esconder o raciocínio de quem quer segui-lo até o fim, que é exatamente
-        quem chega a esta tela.
+        A fundamentação do modelo NÃO aparece aqui — decisão da fundadora
+        (22/08/2026), depois de um testador pedir duas vezes. Ela é escrita para
+        o revisor; o que a pessoa lê são as decisões acima, em linguagem humana,
+        montadas pelo domínio a partir da estrutura do plano. O texto continua
+        guardado no plano para o revisor e o log.
       */}
-      {/*
-        A fundamentação completa fica DOBRADA, atrás de um toque.
-
-        Um testador (ago/2026) leu o texto inteiro e descreveu o efeito: 250
-        palavras em bloco único, vocabulário de sistema, tom de justificativa —
-        "te dei um treino mais fraco porque não confio no que você declarou". A
-        geração passou a escrever para a pessoa; mas planos já gerados guardam o
-        texto antigo, e mesmo o novo é detalhe, não abertura. As decisões acima
-        são a camada que se lê; isto é a que se consulta.
-      */}
-      {plan.rationale ? (
-        <Section label="a fundamentação">
-          {detalhes ? (
-            <Body>{plan.rationale}</Body>
-          ) : (
-            <Body>O texto completo de quem montou o plano — método, faixas e progressão.</Body>
-          )}
-          <Pressable
-            onPress={() => setDetalhes((d) => !d)}
-            accessibilityRole="button"
-            accessibilityState={{ expanded: detalhes }}
-            style={({ pressed }) => [{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }, pressed && { opacity: 0.6 }]}
-          >
-            <Data color="$foreground">{detalhes ? 'Ocultar a explicação completa' : 'Ver a explicação completa'}</Data>
-            <Icon name={detalhes ? 'up' : 'down'} size={12} color={colors.textMuted} />
-          </Pressable>
-        </Section>
-      ) : null}
     </DetailScreen>
   );
 }
