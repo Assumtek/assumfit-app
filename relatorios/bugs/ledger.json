@@ -1004,6 +1004,18 @@
       "nota": "Verdade — o texto expandido era o que o gerador escreve para o revisor (TIER, RIR, referências). Agora a fundamentação que vai para a tela passa por uma reescrita para a pessoa, em segunda pessoa e sem siglas; a técnica fica guardada à parte. Vale para planos gerados daqui em diante — o seu atual só muda se você gerar de novo (ou ajustar com o personal).",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T13:05:53"
+    },
+    "AF3UCZ1IV_qKL1G4H8phdWo": {
+      "commit": "d86dcd5",
+      "nota": "Crash ao cancelar o check-in — encontrado e corrigido de verdade: a rodada de testes no simulador reproduziu ('Rendered fewer hooks than expected'), um efeito da tela de treino vivia depois do retorno de 'sem sessão'; ao cancelar ou concluir, o app fechava. Corrigido; sobe no próximo build. Os crashes ao concluir e ao desconectar têm a mesma causa.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T14:30:38"
+    },
+    "ACx2C-2-dhBRbHHSBfnbmCE": {
+      "commit": "d86dcd5",
+      "nota": "Boa ideia, e é decisão de produto da Silvia: modos (saúde, condicionamento, atleta) mudariam metas e regras em várias telas — água por kg, faixas de batimento, volume de treino. Anotei no plano com o seu exemplo dos 50 ml/kg para ela avaliar.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T14:30:43"
     }
   }
 }

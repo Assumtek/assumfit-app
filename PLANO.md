@@ -376,6 +376,8 @@ Qualquer visão agregada entre usuários, dashboard para terceiros, SSO corporat
 ## Pendência de marca (ago/2026)
 
 - **Imagens do banner da visão geral** — pedido de testador (Leo): imagens
+- **Modos de operação (saúde / condicionamento / atleta)** — pedido do Leo (22/08/2026): cada modo mudaria metas e regras (ex.: água 50 ml/kg para alta performance, faixas de batimento, volume). Decisão de produto; exige estudo por modo antes de código.
+- **Esporte + musculação no mesmo dia como dois cards** — pedido do Leo (22/08/2026): o plano tem um treino por dia; dois cards exigem dois treinos por dia no modelo (plano, check-in, semana).
 - **Vídeos de exercício do MUVX no AssumFit** (pedido do Leo, 22/08/2026): é decisão de marca e licença — o material é do MUVX e o AssumFit é produto independente. Se liberado, a ligação por exercício é direta (o catálogo já tem id por exercício).
   alinhadas à identidade visual. A fundadora decidiu: "deixar anotado pra
   trocarmos as imagens depois". Escolha de marca, não de código — quando os
