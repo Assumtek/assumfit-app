@@ -1052,6 +1052,24 @@
       "nota": "Feito: o descanso agora corre também depois da última série e continua na tela do próximo exercício. Só não aparece depois do último exercício do treino.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T16:00:44"
+    },
+    "AETRMA6mmLZalsDEOS4EnSY": {
+      "commit": "9b80ad7",
+      "nota": "Tocar no lembrete de água agora abre a tela da água.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T16:12:11"
+    },
+    "ALDYEaAsoZTYPZP517ckdk0": {
+      "commit": "9b80ad7",
+      "nota": "Ao concluir um exercício, o próximo abre no topo da tela.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T16:12:11"
+    },
+    "AOX18QuO-fwXXyltAdO3g4o": {
+      "commit": "9b80ad7",
+      "nota": "A pulseira já vibra no fim do descanso: com o app aberto, direto; com a tela apagada, pela notificação — para isso, em Dispositivo → Avisos no pulso, ligue 'Outros apps' e aceite o emparelhamento quando o iPhone pedir. A tela agora explica isso.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T16:12:11"
     }
   }
 }
