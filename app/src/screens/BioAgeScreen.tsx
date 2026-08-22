@@ -10,7 +10,7 @@ import { Icon } from '../components/Icon';
 import { MeasureButton } from '../components/MeasureButton';
 import { DivergingBar } from '../components/charts/DivergingBar';
 import { Button, Body, Data, Display, MetricSm, RatingText } from '../components/ui';
-import { formatYears } from '../domain/bioAge';
+import { explicacaoDaIdade, formatYears } from '../domain/bioAge';
 import { useBioAge } from '../hooks/useBioAge';
 import * as api from '../services/api.service';
 import { deepSleepPct, useBiometricStore } from '../store/biometric.store';
@@ -71,6 +71,8 @@ export function BioAgeScreen() {
         <Display>{bio.bioAge}</Display>
         <Data marginTop="$sm">anos · idade real {bio.realAge}</Data>
         <RatingText marginTop="$lg">{deltaText}</RatingText>
+        {/* Uma frase de abertura, nos dados da pessoa — o método fica na Ajuda. */}
+        <Body marginTop="$md">{explicacaoDaIdade(bio, minutosAtivos)}</Body>
       </YStack>
 
       {/* O VO₂máx é o eixo do cálculo, e por isso aparece como número próprio:

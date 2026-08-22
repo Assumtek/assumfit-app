@@ -6,6 +6,7 @@ import { LayoutChangeEvent, Pressable } from 'react-native';
 import { Note, Row, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
+import { BarChart } from '../components/charts/BarChart';
 import { LineChart } from '../components/charts/LineChart';
 import { MeasuredAt } from '../components/MeasuredAt';
 import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
@@ -28,6 +29,23 @@ export function ActivityScreen() {
    vez só, a mesma regra da agenda de movimento e da bateria.
   */
   const [minutosHoje, setMinutosHoje] = useState<number | null>(null);
+  /*
+   Os últimos 7 dias, do servidor: a pulseira só guarda o dia; o histórico
+   por dia mora no resumo diário. "Ver atividade dos últimos dias, não só do
+   dia" (Leonardo, 22/08).
+  */
+  const [dias, setDias] = useState<api.DailySummary[] | null>(null);
+  const [larguraDias, setLarguraDias] = useState(0);
+  useEffect(() => {
+    let vivo = true;
+    api
+      .fetchDailyHistory(7)
+      .then((rows) => vivo && setDias(rows))
+      .catch(() => vivo && setDias([]));
+    return () => {
+      vivo = false;
+    };
+  }, []);
   useEffect(() => {
     let vivo = true;
     const inicioDoDia = new Date();
@@ -144,6 +162,22 @@ export function ActivityScreen() {
           acabar.
         </Data>
       </Section>
+
+      {dias && dias.length > 0 ? (
+        <Section label="Últimos 7 dias">
+          <YStack onLayout={(e: LayoutChangeEvent) => setLarguraDias(e.nativeEvent.layout.width)}>
+            <BarChart
+              width={larguraDias}
+              height={140}
+              max={Math.max(activity.goal * 1.15, ...dias.map((d) => d.steps ?? 0))}
+              reference={{ value: activity.goal, label: 'meta' }}
+              bars={dias.map((d) => ({ label: d.day.slice(8, 10), value: d.steps ?? 0 }))}
+              labelEvery={1}
+              id="steps-week"
+            />
+          </YStack>
+        </Section>
+      ) : null}
 
       <Section label="Resumo do dia">
         {estimado ? (

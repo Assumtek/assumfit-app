@@ -310,3 +310,31 @@ export function formatYears(years: number): string {
   const sinal = years <= 0 ? '−' : '+';
   return `${sinal}${Math.abs(years).toFixed(1).replace('.', ',')}a`;
 }
+
+/**
+ * A frase de abertura da tela: POR QUE a idade está onde está, nos dados da
+ * pessoa — não o método, que mora na Ajuda.
+ *
+ * "Por que idade tão alta se estou me movimentando?" (Leonardo, 22/08). A
+ * resposta estava na composição, mas em barras; a pessoa quer uma frase. Ela
+ * nomeia o fator que mais puxa, diz de onde ele vem e o que NÃO entra: passos
+ * não são minutos de treino nesta conta — é a confusão mais provável, e a
+ * tela precisa desfazê-la antes que vire desconfiança do número.
+ */
+export function explicacaoDaIdade(bio: BioAge, minutosAtivos: number | null): string {
+  if (bio.delta === 0) return 'Os marcadores somam zero: a idade calculada é a real.';
+  const maior = [...bio.factors].sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))[0];
+  if (!maior || Math.abs(maior.contribution) < 0.5) return 'Nenhum marcador puxa muito: a diferença vem de pequenas somas.';
+  const direcao = maior.contribution > 0 ? 'envelhece' : 'rejuvenesce';
+  const anos = formatYears(Math.abs(maior.contribution)).replace(/^[+−-]/, '');
+  const origem =
+    maior.key === 'fitness'
+      ? `vem do VO₂máx estimado (${bio.vo2max?.toFixed(1).replace('.', ',') ?? '—'}), calculado pelo batimento em repouso e pelos ${minutosAtivos ?? 0} min de treino e esporte registrados na semana — passos não entram nessa conta`
+      : maior.key === 'hrv'
+        ? 'vem da variabilidade cardíaca medida pela pulseira'
+        : 'vem da fração de sono profundo das últimas noites';
+  const semHrv = bio.factors.find((f) => f.key === 'hrv' && f.weight === 0)
+    ? ' Sem HRV suficiente, ele não pesa ainda.'
+    : '';
+  return `O que mais ${direcao} aqui é ${maior.label.toLowerCase()} (${anos}): ${origem}.${semHrv}`;
+}

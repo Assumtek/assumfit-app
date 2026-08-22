@@ -5,8 +5,7 @@ import {
   estimateVo2max,
   fitnessAge,
   formatYears,
-  hrvAge,
-} from '../bioAge';
+  hrvAge, explicacaoDaIdade } from '../bioAge';
 
 /**
  * O espelho da conta que mora em `ai/models/bio_age.py`.
@@ -195,5 +194,31 @@ describe('composição fecha com o total', () => {
     const apt = bio.factors.find((f) => f.key === 'fitness')!;
     expect(hrv.weight).toBe(0);
     expect(apt.weight).toBeCloseTo(1, 6);
+  });
+});
+
+describe('explicacaoDaIdade', () => {
+  const base = { realAge: 28, bioAge: 34, delta: -6, vo2max: 41.9 };
+  it('nomeia o fator que mais puxa, de onde vem, e avisa que passos não entram', () => {
+    const frase = explicacaoDaIdade(
+      {
+        ...base,
+        factors: [
+          { key: 'fitness', label: 'Aptidão cardiorrespiratória', weight: 0.8, contribution: 6 },
+          { key: 'hrv', label: 'HRV', weight: 0, contribution: 0 },
+          { key: 'sleep', label: 'Sono profundo', weight: 0.2, contribution: 0.2 },
+        ],
+      } as never,
+      175,
+    );
+    expect(frase).toContain('envelhece');
+    expect(frase).toContain('aptidão cardiorrespiratória');
+    expect(frase).toContain('41,9');
+    expect(frase).toContain('175 min');
+    expect(frase).toContain('passos não entram');
+    expect(frase).toContain('Sem HRV suficiente');
+  });
+  it('igual à idade real não inventa culpado', () => {
+    expect(explicacaoDaIdade({ ...base, delta: 0, factors: [] } as never, 0)).toContain('somam zero');
   });
 });

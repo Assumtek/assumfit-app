@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { calcBioAge } from '../domain/bioAge';
+import { treinoConta } from '../domain/movement';
 
 type BioAge = ReturnType<typeof calcBioAge>;
 import * as api from '../services/api.service';
@@ -50,7 +51,7 @@ export function useBioAge(): { bio: BioAge | null; imc: number | null; minutosAt
       sessoes.map((s) => s.workoutExecutionId).filter((id): id is string => !!id),
     );
     const minTreino = execucoes
-      .filter((e) => e.status === 'FINISHED' && Date.parse(e.startedAt) >= desde)
+      .filter((e) => treinoConta(e) && Date.parse(e.startedAt) >= desde)
       .filter((e) => !vinculadas.has(e.id))
       .reduce((soma, e) => soma + (e.durationSec ?? 0) / 60, 0);
     const minEsporte = sessoes
