@@ -920,6 +920,18 @@
       "nota": "Corrigido: a folha de horário agora sobe junto com o teclado, e o campo 'ou digite' fica visível.",
       "versao": "1.0.5 (2)",
       "em": "2026-08-22T10:00:37"
+    },
+    "AK_-R6yfe8dKCwIbGcBeb4s": {
+      "commit": "9506923",
+      "nota": "Não era o carro: a pulseira mandou 3,2 km e 886 mil kcal para 1.253 passos, e o app mostrava o que chegava. Agora distância e calorias só entram se couberem nos passos (por passo, como um pedômetro); fora disso o app estima e diz que é estimativa — o seu dia vira ~0,9 km e ~50 kcal. Sobre passos dentro do carro: quem conta é a pulseira, pelo movimento do pulso; o app não tem como saber que você estava dirigindo.",
+      "versao": "1.0.5 (3)",
+      "em": "2026-08-22T11:34:26"
+    },
+    "AJgFy8w0c4WewUa1QYyQE7A": {
+      "commit": "1a840b4",
+      "nota": "A tela da Bateria ganhou uma frase de abertura: ela parte do que a noite recarregou, desce com o estresse que a pulseira mede e sobe nos momentos calmos — 100 é reserva cheia. O detalhe do cálculo está na Ajuda, em 'Bateria do corpo'.",
+      "versao": "1.0.5 (3)",
+      "em": "2026-08-22T11:34:28"
     }
   }
 }
