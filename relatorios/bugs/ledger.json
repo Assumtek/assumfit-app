@@ -932,6 +932,12 @@
       "nota": "A tela da Bateria ganhou uma frase de abertura: ela parte do que a noite recarregou, desce com o estresse que a pulseira mede e sobe nos momentos calmos — 100 é reserva cheia. O detalhe do cálculo está na Ajuda, em 'Bateria do corpo'.",
       "versao": "1.0.5 (3)",
       "em": "2026-08-22T11:34:28"
+    },
+    "AFUcIjxalEdce_B9AcHLmtY": {
+      "commit": "c7b208a",
+      "nota": "Corrigido: o selo do cartão agora é de cada origem — 'ATIVIDADE DO DIA', 'MINHA SAÚDE', 'MEU PROGRESSO' — e 'TREINO CONCLUÍDO' só aparece no treino de verdade. O layout continua o mesmo, com os blocos editáveis.",
+      "versao": "1.0.5 (3)",
+      "em": "2026-08-22T11:42:31"
     }
   }
 }
