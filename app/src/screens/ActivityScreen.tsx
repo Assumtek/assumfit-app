@@ -88,6 +88,7 @@ export function ActivityScreen() {
           <Pressable
             onPress={() =>
               navigation.push('WorkoutShare', {
+                selo: 'ATIVIDADE DO DIA',
                 titulo: 'Minha atividade hoje',
                 metricas: [
                   { valor: activity.steps.toLocaleString('pt-BR'), rotulo: 'passos' },

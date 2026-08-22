@@ -177,6 +177,7 @@ export function ProgressScreen() {
         <Pressable
           onPress={() =>
             navigation.push('WorkoutShare', {
+              selo: 'MEU PROGRESSO',
               titulo: janela ? 'Meu progresso' : dias === 1 ? 'Meu dia' : `Meus últimos ${dias} dias`,
               metricas: [
                 { valor: String(Math.round(totais.minutos)), rotulo: 'min ativos' },

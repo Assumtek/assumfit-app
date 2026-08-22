@@ -49,13 +49,20 @@ type Params = {
    */
   titulo?: string;
   metricas?: { valor: string; rotulo: string }[];
+  /**
+   * O selo no topo do cartão. Era "TREINO CONCLUÍDO" fixo, e a atividade do
+   * dia, a saúde e o progresso saíam com ele (testador, 22/08). Cada origem
+   * manda o seu; sem selo, o uso genérico cai em "ASSUMFIT" e só o treino de
+   * verdade diz "concluído".
+   */
+  selo?: string;
 };
 
 type BlocoId = 'selo' | 'nome' | 'duracao' | 'exercicios' | 'volume' | 'data' | 'marca';
 
 const CHIPS: { id: BlocoId; rotulo: string }[] = [
   { id: 'selo', rotulo: 'Selo' },
-  { id: 'nome', rotulo: 'Treino' },
+  { id: 'nome', rotulo: 'Título' },
   { id: 'duracao', rotulo: 'Duração' },
   { id: 'exercicios', rotulo: 'Exerc.' },
   { id: 'volume', rotulo: 'Carga' },
@@ -298,7 +305,7 @@ export function WorkoutShareScreen() {
                 borderColor="rgba(135,123,240,0.55)"
               >
                 <Text fontSize={9} fontWeight="800" letterSpacing={1.2} color="#ECE7F4">
-                  TREINO CONCLUÍDO
+                  {params.selo ?? (params.titulo ? 'ASSUMFIT' : 'TREINO CONCLUÍDO')}
                 </Text>
               </XStack>
             </BlocoEditavel>

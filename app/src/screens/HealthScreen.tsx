@@ -208,6 +208,7 @@ export function HealthScreen() {
         <Pressable
           onPress={() =>
             (navigation as any).push('WorkoutShare', {
+              selo: 'MINHA SAÚDE',
               titulo: 'Minha saúde hoje',
               metricas: [
                 sleep ? { valor: String(sleep.score), rotulo: 'sono' } : null,
