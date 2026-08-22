@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Note } from '../../components/Card';
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
-import { Body, Card, Data, Label, SectionTitle } from '../../components/ui';
+import { Body, Card, Data, Label, SectionTitle, Skeleton } from '../../components/ui';
 import { consolidateMovement } from '../../domain/movement';
 import { SPORTS, sportClock } from '../../domain/sport';
 import { formatDuration } from '../../domain/workout';
@@ -61,7 +61,7 @@ export function WorkoutHistoryScreen() {
   if (treinos === null || esportes === null) {
     return (
       <DetailScreen title="Histórico" refreshControl={refresh}>
-        <Body>Carregando…</Body>
+        <Skeleton lines={4} />
       </DetailScreen>
     );
   }

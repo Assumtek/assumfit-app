@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Note } from '../../components/Card';
 import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
-import { Body, Button, Card, Data, Label, SectionTitle } from '../../components/ui';
+import { Body, Button, Card, Data, Label, SectionTitle, Skeleton } from '../../components/ui';
 import { fetchAnamnesisHistory, type AnamnesisVersion } from '../../services/api.service';
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -36,7 +36,7 @@ export function AnamnesisHistoryScreen() {
   if (!versoes) {
     return (
       <DetailScreen title="Anamnese">
-        <Body>Carregando…</Body>
+        <Skeleton lines={4} />
       </DetailScreen>
     );
   }

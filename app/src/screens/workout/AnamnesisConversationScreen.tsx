@@ -365,7 +365,7 @@ export function AnamnesisConversationScreen() {
             <XStack alignItems="flex-end" gap="$sm">
               <YStack
                 flex={1}
-                borderRadius={20}
+                borderRadius={16}
                 borderWidth={1}
                 borderColor="$borderStrong"
                 paddingHorizontal="$lg"
@@ -472,7 +472,7 @@ function Balao({
         maxWidth="88%"
         paddingHorizontal="$lg"
         paddingVertical="$md"
-        borderRadius={20}
+        borderRadius={16}
         borderBottomLeftRadius={doAssistente ? 4 : 18}
         borderBottomRightRadius={doAssistente ? 18 : 4}
         backgroundColor={doAssistente ? '$card' : '$primary'}
@@ -600,7 +600,7 @@ function Revisao({
                   <YStack
                     width={40}
                     height={40}
-                    borderRadius={20}
+                    borderRadius={16}
                     alignItems="center"
                     justifyContent="center"
                     backgroundColor="$primary"

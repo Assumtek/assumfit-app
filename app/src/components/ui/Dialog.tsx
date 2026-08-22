@@ -126,7 +126,7 @@ export function ConfirmDialog({
           <ShadowView shadow={shadow} radius={24} backgroundColor="#000000">
             <YStack
               backgroundColor="$backgroundStrong"
-              borderRadius={24}
+              borderRadius={16}
               borderWidth={1}
               borderColor="$border"
               padding="$xl"

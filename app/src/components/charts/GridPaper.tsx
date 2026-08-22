@@ -1,5 +1,5 @@
 import React from 'react';
-import { Defs, Line, Pattern, Rect } from 'react-native-svg';
+import { Line } from 'react-native-svg';
 
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -29,18 +29,20 @@ export function GridPaper({ width, height, x = 0, cell = 12, major = 4, id = 'gr
 
   return (
     <>
-      <Defs>
-        <Pattern id={`${id}-fine`} width={cell} height={cell} patternUnits="userSpaceOnUse">
-          <Line x1={0} y1={0} x2={cell} y2={0} stroke={colors.gridFine} strokeWidth={0.5} />
-          <Line x1={0} y1={0} x2={0} y2={cell} stroke={colors.gridFine} strokeWidth={0.5} />
-        </Pattern>
-        <Pattern id={`${id}-major`} width={majorSize} height={majorSize} patternUnits="userSpaceOnUse">
-          <Rect width={majorSize} height={majorSize} fill={`url(#${id}-fine)`} />
-          <Line x1={0} y1={0} x2={majorSize} y2={0} stroke={colors.gridMajor} strokeWidth={0.5} />
-          <Line x1={0} y1={0} x2={0} y2={majorSize} stroke={colors.gridMajor} strokeWidth={0.5} />
-        </Pattern>
-      </Defs>
-      <Rect x={x} y={0} width={width} height={height} fill={`url(#${id}-major)`} />
+      {/* Só linhas horizontais, espaçadas pelo intervalo maior: régua de
+          leitura, não papel quadriculado. A grade fina e as verticais
+          decoravam mais do que mediam. */}
+      {Array.from({ length: Math.floor(height / majorSize) + 1 }, (_, i) => (
+        <Line
+          key={`${id}-h${i}`}
+          x1={x}
+          y1={i * majorSize}
+          x2={x + width}
+          y2={i * majorSize}
+          stroke={colors.gridMajor}
+          strokeWidth={0.5}
+        />
+      ))}
     </>
   );
 }

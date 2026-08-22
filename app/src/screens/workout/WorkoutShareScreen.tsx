@@ -21,7 +21,6 @@ import {
   FotoDeFundo,
 } from '../../components/ShareCanvas';
 import { Button, Data, Label } from '../../components/ui';
-import { CORNER_HALO, RadialHalo } from '../../components/ui/RadialHalo';
 import { formatDuration } from '../../domain/workout';
 
 /**
@@ -257,15 +256,11 @@ export function WorkoutShareScreen() {
             collapsable={false}
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
-            borderRadius={20}
+            borderRadius={16}
             overflow="hidden"
             backgroundColor="#0E0A22"
           >
-            {foto ? (
-              <FotoDeFundo uri={foto} ativa={selecionado === null} />
-            ) : (
-              <RadialHalo layers={CORNER_HALO} />
-            )}
+            {foto ? <FotoDeFundo uri={foto} ativa={selecionado === null} /> : null}
             {foto ? (
               /*
                O véu sobre a foto tem DOIS pesos: uniforme, para o título no

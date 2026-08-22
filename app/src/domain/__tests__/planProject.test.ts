@@ -91,7 +91,7 @@ describe('fatosDoProjeto', () => {
     const alternancia = fatos.find((f) => f.chave === 'alternancia');
     expect(alternancia?.porque).toContain('descansa enquanto o outro trabalha');
     // A frase precisa desarmar a leitura de defeito, que é o que motivou a tela.
-    expect(alternancia?.porque).toContain('não é erro de ordem');
+    expect(alternancia?.porque).toContain('de propósito');
   });
 
   it('NÃO afirma alternância num plano que agrupa', () => {

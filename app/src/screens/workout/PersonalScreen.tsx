@@ -204,7 +204,7 @@ export function PersonalScreen() {
         >
           <YStack
             flex={1}
-            borderRadius={20}
+            borderRadius={16}
             borderWidth={1}
             borderColor="$borderStrong"
             paddingHorizontal="$lg"
@@ -267,7 +267,7 @@ function Balao({ turno }: { turno: ChatTurn }) {
         maxWidth="86%"
         paddingHorizontal="$lg"
         paddingVertical="$md"
-        borderRadius={20}
+        borderRadius={16}
         borderBottomRightRadius={meu ? 4 : 18}
         borderBottomLeftRadius={meu ? 18 : 4}
         backgroundColor={meu ? '$primary' : '$card'}

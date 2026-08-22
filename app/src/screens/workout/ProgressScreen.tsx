@@ -10,7 +10,7 @@ import { RangeSheet } from '../../components/RangeSheet';
 import { BarChart } from '../../components/charts/BarChart';
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon, type IconName } from '../../components/Icon';
-import { Body, Card, Data, Label, Metric, MetricSm, RatingText, SectionTitle } from '../../components/ui';
+import { Body, Card, Data, Label, Metric, MetricSm, RatingText, SectionTitle, Skeleton } from '../../components/ui';
 import {
   consolidateMovement,
   movementSeries,
@@ -208,7 +208,7 @@ export function ProgressScreen() {
       />
 
       {carregando ? (
-        <Body marginTop="$xl">Carregando…</Body>
+        <YStack marginTop="$xl"><Skeleton lines={4} /></YStack>
       ) : vazio ? (
         <Note
           title="Nada registrado neste período"

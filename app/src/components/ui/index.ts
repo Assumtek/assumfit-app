@@ -20,7 +20,6 @@ export {
 } from './Type';
 export { Card, HeroCard, Pill, PillText } from './Card';
 export { Readout, ReadoutCluster } from './Readout';
-export { CORNER_HALO, RadialHalo, type HaloLayer } from './RadialHalo';
 export { ShadowView, type Shadow } from './ShadowView';
 export {
   useCardShadow,
@@ -29,3 +28,4 @@ export {
   useHighlightShadow,
   useSurfaceColor,
 } from './elevation';
+export { Skeleton } from './Skeleton';

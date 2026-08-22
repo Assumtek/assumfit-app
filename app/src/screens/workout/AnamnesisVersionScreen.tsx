@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Note, Row, Section } from '../../components/Card';
 import { DetailScreen } from '../../components/DetailScreen';
-import { Body, Data, Label, SectionTitle } from '../../components/ui';
+import { Body, Data, Label, SectionTitle, Skeleton } from '../../components/ui';
 import { mensagemDaFalha } from '../../domain/apiErrors';
 import { fetchAnamnesisVersion, type AnamnesisVersion } from '../../services/api.service';
 
@@ -43,7 +43,7 @@ export function AnamnesisVersionScreen() {
   if (!versao) {
     return (
       <DetailScreen title="Anamnese">
-        <Body>Carregando…</Body>
+        <Skeleton lines={5} />
       </DetailScreen>
     );
   }

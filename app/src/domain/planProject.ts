@@ -123,7 +123,7 @@ export function fatosDoProjeto(treinos: TreinoDoProjeto[], anamnese?: AnamneseDo
       chave: 'alternancia',
       titulo: 'Exercícios alternam entre empurrar e puxar',
       porque:
-        'Um grupo descansa enquanto o outro trabalha. A força se mantém ao longo das séries e a sessão termina mais cedo, não é erro de ordem.',
+        'Um grupo descansa enquanto o outro trabalha. A força se mantém ao longo das séries e a sessão termina mais cedo. A ordem é essa de propósito.',
     });
   }
 

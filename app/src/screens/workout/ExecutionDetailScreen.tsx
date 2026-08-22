@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Note, Row, Section } from '../../components/Card';
 import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
-import { Body, Button, Card, Data, Display, Label, SectionTitle } from '../../components/ui';
+import { Body, Button, Card, Data, Display, Label, SectionTitle, Skeleton } from '../../components/ui';
 import { formatDuration } from '../../domain/workout';
 import { mensagemDaFalha } from '../../domain/apiErrors';
 import { fetchExecutionDetail, type ExecutionDetail } from '../../services/api.service';
@@ -52,7 +52,7 @@ export function ExecutionDetailScreen() {
   if (!detalhe) {
     return (
       <DetailScreen title="Treino">
-        <Body>Carregando…</Body>
+        <Skeleton lines={5} />
       </DetailScreen>
     );
   }

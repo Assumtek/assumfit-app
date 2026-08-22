@@ -20,7 +20,6 @@ import {
   FotoDeFundo,
 } from './ShareCanvas';
 import { Button, Data, Label } from './ui';
-import { CORNER_HALO, RadialHalo } from './ui/RadialHalo';
 
 /**
  * O story da sessão — o MESMO canvas editável do fim de treino da Musculação:
@@ -235,15 +234,11 @@ export function SportShare({
             collapsable={false}
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
-            borderRadius={20}
+            borderRadius={16}
             overflow="hidden"
             backgroundColor="#0E0A22"
           >
-            {foto ? (
-              <FotoDeFundo uri={foto} ativa={selecionado === null} />
-            ) : (
-              <RadialHalo layers={CORNER_HALO} />
-            )}
+            {foto ? <FotoDeFundo uri={foto} ativa={selecionado === null} /> : null}
             {foto ? (
               <YStack
                 position="absolute"

@@ -91,7 +91,7 @@ export function RestOverlay({
       right={16}
       bottom={footerHeight + 8}
       zIndex={1000}
-      borderRadius={24}
+      borderRadius={16}
       overflow="hidden"
       /*
        Superfície OPACA, e não `$card`.

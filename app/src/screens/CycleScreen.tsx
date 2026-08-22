@@ -425,7 +425,7 @@ export function CycleScreen() {
               <Row>
                 <YStack flex={1} gap={4}>
                   <Body color="$foreground" fontWeight="700">Janela fértil</Body>
-                  <Data fontSize={12}>para autoconhecimento, não é método contraceptivo</Data>
+                  <Data fontSize={12}>para autoconhecimento; como método contraceptivo, não serve</Data>
                 </YStack>
                 <YStack alignItems="flex-end" flexShrink={0} gap={4}>
                   <Data color="$foreground">

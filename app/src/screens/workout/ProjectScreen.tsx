@@ -5,7 +5,7 @@ import { Pressable } from 'react-native';
 import { Note, Row, Section, ActionRow } from '../../components/Card';
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon, type IconName } from '../../components/Icon';
-import { Body, Button, Data, Headline, HeroCard, SectionTitle } from '../../components/ui';
+import { Body, Button, Data, Headline, HeroCard, SectionTitle, Skeleton } from '../../components/ui';
 import { fatosDoProjeto, semanaDoProjeto, type FatoDoProjeto, type TreinoDoProjeto } from '../../domain/planProject';
 import { DAY_LABEL } from '../../domain/workout';
 import * as api from '../../services/api.service';
@@ -157,7 +157,7 @@ export function ProjectScreen() {
         </Section>
       ) : treinos === null ? (
         <Section label="as decisões">
-          <Data>Lendo o seu plano…</Data>
+          <Skeleton lines={3} />
         </Section>
       ) : null}
 

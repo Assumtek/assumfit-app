@@ -244,7 +244,7 @@ export function DeviceScreen() {
                 {viva ? (
                   <ActivityIndicator size="small" color={colors.accent} />
                 ) : lida || e.lastAt != null || e.resumo ? (
-                  <Icon name="check" size={16} color={e.lastAt != null || e.resumo ? colors.accent : colors.textMuted} />
+                  <YStack width={8} height={8} borderRadius={4} backgroundColor={e.lastAt != null || e.resumo ? '$primary' : '$mutedForeground'} />
                 ) : (
                   <YStack width={8} height={8} borderRadius={4} borderWidth={1} borderColor="$border" />
                 )}
@@ -324,7 +324,7 @@ export function DeviceScreen() {
       {latest?.source === 'mock' ? (
         <Note
           title="Wearable simulado"
-          body="O app está lendo de um gerador de dados, não do hardware. Suba o Metro com EXPO_PUBLIC_BLE=real para usar a pulseira."
+          body="O app está lendo de um gerador de dados. Suba o Metro com EXPO_PUBLIC_BLE=real para usar a pulseira."
         />
       ) : null}
 
@@ -357,5 +357,5 @@ function explicacaoDoQueFalta(faltam: string[]): string {
   };
   const partes = faltam.map((f) => `${f.toLowerCase()} ${motivos[f] ?? 'ainda não foi medido'}`);
   const lista = partes.length === 1 ? partes[0] : `${partes.slice(0, -1).join('; ')}; e ${partes[partes.length - 1]}`;
-  return `Sem medição não é falha: ${lista}.`;
+  return `Sem medição é o esperado aqui: ${lista}.`;
 }

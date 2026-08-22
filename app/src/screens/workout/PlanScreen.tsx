@@ -7,7 +7,7 @@ import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
 import { TrainingPanel } from '../../components/TrainingPanel';
 import { WeekRail } from '../../components/WeekRail';
-import { Body, Button, Data, Headline } from '../../components/ui';
+import { Body, Button, Data, Headline, Skeleton } from '../../components/ui';
 import { QuickMenu } from './QuickMenu';
 import { movementMinutes } from '../../domain/movement';
 import { treinoPendente, montarSemanaDeTreino, type DiaDeTreino } from '../../domain/trainingWeek';
@@ -93,7 +93,7 @@ export function PlanScreen() {
   if (loading && !plan) {
     return (
       <DetailScreen title="Treino" refreshControl={puxar}>
-        <Data paddingTop="$lg">Carregando…</Data>
+        <YStack paddingTop="$lg"><Skeleton lines={4} /></YStack>
       </DetailScreen>
     );
   }

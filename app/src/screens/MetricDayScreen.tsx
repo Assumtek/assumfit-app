@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Note, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
 import { LineChart } from '../components/charts/LineChart';
-import { Body, Data, Display, Readout, ReadoutCluster, RatingText } from '../components/ui';
+import { Body, Data, Display, RatingText, Readout, ReadoutCluster, Skeleton } from '../components/ui';
 import { pontosDoDia } from '../domain/dayHistory';
 import {
   rateHeartRate,
@@ -136,7 +136,7 @@ export function MetricDayScreen() {
     <DetailScreen title={TITULO[metric] ?? 'Indicador'}>
       <Data marginTop="$md">{data}</Data>
       {resumo === undefined ? (
-        <Data marginTop="$xl">Carregando…</Data>
+        <YStack marginTop="$xl"><Skeleton lines={3} /></YStack>
       ) : !resumo ? (
         <Note title="Sem medição neste dia" body="Os dias com medição aparecem marcados na faixa do histórico." />
       ) : (

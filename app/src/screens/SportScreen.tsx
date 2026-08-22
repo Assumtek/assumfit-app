@@ -405,7 +405,7 @@ export function SportScreen() {
           setAviso('O GPS não ligou, a distância fica de fora; o resto funciona.');
         }
       } else {
-        setAviso('Sem acesso à localização a distância não é medida, o resto funciona.');
+        setAviso('Sem acesso à localização, a distância fica de fora; o resto funciona.');
       }
     }
     const stamp = Date.now();

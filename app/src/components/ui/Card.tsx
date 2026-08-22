@@ -1,10 +1,8 @@
 import { Text } from '@tamagui/core';
-import { LinearGradient } from '@tamagui/linear-gradient';
 import { XStack, YStack } from '@tamagui/stacks';
 import React from 'react';
 import { Pressable } from 'react-native';
 
-import { CORNER_HALO, RadialHalo } from './RadialHalo';
 import { ShadowView } from './ShadowView';
 import { useCardShadow, useHighlightShadow, useSurfaceColor } from './elevation';
 
@@ -17,17 +15,15 @@ import { useCardShadow, useHighlightShadow, useSurfaceColor } from './elevation'
  *
  * A composição do hero tem quatro camadas empilhadas, e a ordem importa:
  *
- *   1. `ShadowView` — sombra colorida, por fora do recorte;
+ *   1. `ShadowView`, sombra neutra e discreta, por fora do recorte;
  *   2. `YStack` com `overflow: hidden` — o recorte, que NÃO pode envolver a
  *      sombra (no iOS ele a corta e a peça fica chapada);
- *   3. `LinearGradient` de cima para baixo, tênue;
- *   4. `RadialHalo` no canto superior direito.
  *
- * O conteúdo vem por último, com `zIndex`, senão o halo o cobre.
+ * Sem brilho e sem halo: a peça se destaca pela superfície e pelo fio.
  */
 
-const RADIUS = 20;
-const HERO_RADIUS = 24;
+const RADIUS = 12;
+const HERO_RADIUS = 16;
 
 type CardProps = {
   children: React.ReactNode;
@@ -94,19 +90,6 @@ export function HeroCard({
         overflow="hidden"
         position="relative"
       >
-        <LinearGradient
-          colors={['rgba(135,123,240,0.07)', 'rgba(135,123,240,0)']}
-          locations={[0, 0.85]}
-          start={[0, 0]}
-          end={[0, 1]}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-        />
-        {/* O halo sangra para fora do canto de propósito: contido, ele lê como
-            um círculo desenhado em vez de luz. */}
-        <YStack position="absolute" top={-40} right={-40} width={152} height={152} pointerEvents="none">
-          <RadialHalo layers={CORNER_HALO} />
-        </YStack>
-
         <YStack gap="$md" zIndex={1}>
           {eyebrow ? (
             <Text

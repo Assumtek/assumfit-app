@@ -6,7 +6,7 @@ import { Pressable, ScrollView, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '../components/Icon';
-import { Body, Button, Data, Label, Title } from '../components/ui';
+import { Body, Button, Data, Label, Skeleton, Title } from '../components/ui';
 import {
   nextQuestion,
   progressOf,
@@ -83,7 +83,7 @@ export function OnboardingScreen() {
   if (!loaded) {
     return (
       <YStack flex={1} backgroundColor="$background" alignItems="center" justifyContent="center">
-        <Body>Carregando…</Body>
+        <Skeleton lines={4} />
       </YStack>
     );
   }

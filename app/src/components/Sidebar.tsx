@@ -299,19 +299,14 @@ function Entry({
         borderBottomWidth={spaced ? 0 : 1}
         borderBottomColor="$border"
       >
-        {/* Trilho à esquerda marca a rota atual. Um item de menu selecionado
-            por fundo cheio brigaria com o vidro do painel. */}
-        <YStack
-          width={4}
-          height={24}
-          borderRadius={1}
-          marginRight="$lg"
-          backgroundColor={active ? '$primary' : 'transparent'}
-        />
+        {/* A rota atual se marca pelo PESO do texto, sem trilho nem fundo
+            cheio: o trilho colorido à esquerda é clichê, e fundo cheio
+            brigaria com o vidro do painel. */}
         <YStack flex={1} gap="$xs">
           <Text
             fontSize={16}
             letterSpacing={-0.2}
+            fontWeight={active ? '600' : '400'}
             color={active ? '$foreground' : '$mutedForeground'}
           >
             {name}

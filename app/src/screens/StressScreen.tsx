@@ -46,7 +46,7 @@ export function StressScreen() {
         {/* Uma frase de abertura: o que este número É. O método inteiro fica na
             Ajuda — pedido dos testadores (ago/2026), que queriam entender a
             métrica sem sair da tela. */}
-        <Body marginTop="$md">O firmware da pulseira converte a variabilidade entre batimentos numa escala de 0 a 100. É carga do sistema nervoso, não humor, treino pesado e dia tenso dão número parecido.</Body>
+        <Body marginTop="$md">O firmware da pulseira converte a variabilidade entre batimentos numa escala de 0 a 100. É carga do sistema nervoso: treino pesado e dia tenso dão número parecido, e humor não entra na conta.</Body>
       </YStack>
 
       <DayPickerRow

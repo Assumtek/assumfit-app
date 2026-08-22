@@ -20,7 +20,6 @@ import type { Shadow } from './ShadowView';
  * em `shadowOpacity`, sempre.
  */
 
-const ACCENT = '#877BF0';
 
 const useIsLight = () => useThemeName() === 'light';
 
@@ -30,8 +29,8 @@ export function useCardShadow(): Shadow {
   return {
     shadowColor: isLight ? 'rgb(40,35,75)' : '#000000',
     shadowOffset: { width: 0, height: isLight ? 4 : 6 },
-    shadowOpacity: isLight ? 0.06 : 0.18,
-    shadowRadius: isLight ? 14 : 24,
+    shadowOpacity: isLight ? 0.05 : 0.12,
+    shadowRadius: isLight ? 12 : 16,
     elevation: isLight ? 2 : 3,
   };
 }
@@ -45,10 +44,10 @@ export function useCardShadow(): Shadow {
  */
 export function useHighlightShadow(): Shadow {
   return {
-    shadowColor: ACCENT,
+    shadowColor: useIsLight() ? 'rgb(40,35,75)' : '#000000',
     shadowOffset: { width: 0, height: useIsLight() ? 8 : 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: useIsLight() ? 24 : 28,
+    shadowOpacity: useIsLight() ? 0.06 : 0.14,
+    shadowRadius: useIsLight() ? 16 : 20,
     elevation: 3,
   };
 }
@@ -57,10 +56,10 @@ export function useHighlightShadow(): Shadow {
 export function useCtaShadow(): Shadow {
   const isLight = useIsLight();
   return {
-    shadowColor: ACCENT,
+    shadowColor: isLight ? 'rgb(40,35,75)' : '#000000',
     shadowOffset: { width: 0, height: isLight ? 8 : 6 },
-    shadowOpacity: isLight ? 0.28 : 0.25,
-    shadowRadius: isLight ? 18 : 20,
+    shadowOpacity: isLight ? 0.1 : 0.2,
+    shadowRadius: isLight ? 8 : 10,
     elevation: 5,
   };
 }
@@ -68,10 +67,10 @@ export function useCtaShadow(): Shadow {
 /** Ação flutuante, acima de tudo. O único nível que sobe de verdade. */
 export function useFabShadow(): Shadow {
   return {
-    shadowColor: ACCENT,
+    shadowColor: useIsLight() ? 'rgb(40,35,75)' : '#000000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: useIsLight() ? 0.3 : 0.22,
-    shadowRadius: 14,
+    shadowOpacity: useIsLight() ? 0.12 : 0.24,
+    shadowRadius: 8,
     elevation: 8,
   };
 }

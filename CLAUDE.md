@@ -538,13 +538,20 @@ Duas famílias, e usar a errada é o jeito mais fácil de estragar o sistema.
 - **`ShadowView`**, existe porque o `YStack` do Tamagui **descarta em silêncio**
   `shadowColor`/`shadowOpacity`/`shadowRadius`. Toda sombra passa por ele.
 - **`elevation.ts`**, os quatro níveis (`useCardShadow`, `useHighlightShadow`,
-  `useCtaShadow`, `useFabShadow`). Não invente um quinto no arquivo da tela.
-- **`RadialHalo`**, o halo do canto do card de destaque, em `react-native-svg`.
-  Gradiente vem daí, não de `react-native-linear-gradient`: aquele é nativo e
-  custaria um rebuild de dev client.
+  `useCtaShadow`, `useFabShadow`), todos com sombra NEUTRA e baixa. O brilho
+  roxo sob o botão saiu (22/08/2026). Não invente um quinto no arquivo da tela.
+- **Sem halo, sem orbe, sem brilho de gradiente em cartão.** A peça se
+  destaca pela superfície e pelo fio. `RadialHalo` foi removido (22/08/2026).
 - **`Button`**: `primary` (preenchido, com sombra colorida, no máximo um por
   tela), `secondary` (contornado), `ghost` (só texto). Não escreva um `Pressable`
   com pill de acento à mão; foi assim que três telas divergiram entre si.
+
+- **`Skeleton`** é o estado de carregamento: blocos na forma do conteúdo,
+  pulsando. "Carregando…" em texto não entra em tela nova.
+- **Gráfico tem régua, não papel quadriculado**: `GridPaper` desenha só
+  linhas horizontais no intervalo maior.
+- **Nada de trilho colorido à esquerda** para marcar item ativo: peso do
+  texto e cor de frente bastam (Sidebar, 22/08/2026).
 
 No escuro o relevo é **material**: a peça se destaca porque é mais clara que o
 fundo, e a aresta especular basta. **No claro esse truque não existe**, não há
