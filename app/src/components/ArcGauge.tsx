@@ -34,12 +34,12 @@ export function ArcGauge({ fraction, color, children }: Props) {
   return (
     <YStack alignItems="center">
       <Svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
-        <Path d={ARC} fill="none" stroke={colors.track} strokeWidth={6} />
+        <Path d={ARC} fill="none" stroke={colors.track} strokeWidth={8} />
         <Path
           d={ARC}
           fill="none"
           stroke={color}
-          strokeWidth={6}
+          strokeWidth={8}
           strokeDasharray={ARC_LENGTH}
           strokeDashoffset={offset}
         />

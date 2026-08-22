@@ -87,11 +87,11 @@ export function RestOverlay({
   return (
     <YStack
       position="absolute"
-      left={14}
-      right={14}
+      left={16}
+      right={16}
       bottom={footerHeight + 8}
       zIndex={1000}
-      borderRadius={22}
+      borderRadius={24}
       overflow="hidden"
       /*
        Superfície OPACA, e não `$card`.
@@ -114,10 +114,10 @@ export function RestOverlay({
       shadowColor="#000000"
       shadowOpacity={0.4}
       shadowRadius={24}
-      shadowOffset={{ width: 0, height: 10 }}
+      shadowOffset={{ width: 0, height: 12 }}
       elevation={10}
     >
-      <XStack alignItems="center" gap="$md" paddingVertical={14} paddingHorizontal={16}>
+      <XStack alignItems="center" gap="$md" paddingVertical={16} paddingHorizontal={16}>
         {/*
           78, medido — não 64.
 
@@ -126,7 +126,7 @@ export function RestOverlay({
           estreita) não comporta `01:31` em 26 px: o texto QUEBRAVA em duas
           linhas. Quatro dígitos tabulares nesta fonte pedem ~70 px; 78 dá folga.
         */}
-        <YStack width={78}>
+        <YStack width={80}>
           <Text
             fontSize={26}
             fontWeight="600"
@@ -142,7 +142,7 @@ export function RestOverlay({
           </Text>
         </YStack>
 
-        <YStack flex={1} minWidth={0} gap={2}>
+        <YStack flex={1} minWidth={0} gap={4}>
           <Text
             fontSize={10}
             fontWeight="800"
@@ -168,7 +168,7 @@ export function RestOverlay({
         >
           <YStack
             paddingHorizontal={16}
-            paddingVertical={10}
+            paddingVertical={12}
             borderRadius={999}
             backgroundColor="$primary"
           >

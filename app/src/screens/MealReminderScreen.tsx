@@ -63,7 +63,7 @@ export function MealReminderScreen() {
     <DetailScreen title="Lembrete de refeições">
       <Section label="Lembrete">
         <Row last>
-          <YStack flex={1} gap={2}>
+          <YStack flex={1} gap={4}>
             <Body color="$foreground">Lembrar de registrar o que comi</Body>
             <Data>
               {ligado

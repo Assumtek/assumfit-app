@@ -219,7 +219,7 @@ export function WorkoutShareScreen() {
       </Data>
 
       {/* Os chips ligam e desligam blocos — publicar a carga é decisão, não padrão. */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 14 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
         <XStack gap="$sm">
           {CHIPS.map((chip) => chipGenerico(chip, params.metricas)).map((chip) => (
             <Pressable
@@ -240,9 +240,9 @@ export function WorkoutShareScreen() {
                 backgroundColor={ver(chip.id) ? '$primarySoft' : 'transparent'}
               >
                 <Icon name={ver(chip.id) ? 'check' : 'down'} size={12} />
-                <Text fontSize={12} color="$foreground">
+                <Data color="$foreground">
                   {chip.rotulo}
-                </Text>
+                </Data>
               </XStack>
             </Pressable>
           ))}
@@ -257,7 +257,7 @@ export function WorkoutShareScreen() {
             collapsable={false}
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
-            borderRadius={18}
+            borderRadius={20}
             overflow="hidden"
             backgroundColor="#0E0A22"
           >
@@ -295,7 +295,7 @@ export function WorkoutShareScreen() {
             >
               <XStack
                 paddingVertical={4}
-                paddingHorizontal={10}
+                paddingHorizontal={12}
                 borderRadius={999}
                 backgroundColor="rgba(135,123,240,0.28)"
                 borderWidth={1}
@@ -381,9 +381,9 @@ export function WorkoutShareScreen() {
               selecionado={selecionado === 'data'}
               onSelecionar={escolher('data')}
             >
-              <Text fontSize={12} color="rgba(236,231,244,0.75)">
+              <Data color="rgba(236,231,244,0.75)">
                 {dataDeHoje}
-              </Text>
+              </Data>
             </BlocoEditavel>
 
             <BlocoEditavel
@@ -393,7 +393,7 @@ export function WorkoutShareScreen() {
               selecionado={selecionado === 'marca'}
               onSelecionar={escolher('marca')}
             >
-              <LogoType height={14} color="#ECE7F4" />
+              <LogoType height={16} color="#ECE7F4" />
             </BlocoEditavel>
           </YStack>
         </Pressable>

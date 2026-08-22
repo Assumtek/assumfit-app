@@ -89,20 +89,20 @@ export function Checkbox({
           borderColor="$borderStrong"
           alignItems="center"
           justifyContent="center"
-          marginTop={2}
+          marginTop={4}
           backgroundColor={checked ? '$primary' : 'transparent'}
         >
           {checked ? <Icon name="check" size={12} color={colors.ink} strokeWidth={2.5} /> : null}
         </YStack>
         <YStack flex={1} gap="$xs">
-          <Text fontSize={14} color="$foreground">
+          <Body color="$foreground">
             {title}
             {required ? (
               <Text fontSize={12} color="$faint">
                 {' · obrigatório'}
               </Text>
             ) : null}
-          </Text>
+          </Body>
           <Body>{body}</Body>
         </YStack>
       </XStack>

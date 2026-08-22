@@ -41,7 +41,7 @@ export function ScatterPlot({
   current,
   zones = [],
   width,
-  height = 190,
+  height = 192,
   xDomain,
   yDomain,
   xLabel,

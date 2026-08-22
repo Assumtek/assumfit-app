@@ -34,7 +34,7 @@ export function MealReminder() {
           accessibilityLabel="Escolher horários do lembrete de refeições"
         >
           <XStack alignItems="center" gap="$sm">
-            <YStack flex={1} gap={2}>
+            <YStack flex={1} gap={4}>
               <Body color="$foreground">Lembrar de registrar o que comi</Body>
               <Data>
                 {ligado
@@ -42,7 +42,7 @@ export function MealReminder() {
                   : 'toque para escolher os horários'}
               </Data>
             </YStack>
-            <Icon name="arrowRight" size={14} color={colors.textMuted} />
+            <Icon name="arrowRight" size={16} color={colors.textMuted} />
           </XStack>
         </Pressable>
         <Switch

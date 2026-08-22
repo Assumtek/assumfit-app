@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Checkbox, Field } from '../components/Field';
 import { Icon } from '../components/Icon';
-import { Body, Data, Label } from '../components/ui';
+import { Body, Data, Label, SectionTitle } from '../components/ui';
 import { isValidBirthDate, maskBirthDate, toIsoBirthDate } from '../domain/birthDate';
 import { useAuthStore } from '../store/auth.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -194,18 +194,16 @@ export function SignUpScreen() {
           <XStack
             alignItems="center"
             gap="$md"
-            paddingVertical={14}
+            paddingVertical={16}
             paddingHorizontal="$xl"
             borderRadius={999}
             backgroundColor={!canSubmit || loading ? '$control' : '$primary'}
           >
-            <Text
-              fontSize={16}
-              fontWeight="700"
+            <SectionTitle
               color={!canSubmit || loading ? '$faint' : '$primaryForeground'}
             >
               {loading ? 'Criando' : 'Criar conta'}
-            </Text>
+            </SectionTitle>
             <Icon
               name="arrowRight"
               size={16}

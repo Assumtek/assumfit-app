@@ -27,7 +27,7 @@ export function Scale({ position, ticks, color, label }: Props) {
     <YStack>
       {label ? <Label marginBottom="$md">{label}</Label> : null}
 
-      <YStack height={4} borderRadius={2} backgroundColor="$track" marginBottom="$sm">
+      <YStack height={4} borderRadius={4} backgroundColor="$track" marginBottom="$sm">
         {ticks.map((_, i) => (
           <YStack
             key={i}
@@ -35,16 +35,16 @@ export function Scale({ position, ticks, color, label }: Props) {
             top={-4}
             left={`${(i / (ticks.length - 1)) * 100}%`}
             width={1.5}
-            height={10}
+            height={12}
             backgroundColor="$border"
           />
         ))}
         <YStack
           position="absolute"
-          top={-6}
+          top={-8}
           left={left}
           width={4}
-          height={14}
+          height={16}
           borderRadius={1.5}
           marginLeft={-1.5}
           style={{ backgroundColor: color }}

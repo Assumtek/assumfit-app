@@ -185,7 +185,7 @@ function OpcaoDeCiclo({
       accessibilityLabel={`${cycleLabel(opcao.cycles)}, ${opcao.cycles} ciclos, ${formatHours(opcao.hours)} de sono`}
     >
       <XStack alignItems="center" gap="$md">
-        <YStack flex={1} gap={2}>
+        <YStack flex={1} gap={4}>
           {/* A avaliação em linguagem humana no destaque; o número técnico
               (ciclos e horas) como sub-rótulo — a regra de ouro do produto. */}
           <Body color="$foreground">{cycleLabel(opcao.cycles)}</Body>
@@ -235,9 +235,9 @@ function Aba({
         backgroundColor={ativa ? '$primarySoft' : 'transparent'}
         alignItems="center"
       >
-        <Text fontSize={14} fontWeight={ativa ? '700' : '400'} color="$foreground">
+        <Body fontWeight={ativa ? '700' : '400'} color="$foreground">
           {rotulo}
-        </Text>
+        </Body>
       </YStack>
     </Pressable>
   );
@@ -264,13 +264,13 @@ function Passo({
       <YStack
         width={44}
         height={44}
-        borderRadius={22}
+        borderRadius={24}
         borderWidth={1}
         borderColor="$borderStrong"
         alignItems="center"
         justifyContent="center"
       >
-        <Icon name={icone} size={18} color={colors.text} />
+        <Icon name={icone} size={20} color={colors.text} />
       </YStack>
     </Pressable>
   );

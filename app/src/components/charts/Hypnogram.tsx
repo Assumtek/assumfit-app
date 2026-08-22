@@ -26,7 +26,7 @@ const LANES: { phase: SleepPhase; label: string; opacity: number }[] = [
  * profundo veio concentrado nos primeiros ciclos (fisiológico) ou espalhado
  * (fragmentado), e escondem quantas vezes a pessoa acordou.
  */
-export function Hypnogram({ segments, width, height = 150, id = 'hypno' }: Props) {
+export function Hypnogram({ segments, width, height = 152, id = 'hypno' }: Props) {
   const { colors } = useTheme();
   const padBottom = 18;
   const padLeft = 58;

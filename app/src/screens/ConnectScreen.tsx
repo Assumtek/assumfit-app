@@ -89,7 +89,7 @@ export function ConnectScreen() {
       paddingTop={insets.top + 48}
       paddingBottom={insets.bottom + 32}
     >
-      <LogoType height={18} />
+      <LogoType height={20} />
 
       <YStack flex={1} justifyContent="center">
         <Text fontSize={34} fontWeight="700" letterSpacing={-1.2} lineHeight={40} color="$foreground">
@@ -157,7 +157,7 @@ export function ConnectScreen() {
                         : `${signalLabel(item.rssi)} · ${item.rssi} dBm`}
                     </Data>
                   </YStack>
-                  <Icon name="arrowRight" size={18} color={connecting ? colors.textFaint : colors.text} />
+                  <Icon name="arrowRight" size={20} color={connecting ? colors.textFaint : colors.text} />
                 </XStack>
               </Pressable>
             ))}

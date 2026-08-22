@@ -53,7 +53,7 @@ export function DayPicker({
       // Começa no fim (hoje) sem animar: animar na montagem faria a tela abrir
       // deslizando, que lê como carregamento.
       onContentSizeChange={() => ref.current?.scrollToEnd({ animated: false })}
-      contentContainerStyle={{ paddingHorizontal: 2, gap: 8 }}
+      contentContainerStyle={{ paddingHorizontal: 4, gap: 8 }}
     >
       {lista.map((dia) => {
         const ativo = dia === selecionado;

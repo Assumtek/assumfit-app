@@ -1,5 +1,6 @@
+import { useChartWidth } from '../components/charts/useChartWidth';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
 
 import { LogoMark, LogoType } from '../components/Logo';
 import { space } from '../theme/tokens';
@@ -40,7 +41,7 @@ export function IntroScreen({ onFinish }: Props) {
   const tagline = useRef(new Animated.Value(0)).current;
   const fadeOut = useRef(new Animated.Value(1)).current;
 
-  const [wordWidth, setWordWidth] = useState(0);
+  const [wordWidth, onLayoutWordWidth] = useChartWidth();
   const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
   const finished = useRef(false);
 
@@ -149,7 +150,7 @@ export function IntroScreen({ onFinish }: Props) {
             <LogoMark size={MARK_SIZE} color={colors.text} bleed={0.22} />
           </Animated.View>
 
-          <View style={styles.wordClip} onLayout={(e: LayoutChangeEvent) => setWordWidth(e.nativeEvent.layout.width)}>
+          <View style={styles.wordClip} onLayout={onLayoutWordWidth}>
             {/* O nome desliza para dentro do recorte, vindo da esquerda.
                 A versão anterior punha por cima uma cortina da cor do fundo —
                 que aparecia como retângulo sempre que a composição não estivesse

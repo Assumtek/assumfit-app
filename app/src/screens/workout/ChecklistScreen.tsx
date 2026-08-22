@@ -64,9 +64,9 @@ export function ChecklistScreen() {
         </Data>
         <RatingText marginTop="$sm">{incentivo(fracao)}</RatingText>
 
-        <YStack height={6} borderRadius={4} backgroundColor="$track" marginTop="$md" overflow="hidden">
+        <YStack height={8} borderRadius={4} backgroundColor="$track" marginTop="$md" overflow="hidden">
           <YStack
-            height={6}
+            height={8}
             borderRadius={4}
             backgroundColor="$primary"
             width={`${Math.max(fracao * 100, 1)}%`}
@@ -85,12 +85,12 @@ export function ChecklistScreen() {
                   A cor da fase é valor calculado, não token: vai em `style`,
                   porque `backgroundColor` de token só aceita nome de token.
                 */}
-                <YStack width={4} height={16} borderRadius={2} style={{ backgroundColor: cor }} />
+                <YStack width={4} height={16} borderRadius={4} style={{ backgroundColor: cor }} />
                 <SectionTitle>{PHASE_NAME[fase.tipo]}</SectionTitle>
               </XStack>
               {completa ? (
                 <XStack alignItems="center" gap="$xs">
-                  <Icon name="check" size={14} color={colors.accent} />
+                  <Icon name="check" size={16} color={colors.accent} />
                   <Data color="$primary">Concluída</Data>
                 </XStack>
               ) : (
@@ -122,7 +122,7 @@ export function ChecklistScreen() {
                     }
                   >
                     <XStack alignItems="center" gap="$md">
-                      <YStack flex={1} minWidth={0} gap={2}>
+                      <YStack flex={1} minWidth={0} gap={4}>
                         <Body color="$foreground" numberOfLines={1}>
                           {exercise.name}
                         </Body>
@@ -138,7 +138,7 @@ export function ChecklistScreen() {
                       />
                       {/* A seta diz que a linha é alvo — sem ela, o toque é uma
                           descoberta por tentativa. */}
-                      <Icon name="arrowRight" size={16} color={colors.textMuted} strokeWidth={2} />
+                      <Icon name="arrowRight" size={16} color={colors.textMuted} strokeWidth={4} />
                     </XStack>
                   </Card>
                 );

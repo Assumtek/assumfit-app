@@ -1,6 +1,6 @@
 import { YStack } from '@tamagui/stacks';
+import { useChartWidth } from '../components/charts/useChartWidth';
 import React, { useState } from 'react';
-import { LayoutChangeEvent } from 'react-native';
 
 import { EmptyMetric } from '../components/BandStatus';
 import { Section } from '../components/Card';
@@ -21,7 +21,7 @@ export function StressScreen() {
   const byHour = useBiometricStore((s) => s.stressByHour);
   const stressHistory = useBiometricStore((s) => s.stressHistory);
   const historico = useHistoricoDoDia((p) => p.stress_score, stressHistory);
-  const [chartWidth, setChartWidth] = useState(0);
+  const [chartWidth, onLayoutChartWidth] = useChartWidth();
   if (!latest)
     return (
       <DetailScreen title="Stress">
@@ -75,10 +75,10 @@ export function StressScreen() {
         </YStack>
       ) : (
       <Section label="Ao longo do dia">
-        <YStack onLayout={(e: LayoutChangeEvent) => setChartWidth(e.nativeEvent.layout.width)}>
+        <YStack onLayout={onLayoutChartWidth}>
           <BarChart
             width={chartWidth}
-            height={150}
+            height={152}
             max={100}
             reference={{ value: 40, label: 'recuperação' }}
             bars={byHour.map((h) => ({

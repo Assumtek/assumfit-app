@@ -1,5 +1,6 @@
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
+import { Body } from './ui';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Image,
@@ -138,7 +139,7 @@ export function HomeBanners({ aoAbrir }: { aoAbrir: (rota: string) => void }) {
                 />
                 <Veu largura={larguraPagina} altura={ALTURA} />
 
-                <YStack flex={1} justifyContent="flex-end" padding="$lg" gap={2}>
+                <YStack flex={1} justifyContent="flex-end" padding="$lg" gap={4}>
                   <Text
                     fontSize={20}
                     fontWeight="800"
@@ -149,9 +150,9 @@ export function HomeBanners({ aoAbrir }: { aoAbrir: (rota: string) => void }) {
                     {banner.titulo}
                   </Text>
                   <XStack alignItems="center" gap="$sm">
-                    <Text fontSize={14} flex={1} numberOfLines={2} style={{ color: TINTA_FRACA }}>
+                    <Body color="$foreground" flex={1} numberOfLines={2} style={{ color: TINTA_FRACA }}>
                       {banner.corpo}
-                    </Text>
+                    </Body>
                     <Icon name="arrowRight" size={16} color={TINTA} />
                   </XStack>
                 </YStack>
@@ -166,8 +167,8 @@ export function HomeBanners({ aoAbrir }: { aoAbrir: (rota: string) => void }) {
         {BANNERS.map((banner, i) => (
           <YStack
             key={banner.key}
-            width={6}
-            height={6}
+            width={8}
+            height={8}
             borderRadius={4}
             backgroundColor={i === pagina ? '$mutedForeground' : '$track'}
           />

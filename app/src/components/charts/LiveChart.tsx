@@ -107,7 +107,7 @@ export function LiveChart({ data, width, height = 88, color, label, id = 'live' 
           </Defs>
           <GridPaper width={width} height={height} cell={10} id={id} />
           <Path d={area} fill={`url(#${id}-fill)`} />
-          <Path d={line} stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" fill="none" />
+          <Path d={line} stroke={color} strokeWidth={4} strokeLinejoin="round" strokeLinecap="round" fill="none" />
           <AnimatedCircle
             cx={lastX}
             cy={lastY}
@@ -131,7 +131,7 @@ export function LiveChart({ data, width, height = 88, color, label, id = 'live' 
 }
 
 /** Ponto piscando: "estou recebendo dado agora". */
-export function LiveDot({ color, size = 6 }: { color?: string; size?: number }) {
+export function LiveDot({ color, size = 8 }: { color?: string; size?: number }) {
   const { colors } = useTheme();
   color = color ?? colors.accent;
   const blink = useRef(new Animated.Value(1)).current;

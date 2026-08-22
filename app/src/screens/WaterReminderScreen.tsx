@@ -92,7 +92,7 @@ export function WaterReminderScreen() {
     <DetailScreen title="Lembrete de água">
       <Section label="Lembrete">
         <Row last>
-          <YStack flex={1} gap={2}>
+          <YStack flex={1} gap={4}>
             <Body color="$foreground">Lembrar de beber água</Body>
             <Data>
               {ligado
@@ -145,14 +145,14 @@ export function WaterReminderScreen() {
                   >
                     <YStack
                       paddingHorizontal="$md"
-                      paddingVertical={6}
+                      paddingVertical={8}
                       borderRadius={999}
                       borderWidth={1}
                       borderColor={intervaloMin === min ? '$primary' : '$border'}
                     >
-                      <Text fontSize={14} color={intervaloMin === min ? '$foreground' : '$mutedForeground'}>
+                      <Body color={intervaloMin === min ? '$foreground' : '$mutedForeground'}>
                         {min >= 60 ? `${min / 60}h${min % 60 ? String(min % 60).padStart(2, '0') : ''}` : `${min} min`}
-                      </Text>
+                      </Body>
                     </YStack>
                   </Pressable>
                 ))}

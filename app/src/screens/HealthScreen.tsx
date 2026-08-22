@@ -222,7 +222,7 @@ export function HealthScreen() {
           accessibilityLabel="Compartilhar minha saúde"
           style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
         >
-          <Icon name="share" size={18} color={colors.textMuted} strokeWidth={2} />
+          <Icon name="share" size={20} color={colors.textMuted} strokeWidth={4} />
         </Pressable>
       </XStack>
       <YStack alignSelf="flex-start" marginBottom="$xl">
@@ -444,10 +444,10 @@ export function HealthScreen() {
  */
 function BateriaTrilho({ fracao }: { fracao: number }) {
   return (
-    <YStack height={4} borderRadius={2} backgroundColor="$border" marginTop="$md" overflow="hidden">
+    <YStack height={4} borderRadius={4} backgroundColor="$border" marginTop="$md" overflow="hidden">
       <YStack
         height={4}
-        borderRadius={2}
+        borderRadius={4}
         backgroundColor="$primary"
         width={`${Math.max(2, Math.min(100, fracao * 100))}%`}
       />
@@ -505,7 +505,7 @@ function Celula({
           única coisa da célula que carrega informação.
         */}
         <XStack alignItems="center" gap="$xs">
-          <Icon name={icone} size={14} color={colors.textMuted} />
+          <Icon name={icone} size={16} color={colors.textMuted} />
           <Label>{label}</Label>
         </XStack>
         {rating ? (
@@ -535,7 +535,7 @@ function Celula({
         {serie && serie.length > 1 ? (
           <Medido>
             {(largura) => (
-              <LineChart data={serie.slice(-40)} width={largura} height={34} area={false} />
+              <LineChart data={serie.slice(-40)} width={largura} height={36} area={false} />
             )}
           </Medido>
         ) : null}

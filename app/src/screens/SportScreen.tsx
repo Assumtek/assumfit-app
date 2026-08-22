@@ -1,4 +1,3 @@
-import { Text } from '@tamagui/core';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
 import * as Location from 'expo-location';
@@ -22,17 +21,7 @@ import { PhotoViewer } from '../components/PhotoViewer';
 import { TrainingPanel } from '../components/TrainingPanel';
 import { WeekRail } from '../components/WeekRail';
 import { BarChart } from '../components/charts/BarChart';
-import {
-  Body,
-  Button,
-  Data,
-  Display,
-  Headline,
-  Label,
-  Readout,
-  ReadoutCluster,
-  SectionTitle,
-} from '../components/ui';
+import { Body, Button, Data, Display, Headline, Label, Readout, ReadoutCluster, SectionTitle } from '../components/ui';
 import { Card } from '../components/ui/Card';
 import { ScalePicker } from '../components/ScalePicker';
 import { ConfirmDialog, Sheet } from '../components/ui/Dialog';
@@ -972,7 +961,7 @@ export function SportScreen() {
         {/* O percurso desenhado ao vivo — o mapa é o instrumento da modalidade
             com GPS, como o anel é o do foco. */}
         {sessao.sport.gps && (ultimo || posicao) ? (
-          <YStack height={210} borderRadius={16} overflow="hidden" marginTop="$md">
+          <YStack height={212} borderRadius={16} overflow="hidden" marginTop="$md">
             <MapView
               style={{ flex: 1 }}
               showsUserLocation
@@ -1004,11 +993,11 @@ export function SportScreen() {
         */}
         <YStack opacity={pausado ? 0.55 : 1}>
           <YStack alignItems="center" paddingVertical={sessao.sport.gps ? '$lg' : '$xxl'} gap="$sm">
-            <XStack alignItems="center" gap={6}>
+            <XStack alignItems="center" gap={8}>
               {/* Luz de estado: aceso é dado — o cronômetro está correndo. */}
               <YStack
-                width={6}
-                height={6}
+                width={8}
+                height={8}
                 borderRadius={4}
                 backgroundColor={pausado ? '$faint' : '$primary'}
               />
@@ -1094,7 +1083,7 @@ export function SportScreen() {
               <YStack
                 width={76}
                 height={76}
-                borderRadius={38}
+                borderRadius={40}
                 backgroundColor="$primary"
                 alignItems="center"
                 justifyContent="center"
@@ -1424,7 +1413,7 @@ export function SportScreen() {
                 backgroundColor="$primary"
                 borderRadius={28}
                 paddingVertical={16}
-                paddingHorizontal={22}
+                paddingHorizontal={24}
                 alignItems="center"
                 gap="$sm"
                 opacity={pressed ? 0.8 : 1}
@@ -1432,10 +1421,10 @@ export function SportScreen() {
                 {/* Sobre o acento, o ink ESCURO da marca nos dois temas.
                     Com `colors.ink` o texto virava claro no tema claro — texto
                     quase branco sobre roxo médio, que não alcança contraste. */}
-                <Icon name="play" size={18} color={darkPalette.ink} />
-                <Text fontSize={16} fontWeight="700" style={{ color: darkPalette.ink }}>
+                <Icon name="play" size={20} color={darkPalette.ink} />
+                <SectionTitle color="$foreground" style={{ color: darkPalette.ink }}>
                   Iniciar treino
-                </Text>
+                </SectionTitle>
               </XStack>
             )}
           </Pressable>
@@ -1541,7 +1530,7 @@ function EscolhaDeEsporte({
       >
         <Icon name="search" size={16} color={colors.textMuted} />
         <TextInput
-          style={{ flex: 1, color: colors.text, fontSize: 16, paddingVertical: 10 }}
+          style={{ flex: 1, color: colors.text, fontSize: 16, paddingVertical: 12 }}
           value={busca}
           onChangeText={setBusca}
           placeholder="Buscar modalidade"
@@ -1582,7 +1571,7 @@ function EscolhaDeEsporte({
                       alignItems="center"
                       gap="$sm"
                     >
-                      <Icon name={sport.icon} size={22} color={colors.textMuted} />
+                      <Icon name={sport.icon} size={24} color={colors.textMuted} />
                       <Body fontSize={14} color="$foreground" numberOfLines={1}>
                         {sport.label}
                       </Body>
@@ -1640,7 +1629,7 @@ function OpcaoDeInicio({
         gap="$md"
       >
         <Icon name={icone} size={20} color={colors.textMuted} />
-        <YStack flex={1} gap={2}>
+        <YStack flex={1} gap={4}>
           <SectionTitle fontSize={16}>{titulo}</SectionTitle>
           <Data fontSize={12}>{detalhe}</Data>
         </YStack>

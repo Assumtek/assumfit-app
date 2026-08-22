@@ -5,7 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import { Image, Pressable } from 'react-native';
 
-import { Row, Section } from '../components/Card';
+import { Row, Section, RowLabel, RowValue } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
 import { Field } from '../components/Field';
 import { Icon } from '../components/Icon';
@@ -252,5 +252,3 @@ export function ProfileScreen() {
  * `flex: 1` no rótulo empurra o valor para a direita: `Row` só alinha na
  * vertical, quem distribui é o conteúdo.
  */
-const RowLabel = styled(Body, { flex: 1 });
-const RowValue = styled(Data, { fontSize: 14, color: '$foreground' });

@@ -5,7 +5,7 @@ import { Pressable, Share } from 'react-native';
 
 import { Note, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
-import { Body, Data } from '../components/ui';
+import { Body, Data, SectionTitle } from '../components/ui';
 import { ble, usingRealDevice, type GattNotification, type GattService } from '../services/ble';
 import { useBiometricStore } from '../store/biometric.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -162,7 +162,7 @@ export function GattScreen() {
       {feed.length ? (
         <Section label={`recebido · ${feed.length} quadros`}>
           {feed.slice(0, 40).map((n, i) => (
-            <YStack key={`${n.at}-${i}`} gap={2} paddingVertical="$sm" borderTopWidth={1} borderTopColor="$border">
+            <YStack key={`${n.at}-${i}`} gap={4} paddingVertical="$sm" borderTopWidth={1} borderTopColor="$border">
               <Mono color="$primary">{n.charUuid.slice(0, 8)}</Mono>
               <Mono selectable>{n.hex}</Mono>
               {/* O ASCII ao lado poupa decodificação manual: nome e versão do
@@ -277,14 +277,14 @@ function GattAction({
       accessibilityState={{ disabled: Boolean(disabled) }}
     >
       <YStack
-        paddingVertical={14}
+        paddingVertical={16}
         paddingHorizontal="$xl"
         borderRadius={999}
         backgroundColor={disabled ? '$control' : '$primary'}
       >
-        <Text fontSize={16} fontWeight="700" color={disabled ? '$faint' : '$primaryForeground'}>
+        <SectionTitle color={disabled ? '$faint' : '$primaryForeground'}>
           {label}
-        </Text>
+        </SectionTitle>
       </YStack>
     </Pressable>
   );

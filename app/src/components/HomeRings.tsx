@@ -40,7 +40,7 @@ export function HomeRings({ items }: { items: RingItem[] }) {
           style={({ pressed }) => pressed && { opacity: 0.6 }}
         >
           <YStack alignItems="center" gap="$md">
-            <ProgressRing fraction={item.fraction} color={item.color} size={88} strokeWidth={6}>
+            <ProgressRing fraction={item.fraction} color={item.color} size={88} strokeWidth={8}>
               <MetricSm>{item.value}</MetricSm>
             </ProgressRing>
             <Label>{item.label}</Label>

@@ -133,7 +133,7 @@ export function HistoryScreen() {
                 <YStack
                   width={4}
                   height={4}
-                  borderRadius={2}
+                  borderRadius={4}
                   backgroundColor={temDado ? '$primary' : 'transparent'}
                 />
               </YStack>

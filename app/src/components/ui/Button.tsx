@@ -63,7 +63,7 @@ export function Button({
       gap="$sm"
       height={HEIGHT[size]}
       paddingHorizontal="$xl"
-      borderRadius={14}
+      borderRadius={16}
       backgroundColor={variant === 'primary' ? '$primary' : 'transparent'}
       borderWidth={variant === 'secondary' ? 1 : 0}
       borderColor="$borderStrong"

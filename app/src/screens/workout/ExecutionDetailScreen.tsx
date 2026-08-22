@@ -109,7 +109,7 @@ export function ExecutionDetailScreen() {
           <YStack key={fase.type} marginTop="$xl">
             <XStack alignItems="center" gap="$sm" marginBottom="$md">
               {/* Cor calculada vai em `style` — token não aceita valor cru. */}
-              <YStack width={4} height={16} borderRadius={2} style={{ backgroundColor: PHASE_COLOR[tipo] }} />
+              <YStack width={4} height={16} borderRadius={4} style={{ backgroundColor: PHASE_COLOR[tipo] }} />
               <SectionTitle>{PHASE_NAME[tipo]}</SectionTitle>
             </XStack>
 

@@ -42,7 +42,7 @@ export function WaterRing({ ml, metaMl }: { ml: number; metaMl: number }) {
           origin={`${centro}, ${centro}`}
         />
       </Svg>
-      <YStack alignItems="center" gap={2}>
+      <YStack alignItems="center" gap={4}>
         <Text fontSize={44} fontWeight="200" letterSpacing={-1.5} color="$foreground" fontVariant={['tabular-nums']}>
           {ml.toLocaleString('pt-BR')}
           <Text fontSize={18} fontWeight="300" color="$mutedForeground">

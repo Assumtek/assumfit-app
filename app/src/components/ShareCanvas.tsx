@@ -130,8 +130,8 @@ export function BlocoEditavel({
         <YStack
           borderWidth={selecionado ? 1 : 0}
           borderColor="$primary"
-          borderRadius={6}
-          padding={2}
+          borderRadius={8}
+          padding={4}
         >
           {children}
         </YStack>

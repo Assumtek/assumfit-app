@@ -1,5 +1,4 @@
 import { horaCurta } from '../domain/horario';
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
 import { Pressable, Switch } from 'react-native';
@@ -61,7 +60,7 @@ export function WaterReminder() {
           accessibilityLabel="Escolher horários do lembrete de água"
         >
           <XStack alignItems="center" gap="$sm">
-            <YStack flex={1} gap={2}>
+            <YStack flex={1} gap={4}>
               <Body color="$foreground">Lembrar de beber água</Body>
               <Data>
                 {ligado
@@ -69,7 +68,7 @@ export function WaterReminder() {
                   : 'toque para escolher os horários'}
               </Data>
             </YStack>
-            <Icon name="arrowRight" size={14} color={colors.textMuted} />
+            <Icon name="arrowRight" size={16} color={colors.textMuted} />
           </XStack>
         </Pressable>
         <Switch
@@ -118,7 +117,7 @@ export function SedentaryReminder() {
   return (
     <Section label="Alerta de sedentarismo">
       <Row>
-        <YStack flex={1} gap={2}>
+        <YStack flex={1} gap={4}>
           <Body color="$foreground">Vibrar quando eu ficar parada</Body>
           <Data>
             na pulseira, das {JANELA.inicio} às {JANELA.fim}
@@ -145,16 +144,16 @@ export function SedentaryReminder() {
                 accessibilityState={{ selected: estado.intervalo === min }}
               >
                 <YStack
-                  paddingVertical={6}
-                  paddingHorizontal={10}
+                  paddingVertical={8}
+                  paddingHorizontal={12}
                   borderRadius={999}
                   borderWidth={1}
                   borderColor={estado.intervalo === min ? '$primary' : '$borderStrong'}
                   backgroundColor={estado.intervalo === min ? '$primarySoft' : 'transparent'}
                 >
-                  <Text fontSize={12} color="$foreground">
+                  <Data color="$foreground">
                     {min} min
-                  </Text>
+                  </Data>
                 </YStack>
               </Pressable>
             ))}

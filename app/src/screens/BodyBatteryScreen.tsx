@@ -119,7 +119,7 @@ export function BodyBatteryScreen() {
             <LineChart
               data={bateria.curve.map((p) => p.level)}
               width={largura}
-              height={170}
+              height={172}
               domain={[0, 100]}
               markLast
             />

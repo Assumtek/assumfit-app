@@ -66,7 +66,7 @@ export function TrainingPanel({
         {meta ? (
           <XStack alignItems="center" gap="$sm">
             {icone ? (
-              <Icon name={icone} size={14} color={colors.textMuted} strokeWidth={2} />
+              <Icon name={icone} size={16} color={colors.textMuted} strokeWidth={4} />
             ) : null}
             <Body flex={1} numberOfLines={2}>
               {meta}
@@ -74,7 +74,7 @@ export function TrainingPanel({
             {/* A seta só aparece quando a peça INTEIRA é o alvo e não há botão:
                 com botão, ela prometeria um segundo destino que não existe. */}
             {onPress && !acao ? (
-              <Icon name="arrowRight" size={16} color={colors.textMuted} strokeWidth={2} />
+              <Icon name="arrowRight" size={16} color={colors.textMuted} strokeWidth={4} />
             ) : null}
           </XStack>
         ) : null}

@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
+import { Data } from '../../components/ui';
 import React from 'react';
 import { Pressable } from 'react-native';
 
@@ -77,11 +77,11 @@ function Botao({ item, onPress }: { item: Item; onPress: () => void }) {
         >
           {/* Ícone acromático: estes cinco são navegação, e o acento
               pertence ao dado — a mesma regra do resto do sistema. */}
-          <Icon name={item.icone} size={20} color={colors.textMuted} strokeWidth={2} />
+          <Icon name={item.icone} size={20} color={colors.textMuted} strokeWidth={4} />
         </YStack>
-        <Text fontSize={12} color="$mutedForeground" numberOfLines={1}>
+        <Data color="$mutedForeground" numberOfLines={1}>
           {item.rotulo}
-        </Text>
+        </Data>
       </YStack>
     </Pressable>
   );

@@ -58,15 +58,15 @@ export function MetricBlock({ label, rating, pending, onPress }: Props) {
           {medindo ? (
             // No lugar do anel, com o mesmo diâmetro: a troca não muda a
             // altura do card nem faz o grid respirar entre estados.
-            <XStack width={30} height={30} alignItems="center" justifyContent="center">
+            <XStack width={32} height={32} alignItems="center" justifyContent="center">
               <ActivityIndicator size="small" color={colors.textMuted} />
             </XStack>
           ) : (
             <ProgressRing
               fraction={rating.fraction}
               color={stateColor(rating.state, colors)}
-              size={30}
-              strokeWidth={6}
+              size={32}
+              strokeWidth={8}
             />
           )}
           <Data numberOfLines={1}>{medindo ? 'medindo agora' : rating.detail}</Data>

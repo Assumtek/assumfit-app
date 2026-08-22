@@ -25,7 +25,7 @@ import { YStack } from '@tamagui/stacks';
 
 import { BandStatusLine } from '../components/BandStatus';
 import { BandVibration } from '../components/BandVibration';
-import { Note, Row, Section } from '../components/Card';
+import { Note, Row, Section, ActionRow } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
 import { SedentaryReminder } from '../components/SedentaryReminder';
@@ -249,7 +249,7 @@ export function DeviceScreen() {
                   <YStack width={8} height={8} borderRadius={4} borderWidth={1} borderColor="$border" />
                 )}
               </YStack>
-              <YStack flex={1} gap={2}>
+              <YStack flex={1} gap={4}>
                 <Body color={e.lastAt != null || e.resumo || viva ? '$foreground' : '$mutedForeground'}>{e.label}</Body>
                 {e.resumo ? <Data>{e.resumo}</Data> : null}
               </YStack>
@@ -271,34 +271,25 @@ export function DeviceScreen() {
 
       {conectada ? (
         <Section label="Ferramentas">
-          <Pressable onPress={() => void localizar()} disabled={localizando} accessibilityRole="button">
-            <Row>
-              <Icon name="target" size={16} color={colors.text} />
-              <YStack flex={1} marginLeft="$md" gap={2}>
-                <Body color="$foreground">Localizar pulseira</Body>
-                <Data>{localizando ? 'Vibrando…' : 'Vibra por alguns segundos.'}</Data>
-              </YStack>
-              <Icon name="arrowRight" size={14} color={colors.textMuted} />
-            </Row>
-          </Pressable>
-          <Pressable onPress={() => void calibrar()} disabled={calibrando} accessibilityRole="button">
-            <Row last>
-              <Icon name="watch" size={16} color={colors.text} />
-              <YStack flex={1} marginLeft="$md" gap={2}>
-                <Body color="$foreground">Calibrar uso da pulseira</Body>
-                <Data>
-                  {calibrando
-                    ? 'Calibrando… fique parado, com a pulseira vestida (até 2 min).'
-                    : (calibracao ?? 'Se a medição sob demanda volta vazia, a pulseira pede isto.')}
-                </Data>
-              </YStack>
-              {calibrando ? (
-                <ActivityIndicator size="small" color={colors.accent} />
-              ) : (
-                <Icon name="arrowRight" size={14} color={colors.textMuted} />
-              )}
-            </Row>
-          </Pressable>
+          <ActionRow
+            icon="target"
+            title="Localizar pulseira"
+            subtitle={localizando ? 'Vibrando…' : 'Vibra por alguns segundos.'}
+            onPress={() => void localizar()}
+            disabled={localizando}
+          />
+          <ActionRow
+            icon="watch"
+            title="Calibrar uso da pulseira"
+            subtitle={
+              calibrando
+                ? 'Calibrando… fique parado, com a pulseira vestida (até 2 min).'
+                : (calibracao ?? 'Se a medição sob demanda volta vazia, a pulseira pede isto.')
+            }
+            busy={calibrando}
+            onPress={() => void calibrar()}
+            last
+          />
         </Section>
       ) : null}
 

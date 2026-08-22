@@ -1,7 +1,7 @@
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
+import { useChartWidth } from '../components/charts/useChartWidth';
 import React, { useState } from 'react';
-import { LayoutChangeEvent } from 'react-native';
 
 import { EmptyMetric } from '../components/BandStatus';
 import { Row, Section } from '../components/Card';
@@ -18,7 +18,7 @@ export function PressureScreen() {
   const history = useBiometricStore((s) => s.pressureHistory);
   // Hook antes de qualquer return condicional — do contrário a ordem muda
   // quando `latest` alterna entre nulo e presente.
-  const [chartWidth, setChartWidth] = useState(0);
+  const [chartWidth, onLayoutChartWidth] = useChartWidth();
 
   if (!latest)
     return (
@@ -67,7 +67,7 @@ export function PressureScreen() {
       </YStack>
 
       <Section label="Sistólica × diastólica · 7 dias">
-        <YStack onLayout={(e: LayoutChangeEvent) => setChartWidth(e.nativeEvent.layout.width)}>
+        <YStack onLayout={onLayoutChartWidth}>
           <ScatterPlot
             width={chartWidth}
             height={200}

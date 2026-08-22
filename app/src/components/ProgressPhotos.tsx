@@ -96,7 +96,7 @@ export function ProgressPhotos() {
                     style={{
                       width: 72,
                       height: 96,
-                      borderRadius: 10,
+                      borderRadius: 12,
                       borderWidth: marcada ? 2 : 1,
                       borderColor: marcada ? colors.accent : colors.hairlineStrong,
                     }}

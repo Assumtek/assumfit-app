@@ -1,7 +1,8 @@
 import { useNavigation } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
+import { useChartWidth } from '../components/charts/useChartWidth';
 import React, { useEffect, useState } from 'react';
-import { LayoutChangeEvent, Pressable } from 'react-native';
+import { Pressable } from 'react-native';
 
 import { Note, Row, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
@@ -35,7 +36,7 @@ export function ActivityScreen() {
    dia" (Leonardo, 22/08).
   */
   const [dias, setDias] = useState<api.DailySummary[] | null>(null);
-  const [larguraDias, setLarguraDias] = useState(0);
+  const [larguraDias, onLayoutLarguraDias] = useChartWidth();
   useEffect(() => {
     let vivo = true;
     api
@@ -73,7 +74,7 @@ export function ActivityScreen() {
   }, []);
   const latest = useBiometricStore((s) => s.latest);
   const stepsByHour = useBiometricStore((s) => s.stepsByHour);
-  const [chartWidth, setChartWidth] = useState(0);
+  const [chartWidth, onLayoutChartWidth] = useChartWidth();
   const rating = rateActivity(activity);
   const remaining = Math.max(0, activity.goal - activity.steps);
 
@@ -120,7 +121,7 @@ export function ActivityScreen() {
             accessibilityLabel="Compartilhar minha atividade"
             style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
           >
-            <Icon name="share" size={18} color={colors.textMuted} strokeWidth={2} />
+            <Icon name="share" size={20} color={colors.textMuted} strokeWidth={4} />
           </Pressable>
         </XStack>
         <Display>{activity.steps.toLocaleString('pt-BR')}</Display>
@@ -134,9 +135,9 @@ export function ActivityScreen() {
 
       {/* Aqui a barra de PREENCHIMENTO é a certa: passos acumulam rumo a uma
           meta, e a meta é o fim da régua. */}
-      <YStack height={6} borderRadius={4} backgroundColor="$track">
+      <YStack height={8} borderRadius={4} backgroundColor="$track">
         <YStack
-          height={6}
+          height={8}
           borderRadius={4}
           backgroundColor="$primary"
           width={`${rating.fraction * 100}%`}
@@ -145,11 +146,11 @@ export function ActivityScreen() {
       <Data marginTop="$sm">{Math.round(rating.fraction * 100)}% da meta</Data>
 
       <Section label="Acúmulo do dia">
-        <YStack onLayout={(e: LayoutChangeEvent) => setChartWidth(e.nativeEvent.layout.width)}>
+        <YStack onLayout={onLayoutChartWidth}>
           <LineChart
             data={stepsByHour}
             width={chartWidth}
-            height={150}
+            height={152}
             domain={[0, activity.goal]}
             thresholds={[{ value: activity.goal, label: 'meta' }]}
             xLabels={['06h', '12h', '18h', '22h']}
@@ -164,7 +165,7 @@ export function ActivityScreen() {
 
       {dias && dias.length > 0 ? (
         <Section label="Últimos 7 dias">
-          <YStack onLayout={(e: LayoutChangeEvent) => setLarguraDias(e.nativeEvent.layout.width)}>
+          <YStack onLayout={onLayoutLarguraDias}>
             <BarChart
               width={larguraDias}
               height={140}

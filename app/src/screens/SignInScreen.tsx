@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Field } from '../components/Field';
 import { Icon } from '../components/Icon';
 import { LogoType } from '../components/Logo';
-import { Body } from '../components/ui';
+import { Body, SectionTitle } from '../components/ui';
 import { useAuthStore } from '../store/auth.store';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -44,7 +44,7 @@ export function SignInScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <LogoType height={18} />
+        <LogoType height={20} />
         <Text
           fontSize={34}
           fontWeight="700"
@@ -101,19 +101,17 @@ export function SignInScreen() {
           <XStack
             alignItems="center"
             gap="$md"
-            paddingVertical={14}
+            paddingVertical={16}
             paddingHorizontal="$xl"
             marginTop="$md"
             borderRadius={999}
             backgroundColor={disabled ? '$control' : '$primary'}
           >
-            <Text
-              fontSize={16}
-              fontWeight="700"
+            <SectionTitle
               color={disabled ? '$faint' : '$primaryForeground'}
             >
               {loading ? 'Entrando' : 'Entrar'}
-            </Text>
+            </SectionTitle>
             <Icon name="arrowRight" size={16} color={disabled ? colors.textFaint : colors.ink} />
           </XStack>
         </Pressable>

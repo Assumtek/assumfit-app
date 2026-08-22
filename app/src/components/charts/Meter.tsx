@@ -1,6 +1,6 @@
 import { XStack, YStack } from '@tamagui/stacks';
+import { useChartWidth } from './useChartWidth';
 import React, { useState } from 'react';
-import { LayoutChangeEvent } from 'react-native';
 
 import { useTheme } from '../../theme/ThemeProvider';
 import { Data } from '../ui';
@@ -35,7 +35,7 @@ type Props = {
 export function Meter({ value, min = 0, max = 100, zones, color }: Props) {
   const { colors } = useTheme();
   color = color ?? colors.accent;
-  const [width, setWidth] = useState(0);
+  const [width, onLayoutWidth] = useChartWidth();
 
   const clamped = Math.max(min, Math.min(max, value));
   const position = (clamped - min) / (max - min || 1);
@@ -43,11 +43,11 @@ export function Meter({ value, min = 0, max = 100, zones, color }: Props) {
   return (
     <YStack>
       <YStack
-        height={6}
+        height={8}
         borderRadius={4}
         backgroundColor="$track"
         justifyContent="center"
-        onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
+        onLayout={onLayoutWidth}
       >
         {/* Divisórias entre faixas. A última não desenha: é a borda da régua. */}
         {zones.slice(0, -1).map((zone) => (
@@ -79,7 +79,7 @@ export function Meter({ value, min = 0, max = 100, zones, color }: Props) {
         {width > 0 ? (
           <YStack
             position="absolute"
-            top={-6}
+            top={-8}
             width={4}
             height={16}
             borderRadius={1.5}

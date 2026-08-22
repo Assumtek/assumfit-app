@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
+import { useChartWidth } from '../../components/charts/useChartWidth';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable } from 'react-native';
 
@@ -10,16 +10,7 @@ import { RangeSheet } from '../../components/RangeSheet';
 import { BarChart } from '../../components/charts/BarChart';
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon, type IconName } from '../../components/Icon';
-import {
-  Body,
-  Card,
-  Data,
-  Label,
-  Metric,
-  MetricSm,
-  RatingText,
-  SectionTitle,
-} from '../../components/ui';
+import { Body, Card, Data, Label, Metric, MetricSm, RatingText, SectionTitle } from '../../components/ui';
 import {
   consolidateMovement,
   movementSeries,
@@ -141,7 +132,7 @@ export function ProgressScreen() {
         duas respondem a mesma pergunta em janelas diferentes — "o que eu fiz" e
         "para onde estou indo" — e trocar de aba preserva o período escolhido.
       */}
-      <XStack borderRadius={10} borderWidth={1} borderColor="$border" overflow="hidden" marginBottom="$md">
+      <XStack borderRadius={12} borderWidth={1} borderColor="$border" overflow="hidden" marginBottom="$md">
         {(
           [
             ['movimento', 'Movimento'],
@@ -160,13 +151,12 @@ export function ProgressScreen() {
               alignItems="center"
               backgroundColor={aba === chave ? '$primarySoft' : 'transparent'}
             >
-              <Text
-                fontSize={14}
+              <Body
                 fontWeight={aba === chave ? '700' : '400'}
                 color={aba === chave ? '$foreground' : '$mutedForeground'}
               >
                 {rotulo}
-              </Text>
+              </Body>
             </YStack>
           </Pressable>
         ))}
@@ -193,7 +183,7 @@ export function ProgressScreen() {
           accessibilityLabel="Compartilhar meu progresso"
           style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
         >
-          <Icon name="share" size={18} color={colors.textMuted} strokeWidth={2} />
+          <Icon name="share" size={20} color={colors.textMuted} strokeWidth={4} />
         </Pressable>
       </XStack>
       <SeletorDePeriodo
@@ -239,9 +229,9 @@ export function ProgressScreen() {
               <RatingText marginTop="$sm">{movimento.label}</RatingText>
               {/* Barra de PREENCHIMENTO: minutos acumulam rumo a uma régua, e a
                   régua é o fim do trilho. */}
-              <YStack height={6} borderRadius={4} backgroundColor="$track" marginTop="$md" overflow="hidden">
+              <YStack height={8} borderRadius={4} backgroundColor="$track" marginTop="$md" overflow="hidden">
                 <YStack
-                  height={6}
+                  height={8}
                   borderRadius={4}
                   backgroundColor="$primary"
                   width={`${movimento.fraction * 100}%`}
@@ -288,10 +278,10 @@ export function ProgressScreen() {
                     </YStack>
                     <Data flexShrink={0}>{formatDuration(modalidade.minutos * 60)}</Data>
                   </XStack>
-                  <YStack height={4} borderRadius={2} backgroundColor="$track" marginTop="$sm" overflow="hidden">
+                  <YStack height={4} borderRadius={4} backgroundColor="$track" marginTop="$sm" overflow="hidden">
                     <YStack
                       height={4}
-                      borderRadius={2}
+                      borderRadius={4}
                       backgroundColor="$primary"
                       width={`${fracaoDe(modalidade.minutos, maiorModalidade) * 100}%`}
                     />
@@ -356,7 +346,7 @@ export function ProgressScreen() {
                             value: d.volume,
                           }))}
                           width={largura}
-                          height={150}
+                          height={152}
                           labelEvery={Math.max(1, Math.ceil(musculacao.volumeEvolution.length / 6))}
                           id="volume-dia"
                         />
@@ -380,10 +370,10 @@ export function ProgressScreen() {
                         </YStack>
                         <Data flexShrink={0}>{formatarVolume(grupo.volume)}</Data>
                       </XStack>
-                      <YStack height={4} borderRadius={2} backgroundColor="$track" marginTop="$sm" overflow="hidden">
+                      <YStack height={4} borderRadius={4} backgroundColor="$track" marginTop="$sm" overflow="hidden">
                         <YStack
                           height={4}
-                          borderRadius={2}
+                          borderRadius={4}
                           backgroundColor="$primary"
                           width={`${fracaoDe(grupo.volume, maiorGrupo) * 100}%`}
                         />
@@ -440,7 +430,7 @@ function SeletorDePeriodo({
 }) {
   const opcoes: { dias: 1 | 7 | 30 | 90 | 'outro'; rotulo: string }[] = [...PERIODOS, { dias: 'outro', rotulo: 'Outro' }];
   return (
-    <XStack borderRadius={10} borderWidth={1} borderColor="$border" overflow="hidden">
+    <XStack borderRadius={12} borderWidth={1} borderColor="$border" overflow="hidden">
       {opcoes.map((periodo) => {
         const ativo = periodo.dias === atual;
         return (
@@ -456,13 +446,12 @@ function SeletorDePeriodo({
               alignItems="center"
               backgroundColor={ativo ? '$control' : 'transparent'}
             >
-              <Text
-                fontSize={14}
+              <Body
                 fontWeight={ativo ? '600' : '400'}
                 color={ativo ? '$foreground' : '$mutedForeground'}
               >
                 {periodo.rotulo}
-              </Text>
+              </Body>
             </YStack>
           </Pressable>
         );
@@ -478,7 +467,7 @@ function Numero({ icone, valor, rotulo }: { icone: IconName; valor: string; rotu
     <YStack flex={1}>
       <Card>
         <XStack alignItems="center" gap="$xs">
-          <Icon name={icone} size={14} color={colors.textMuted} />
+          <Icon name={icone} size={16} color={colors.textMuted} />
           <Label>{rotulo}</Label>
         </XStack>
         <MetricSm marginTop="$xs" numberOfLines={1}>
@@ -501,9 +490,9 @@ function Miudo({ valor, rotulo }: { valor: string; rotulo: string }) {
 
 /** Dá ao filho a largura real — SVG precisa de número, não de porcentagem. */
 function Medido({ children }: { children: (largura: number) => React.ReactNode }) {
-  const [largura, setLargura] = useState(0);
+  const [largura, onLayoutLargura] = useChartWidth();
   return (
-    <XStack marginTop="$sm" onLayout={(e) => setLargura(e.nativeEvent.layout.width)}>
+    <XStack marginTop="$sm" onLayout={onLayoutLargura}>
       {largura > 0 ? children(largura) : null}
     </XStack>
   );
@@ -602,7 +591,7 @@ function Evolucao({
                 <BarChart
                   bars={serie}
                   width={largura}
-                  height={150}
+                  height={152}
                   labelEvery={Math.max(1, Math.ceil(serie.length / 6))}
                   id="movimento-dia"
                 />
@@ -622,7 +611,7 @@ function Evolucao({
                 <BarChart
                   bars={volume.map((d) => ({ label: d.day.slice(8), value: d.volume }))}
                   width={largura}
-                  height={150}
+                  height={152}
                   labelEvery={Math.max(1, Math.ceil(volume.length / 6))}
                   id="volume-evolucao"
                 />
@@ -671,7 +660,7 @@ function Evolucao({
               >
                 <XStack alignItems="center" gap="$md">
                   <Icon name={meta?.icon ?? 'footprints'} size={16} color={colors.textMuted} />
-                  <YStack flex={1} minWidth={0} gap={2}>
+                  <YStack flex={1} minWidth={0} gap={4}>
                     <Body color="$foreground" numberOfLines={1}>
                       {nomeDoEsporte(sessao.sport)}
                     </Body>
@@ -680,7 +669,7 @@ function Evolucao({
                       {sessao.distanceM ? ` · ${emKm(sessao.distanceM)}` : ''}
                     </Data>
                   </YStack>
-                  <Icon name="arrowRight" size={14} color={colors.textMuted} />
+                  <Icon name="arrowRight" size={16} color={colors.textMuted} />
                 </XStack>
               </Card>
             );
@@ -695,7 +684,7 @@ function Evolucao({
             >
               <XStack alignItems="center" gap="$md">
                 <Icon name="dumbbell" size={16} color={colors.textMuted} />
-                <YStack flex={1} minWidth={0} gap={2}>
+                <YStack flex={1} minWidth={0} gap={4}>
                   <Body color="$foreground" numberOfLines={1}>
                     {item.workoutName}
                   </Body>
@@ -711,7 +700,7 @@ function Evolucao({
                   falha clínica.
                 */}
                 {item.status !== 'FINISHED' ? <Data flexShrink={0}>interrompido</Data> : null}
-                <Icon name="arrowRight" size={14} color={colors.textMuted} />
+                <Icon name="arrowRight" size={16} color={colors.textMuted} />
               </XStack>
             </Card>
           );

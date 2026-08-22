@@ -76,7 +76,7 @@ export function AnamnesisHistoryScreen() {
               accessibilityLabel={`Versão de ${formatarData(versao.createdAt)}`}
             >
               <XStack alignItems="center" gap="$md">
-                <YStack flex={1} minWidth={0} gap={2}>
+                <YStack flex={1} minWidth={0} gap={4}>
                   <XStack alignItems="center" gap="$sm">
                     <Body color="$foreground">{formatarData(versao.createdAt)}</Body>
                     {atual ? <Data color="$primary">em uso</Data> : null}
@@ -90,7 +90,7 @@ export function AnamnesisHistoryScreen() {
                   */}
                   <Data>{resumo(clinicas(versao.flags))}</Data>
                 </YStack>
-                <Icon name="arrowRight" size={14} color={colors.textMuted} />
+                <Icon name="arrowRight" size={16} color={colors.textMuted} />
               </XStack>
             </Card>
           );

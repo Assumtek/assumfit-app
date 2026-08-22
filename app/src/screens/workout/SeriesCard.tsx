@@ -1,5 +1,6 @@
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
+import { Body, Data, SectionTitle } from '../../components/ui';
 import React from 'react';
 import { TextInput, TouchableOpacity } from 'react-native';
 
@@ -64,16 +65,16 @@ export function SeriesCard({
         borderBottomColor="$border"
         opacity={0.7}
       >
-        <Text fontSize={14} color="$mutedForeground" width={28}>
+        <Body color="$mutedForeground" width={28}>
           {number}ª
-        </Text>
-        <Text fontSize={14} color="$mutedForeground" flex={1}>
+        </Body>
+        <Body color="$mutedForeground" flex={1}>
           {simple
             ? `${prescribedReps} concluído`
             : seconds
               ? `${state.load || '0'}kg · ${state.reps || seconds} s`
               : `${state.load || '0'}kg · ${state.reps || '0'} reps`}
-        </Text>
+        </Body>
         <TouchableOpacity onPress={onToggle} activeOpacity={0.7} accessibilityRole="checkbox">
           <YStack
             width={28}
@@ -83,7 +84,7 @@ export function SeriesCard({
             justifyContent="center"
             backgroundColor="$primary"
           >
-            <Icon name="check" size={14} color={colors.ink} />
+            <Icon name="check" size={16} color={colors.ink} />
           </YStack>
         </TouchableOpacity>
       </XStack>
@@ -101,12 +102,12 @@ export function SeriesCard({
         borderBottomColor="$border"
         opacity={0.35}
       >
-        <Text fontSize={14} color="$mutedForeground" width={28}>
+        <Body color="$mutedForeground" width={28}>
           {number}ª
-        </Text>
-        <Text fontSize={14} color="$mutedForeground" flex={1}>
+        </Body>
+        <Body color="$mutedForeground" flex={1}>
           Pendente
-        </Text>
+        </Body>
         <YStack width={28} height={28} borderRadius={999} borderWidth={1} borderColor="$border" />
       </XStack>
     );
@@ -117,16 +118,16 @@ export function SeriesCard({
     return (
       <YStack paddingVertical="$lg" borderBottomWidth={1} borderBottomColor="$border">
         <XStack alignItems="center" gap="$md">
-          <Text fontSize={16} fontWeight="700" color="$foreground" width={28}>
+          <SectionTitle color="$foreground" width={28}>
             {number}ª
-          </Text>
+          </SectionTitle>
           <YStack flex={1}>
             <Text fontSize={16} fontWeight="500" color="$foreground">
               {isCardio ? `Faça por ${prescribedReps}` : `Mantenha por ${prescribedReps}`}
             </Text>
-            <Text fontSize={14} color="$mutedForeground">
+            <Body color="$mutedForeground">
               {isCardio ? 'Mantenha o ritmo constante' : 'Respire calmamente e segure a posição'}
-            </Text>
+            </Body>
           </YStack>
           <TouchableOpacity onPress={onToggle} activeOpacity={0.7} accessibilityRole="checkbox">
             <YStack
@@ -138,16 +139,16 @@ export function SeriesCard({
               borderWidth={2}
               borderColor="$primary"
             >
-              <Icon name="check" size={22} color={colors.accent} />
+              <Icon name="check" size={24} color={colors.accent} />
             </YStack>
           </TouchableOpacity>
         </XStack>
         {onSkip ? (
           <TouchableOpacity onPress={onSkip} activeOpacity={0.7}>
             <XStack alignItems="center" justifyContent="center" gap="$xs" marginTop="$sm">
-              <Text fontSize={14} color="$mutedForeground">
+              <Body color="$mutedForeground">
                 Pular
-              </Text>
+              </Body>
               <Icon name="arrowRight" size={12} color={colors.textMuted} />
             </XStack>
           </TouchableOpacity>
@@ -160,18 +161,18 @@ export function SeriesCard({
   return (
     <YStack paddingVertical="$lg" borderBottomWidth={1} borderBottomColor="$border">
       <XStack alignItems="center" gap="$md">
-        <Text fontSize={16} fontWeight="700" color="$foreground" width={28}>
+        <SectionTitle color="$foreground" width={28}>
           {number}ª
-        </Text>
+        </SectionTitle>
         <Text fontSize={14} fontWeight="500" color="$primary" flex={1}>
           Série atual
         </Text>
         {onSkip ? (
           <TouchableOpacity onPress={onSkip} activeOpacity={0.7}>
             <XStack alignItems="center" gap="$xs">
-              <Text fontSize={14} color="$mutedForeground">
+              <Body color="$mutedForeground">
                 Pular
-              </Text>
+              </Body>
               <Icon name="arrowRight" size={12} color={colors.textMuted} />
             </XStack>
           </TouchableOpacity>
@@ -212,7 +213,7 @@ export function SeriesCard({
             borderWidth={2}
             borderColor="$primary"
           >
-            <Icon name="check" size={22} color={colors.accent} />
+            <Icon name="check" size={24} color={colors.accent} />
           </YStack>
         </TouchableOpacity>
       </XStack>
@@ -234,12 +235,12 @@ function NumberField({
   const { colors } = useTheme();
   return (
     <YStack flex={1} gap="$xs">
-      <Text fontSize={12} color="$mutedForeground">
+      <Data color="$mutedForeground">
         {label}
-      </Text>
+      </Data>
       <YStack
         backgroundColor="$card"
-        borderRadius={10}
+        borderRadius={12}
         borderWidth={1}
         borderColor="$border"
         minHeight={48}

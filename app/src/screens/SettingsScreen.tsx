@@ -5,7 +5,7 @@ import { mensagemDaFalha } from '../domain/apiErrors';
 import React, { useEffect, useState } from 'react';
 import { Alert, Linking, Pressable, Switch } from 'react-native';
 
-import { Row, Section } from '../components/Card';
+import { Row, Section, RowLabel, RowValue, ActionRow } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
 import { ThemeSwitch } from '../components/ThemeSwitch';
@@ -157,7 +157,7 @@ export function SettingsScreen() {
       */}
       <Section label="Notificações">
         <Row>
-          <YStack flex={1} gap={2}>
+          <YStack flex={1} gap={4}>
             <RowLabel>Notificações personalizadas</RowLabel>
             <Data>
               {personalizadas
@@ -174,7 +174,7 @@ export function SettingsScreen() {
           <Switch value={personalizadas} onValueChange={(v) => void ligarPersonalizadas(v)} trackColor={{ true: colors.accent }} />
         </Row>
         <Row last>
-          <YStack flex={1} gap={2}>
+          <YStack flex={1} gap={4}>
             <RowLabel>Lembrar ao chegar no lugar do treino</RowLabel>
             <Data>
               {porLocal
@@ -238,8 +238,6 @@ export function SettingsScreen() {
  * `flex: 1` no rótulo empurra o valor para a direita: `Row` só alinha na
  * vertical, quem distribui é o conteúdo.
  */
-const RowLabel = styled(Body, { flex: 1 });
-const RowValue = styled(Data, { fontSize: 14, color: '$foreground' });
 
 /**
  * Ação de navegação dentro de uma seção.
@@ -253,33 +251,23 @@ function LinkRow({
   disabled,
   arrow = true,
   destructive = false,
+  last = false,
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
   arrow?: boolean;
   destructive?: boolean;
+  last?: boolean;
 }) {
-  const { colors } = useTheme();
   return (
-    <Pressable
-      style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
+    <ActionRow
+      title={label}
       onPress={onPress}
       disabled={disabled}
-      accessibilityRole="button"
-    >
-      <XStack
-        alignItems="center"
-        justifyContent="space-between"
-        paddingVertical="$lg"
-        borderTopWidth={1}
-        borderTopColor="$border"
-      >
-        <Text fontSize={16} color={destructive ? '$destructive' : '$foreground'}>
-          {label}
-        </Text>
-        {arrow ? <Icon name="arrowRight" size={16} color={colors.textMuted} /> : null}
-      </XStack>
-    </Pressable>
+      right={arrow ? 'chevron' : 'none'}
+      destructive={destructive}
+      last={last}
+    />
   );
 }

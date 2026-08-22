@@ -1,7 +1,8 @@
 import { useNavigation } from '@react-navigation/native';
 import { YStack } from '@tamagui/stacks';
+import { useChartWidth } from '../components/charts/useChartWidth';
 import React, { useCallback, useEffect, useState } from 'react';
-import { LayoutChangeEvent, Pressable } from 'react-native';
+import { Pressable } from 'react-native';
 
 import { EmptyMetric } from '../components/BandStatus';
 import { Note, Row, Section } from '../components/Card';
@@ -38,7 +39,7 @@ export function BioAgeScreen() {
   const user = useUserStore((s) => s.user);
   const age = useUserStore((s) => s.age());
   const { colors } = useTheme();
-  const [chartWidth, setChartWidth] = useState(0);
+  const [chartWidth, onLayoutChartWidth] = useChartWidth();
   const [referencias, setReferencias] = useState(false);
 
   /**
@@ -91,7 +92,7 @@ export function BioAgeScreen() {
       </Section>
 
       <Section label="Composição">
-        <YStack onLayout={(e: LayoutChangeEvent) => setChartWidth(e.nativeEvent.layout.width)}>
+        <YStack onLayout={onLayoutChartWidth}>
           <DivergingBar
             width={chartWidth}
             items={bio.factors
@@ -121,7 +122,7 @@ export function BioAgeScreen() {
       <Section label="Suas medidas">
         {bio.factors.map((f, i) => (
           <Row key={f.key} last={i === bio.factors.length - 1}>
-            <YStack flex={1} gap={2}>
+            <YStack flex={1} gap={4}>
               <Body color="$foreground">{f.label}</Body>
               <Data>{f.reference}</Data>
             </YStack>
@@ -159,7 +160,7 @@ export function BioAgeScreen() {
           onPress={() => setReferencias((r) => !r)}
           accessibilityRole="button"
           accessibilityState={{ expanded: referencias }}
-          style={({ pressed }) => [{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }, pressed && { opacity: 0.6 }]}
+          style={({ pressed }) => [{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }, pressed && { opacity: 0.6 }]}
         >
           <Data color="$foreground">{referencias ? 'Ocultar referências' : 'Ver referências científicas'}</Data>
           <Icon name={referencias ? 'up' : 'down'} size={12} color={colors.textMuted} />

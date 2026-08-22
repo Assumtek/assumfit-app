@@ -50,7 +50,7 @@ export function ExerciseVideo({
             <YStack
               width={52}
               height={52}
-              borderRadius={26}
+              borderRadius={28}
               alignItems="center"
               justifyContent="center"
               backgroundColor="$primary"

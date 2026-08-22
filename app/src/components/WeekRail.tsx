@@ -63,7 +63,7 @@ export function WeekRail({ semana, selecionado, onSelect, streak }: Props) {
           {resumo ? <Data>{resumo}</Data> : null}
           {typeof streak === 'number' && streak > 0 ? (
             <XStack alignItems="center" gap={4}>
-              <Icon name="flame" size={14} color={colors.accent} strokeWidth={2} />
+              <Icon name="flame" size={16} color={colors.accent} strokeWidth={4} />
               <Text fontSize={12} fontWeight="700" color="$primary" fontVariant={['tabular-nums']}>
                 {streak}
               </Text>
@@ -138,18 +138,17 @@ function Dia({
       */}
       <YStack
         alignItems="center"
-        gap={6}
-        paddingVertical={6}
-        borderRadius={10}
+        gap={8}
+        paddingVertical={8}
+        borderRadius={12}
         backgroundColor={aberto ? '$card' : 'transparent'}
       >
-        <Text
-          fontSize={12}
+        <Data
           fontWeight={dia.ehHoje ? '700' : '400'}
           color={dia.ehHoje ? '$foreground' : '$mutedForeground'}
         >
           {DAY_SHORT[dia.weekday]}
-        </Text>
+        </Data>
 
         {/* Altura fixa: o traço do descanso é mais baixo que o disco, e sem a
             caixa comum a fileira inteira ondula. */}
@@ -187,7 +186,7 @@ function Dia({
             */
             <YStack
               width={DISCO}
-              height={2}
+              height={4}
               borderRadius={1}
               backgroundColor={dia.ehHoje ? '$primary' : '$borderStrong'}
             />

@@ -154,7 +154,7 @@ const elevation = (scheme: 'light' | 'dark'): ViewStyle =>
         shadowColor: '#0E0A22',
         shadowOpacity: 0.1,
         shadowRadius: 14,
-        shadowOffset: { width: 0, height: 6 },
+        shadowOffset: { width: 0, height: 8 },
         elevation: 3,
       }
     : { overflow: 'hidden' };

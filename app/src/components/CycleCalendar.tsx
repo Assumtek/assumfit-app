@@ -1,4 +1,5 @@
 import { XStack, YStack } from '@tamagui/stacks';
+import { useChartWidth } from './charts/useChartWidth';
 import React, { useMemo, useState } from 'react';
 import { Pressable, type ViewStyle } from 'react-native';
 
@@ -75,7 +76,7 @@ export function CycleCalendar({
    outra, atravessando a borda entre as duas — e `50%` de um filho absoluto
    não sabe de que largura é a metade.
   */
-  const [larguraGrade, setLarguraGrade] = useState(0);
+  const [larguraGrade, onLayoutLarguraGrade] = useChartWidth();
   const ladoCelula = larguraGrade / 7;
 
   const primeiroDiaSemana = new Date(ano, mes, 1).getDay();
@@ -104,7 +105,7 @@ export function CycleCalendar({
     <YStack marginTop="$md" marginBottom="$lg">
       <XStack alignItems="center" justifyContent="space-between" marginBottom="$md">
         <Pressable onPress={() => mover(-1)} accessibilityRole="button" accessibilityLabel="Mês anterior" hitSlop={12}>
-          <Icon name="back" size={18} color={colors.text} />
+          <Icon name="back" size={20} color={colors.text} />
         </Pressable>
         <Body color="$foreground">
           {MESES[mes]} {ano !== agora.getFullYear() ? ano : ''}
@@ -116,7 +117,7 @@ export function CycleCalendar({
           accessibilityLabel="Próximo mês"
           hitSlop={12}
         >
-          <Icon name="arrowRight" size={18} color={noTeto ? colors.hairlineStrong : colors.text} />
+          <Icon name="arrowRight" size={20} color={noTeto ? colors.hairlineStrong : colors.text} />
         </Pressable>
       </XStack>
 
@@ -128,7 +129,7 @@ export function CycleCalendar({
         ))}
       </XStack>
 
-      <XStack flexWrap="wrap" onLayout={(e) => setLarguraGrade(e.nativeEvent.layout.width)}>
+      <XStack flexWrap="wrap" onLayout={onLayoutLarguraGrade}>
         {celulas.map((dia, i) => {
           if (dia === null) return <YStack key={`v${i}`} style={CELULA} />;
 
@@ -196,8 +197,8 @@ export function CycleCalendar({
                   preenchimentos sobrepostos escureceriam as pontas.
                 */}
                 <YStack
-                  width={30}
-                  height={30}
+                  width={32}
+                  height={32}
                   borderRadius={16}
                   alignItems="center"
                   justifyContent="center"
@@ -222,7 +223,7 @@ export function CycleCalendar({
                 </YStack>
 
                 {k === hoje ? (
-                  <YStack width={4} height={4} borderRadius={2} backgroundColor="$foreground" />
+                  <YStack width={4} height={4} borderRadius={4} backgroundColor="$foreground" />
                 ) : (
                   <YStack width={4} height={4} />
                 )}
@@ -241,7 +242,7 @@ const CELULA: ViewStyle = {
   aspectRatio: 1,
   alignItems: 'center',
   justifyContent: 'center',
-  gap: 2,
+  gap: 4,
 };
 
 /**

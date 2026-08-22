@@ -102,7 +102,7 @@ export function PhotoViewer({
             hitSlop={12}
             style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
           >
-            <Icon name="x" size={22} color="#ECE7F4" />
+            <Icon name="x" size={24} color="#ECE7F4" />
           </Pressable>
         </XStack>
 

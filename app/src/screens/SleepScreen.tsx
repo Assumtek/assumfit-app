@@ -1,7 +1,8 @@
 import { YStack } from '@tamagui/stacks';
 import { useNavigation } from '@react-navigation/native';
+import { useChartWidth } from '../components/charts/useChartWidth';
 import React, { useEffect, useState } from 'react';
-import { LayoutChangeEvent, Pressable } from 'react-native';
+import { Pressable } from 'react-native';
 
 import { HistoryRow, Note, Row, Section } from '../components/Card';
 import { SyncSleepButton } from '../components/MeasureButton';
@@ -38,7 +39,7 @@ export function SleepScreen() {
     await connectHealth();
   });
   const rating = rateSleep(sleep?.score ?? null, sleep?.totalMin ?? null);
-  const [chartWidth, setChartWidth] = useState(0);
+  const [chartWidth, onLayoutChartWidth] = useChartWidth();
   // A hora habitual de dormir vem do perfil de rotina, quando respondida.
   const bedtime = useLifestyleStore((st) => st.answers.bedtime ?? null);
 
@@ -121,7 +122,7 @@ export function SleepScreen() {
         <Body marginTop="$md">O score nasce das fases medidas: metade é quanto você dormiu, um quarto é o sono profundo, o resto é REM e continuidade, uma noite longa e picada pode pontuar menos que uma curta e inteira.</Body>
       </YStack>
 
-      <YStack onLayout={(e: LayoutChangeEvent) => setChartWidth(e.nativeEvent.layout.width)}>
+      <YStack onLayout={onLayoutChartWidth}>
         <Hypnogram segments={sleep.segments} width={chartWidth} />
       </YStack>
       <Data marginTop="$md" marginBottom="$sm" lineHeight={18}>
@@ -153,7 +154,7 @@ export function SleepScreen() {
           <Row key={p.key} last={i === PHASES.length - 1}>
             <YStack
               width={8}
-              height={2}
+              height={4}
               backgroundColor="$primary"
               marginRight="$md"
               opacity={p.opacity}

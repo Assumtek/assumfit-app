@@ -1,5 +1,5 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
+import { Body } from './ui';
 import React from 'react';
 import { Pressable } from 'react-native';
 
@@ -35,18 +35,17 @@ export function ScalePicker({
           <YStack
             alignItems="center"
             paddingVertical="$md"
-            borderRadius={10}
+            borderRadius={12}
             borderWidth={1}
             borderColor={value === v ? '$primary' : '$border'}
             backgroundColor={value === v ? 'rgba(135,123,240,0.15)' : 'transparent'}
           >
-            <Text
-              fontSize={14}
+            <Body
               fontWeight={value === v ? '700' : '400'}
               color={value === v ? '$primary' : '$mutedForeground'}
             >
               {v}
-            </Text>
+            </Body>
           </YStack>
         </Pressable>
       ))}

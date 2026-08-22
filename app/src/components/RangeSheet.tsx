@@ -51,7 +51,7 @@ export function RangeSheet({
           fontSize: 18,
           fontVariant: ['tabular-nums'],
           color: colors.text,
-          paddingVertical: 10,
+          paddingVertical: 12,
           borderBottomWidth: 1,
           borderBottomColor: colors.hairlineStrong,
         }}

@@ -127,10 +127,10 @@ export function SyncProgress() {
         A régua no acento: é o único lugar da peça em que a cor da marca aparece
         como dado, e ela mostra a mesma verdade da lista num traço só.
       */}
-      <YStack height={4} borderRadius={2} backgroundColor="$border" overflow="hidden">
+      <YStack height={4} borderRadius={4} backgroundColor="$border" overflow="hidden">
         <YStack
           height={4}
-          borderRadius={2}
+          borderRadius={4}
           backgroundColor="$primary"
           width={`${Math.round((atual.done / atual.total) * 100)}%`}
         />

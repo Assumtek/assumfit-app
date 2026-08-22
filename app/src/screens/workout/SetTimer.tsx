@@ -1,5 +1,6 @@
 import { Text } from '@tamagui/core';
 import { YStack } from '@tamagui/stacks';
+import { Data } from '../../components/ui';
 import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, Vibration } from 'react-native';
 
@@ -71,9 +72,9 @@ export function SetTimer({
 
   return (
     <YStack flex={1} gap="$xs">
-      <Text fontSize={12} color="$mutedForeground">
+      <Data color="$mutedForeground">
         {label}
-      </Text>
+      </Data>
       <Pressable
         onPress={() => {
           if (preparo !== null || rodando) return;
@@ -84,7 +85,7 @@ export function SetTimer({
       >
         <YStack
           backgroundColor="$card"
-          borderRadius={10}
+          borderRadius={12}
           borderWidth={1}
           borderColor={rodando || preparo !== null ? '$primary' : '$border'}
           minHeight={48}
@@ -93,7 +94,7 @@ export function SetTimer({
           justifyContent="center"
           gap="$xs"
         >
-          {!rodando && preparo === null ? <Icon name="play" size={14} color={colors.accent} /> : null}
+          {!rodando && preparo === null ? <Icon name="play" size={16} color={colors.accent} /> : null}
           <Text
             fontSize={18}
             fontWeight="600"

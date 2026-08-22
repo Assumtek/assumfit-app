@@ -2,7 +2,7 @@ import { XStack, YStack } from '@tamagui/stacks';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable } from 'react-native';
 
-import { Note, Row, Section } from '../../components/Card';
+import { Note, Row, Section, ActionRow } from '../../components/Card';
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon, type IconName } from '../../components/Icon';
 import { Body, Button, Data, Headline, HeroCard, SectionTitle } from '../../components/ui';
@@ -189,40 +189,7 @@ export function ProjectScreen() {
   );
 }
 
-/**
- * Uma escolha do projeto — entrada de lista, não cartão.
- *
- * `Row` não serve aqui: ela distribui rótulo e valor numa linha horizontal, e o
- * que esta tela lista é título sobre prosa. A divisória é a MESMA hairline, que
- * é o que mantém as quatro faixas da tela falando a mesma língua.
- */
-function Escolha({
-  icone,
-  titulo,
-  corpo,
-  last,
-}: {
-  icone: IconName;
-  titulo?: string;
-  corpo: string;
-  last: boolean;
-}) {
-  const { colors } = useTheme();
-
-  return (
-    <YStack>
-      <XStack alignItems="flex-start" gap="$md" paddingVertical="$lg">
-        {/* Alinha o traço do ícone com a primeira linha do texto, não com o
-            topo da caixa — sem isso ele flutua acima da maiúscula. */}
-        <YStack paddingTop={2}>
-          <Icon name={icone} size={16} color={colors.textMuted} strokeWidth={2} />
-        </YStack>
-        <YStack flex={1} gap="$xs">
-          {titulo ? <SectionTitle>{titulo}</SectionTitle> : null}
-          <Body>{corpo}</Body>
-        </YStack>
-      </XStack>
-      {!last ? <YStack height={1} backgroundColor="$border" /> : null}
-    </YStack>
-  );
+/** Uma escolha do projeto: linha de ação sem ação, só leitura. */
+function Escolha({ icone, titulo, corpo, last }: { icone: IconName; titulo?: string; corpo: string; last: boolean }) {
+  return <ActionRow icon={icone} title={titulo ?? corpo} subtitle={titulo ? corpo : undefined} right="none" last={last} />;
 }

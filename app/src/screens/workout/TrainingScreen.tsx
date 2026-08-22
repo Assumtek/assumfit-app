@@ -14,7 +14,7 @@ import {
 } from '../../../modules/widgetbridge';
 
 import { Icon } from '../../components/Icon';
-import { Button } from '../../components/ui';
+import { Body, Button } from '../../components/ui';
 import { ExerciseVideo } from '../../components/ExerciseVideo';
 import { acumularKcal, type PerfilParaEnergia } from '../../domain/workoutEnergy';
 import { fetchAnamnesis } from '../../services/api.service';
@@ -471,7 +471,7 @@ export function TrainingScreen() {
             alignItems="center"
             gap="$xs"
             backgroundColor="$control"
-            borderRadius={14}
+            borderRadius={16}
             paddingHorizontal="$lg"
             paddingVertical="$md"
           >
@@ -490,7 +490,7 @@ export function TrainingScreen() {
           {bpmAoVivo != null ? (
             <XStack
               alignItems="center"
-              gap={6}
+              gap={8}
               borderRadius={999}
               borderWidth={1}
               borderColor="$border"
@@ -502,9 +502,9 @@ export function TrainingScreen() {
                 {Math.round(bpmAoVivo)}
               </Text>
               {pesoKg != null ? (
-                <Text fontSize={14} color="$mutedForeground" fontVariant={['tabular-nums']}>
+                <Body color="$mutedForeground" fontVariant={['tabular-nums']}>
                   · {Math.round(kcal)} kcal
-                </Text>
+                </Body>
               ) : null}
             </XStack>
           ) : null}
@@ -584,20 +584,20 @@ export function TrainingScreen() {
           {exercise.name}
         </Text>
 
-        <Text fontSize={14} color="$mutedForeground" textAlign="center" marginTop="$md">
+        <Body color="$mutedForeground" textAlign="center" marginTop="$md">
           {infoLine(exercise, sets.length)}
-        </Text>
+        </Body>
 
         {exercise.description ? (
-          <Text fontSize={14} color="$mutedForeground" textAlign="center" marginTop="$xl">
+          <Body color="$mutedForeground" textAlign="center" marginTop="$xl">
             {exercise.description}
-          </Text>
+          </Body>
         ) : null}
 
         {exercise.notes ? (
-          <Text fontSize={14} color="$mutedForeground" textAlign="center" marginTop="$md">
+          <Body color="$mutedForeground" textAlign="center" marginTop="$md">
             {exercise.notes}
-          </Text>
+          </Body>
         ) : null}
 
         <YStack marginTop="$xxl">
@@ -670,7 +670,7 @@ export function TrainingScreen() {
                 title="Pular exercício"
                 variant="ghost"
                 size="md"
-                icon={<Icon name="skip" size={14} color={colors.textMuted} />}
+                icon={<Icon name="skip" size={16} color={colors.textMuted} />}
                 onPress={goNext}
               />
             </YStack>
@@ -811,12 +811,12 @@ function AcaoDoExercicio({
         alignItems="center"
         gap="$sm"
         paddingHorizontal="$md"
-        paddingVertical={10}
+        paddingVertical={12}
         borderRadius={999}
         borderWidth={1}
         borderColor="$border"
       >
-        <Icon name={icone} size={14} color={colors.textMuted} />
+        <Icon name={icone} size={16} color={colors.textMuted} />
         <Text fontSize={14} fontWeight="500" color="$mutedForeground">
           {rotulo}
         </Text>

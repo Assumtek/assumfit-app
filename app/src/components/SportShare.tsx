@@ -197,7 +197,7 @@ export function SportShare({
       </Data>
 
       {/* Os chips ligam e desligam blocos — publicar batimento é decisão, não padrão. */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 14 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
         <XStack gap="$sm">
           {chips.map((chip) => (
             <Pressable
@@ -218,9 +218,9 @@ export function SportShare({
                 backgroundColor={ver(chip.id) ? '$primarySoft' : 'transparent'}
               >
                 <Icon name={ver(chip.id) ? 'check' : 'down'} size={12} />
-                <Text fontSize={12} color="$foreground">
+                <Data color="$foreground">
                   {chip.rotulo}
-                </Text>
+                </Data>
               </XStack>
             </Pressable>
           ))}
@@ -235,7 +235,7 @@ export function SportShare({
             collapsable={false}
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
-            borderRadius={18}
+            borderRadius={20}
             overflow="hidden"
             backgroundColor="#0E0A22"
           >
@@ -265,7 +265,7 @@ export function SportShare({
             >
               <XStack
                 paddingVertical={4}
-                paddingHorizontal={10}
+                paddingHorizontal={12}
                 borderRadius={999}
                 backgroundColor="rgba(135,123,240,0.28)"
                 borderWidth={1}
@@ -370,9 +370,9 @@ export function SportShare({
               selecionado={selecionado === 'data'}
               onSelecionar={escolher('data')}
             >
-              <Text fontSize={12} color="rgba(236,231,244,0.75)">
+              <Data color="rgba(236,231,244,0.75)">
                 {dataDeHoje}
-              </Text>
+              </Data>
             </BlocoEditavel>
 
             <BlocoEditavel
@@ -382,7 +382,7 @@ export function SportShare({
               selecionado={selecionado === 'marca'}
               onSelecionar={escolher('marca')}
             >
-              <LogoType height={14} color="#ECE7F4" />
+              <LogoType height={16} color="#ECE7F4" />
             </BlocoEditavel>
           </YStack>
         </Pressable>
@@ -453,7 +453,7 @@ function Tracado({ points, width, height }: { points: GeoPoint[]; width: number;
       {/* Halo escuro por baixo: o traçado precisa ler sobre QUALQUER foto. */}
       <SvgPolyline points={coords.join(' ')} fill="none" stroke="rgba(0,0,0,0.45)" strokeWidth={8} strokeLinejoin="round" strokeLinecap="round" />
       <SvgPolyline points={coords.join(' ')} fill="none" stroke="#FFFFFF" strokeWidth={3.5} strokeLinejoin="round" strokeLinecap="round" />
-      <Circle cx={x0} cy={y0} r={5} fill="#877BF0" stroke="#FFFFFF" strokeWidth={2} />
+      <Circle cx={x0} cy={y0} r={5} fill="#877BF0" stroke="#FFFFFF" strokeWidth={4} />
       <Circle cx={xf} cy={yf} r={5} fill="#FFFFFF" />
     </Svg>
   );

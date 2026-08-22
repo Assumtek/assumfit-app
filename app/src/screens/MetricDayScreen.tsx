@@ -1,7 +1,7 @@
 import { useRoute } from '@react-navigation/native';
 import { YStack } from '@tamagui/stacks';
+import { useChartWidth } from '../components/charts/useChartWidth';
 import React, { useEffect, useMemo, useState } from 'react';
-import { LayoutChangeEvent } from 'react-native';
 
 import { Note, Section } from '../components/Card';
 import { DetailScreen } from '../components/DetailScreen';
@@ -60,7 +60,7 @@ export function MetricDayScreen() {
   const serie = useHistoryStore((s) => s.serie);
   const carregar = useHistoryStore((s) => s.load);
   const [resumo, setResumo] = useState<api.DailySummary | null | undefined>(undefined);
-  const [largura, setLargura] = useState(0);
+  const [largura, onLayoutLargura] = useChartWidth();
 
   useEffect(() => {
     void carregar();
@@ -165,7 +165,7 @@ export function MetricDayScreen() {
 
           {acumulado.length >= 2 ? (
             <Section label={metric === 'steps' ? 'Acumulado ao longo do dia' : 'Ao longo do dia'}>
-              <YStack onLayout={(e: LayoutChangeEvent) => setLargura(e.nativeEvent.layout.width)}>
+              <YStack onLayout={onLayoutLargura}>
                 {largura > 0 ? (
                   <LineChart
                     data={acumulado}

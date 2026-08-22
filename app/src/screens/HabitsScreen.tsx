@@ -1,8 +1,9 @@
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
+import { useChartWidth } from '../components/charts/useChartWidth';
 import React, { useEffect, useState } from 'react';
-import { LayoutChangeEvent, Pressable, TextInput } from 'react-native';
+import { Pressable, TextInput } from 'react-native';
 
 import { Note, Row, Section } from '../components/Card';
 import { WaterReminder } from '../components/SedentaryReminder';
@@ -51,7 +52,7 @@ export function HabitsScreen() {
   const setWaterTotal = useHabitsStore((s) => s.setWaterTotal);
   const [editandoTotal, setEditandoTotal] = useState(false);
   const [totalRascunho, setTotalRascunho] = useState('');
-  const [chartWidth, setChartWidth] = useState(0);
+  const [chartWidth, onLayoutChartWidth] = useChartWidth();
   const [ajustando, setAjustando] = useState(false);
   /** `null` enquanto a anamnese não respondeu — só depois dá para dizer o que falta. */
   const [pesoDeclarado, setPesoDeclarado] = useState<boolean | null>(null);
@@ -164,7 +165,7 @@ export function HabitsScreen() {
               accessibilityLabel={`Remover registro de ${ml} mililitros`}
               style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
             >
-              <XStack alignItems="center" gap={6} paddingHorizontal="$md" paddingVertical={6} borderRadius={999} borderWidth={1} borderColor="$border">
+              <XStack alignItems="center" gap={8} paddingHorizontal="$md" paddingVertical={8} borderRadius={999} borderWidth={1} borderColor="$border">
                 <Data color="$foreground">{ml} ml</Data>
                 <Icon name="x" size={12} color={colors.textMuted} />
               </XStack>
@@ -231,7 +232,7 @@ export function HabitsScreen() {
       <WaterReminder />
 
       <Section label="Últimos 7 dias">
-        <YStack onLayout={(e: LayoutChangeEvent) => setChartWidth(e.nativeEvent.layout.width)}>
+        <YStack onLayout={onLayoutChartWidth}>
           <BarChart
             width={chartWidth}
             height={140}
@@ -307,7 +308,7 @@ function AjusteDeVolume({
 
   return (
     <XStack alignItems="center" gap="$md">
-      <YStack flex={1} gap={2}>
+      <YStack flex={1} gap={4}>
         <Body color="$foreground" textTransform="capitalize">
           {container.label}
         </Body>

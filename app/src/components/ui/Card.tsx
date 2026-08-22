@@ -103,7 +103,7 @@ export function HeroCard({
         />
         {/* O halo sangra para fora do canto de propósito: contido, ele lê como
             um círculo desenhado em vez de luz. */}
-        <YStack position="absolute" top={-40} right={-40} width={150} height={150} pointerEvents="none">
+        <YStack position="absolute" top={-40} right={-40} width={152} height={152} pointerEvents="none">
           <RadialHalo layers={CORNER_HALO} />
         </YStack>
 
@@ -144,27 +144,4 @@ export function HeroCard({
  * Carrega o acento porque o que ela mostra é dado. Um rótulo de navegação
  * dentro de uma pílula dessas seria acento sem dado, e o sistema perde o sinal.
  */
-export function Pill({ children }: { children: React.ReactNode }) {
-  return (
-    <XStack
-      alignItems="center"
-      gap={6}
-      paddingHorizontal={10}
-      paddingVertical={4}
-      borderRadius={999}
-      borderWidth={1}
-      borderColor="rgba(135,123,240,0.40)"
-      backgroundColor="rgba(135,123,240,0.15)"
-    >
-      {children}
-    </XStack>
-  );
-}
-
-export function PillText({ children }: { children: React.ReactNode }) {
-  return (
-    <Text fontSize={10} fontWeight="700" color="$primary" letterSpacing={0.5}>
-      {children}
-    </Text>
-  );
-}
+export { Pill, PillText } from './Pill';

@@ -66,12 +66,12 @@ export function ExerciseSwapSheet({
     <Sheet open onClose={onClose}>
       <>
         <YStack flexDirection="row" alignItems="flex-start" gap="$md">
-          <YStack flex={1} gap={2}>
+          <YStack flex={1} gap={4}>
             <Label>trocar</Label>
             <SectionTitle numberOfLines={1}>{exercise.name}</SectionTitle>
           </YStack>
           <Pressable onPress={onClose} hitSlop={12} accessibilityRole="button" accessibilityLabel="Fechar">
-            <Icon name="down" size={18} color={colors.textMuted} />
+            <Icon name="down" size={20} color={colors.textMuted} />
           </Pressable>
         </YStack>
 
@@ -98,13 +98,13 @@ export function ExerciseSwapSheet({
                   accessibilityLabel={option.name}
                 >
                   <YStack flexDirection="row" alignItems="center" gap="$md">
-                    <YStack flex={1} gap={2}>
+                    <YStack flex={1} gap={4}>
                       <Body color="$foreground" numberOfLines={1}>
                         {option.name}
                       </Body>
                       <Data numberOfLines={1}>{option.equipment}</Data>
                     </YStack>
-                    <Icon name="arrowRight" size={14} color={colors.textMuted} />
+                    <Icon name="arrowRight" size={16} color={colors.textMuted} />
                   </YStack>
                 </Card>
               ))}

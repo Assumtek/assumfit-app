@@ -121,7 +121,7 @@ export const space = {
  * barato — não muda com o tema.
  */
 export const radius = {
-  sm: 6,
-  md: 10,
+  sm: 8,
+  md: 12,
   pill: 999,
 } as const;

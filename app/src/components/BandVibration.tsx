@@ -1,10 +1,8 @@
 import { YStack } from '@tamagui/stacks';
 import React from 'react';
-import { Switch } from 'react-native';
 
 import { AppIcon } from './AppIcon';
-import { Row, Section } from './Card';
-import { Icon } from './Icon';
+import { Section, SwitchRow } from './Card';
 import { Body, Button, Data } from './ui';
 import {
   comAssumfit,
@@ -84,33 +82,25 @@ export function BandVibration() {
   return (
     <YStack gap="$md">
       <Section label="Avisos no pulso">
-        <Row>
-          <Icon name="smartphone" size={18} color={colors.text} />
-          <YStack flex={1} marginLeft="$md" paddingRight="$md">
-            <Body color="$foreground">Todas as notificações do celular</Body>
-            <Data>{tudo ? 'ligado' : 'escolha abaixo'}</Data>
-          </YStack>
-          <Switch
-            value={tudo}
-            onValueChange={(v) => void aplicar(comTodas(filtro, v), v)}
-            trackColor={{ true: colors.accent }}
-            disabled={salvando}
-          />
-        </Row>
+        <SwitchRow
+          icon="smartphone"
+          title="Todas as notificações do celular"
+          subtitle={tudo ? 'ligado' : 'escolha abaixo'}
+          value={tudo}
+          onValueChange={(v) => void aplicar(comTodas(filtro, v), v)}
+          disabled={salvando}
+        />
         {linhas.map((l, i) => (
-          <Row key={l.key} last={i === linhas.length - 1}>
-            <AppIcon mark={l.marca} />
-            <YStack flex={1} marginLeft="$md" paddingRight="$md">
-              <Body color="$foreground">{l.nome}</Body>
-              <Data>{l.outros ? 'inclui o AssumFit' : l.enabled ? 'ligado' : 'desligado'}</Data>
-            </YStack>
-            <Switch
-              value={l.enabled}
-              onValueChange={(v) => void mudarLinha(l.key, v)}
-              trackColor={{ true: colors.accent }}
-              disabled={salvando}
-            />
-          </Row>
+          <SwitchRow
+            key={l.key}
+            leading={<AppIcon mark={l.marca} />}
+            title={l.nome}
+            subtitle={l.outros ? 'inclui o AssumFit' : l.enabled ? 'ligado' : 'desligado'}
+            value={l.enabled}
+            onValueChange={(v) => void mudarLinha(l.key, v)}
+            disabled={salvando}
+            last={i === linhas.length - 1}
+          />
         ))}
       </Section>
 

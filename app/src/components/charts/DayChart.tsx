@@ -1,6 +1,6 @@
 import { YStack } from '@tamagui/stacks';
+import { useChartWidth } from './useChartWidth';
 import React, { useState } from 'react';
-import { LayoutChangeEvent } from 'react-native';
 
 import { LineChart } from './LineChart';
 import { Note } from '../Card';
@@ -28,7 +28,7 @@ export function DayChart({
   band,
   thresholds,
   id,
-  height = 150,
+  height = 152,
 }: {
   serie: Ponto[];
   /**
@@ -46,7 +46,7 @@ export function DayChart({
   id: string;
   height?: number;
 }) {
-  const [largura, setLargura] = useState(0);
+  const [largura, onLayoutLargura] = useChartWidth();
 
   /*
    O dia corrente, e não a série inteira: "medições do dia" precisa ser o dia,
@@ -55,7 +55,7 @@ export function DayChart({
   const doDia = !dia || dia === isoHoje() ? noPeriodo(serie, '24H') : serie;
 
   return (
-    <YStack onLayout={(e: LayoutChangeEvent) => setLargura(e.nativeEvent.layout.width)}>
+    <YStack onLayout={onLayoutLargura}>
       {doDia.length >= 1 ? (
         <>
           <LineChart

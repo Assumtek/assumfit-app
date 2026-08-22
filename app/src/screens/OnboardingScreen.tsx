@@ -149,9 +149,9 @@ export function OnboardingScreen() {
         </Data>
       </XStack>
 
-      <YStack height={2} backgroundColor="$track" marginHorizontal={space.screen}>
+      <YStack height={4} backgroundColor="$track" marginHorizontal={space.screen}>
         <YStack
-          height={2}
+          height={4}
           backgroundColor="$primary"
           width={`${Math.min(1, answered / estimatedTotal) * 100}%`}
         />
@@ -228,9 +228,9 @@ export function OnboardingScreen() {
                       borderColor={on ? '$primary' : '$borderStrong'}
                       backgroundColor={on ? '$primarySoft' : 'transparent'}
                     >
-                      <Text fontSize={14} color={on ? '$foreground' : '$mutedForeground'}>
+                      <Body color={on ? '$foreground' : '$mutedForeground'}>
                         {option.label}
-                      </Text>
+                      </Body>
                     </YStack>
                   </Pressable>
                 );
@@ -262,9 +262,9 @@ export function OnboardingScreen() {
                       borderColor={on ? '$primary' : '$borderStrong'}
                       backgroundColor={on ? '$primarySoft' : 'transparent'}
                     >
-                      <Text fontSize={12} color={on ? '$foreground' : '$mutedForeground'}>
+                      <Data color={on ? '$foreground' : '$mutedForeground'}>
                         {label}
-                      </Text>
+                      </Data>
                     </YStack>
                   </Pressable>
                 );

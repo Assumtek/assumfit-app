@@ -431,7 +431,7 @@ export function MealsScreen() {
           placeholder="Nome (ex.: Farofa)"
           placeholderTextColor={colors.textFaint}
           selectionColor={colors.accent}
-          style={{ fontSize: 16, color: colors.text, paddingVertical: 6 }}
+          style={{ fontSize: 16, color: colors.text, paddingVertical: 8 }}
         />
         <TextInput
           value={editando.gramas}
@@ -440,7 +440,7 @@ export function MealsScreen() {
           placeholderTextColor={colors.textFaint}
           selectionColor={colors.accent}
           keyboardType="number-pad"
-          style={{ fontSize: 16, color: colors.text, paddingVertical: 6 }}
+          style={{ fontSize: 16, color: colors.text, paddingVertical: 8 }}
         />
         <Data color="$mutedForeground">
           A caloria recalcula pela tabela TACO a partir do nome e dos gramas.
@@ -497,7 +497,7 @@ export function MealsScreen() {
           {(detalhe.foods as api.MealFood[]).map((food, i) => (
             <React.Fragment key={`${detalhe.id}-${i}`}>
               <Row last={i === detalhe.foods.length - 1}>
-                <YStack flex={1} minWidth={0} gap={2}>
+                <YStack flex={1} minWidth={0} gap={4}>
                   <Body color="$foreground" numberOfLines={2}>
                     {food.name}
                     {food.uncertain ? ' (?)' : ''}
@@ -529,7 +529,7 @@ export function MealsScreen() {
                   {food.kcal_min}–{food.kcal_max} kcal
                 </Data>
                 {/* Lápis e lixeira NA LINHA: a ação mora ao lado do alvo. */}
-                <XStack gap={2} marginLeft={8} flexShrink={0} alignItems="center">
+                <XStack gap={4} marginLeft={8} flexShrink={0} alignItems="center">
                   <Pressable
                     onPress={() => {
                       setAvisoDetalhe(null);
@@ -543,9 +543,9 @@ export function MealsScreen() {
                     accessibilityRole="button"
                     accessibilityLabel={`Editar ${food.name}`}
                     hitSlop={8}
-                    style={({ pressed }) => [{ padding: 6 }, pressed && { opacity: 0.5 }]}
+                    style={({ pressed }) => [{ padding: 8 }, pressed && { opacity: 0.5 }]}
                   >
-                    <Icon name="pencil" size={16} color={colors.textMuted} strokeWidth={2} />
+                    <Icon name="pencil" size={16} color={colors.textMuted} strokeWidth={4} />
                   </Pressable>
                   <Pressable
                     onPress={() => void removerAlimentoEm(i)}
@@ -553,9 +553,9 @@ export function MealsScreen() {
                     accessibilityRole="button"
                     accessibilityLabel={`Remover ${food.name}`}
                     hitSlop={8}
-                    style={({ pressed }) => [{ padding: 6 }, pressed && { opacity: 0.5 }]}
+                    style={({ pressed }) => [{ padding: 8 }, pressed && { opacity: 0.5 }]}
                   >
-                    <Icon name="trash" size={16} color={colors.textMuted} strokeWidth={2} />
+                    <Icon name="trash" size={16} color={colors.textMuted} strokeWidth={4} />
                   </Pressable>
                 </XStack>
               </Row>
@@ -584,7 +584,7 @@ export function MealsScreen() {
                   placeholderTextColor={colors.textFaint}
                   selectionColor={colors.accent}
                   autoFocus
-                  style={{ fontSize: 16, color: colors.text, paddingVertical: 6 }}
+                  style={{ fontSize: 16, color: colors.text, paddingVertical: 8 }}
                 />
                 {adicionando.resultados.map((f) => (
                   <Pressable
@@ -624,7 +624,7 @@ export function MealsScreen() {
                   selectionColor={colors.accent}
                   keyboardType="number-pad"
                   autoFocus
-                  style={{ fontSize: 16, color: colors.text, paddingVertical: 6 }}
+                  style={{ fontSize: 16, color: colors.text, paddingVertical: 8 }}
                 />
                 <XStack gap="$md" marginTop="$xs">
                   <YStack flex={1}>
@@ -843,20 +843,20 @@ export function MealsScreen() {
                   {fotoUri ? (
                     <Image
                       source={{ uri: fotoUri }}
-                      style={{ width: 52, height: 52, borderRadius: 10 }}
+                      style={{ width: 52, height: 52, borderRadius: 12 }}
                       resizeMode="cover"
                     />
                   ) : (
                     <YStack
                       width={52}
                       height={52}
-                      borderRadius={10}
+                      borderRadius={12}
                       backgroundColor="$card"
                       borderWidth={1}
                       borderColor="$border"
                     />
                   )}
-                  <YStack flex={1} minWidth={0} gap={2}>
+                  <YStack flex={1} minWidth={0} gap={4}>
                     <Body color="$foreground" numberOfLines={1}>
                       {alimentos || 'Refeição'}
                     </Body>
@@ -888,9 +888,9 @@ export function MealsScreen() {
 function BarraDaMeta({ consumido, meta }: { consumido: number; meta: number }) {
   const fracao = meta > 0 ? Math.min(1, consumido / meta) : 0;
   return (
-    <YStack height={6} borderRadius={999} backgroundColor="$border" overflow="hidden">
+    <YStack height={8} borderRadius={999} backgroundColor="$border" overflow="hidden">
       <YStack
-        height={6}
+        height={8}
         borderRadius={999}
         backgroundColor="$primary"
         width={`${Math.round(fracao * 100)}%`}
@@ -915,7 +915,7 @@ function MacroColunas({ m }: { m: { p: number; c: number; g: number } }) {
   return (
     <XStack justifyContent="space-between" paddingTop="$sm">
       {colunas.map((c) => (
-        <YStack key={c.rotulo} alignItems="flex-start" gap={2}>
+        <YStack key={c.rotulo} alignItems="flex-start" gap={4}>
           <Label>{c.rotulo}</Label>
           <Body color="$foreground">{c.gramas} g</Body>
           <Data color="$mutedForeground">{pct(c.kcal)}</Data>
@@ -945,8 +945,8 @@ function BotaoDePasso({
       style={({ pressed }) => [pressed && { opacity: 0.5 }, desabilitado ? { opacity: 0.3 } : null]}
     >
       <YStack
-        width={30}
-        height={30}
+        width={32}
+        height={32}
         borderRadius={8}
         borderWidth={1}
         borderColor="$borderStrong"

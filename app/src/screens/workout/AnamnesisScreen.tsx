@@ -7,7 +7,7 @@ import { TextInput } from 'react-native';
 import { Note } from '../../components/Card';
 import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
-import { Button, Card, HeroCard } from '../../components/ui';
+import { Body, Button, Card, Data, HeroCard, SectionTitle } from '../../components/ui';
 import {
   impliesReferral,
   nextQuestion,
@@ -118,17 +118,17 @@ export function AnamnesisScreen() {
             <Text fontSize={22} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
               {referral ? 'Vamos com cuidado aqui' : 'Podemos montar seu treino'}
             </Text>
-            <Text fontSize={14} color="$mutedForeground">
+            <Body color="$mutedForeground">
               {referral
                 ? 'Pelo que você respondeu, o caminho seguro passa por um profissional antes de treinar por conta. Podemos seguir, mas é possível que a resposta seja um encaminhamento em vez de um treino.'
                 : 'Com essas respostas dá para montar um treino que respeita o seu histórico e a sua rotina.'}
-            </Text>
+            </Body>
           </HeroCard>
 
           {error ? (
-            <Text fontSize={14} color="$destructive">
+            <Body color="$destructive">
               {error}
-            </Text>
+            </Body>
           ) : null}
 
           <Button
@@ -156,12 +156,12 @@ export function AnamnesisScreen() {
   return (
     <DetailScreen title="Saúde">
       <YStack gap="$lg" paddingTop="$sm">
-        <YStack height={2} backgroundColor="$track" borderRadius={1} overflow="hidden">
-          <YStack height={2} backgroundColor="$primary" width={`${Math.min(1, progress) * 100}%`} />
+        <YStack height={4} backgroundColor="$track" borderRadius={1} overflow="hidden">
+          <YStack height={4} backgroundColor="$primary" width={`${Math.min(1, progress) * 100}%`} />
         </YStack>
-        <Text fontSize={12} color="$mutedForeground">
+        <Data color="$mutedForeground">
           {remaining === 1 ? 'última pergunta' : `faltam ${remaining} perguntas`}
-        </Text>
+        </Data>
 
         {question.clinical ? (
           <Text
@@ -180,9 +180,9 @@ export function AnamnesisScreen() {
             {question.title}
           </Text>
           {question.hint ? (
-            <Text fontSize={14} color="$mutedForeground">
+            <Body color="$mutedForeground">
               {question.hint}
-            </Text>
+            </Body>
           ) : null}
         </YStack>
 
@@ -232,13 +232,13 @@ function SingleChoice({ options, onPick }: { options: Option[]; onPick: (v: unkn
           onPress={() => onPick(option.value)}
           accessibilityLabel={option.label}
         >
-          <Text fontSize={16} fontWeight="700" color="$foreground">
+          <SectionTitle color="$foreground">
             {option.label}
-          </Text>
+          </SectionTitle>
           {option.detail ? (
-            <Text fontSize={14} color="$mutedForeground">
+            <Body color="$mutedForeground">
               {option.detail}
-            </Text>
+            </Body>
           ) : null}
         </Card>
       ))}
@@ -278,20 +278,20 @@ function MultiChoice({
         return (
           <Card key={String(option.value)} onPress={() => toggle(option.value)} selected={on}>
             <XStack alignItems="center" gap="$md">
-              <Text fontSize={16} fontWeight="700" color="$foreground" flex={1}>
+              <SectionTitle color="$foreground" flex={1}>
                 {option.label}
-              </Text>
+              </SectionTitle>
               <YStack
                 width={24}
                 height={24}
-                borderRadius={6}
+                borderRadius={8}
                 alignItems="center"
                 justifyContent="center"
                 borderWidth={on ? 0 : 1}
                 borderColor="$borderStrong"
                 backgroundColor={on ? '$primary' : 'transparent'}
               >
-                {on ? <Icon name="check" size={14} color={colors.ink} /> : null}
+                {on ? <Icon name="check" size={16} color={colors.ink} /> : null}
               </YStack>
             </XStack>
           </Card>

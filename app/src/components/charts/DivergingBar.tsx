@@ -43,7 +43,7 @@ export function DivergingBar({ items, width, rowHeight = 40, id = 'diverge' }: P
       <GridPaper width={plotW} height={height - 16} x={padLeft} id={id} />
 
       {/* Eixo zero: a idade cronológica. */}
-      <Line x1={center} y1={0} x2={center} y2={height - 16} stroke={colors.hairlineStrong} strokeWidth={2} />
+      <Line x1={center} y1={0} x2={center} y2={height - 16} stroke={colors.hairlineStrong} strokeWidth={4} />
 
       {items.map((item, i) => {
         const y = i * rowHeight + rowHeight / 2;
@@ -58,7 +58,7 @@ export function DivergingBar({ items, width, rowHeight = 40, id = 'diverge' }: P
               x={rejuvenates ? center - w : center}
               y={y - 6.5}
               width={Math.max(4, w)}
-              height={14}
+              height={16}
               rx={6.5}
               fill={rejuvenates ? colors.accent : colors.alert}
             />

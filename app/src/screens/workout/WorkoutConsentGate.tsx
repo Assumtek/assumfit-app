@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 
 import { Note } from '../../components/Card';
 import { Icon } from '../../components/Icon';
-import { Button, Card } from '../../components/ui';
+import { Body, Button, Card } from '../../components/ui';
 import { setWorkoutConsent } from '../../services/api.service';
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -52,11 +52,11 @@ export function WorkoutConsentGate({
         <Text fontSize={24} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
           Antes de perguntar sobre você
         </Text>
-        <Text fontSize={14} color="$mutedForeground">
+        <Body color="$mutedForeground">
           Para montar um treino seguro, precisamos saber do seu histórico de saúde, condições,
           medicamentos, lesões. Isso é dado sensível, e por isso pedimos permissão separada da
           leitura da pulseira.
-        </Text>
+        </Body>
       </YStack>
 
       <Card>
@@ -67,19 +67,19 @@ export function WorkoutConsentGate({
             'Você pode retirar esta permissão quando quiser. Ao retirar, apagamos suas respostas de saúde e os planos gerados a partir delas.',
           ].map((line) => (
             <XStack key={line} gap="$sm" alignItems="flex-start">
-              <YStack width={6} height={6} borderRadius={4} backgroundColor="$primary" marginTop={8} />
-              <Text fontSize={14} color="$mutedForeground" flex={1}>
+              <YStack width={8} height={8} borderRadius={4} backgroundColor="$primary" marginTop={8} />
+              <Body color="$mutedForeground" flex={1}>
                 {line}
-              </Text>
+              </Body>
             </XStack>
           ))}
         </YStack>
       </Card>
 
       {error ? (
-        <Text fontSize={14} color="$destructive">
+        <Body color="$destructive">
           {error}
-        </Text>
+        </Body>
       ) : null}
 
       <Button

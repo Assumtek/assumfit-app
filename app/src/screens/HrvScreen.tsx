@@ -1,6 +1,7 @@
 import { XStack, YStack } from '@tamagui/stacks';
+import { useChartWidth } from '../components/charts/useChartWidth';
 import React, { useState } from 'react';
-import { LayoutChangeEvent, Pressable } from 'react-native';
+import { Pressable } from 'react-native';
 
 import { EmptyMetric } from '../components/BandStatus';
 import { Note } from '../components/Card';
@@ -25,7 +26,7 @@ export function HrvScreen() {
   */
   const historico = useHistoricoDoDia((p) => p.hrv_ms, hrvHistory);
   const [range, setRange] = useState<Faixa>(() => faixaInicial(hrvHistory));
-  const [chartWidth, setChartWidth] = useState(0);
+  const [chartWidth, onLayoutChartWidth] = useChartWidth();
 
   if (!latest)
     return (
@@ -124,7 +125,7 @@ export function HrvScreen() {
 
       <YStack
         marginBottom="$md"
-        onLayout={(e: LayoutChangeEvent) => setChartWidth(e.nativeEvent.layout.width)}
+        onLayout={onLayoutChartWidth}
       >
         {/*
           Curva só existe com pelo menos DOIS pontos — um ponto é um valor, não
@@ -137,7 +138,7 @@ export function HrvScreen() {
           <LineChart
             data={serie.map((p) => p.value)}
             width={chartWidth}
-            height={150}
+            height={152}
             markLast
             // Sem HRV medido não há média pessoal, e faixa de referência
             // desenhada sobre nada seria decoração enganosa.

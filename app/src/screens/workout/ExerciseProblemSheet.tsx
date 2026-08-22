@@ -2,6 +2,7 @@ import { XStack, YStack } from '@tamagui/stacks';
 import React from 'react';
 import { Pressable } from 'react-native';
 
+import { ActionRow } from '../../components/Card';
 import { Icon, type IconName } from '../../components/Icon';
 import { Body, Data, Label, SectionTitle } from '../../components/ui';
 import { Sheet } from '../../components/ui/Dialog';
@@ -79,38 +80,25 @@ export function ExerciseProblemSheet({
     <Sheet open={open} onClose={onClose}>
       <>
         <XStack alignItems="flex-start" gap="$md">
-          <YStack flex={1} gap={2}>
+          <YStack flex={1} gap={4}>
             <Label>sinalizar</Label>
             <SectionTitle>O que houve com este exercício?</SectionTitle>
           </YStack>
           <Pressable onPress={onClose} hitSlop={12} accessibilityRole="button" accessibilityLabel="Fechar">
-            <Icon name="down" size={18} color={colors.textMuted} />
+            <Icon name="down" size={20} color={colors.textMuted} />
           </Pressable>
         </XStack>
 
         <YStack>
           {MOTIVOS.map((motivo, i) => (
-            <Pressable
+            <ActionRow
               key={motivo.titulo}
+              icon={motivo.icone}
+              title={motivo.titulo}
+              subtitle={motivo.detalhe}
               onPress={motivo.acao === 'trocar' ? () => onTrocar(motivo.motivo ?? 'equipamento') : onPular}
-              accessibilityRole="button"
-              style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
-            >
-              <XStack
-                alignItems="center"
-                gap="$md"
-                paddingVertical="$lg"
-                borderBottomWidth={i === MOTIVOS.length - 1 ? 0 : 1}
-                borderBottomColor="$border"
-              >
-                <Icon name={motivo.icone} size={18} color={colors.textMuted} />
-                <YStack flex={1} gap={2}>
-                  <Body color="$foreground">{motivo.titulo}</Body>
-                  <Data>{motivo.detalhe}</Data>
-                </YStack>
-                <Icon name="arrowRight" size={14} color={colors.textMuted} />
-              </XStack>
-            </Pressable>
+              last={i === MOTIVOS.length - 1}
+            />
           ))}
         </YStack>
 

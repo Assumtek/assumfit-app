@@ -6,7 +6,7 @@ import { ActivityIndicator, Pressable } from 'react-native';
 
 import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
-import { Button, Card, HeroCard, Pill, PillText } from '../../components/ui';
+import { Body, Button, Card, HeroCard, Pill, PillText, SectionTitle } from '../../components/ui';
 import { sportForModality } from '../../domain/sport';
 import { DAY_LABEL, workoutMeta } from '../../domain/workout';
 import { fetchWorkout, type PlanDay } from '../../services/api.service';
@@ -132,9 +132,9 @@ export function CheckinScreen() {
             <Text fontSize={24} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
               Você tem um treino em andamento
             </Text>
-            <Text fontSize={14} color="$mutedForeground">
+            <Body color="$mutedForeground">
               Continue de onde parou, ou encerre para começar outro.
-            </Text>
+            </Body>
           </YStack>
 
           <HeroCard eyebrow="em andamento" selected>
@@ -178,9 +178,9 @@ export function CheckinScreen() {
             <Text fontSize={24} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
               Você ainda não tem um plano
             </Text>
-            <Text fontSize={14} color="$mutedForeground">
+            <Body color="$mutedForeground">
               Responda algumas perguntas sobre saúde e rotina, e o treino é montado a partir delas.
-            </Text>
+            </Body>
           </YStack>
           <Button
             title="Montar meu treino"
@@ -199,9 +199,9 @@ export function CheckinScreen() {
           <Text fontSize={24} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
             Bora treinar?
           </Text>
-          <Text fontSize={14} color="$mutedForeground">
+          <Body color="$mutedForeground">
             {DAY_LABEL[plan.today] ?? ''}
-          </Text>
+          </Body>
         </YStack>
 
         {isRestDay ? (
@@ -209,9 +209,9 @@ export function CheckinScreen() {
             <Text fontSize={20} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
               Hoje é seu dia de descanso
             </Text>
-            <Text fontSize={14} color="$mutedForeground">
+            <Body color="$mutedForeground">
               Recuperação é parte do treino. Quer treinar mesmo assim? Escolha um abaixo.
-            </Text>
+            </Body>
           </HeroCard>
         ) : null}
 
@@ -238,7 +238,7 @@ export function CheckinScreen() {
         {selected?.workout ? (
           <YStack gap="$md">
             <XStack alignItems="center" justifyContent="space-between" gap="$md">
-              <YStack gap={2} flex={1}>
+              <YStack gap={4} flex={1}>
                 <Text
                   fontSize={12}
                   fontWeight="700"
@@ -248,9 +248,9 @@ export function CheckinScreen() {
                 >
                   selecionado
                 </Text>
-                <Text fontSize={16} fontWeight="700" color="$foreground" numberOfLines={1}>
+                <SectionTitle color="$foreground" numberOfLines={1}>
                   {selected.workout.name}
-                </Text>
+                </SectionTitle>
               </YStack>
               {selected.workout.estimatedDuration ? (
                 <Pill>
@@ -339,9 +339,9 @@ export function CheckinScreen() {
 
         {others.length > 0 ? (
           <YStack gap="$md">
-            <Text fontSize={16} fontWeight="700" color="$foreground">
+            <SectionTitle color="$foreground">
               {isRestDay ? 'Escolha um treino' : 'Ou escolha outro'}
-            </Text>
+            </SectionTitle>
             {others.map((day) => (
               <WorkoutOption
                 key={day.id}
@@ -358,9 +358,9 @@ export function CheckinScreen() {
         ) : null}
 
         {error ? (
-          <Text fontSize={14} color="$destructive">
+          <Body color="$destructive">
             {error}
-          </Text>
+          </Body>
         ) : null}
 
       </YStack>
@@ -406,7 +406,7 @@ function WorkoutOption({
       accessibilityLabel={workout.name}
     >
       <XStack alignItems="flex-start" gap="$md">
-        <YStack flex={1} gap={6} minWidth={0}>
+        <YStack flex={1} gap={8} minWidth={0}>
           <Text
             fontSize={hero ? 22 : 16}
             fontWeight={hero ? '800' : '700'}
@@ -416,12 +416,12 @@ function WorkoutOption({
           >
             {workout.name}
           </Text>
-          <Text fontSize={14} color="$mutedForeground" numberOfLines={1}>
+          <Body color="$mutedForeground" numberOfLines={1}>
             {workoutMeta(workout.muscleGroups, workout.exerciseCount)}
-          </Text>
+          </Body>
         </YStack>
 
-        <YStack alignItems="flex-end" gap={10}>
+        <YStack alignItems="flex-end" gap={12}>
           <YStack
             width={24}
             height={24}
@@ -432,7 +432,7 @@ function WorkoutOption({
             borderColor="$borderStrong"
             backgroundColor={selected ? '$primary' : 'transparent'}
           >
-            {selected ? <Icon name="check" size={14} color={colors.ink} /> : null}
+            {selected ? <Icon name="check" size={16} color={colors.ink} /> : null}
           </YStack>
           {hero && workout.estimatedDuration ? (
             <Pill>
@@ -468,18 +468,18 @@ function WorkoutOption({
           ) : names && names.length > 0 ? (
             names.map((name, i) => (
               <XStack key={`${name}-${i}`} alignItems="center" gap="$sm">
-                <Text fontSize={14} color="$mutedForeground" width={20}>
+                <Body color="$mutedForeground" width={20}>
                   {i + 1}.
-                </Text>
-                <Text fontSize={14} color="$foreground" flex={1} numberOfLines={1}>
+                </Body>
+                <Body color="$foreground" flex={1} numberOfLines={1}>
                   {name}
-                </Text>
+                </Body>
               </XStack>
             ))
           ) : (
-            <Text fontSize={14} color="$mutedForeground">
+            <Body color="$mutedForeground">
               Nenhum exercício encontrado.
-            </Text>
+            </Body>
           )}
         </YStack>
       ) : null}

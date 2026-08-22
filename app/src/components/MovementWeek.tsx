@@ -67,12 +67,12 @@ export function MovementWeek({
       <Card>
         <XStack justifyContent="space-between" alignItems="center" marginBottom="$lg">
           <Label>agenda de movimento</Label>
-          <XStack alignItems="center" gap={6}>
+          <XStack alignItems="center" gap={8}>
             <Icon
               name="flame"
               size={16}
               color={streak > 0 ? colors.accent : colors.textMuted}
-              strokeWidth={2}
+              strokeWidth={4}
             />
             <Text
               fontSize={14}
@@ -89,7 +89,7 @@ export function MovementWeek({
         <BarChart
           bars={barras}
           width={chartW}
-          height={110}
+          height={112}
           max={Math.max(...dias.map((d) => d.minutos), 30) * 1.15}
           labelEvery={1}
           id="movimento-semana"

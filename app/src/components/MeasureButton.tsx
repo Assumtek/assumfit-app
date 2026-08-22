@@ -1,13 +1,12 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable } from 'react-native';
 
 import type { MeasurableKind } from '../services/ble';
 import { useBiometricStore } from '../store/biometric.store';
+import { Body, Pill } from './ui';
 import { useTheme } from '../theme/ThemeProvider';
 import { Icon } from './Icon';
-import { Body } from './ui';
 
 /**
  * A pílula do botão.
@@ -16,25 +15,6 @@ import { Body } from './ui';
  * superfície com contorno: o vidro ficou reservado para o painel lateral e a
  * barra, que flutuam sobre o conteúdo. Um botão em linha não flutua.
  */
-function Pill({ children, muted }: { children: React.ReactNode; muted?: boolean }) {
-  return (
-    <XStack
-      alignItems="center"
-      gap="$sm"
-      paddingVertical="$sm"
-      paddingHorizontal="$lg"
-      borderRadius={999}
-      borderWidth={1}
-      borderColor={muted ? '$border' : '$borderStrong'}
-      backgroundColor="$control"
-      // Largura do conteúdo: a composição é assimétrica, o botão não atravessa
-      // a tela nem centraliza.
-      alignSelf="flex-start"
-    >
-      {children}
-    </XStack>
-  );
-}
 
 /**
  * "Medir agora" — o mesmo botão em toda tela de saúde.
@@ -95,15 +75,15 @@ export function MeasureButton({ kind, label }: { kind: MeasurableKind; label?: s
         accessibilityLabel={desteBotao ? 'Medindo, aguarde' : (label ?? 'Medir agora')}
         style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
       >
-        <Pill muted={!conectado}>
+        <Pill variant="control" muted={!conectado}>
           {desteBotao ? (
             <ActivityIndicator size="small" color={colors.textMuted} />
           ) : (
             <Icon name="pulse" size={16} color={conectado ? colors.text : colors.textMuted} />
           )}
-          <Text fontSize={14} color={conectado ? '$foreground' : '$mutedForeground'}>
+          <Body color={conectado ? '$foreground' : '$mutedForeground'}>
             {desteBotao ? 'Medindo…' : (label ?? 'Medir agora')}
-          </Text>
+          </Body>
         </Pill>
       </Pressable>
 
@@ -182,9 +162,9 @@ export function SyncSleepButton() {
           ) : (
             <Icon name="moon" size={16} color={colors.text} />
           )}
-          <Text fontSize={14} color="$foreground">
+          <Body color="$foreground">
             {buscando ? 'Buscando…' : 'Buscar noite'}
-          </Text>
+          </Body>
         </Pill>
       </Pressable>
       <Body marginTop="$sm">
@@ -234,9 +214,9 @@ export function FetchFromBandButton({ label = 'Buscar na pulseira' }: { label?: 
           ) : (
             <Icon name="refresh" size={16} color={colors.text} />
           )}
-          <Text fontSize={14} color="$foreground">
+          <Body color="$foreground">
             {sincronizando ? 'Lendo a pulseira…' : label}
-          </Text>
+          </Body>
         </Pill>
       </Pressable>
     </YStack>

@@ -7,7 +7,7 @@ import { Pressable, TextInput } from 'react-native';
 import { DetailScreen } from '../../components/DetailScreen';
 import { ScalePicker } from '../../components/ScalePicker';
 import { Icon } from '../../components/Icon';
-import { Button, Card, Data, HeroCard, SectionTitle } from '../../components/ui';
+import { Body, Button, Card, Data, HeroCard, SectionTitle } from '../../components/ui';
 import { achievementsFor, type Achievement } from '../../domain/achievements';
 import { formatDuration, rateCompletion, rateEffort } from '../../domain/workout';
 import { fetchExecutionHistory } from '../../services/api.service';
@@ -85,12 +85,12 @@ export function TrainingFinishedScreen() {
             <Text fontSize={20} fontWeight="700" color="$foreground">
               {completion.label}
             </Text>
-            <Text fontSize={14} color="$mutedForeground">
+            <Body color="$mutedForeground">
               {completion.detail}
-            </Text>
-            <YStack height={6} borderRadius={4} backgroundColor="$track" overflow="hidden" marginTop="$sm">
+            </Body>
+            <YStack height={8} borderRadius={4} backgroundColor="$track" overflow="hidden" marginTop="$sm">
               <YStack
-                height={6}
+                height={8}
                 borderRadius={4}
                 width={`${completion.fraction * 100}%`}
                 backgroundColor="$primary"
@@ -112,9 +112,9 @@ export function TrainingFinishedScreen() {
               <Text fontSize={18} fontWeight="700" color="$foreground" marginTop="$sm">
                 {effortRating.label}
               </Text>
-              <Text fontSize={14} color="$mutedForeground">
+              <Body color="$mutedForeground">
                 {effortRating.detail}
-              </Text>
+              </Body>
             </Card>
           ) : null}
 
@@ -126,16 +126,16 @@ export function TrainingFinishedScreen() {
                   <XStack alignItems="center" gap="$md">
                     <Icon
                       name={c.fresh ? 'flame' : 'check'}
-                      size={18}
+                      size={20}
                       color={c.fresh ? colors.accent : colors.textMuted}
                     />
-                    <YStack flex={1} minWidth={0} gap={2}>
-                      <Text fontSize={16} fontWeight="700" color="$foreground">
+                    <YStack flex={1} minWidth={0} gap={4}>
+                      <SectionTitle color="$foreground">
                         {c.title}
-                      </Text>
-                      <Text fontSize={12} color="$mutedForeground">
+                      </SectionTitle>
+                      <Data color="$mutedForeground">
                         {c.detail}
-                      </Text>
+                      </Data>
                     </YStack>
                     {c.fresh ? <Data color="$primary">novo</Data> : null}
                   </XStack>
@@ -186,9 +186,9 @@ export function TrainingFinishedScreen() {
           <Text fontSize={24} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
             Como foi?
           </Text>
-          <Text fontSize={14} color="$mutedForeground">
+          <Body color="$mutedForeground">
             {execution?.workoutName ?? 'Sua sessão'}, duas perguntas rápidas antes de fechar.
-          </Text>
+          </Body>
         </YStack>
 
         <Card>
@@ -206,12 +206,12 @@ export function TrainingFinishedScreen() {
           </Text>
           <ScalePicker values={[2, 4, 6, 8, 10]} value={effort} onPick={setEffort} label="Esforço" />
           <XStack justifyContent="space-between" marginTop="$sm">
-            <Text fontSize={12} color="$mutedForeground">
+            <Data color="$mutedForeground">
               leve
-            </Text>
-            <Text fontSize={12} color="$mutedForeground">
+            </Data>
+            <Data color="$mutedForeground">
               no limite
-            </Text>
+            </Data>
           </XStack>
         </Card>
 
@@ -259,9 +259,9 @@ export function TrainingFinishedScreen() {
         </Card>
 
         {error ? (
-          <Text fontSize={14} color="$destructive">
+          <Body color="$destructive">
             {error}
-          </Text>
+          </Body>
         ) : null}
 
         <Button

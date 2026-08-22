@@ -81,7 +81,7 @@ export function HomeCarousel({ cards }: { cards: HomeCard[] }) {
               <YStack minHeight={132}>
                 <XStack justifyContent="space-between" alignItems="center" marginBottom="$sm">
                   <Label>{card.title}</Label>
-                  <Icon name="arrowRight" size={14} color={colors.textMuted} />
+                  <Icon name="arrowRight" size={16} color={colors.textMuted} />
                 </XStack>
                 <RatingText numberOfLines={2}>{card.headline}</RatingText>
                 <Body marginTop="$sm" numberOfLines={3} flexShrink={1}>
@@ -100,8 +100,8 @@ export function HomeCarousel({ cards }: { cards: HomeCard[] }) {
         {cards.map((card, i) => (
           <YStack
             key={card.key}
-            width={6}
-            height={6}
+            width={8}
+            height={8}
             borderRadius={4}
             backgroundColor={i === pagina ? '$mutedForeground' : '$border'}
           />

@@ -471,7 +471,7 @@ export function HomeScreen() {
             ambiente é contexto em texto corrido — os números grandes da tela
             são os anéis. O relógio (com a carga em texto, sem segundo ícone)
             é porta para a tela do dispositivo. */}
-        <YStack alignItems="flex-end" gap="$sm" paddingBottom={2}>
+        <YStack alignItems="flex-end" gap="$sm" paddingBottom={4}>
           {ambient ? (
             <Data
               // Palavra além da cor no calor extremo, como antes: só a cor
@@ -501,7 +501,7 @@ export function HomeScreen() {
             style={({ pressed }) => pressed && { opacity: 0.6 }}
           >
             <XStack alignItems="center" gap="$sm">
-              <Icon name="watch" size={18} color={colors.textMuted} strokeWidth={2} />
+              <Icon name="watch" size={20} color={colors.textMuted} strokeWidth={4} />
               <Data>{batteryPct != null ? `${batteryPct}%` : '–'}</Data>
             </XStack>
           </Pressable>
@@ -581,7 +581,7 @@ export function HomeScreen() {
     */}
     <View
       {...bordaParaMenu.panHandlers}
-      style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 22 }}
+      style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 24 }}
       accessibilityElementsHidden
     />
     </View>
@@ -623,7 +623,7 @@ function Cabecalho({
         accessibilityLabel="Abrir menu"
         style={({ pressed }) => pressed && { opacity: 0.6 }}
       >
-        <Icon name="menu" size={24} strokeWidth={2} color={colors.text} />
+        <Icon name="menu" size={24} strokeWidth={4} color={colors.text} />
       </Pressable>
 
       <XStack alignItems="center" gap="$lg">

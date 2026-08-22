@@ -17,7 +17,7 @@ import { LogoType } from './Logo';
 import { navigate } from '../navigation/ref';
 import { Glass } from './Surface';
 import { ThemeSwitch } from './ThemeSwitch';
-import { Data, Label } from './ui';
+import { Body, Data, Label } from './ui';
 import { useBiometricStore } from '../store/biometric.store';
 import { useHabitsStore } from '../store/habits.store';
 import { useUiStore } from '../store/ui.store';
@@ -124,7 +124,7 @@ export function Sidebar() {
             exatamente o caso para o qual a camada de vidro existe. */}
         <Glass variant="regular" style={StyleSheet.absoluteFill} />
         <YStack marginBottom="$xl">
-          <LogoType height={18} />
+          <LogoType height={20} />
         </YStack>
 
         {/* Identidade da conta no topo do painel — é onde se procura por ela em
@@ -144,26 +144,26 @@ export function Sidebar() {
             {avatarUri ? (
               <Image
                 source={{ uri: avatarUri }}
-                style={{ width: 34, height: 34, borderRadius: 18 }}
+                style={{ width: 36, height: 36, borderRadius: 20 }}
                 accessibilityIgnoresInvertColors
               />
             ) : (
               // Sem foto, a inicial em círculo de contorno — a foto entra pelo Perfil.
               <YStack
-                width={34}
-                height={34}
-                borderRadius={18}
+                width={36}
+                height={36}
+                borderRadius={20}
                 borderWidth={1}
                 borderColor="$borderStrong"
                 alignItems="center"
                 justifyContent="center"
               >
-                <Text fontSize={14} color="$mutedForeground">
+                <Body color="$mutedForeground">
                   {user.name.trim().charAt(0).toUpperCase()}
-                </Text>
+                </Body>
               </YStack>
             )}
-            <YStack flex={1} gap={2}>
+            <YStack flex={1} gap={4}>
               <Text fontSize={16} letterSpacing={-0.2} color="$foreground" numberOfLines={1}>
                 {user.name}
               </Text>
@@ -302,8 +302,8 @@ function Entry({
         {/* Trilho à esquerda marca a rota atual. Um item de menu selecionado
             por fundo cheio brigaria com o vidro do painel. */}
         <YStack
-          width={2}
-          height={22}
+          width={4}
+          height={24}
           borderRadius={1}
           marginRight="$lg"
           backgroundColor={active ? '$primary' : 'transparent'}

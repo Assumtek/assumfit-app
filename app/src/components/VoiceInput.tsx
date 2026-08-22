@@ -226,7 +226,7 @@ export function VoiceInput({
         ) : null}
         <Icon
           name="mic"
-          size={18}
+          size={20}
           color={estado === 'gravando' ? colors.alert : colors.textMuted}
         />
       </YStack>

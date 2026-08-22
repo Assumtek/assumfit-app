@@ -9,7 +9,7 @@ import { Note } from '../../components/Card';
 import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
 import { ProgressRing } from '../../components/ProgressRing';
-import { Button } from '../../components/ui';
+import { Body, Button } from '../../components/ui';
 import {
   fetchGenerationStatus,
   requestPlanGeneration,
@@ -234,9 +234,9 @@ export function GeneratingScreen() {
             <Text fontSize={24} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
               {isReferral ? 'Melhor não gerar automático' : 'Não deu certo desta vez'}
             </Text>
-            <Text fontSize={14} color="$mutedForeground">
+            <Body color="$mutedForeground">
               {status?.message ?? error}
-            </Text>
+            </Body>
           </YStack>
 
           {canRetry ? (
@@ -289,7 +289,7 @@ export function GeneratingScreen() {
     <DetailScreen title="Seu treino">
       <YStack gap="$xl" paddingTop="$xl">
         <YStack alignItems="flex-start">
-          <ProgressRing size={132} strokeWidth={2} fraction={fraction} color={colors.accent}>
+          <ProgressRing size={132} strokeWidth={4} fraction={fraction} color={colors.accent}>
             <Text
               fontSize={28}
               fontWeight="300"
@@ -305,17 +305,17 @@ export function GeneratingScreen() {
           <Text fontSize={24} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
             Montando seu treino
           </Text>
-          <Text fontSize={14} color="$mutedForeground">
+          <Body color="$mutedForeground">
             {STEPS[step]}
-          </Text>
+          </Body>
         </YStack>
 
         <YStack gap="$md">
           {STEPS.map((label, i) => (
             <XStack key={label} alignItems="center" gap="$md">
               <YStack
-                width={6}
-                height={6}
+                width={8}
+                height={8}
                 borderRadius={4}
                 backgroundColor={i <= step ? '$primary' : '$track'}
               />

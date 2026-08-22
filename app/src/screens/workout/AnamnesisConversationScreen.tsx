@@ -279,8 +279,8 @@ export function AnamnesisConversationScreen() {
           <Data>{Math.round(estado.progress * 100)}%</Data>
         </XStack>
 
-        <YStack height={2} backgroundColor="$track" marginHorizontal="$xl">
-          <YStack height={2} backgroundColor="$primary" width={`${estado.progress * 100}%`} />
+        <YStack height={4} backgroundColor="$track" marginHorizontal="$xl">
+          <YStack height={4} backgroundColor="$primary" width={`${estado.progress * 100}%`} />
         </YStack>
 
         <ScrollView
@@ -320,9 +320,9 @@ export function AnamnesisConversationScreen() {
                     borderColor="$primary"
                     backgroundColor="$primarySoft"
                   >
-                    <Text fontSize={14} color="$foreground">
+                    <Body color="$foreground">
                       {opcao}
-                    </Text>
+                    </Body>
                   </YStack>
                 </Pressable>
               ))}
@@ -380,7 +380,7 @@ export function AnamnesisConversationScreen() {
                   multiline
                   editable={!enviando && pendente !== null}
                   keyboardType={pendente?.type === 'NUMBER' ? 'number-pad' : 'default'}
-                  style={{ fontSize: 16, color: colors.text, maxHeight: 110 }}
+                  style={{ fontSize: 16, color: colors.text, maxHeight: 112 }}
                 />
               </YStack>
               {/* Ditado por voz — o transcrito entra no campo para revisão,
@@ -397,13 +397,13 @@ export function AnamnesisConversationScreen() {
                 <YStack
                   width={44}
                   height={44}
-                  borderRadius={22}
+                  borderRadius={24}
                   alignItems="center"
                   justifyContent="center"
                   backgroundColor="$primary"
                   opacity={!texto.trim() || enviando ? 0.4 : 1}
                 >
-                  <Icon name="arrowRight" size={18} color={colors.ink} />
+                  <Icon name="arrowRight" size={20} color={colors.ink} />
                 </YStack>
               </Pressable>
             </XStack>
@@ -472,7 +472,7 @@ function Balao({
         maxWidth="88%"
         paddingHorizontal="$lg"
         paddingVertical="$md"
-        borderRadius={18}
+        borderRadius={20}
         borderBottomLeftRadius={doAssistente ? 4 : 18}
         borderBottomRightRadius={doAssistente ? 18 : 4}
         backgroundColor={doAssistente ? '$card' : '$primary'}
@@ -531,7 +531,7 @@ function Revisao({
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 24, gap: 10 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 24, gap: 12 }}
       >
         <SectionTitle marginBottom="$xs">Suas respostas</SectionTitle>
 
@@ -557,9 +557,9 @@ function Revisao({
                       borderColor={opcao === campo.value ? '$primary' : '$borderStrong'}
                       backgroundColor={opcao === campo.value ? '$primarySoft' : 'transparent'}
                     >
-                      <Text fontSize={14} color="$foreground">
+                      <Body color="$foreground">
                         {opcao}
-                      </Text>
+                      </Body>
                     </YStack>
                   </Pressable>
                 ))}
@@ -586,7 +586,7 @@ function Revisao({
                     autoFocus
                     multiline
                     selectionColor={colors.accent}
-                    style={{ fontSize: 14, color: colors.text, maxHeight: 90 }}
+                    style={{ fontSize: 14, color: colors.text, maxHeight: 92 }}
                   />
                 </YStack>
                 <Pressable
@@ -598,8 +598,8 @@ function Revisao({
                   accessibilityLabel="Salvar correção"
                 >
                   <YStack
-                    width={38}
-                    height={38}
+                    width={40}
+                    height={40}
                     borderRadius={20}
                     alignItems="center"
                     justifyContent="center"
@@ -610,7 +610,7 @@ function Revisao({
                 </Pressable>
               </XStack>
             ) : (
-              <XStack alignItems="center" gap="$md" marginTop={2}>
+              <XStack alignItems="center" gap="$md" marginTop={4}>
                 <Body flex={1} color="$foreground">
                   {campo.value}
                 </Body>

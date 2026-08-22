@@ -369,7 +369,7 @@ export function CycleScreen() {
                 size="md"
                 onPress={() => void executar(hoje_, false)}
                 loading={salvando}
-                icon={<Icon name="drop" size={14} color="#0E0A22" />}
+                icon={<Icon name="drop" size={16} color="#0E0A22" />}
               />
             </YStack>
           ) : null}
@@ -423,11 +423,11 @@ export function CycleScreen() {
             </Row>
             {mes ? (
               <Row>
-                <YStack flex={1} gap={2}>
+                <YStack flex={1} gap={4}>
                   <Body color="$foreground" fontWeight="700">Janela fértil</Body>
                   <Data fontSize={12}>para autoconhecimento, não é método contraceptivo</Data>
                 </YStack>
-                <YStack alignItems="flex-end" flexShrink={0} gap={2}>
+                <YStack alignItems="flex-end" flexShrink={0} gap={4}>
                   <Data color="$foreground">
                     {porExtenso(mes.fertile.from)} – {porExtenso(mes.fertile.to)}
                   </Data>

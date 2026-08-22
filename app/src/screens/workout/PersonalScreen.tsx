@@ -237,13 +237,13 @@ export function PersonalScreen() {
             <YStack
               width={44}
               height={44}
-              borderRadius={22}
+              borderRadius={24}
               alignItems="center"
               justifyContent="center"
               backgroundColor="$primary"
               opacity={!texto.trim() || pensando ? 0.4 : 1}
             >
-              <Icon name="arrowRight" size={18} color={colors.ink} />
+              <Icon name="arrowRight" size={20} color={colors.ink} />
             </YStack>
           </Pressable>
         </XStack>
@@ -267,7 +267,7 @@ function Balao({ turno }: { turno: ChatTurn }) {
         maxWidth="86%"
         paddingHorizontal="$lg"
         paddingVertical="$md"
-        borderRadius={18}
+        borderRadius={20}
         borderBottomRightRadius={meu ? 4 : 18}
         borderBottomLeftRadius={meu ? 18 : 4}
         backgroundColor={meu ? '$primary' : '$card'}

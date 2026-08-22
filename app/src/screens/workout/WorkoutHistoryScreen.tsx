@@ -111,7 +111,7 @@ export function WorkoutHistoryScreen() {
                 <XStack alignItems="center" gap="$md">
                   <Data width={52}>{data}</Data>
                   <Icon name={meta?.icon ?? 'footprints'} size={16} color={colors.textMuted} />
-                  <YStack flex={1} minWidth={0} gap={2}>
+                  <YStack flex={1} minWidth={0} gap={4}>
                     <Body color="$foreground" numberOfLines={1}>
                       {meta?.label ?? s.sport}
                     </Body>
@@ -120,7 +120,7 @@ export function WorkoutHistoryScreen() {
                     ) : null}
                   </YStack>
                   <Data>{sportClock(s.durationS * 1000)}</Data>
-                  <Icon name="arrowRight" size={14} color={colors.textMuted} />
+                  <Icon name="arrowRight" size={16} color={colors.textMuted} />
                 </XStack>
               </Card>
             );
@@ -137,7 +137,7 @@ export function WorkoutHistoryScreen() {
               <XStack alignItems="center" gap="$md">
                 <Data width={52}>{data}</Data>
                 <Icon name="dumbbell" size={16} color={colors.textMuted} />
-                <YStack flex={1} minWidth={0} gap={2}>
+                <YStack flex={1} minWidth={0} gap={4}>
                   <Body color="$foreground" numberOfLines={1}>
                     {item.workoutName}
                   </Body>
@@ -152,7 +152,7 @@ export function WorkoutHistoryScreen() {
                   {abandonado ? <Data>interrompido</Data> : null}
                 </YStack>
                 <Data>{item.durationSec ? formatDuration(item.durationSec) : '–'}</Data>
-                <Icon name="arrowRight" size={14} color={colors.textMuted} />
+                <Icon name="arrowRight" size={16} color={colors.textMuted} />
               </XStack>
             </Card>
           );
