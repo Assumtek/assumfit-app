@@ -237,3 +237,34 @@ export function montarNoites(segmentos: SegmentoComInstante[]): SleepNight[] {
 
   return noites.sort((a, b) => (b.startAt ?? 0) - (a.startAt ?? 0));
 }
+
+/** Um trecho acordado dentro da noite, com relógio. */
+export type TrechoAcordado = { startAt: number; endAt: number; minutes: number };
+
+/**
+ * Os trechos em que a pessoa ACORDOU durante a noite, com hora de início e fim.
+ *
+ * Pedido de um testador (22/08/2026): "mostrar o horário do início e término
+ * do sono e, se acordou na madrugada, trazer também". Os segmentos já carregam
+ * a ordem e a duração; somando-os a partir de `startAt` cada um ganha relógio.
+ * Sem `startAt` (noite vinda de fonte sem janela) não há como datar — devolve
+ * vazio em vez de inventar hora. Acordado de menos de 1 minuto não é "acordou",
+ * é virada na cama.
+ */
+export function trechosAcordado(night: SleepNight): TrechoAcordado[] {
+  if (night.startAt == null) return [];
+  const trechos: TrechoAcordado[] = [];
+  let cursor = night.startAt;
+  for (const seg of night.segments) {
+    const fim = cursor + seg.minutes * 60_000;
+    if (seg.phase === 'awake' && seg.minutes >= 1) trechos.push({ startAt: cursor, endAt: fim, minutes: seg.minutes });
+    cursor = fim;
+  }
+  return trechos;
+}
+
+/** `23:05`, em hora local. */
+export function horaLocal(ms: number): string {
+  const d = new Date(ms);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}

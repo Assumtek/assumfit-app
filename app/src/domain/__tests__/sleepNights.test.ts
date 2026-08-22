@@ -1,4 +1,11 @@
-import { INTERVALO_MAXIMO_NA_NOITE_MS, montarNoites, type SegmentoComInstante } from '../sleep';
+import {
+  horaLocal,
+  INTERVALO_MAXIMO_NA_NOITE_MS,
+  montarNoites,
+  nightFrom,
+  trechosAcordado,
+  type SegmentoComInstante,
+} from '../sleep';
 
 /** `h(21, 23, 30)` → 21/08/2026 23:30, hora local. */
 const h = (dia: number, hora: number, min = 0) => new Date(2026, 7, dia, hora, min).getTime();
@@ -51,5 +58,32 @@ describe('montarNoites', () => {
   it('sem segmento válido, sem noite', () => {
     expect(montarNoites([])).toEqual([]);
     expect(montarNoites([seg('light', 0, 30)])).toEqual([]);
+  });
+});
+
+describe('trechosAcordado', () => {
+  it('dá relógio a cada trecho acordado, somando os segmentos desde o início', () => {
+    const noite = montarNoites([
+      seg('light', h(21, 23, 30), 31),
+      seg('deep', h(22, 0, 1), 28),
+      seg('light', h(22, 1, 30), 40),
+    ])[0];
+    const trechos = trechosAcordado(noite);
+    expect(trechos).toHaveLength(1);
+    expect(horaLocal(trechos[0].startAt)).toBe('00:29');
+    expect(horaLocal(trechos[0].endAt)).toBe('01:30');
+    expect(trechos[0].minutes).toBe(61);
+    expect(horaLocal(noite.startAt!)).toBe('23:30');
+    expect(horaLocal(noite.endAt!)).toBe('02:10');
+  });
+
+  it('noite sem janela não inventa hora', () => {
+    const semJanela = nightFrom('2026-08-21', [{ phase: 'light', minutes: 60 }, { phase: 'awake', minutes: 10 }]);
+    expect(trechosAcordado(semJanela)).toEqual([]);
+  });
+
+  it('noite sem levantada devolve lista vazia', () => {
+    const noite = montarNoites([seg('deep', h(21, 23, 0), 300)])[0];
+    expect(trechosAcordado(noite)).toEqual([]);
   });
 });

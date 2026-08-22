@@ -11,6 +11,7 @@ import { formatDateBR } from '../domain/birthDate';
 import { Hypnogram } from '../components/charts/Hypnogram';
 import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
 import { rateSleep } from '../domain/ratings';
+import { horaLocal, trechosAcordado } from '../domain/sleep';
 import type { SleepPhase } from '../domain/types';
 import { useBiometricStore } from '../store/biometric.store';
 import * as api from '../services/api.service';
@@ -80,6 +81,7 @@ export function SleepScreen() {
     return h > 0 ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`;
   };
   const pct = (min: number) => Math.round((min / sleep.totalMin) * 100);
+  const acordadas = trechosAcordado(sleep);
 
   return (
     <DetailScreen title="Sono" refreshControl={puxar}>
@@ -101,6 +103,12 @@ export function SleepScreen() {
           acordou Y resolve as duas leituras.
         */}
         <Data marginTop="$xs">noite de {formatDateBR(sleep.date).slice(0, 5)} para {formatDateBR(diaSeguinte(sleep.date))}</Data>
+        {/* Início e fim com relógio — pedido de um testador (22/08). Só quando
+            a noite veio com janela; sem ela, a linha não aparece em vez de
+            inventar hora. */}
+        {sleep.startAt != null && sleep.endAt != null ? (
+          <Data marginTop="$xs">dormiu {horaLocal(sleep.startAt)} · acordou {horaLocal(sleep.endAt)}</Data>
+        ) : null}
         <RatingText
           marginTop="$lg"
           color={rating.state === 'alert' ? '$destructive' : '$foreground'}
@@ -120,6 +128,25 @@ export function SleepScreen() {
         A ordem importa mais que o total: profundo concentrado nos primeiros ciclos é o padrão
         fisiológico.
       </Data>
+
+      {/*
+        Quando levantou durante a noite, com relógio. A seção só existe se
+        houve levantada: "nenhuma" como linha seria ruído numa noite inteira.
+      */}
+      {acordadas.length > 0 ? (
+        <YStack marginBottom="$xl">
+          <Section label="Acordou durante a noite">
+            {acordadas.map((t, i) => (
+              <Row key={t.startAt} last={i === acordadas.length - 1}>
+                <Body flex={1}>
+                  {horaLocal(t.startAt)} → {horaLocal(t.endAt)}
+                </Body>
+                <Data>{t.minutes >= 60 ? `${Math.floor(t.minutes / 60)}h ${String(t.minutes % 60).padStart(2, '0')}m` : `${t.minutes} min`}</Data>
+              </Row>
+            ))}
+          </Section>
+        </YStack>
+      ) : null}
 
       <Section label="Fases da noite">
         {PHASES.map((p, i) => (
