@@ -116,7 +116,18 @@ export function VoiceInput({
   const terminar = async () => {
     setEstado('transcrevendo');
     try {
+      /*
+       Duração ANTES de parar: o Transcribe recusa áudio de menos de ~0,5 s
+       ("a transcrição falhou" — testador, 22/08), e um toque acidental no
+       microfone produz exatamente isso. Abaixo de 1 s não vale subir: a
+       resposta é dizer o que fazer, não mandar tentar de novo.
+      */
+      const segundos = recorder.currentTime ?? 0;
       await recorder.stop();
+      if (segundos < 1) {
+        void AudioModule.setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
+        return falha('Áudio curto demais. Toque no microfone, fale a resposta e toque de novo para parar.');
+      }
       // Devolve a sessão ao modo normal assim que a captura termina — o modo
       // de gravação segue valendo para o app inteiro enquanto ninguém desfaz.
       void AudioModule.setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
@@ -145,7 +156,17 @@ export function VoiceInput({
           else onError?.('Não deu para entender o áudio. Tente falar mais perto do aparelho.');
           return;
         }
-        if (r.status === 'FAILED') return falha('A transcrição falhou. Tente de novo.');
+        if (r.status === 'FAILED') {
+          // O motivo vem do AWS desde 22/08; a frase escolhe pelo que ele diz.
+          const motivo = (r.reason ?? '').toLowerCase();
+          if (motivo.includes('short') || motivo.includes('duration')) {
+            return falha('O áudio ficou curto demais. Fale a resposta inteira antes de parar.');
+          }
+          if (motivo.includes('format') || motivo.includes('sample')) {
+            return falha('O áudio chegou num formato que o serviço não leu. Tente gravar de novo.');
+          }
+          return falha('A transcrição falhou. Tente de novo.');
+        }
       }
       falha('A transcrição demorou demais. Tente um áudio mais curto.');
     } catch (err) {

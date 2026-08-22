@@ -1061,7 +1061,8 @@ export async function startTranscription(key: string, format = 'm4a'): Promise<{
 
 export async function getTranscription(
   jobName: string,
-): Promise<{ status: 'TRANSCRIBING' | 'DONE' | 'FAILED'; transcript?: string }> {
+): Promise<{ status: 'TRANSCRIBING' | 'DONE' | 'FAILED';
+  reason?: string; transcript?: string }> {
   const { data } = await api.get(`/transcribe/${jobName}`);
   return data;
 }

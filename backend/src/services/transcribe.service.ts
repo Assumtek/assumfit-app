@@ -63,6 +63,7 @@ export async function startTranscription(userId: string, key: string, format: st
 
 export async function getTranscription(jobName: string): Promise<{
   status: 'TRANSCRIBING' | 'DONE' | 'FAILED';
+  reason?: string;
   transcript?: string;
 }> {
   const { TranscriptionJob: job } = await transcribe.send(
@@ -77,6 +78,16 @@ export async function getTranscription(jobName: string): Promise<{
     const texto = data.results?.transcripts?.map((t) => t.transcript ?? '').join(' ') ?? '';
     return { status: 'DONE', transcript: texto.trim() };
   }
-  if (status === 'FAILED') return { status: 'FAILED' };
+  if (status === 'FAILED') {
+    /*
+     O motivo do AWS ia para o lixo, e o app só dizia "a transcrição falhou"
+     (testador, 22/08). O FailureReason distingue áudio curto demais, formato
+     fora do declarado e taxa de amostragem errada — três correções diferentes
+     no app. Vai para o log e volta ao cliente, que escolhe a frase.
+    */
+    const reason = job?.FailureReason ?? 'sem motivo informado';
+    console.error(`[transcribe] job ${jobName} FAILED: ${reason}`);
+    return { status: 'FAILED', reason };
+  }
   return { status: 'TRANSCRIBING' };
 }

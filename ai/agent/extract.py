@@ -24,6 +24,7 @@ seria visto na revisão — por alguém que não sabe que precisa procurá-lo.
 from __future__ import annotations
 
 import json
+import re
 
 from pydantic import BaseModel, Field
 
@@ -44,6 +45,12 @@ que a pergunta pede. Trocar a unidade dita pela pedida NÃO é dedução — "1,
 para altura em cm é "180", "90kg" para peso em kg é "90", "1h por treino" para \
 minutos é "60".
 - Se a fala não responde claramente uma pergunta, NÃO inclua a chave.
+- PRAZO não é FREQUÊNCIA: "em 3 meses", "até dezembro", "3 semanas" falam de \
+quando, não de quantas vezes por semana. `daysPerWeek` só entra quando a fala \
+diz explicitamente "N vezes/dias por semana".
+- Pergunta que pede UMA opção não recebe lista: se a fala cita várias regiões, \
+vários objetivos ou vários horários, NÃO inclua a chave — o roteiro pergunta \
+depois e a pessoa escolhe.
 - Nunca deduza saúde: na dúvida, omita.
 - Fala vaga ou fora de tópico → devolva {}.
 
@@ -51,7 +58,30 @@ Exemplo. Perguntas: id `weightKg`: Peso (kg); id `heightCm`: Altura (cm); \
 id `daysPerWeek`: Dias por semana (opções: 2, 3, 4, 5); id `injuries`: Lesões.
 Fala: "tenho 1,75m e uns 82kg, consigo treinar 4 vezes por semana"
 Resposta: {"weightKg": "82", "heightCm": "175", "daysPerWeek": "4"}
-(`injuries` fica de fora: a fala não diz nada sobre lesão.)"""
+(`injuries` fica de fora: a fala não diz nada sobre lesão.)
+
+Contraexemplo. Fala: "quero hipertrofia em 3 meses, foco em ombros, peito e costas"
+Resposta: {}
+(`daysPerWeek` fica de fora: "3 meses" é prazo, não frequência. Região \
+prioritária fica de fora: são três regiões, e a pergunta pede uma.)"""
+
+
+#: "N vezes/dias por semana", "N x por semana", "N x na semana". É o que faz
+#: `daysPerWeek` existir de verdade na fala — "em 3 meses" não passa aqui.
+_FREQUENCIA = re.compile(
+    r"\b(\d)\s*(?:x|vezes|vez|dias?|treinos?)\s*(?:por|na|a cada|/)\s*semana\b",
+    re.IGNORECASE,
+)
+
+
+def frequencia_explicita(text: str, value: str) -> bool:
+    """A fala diz `value` vezes por semana, com essas palavras?
+
+    Um testador (22/08/2026) escreveu "hipertrofia em 3 meses" e o modelo
+    devolveu `daysPerWeek: 3`. O prompt agora proíbe; este filtro garante —
+    o modelo orienta, o código decide.
+    """
+    return any(m.group(1) == value.strip() for m in _FREQUENCIA.finditer(text))
 
 
 class ExtractQuestion(BaseModel):
@@ -102,6 +132,9 @@ async def extract_answers(inp: ExtractInput) -> dict[str, str]:
         if q is None or not isinstance(value, str) or not value.strip():
             continue
         if q.options is not None and value not in q.options:
+            continue
+        if key == "daysPerWeek" and not frequencia_explicita(inp.text, value):
+            log.info("agent.extract.dropped_days_per_week", value=value)
             continue
         out[key] = value.strip()
 
