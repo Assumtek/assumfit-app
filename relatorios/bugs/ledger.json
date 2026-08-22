@@ -1022,6 +1022,12 @@
       "nota": "Feito na parte que o plano suporta: dia de esporte coletivo sem exercícios prescritos mostra só 'Registrar' no check-in (cronômetro ou GPS), sem o treino guiado vazio. Esporte e musculação no mesmo dia como dois cards separados precisa de dois treinos por dia no plano — hoje é um por dia; ficou anotado para a Silvia decidir.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T14:31:06"
+    },
+    "ANl7QjAhE50YZrXQJnuZAmU": {
+      "commit": "f26deb1",
+      "nota": "O treino selecionado e o Iniciar treino agora ficam antes da lista de outros treinos — não precisa mais rolar até o fim.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T15:28:45"
     }
   }
 }
