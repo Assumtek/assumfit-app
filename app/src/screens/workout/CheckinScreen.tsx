@@ -347,6 +347,12 @@ export function CheckinScreen() {
                   }
                 />
               );
+              /*
+               Esporte coletivo sem exercícios prescritos (futebol, vôlei…) não
+               tem o que guiar: só registrar. Oferecer "abrir o treino guiado"
+               num dia desses levava a uma tela vazia (testador, 22/08).
+              */
+              if (!selected.workout.exerciseCount) return [cronometro, personal];
               return [cronometro, guiado, personal];
             })()}
           </YStack>
