@@ -1070,6 +1070,18 @@
       "nota": "A pulseira já vibra no fim do descanso: com o app aberto, direto; com a tela apagada, pela notificação — para isso, em Dispositivo → Avisos no pulso, ligue 'Outros apps' e aceite o emparelhamento quando o iPhone pedir. A tela agora explica isso.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T16:12:11"
+    },
+    "ADk9UyFHvkMLyaTnGGMmjmA": {
+      "commit": "e5f872a",
+      "nota": "Série prescrita em segundos (prancha, isometria) agora tem relógio no lugar das reps, com 3-2-1 antes e vibração no fim.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T16:25:24"
+    },
+    "AI4uzR9f5WVG4kGjJMA6FqA": {
+      "commit": "e5f872a",
+      "nota": "A folha de troca agora muda com o motivo: 'aparelho ocupado' lista outro equipamento primeiro, 'não sei executar' lista as versões mais simples primeiro — e diz isso no topo.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T16:25:24"
     }
   }
 }
