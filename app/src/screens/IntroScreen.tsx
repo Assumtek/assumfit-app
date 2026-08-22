@@ -108,10 +108,21 @@ export function IntroScreen({ onFinish }: Props) {
       Animated.delay(700),
     ]);
 
-    sequence.start(({ finished: completed }) => {
-      if (completed) exit();
-    });
-    return () => sequence.stop();
+    /*
+     Sai QUANDO A ANIMAÇÃO ACABA — ou quando ela é interrompida. A versão
+     anterior só saía em `finished: true`; um diálogo do sistema, uma ligação
+     ou uma notificação tocada durante os três segundos da intro deixavam
+     `finished: false`, `exit` nunca rodava e a marca ficava parada por cima do
+     app, engolindo toques, até alguém descobrir o "pular" invisível (achado na
+     rodada de testes de 22/08/2026). O teto de 6 s cobre o que mais possa
+     travar a sequência: a intro é abertura, não porta.
+    */
+    sequence.start(() => exit());
+    const teto = setTimeout(exit, 6000);
+    return () => {
+      sequence.stop();
+      clearTimeout(teto);
+    };
   }, [reduceMotion, wordWidth, spin, slide, reveal, tagline, exit]);
 
   // Deslocamento inicial: metade do que ainda está escondido, para a marca

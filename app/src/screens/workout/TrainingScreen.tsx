@@ -266,6 +266,22 @@ export function TrainingScreen() {
     return [...byType.values()];
   }, [flat, progress]);
 
+  /*
+   ESTE efeito vivia DEPOIS do retorno antecipado abaixo. Quando `execution`
+   vira null — cancelar o check-in, concluir o treino, a sessão morrer —, o
+   componente retornava antes de chegar nele, o React via um hook a menos e
+   lançava "Rendered fewer hooks than expected": erro de render, fatal em
+   produção. Foram os três crashes relatados em 22/08 (cancelar, concluir,
+   desconectar), invisíveis no log da Apple porque o iOS não carrega a
+   mensagem do JS. Achado na rodada de testes no simulador, com a tela
+   vermelha dizendo a linha. Hooks ficam todos antes de qualquer retorno.
+  */  useEffect(() => {
+    if (!pedido || !workout) return;
+    const todos = workout.phases.flatMap((f) => f.exercises);
+    const alvo = todos.findIndex((e) => e.id === pedido);
+    if (alvo >= 0) setIndex(alvo);
+  }, [pedido, workout]);
+
   if (!execution || !workout || !current) {
     return (
       <YStack flex={1} backgroundColor="$background" alignItems="center" justifyContent="center">
@@ -321,12 +337,6 @@ export function TrainingScreen() {
         : { nextLabel: null, nextName: null };
   nextUpRef.current = nextUp;
 
-  useEffect(() => {
-    if (!pedido || !workout) return;
-    const todos = workout.phases.flatMap((f) => f.exercises);
-    const alvo = todos.findIndex((e) => e.id === pedido);
-    if (alvo >= 0) setIndex(alvo);
-  }, [pedido, workout]);
 
   const handleToggle = async (setIndex: number) => {
     const wasCompleted = sets[setIndex]?.completed ?? false;
@@ -455,7 +465,7 @@ export function TrainingScreen() {
             >
               <Icon name="heart" size={16} color={colors.text} />
               <Text fontSize={15} fontWeight="500" color="$foreground" fontVariant={['tabular-nums']}>
-                {bpmAoVivo}
+                {Math.round(bpmAoVivo)}
               </Text>
               {pesoKg != null ? (
                 <Text fontSize={13} color="$mutedForeground" fontVariant={['tabular-nums']}>
