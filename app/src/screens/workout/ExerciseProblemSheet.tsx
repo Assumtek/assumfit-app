@@ -5,6 +5,7 @@ import { Pressable } from 'react-native';
 import { Icon, type IconName } from '../../components/Icon';
 import { Body, Data, Label, SectionTitle } from '../../components/ui';
 import { Sheet } from '../../components/ui/Dialog';
+import type { MotivoDeTroca } from '../../domain/prescription';
 import { useTheme } from '../../theme/ThemeProvider';
 
 /**
@@ -27,29 +28,31 @@ type Motivo = {
   titulo: string;
   detalhe: string;
   acao: 'trocar' | 'pular';
+  /** O que a folha de troca faz de diferente com este motivo. */
+  motivo?: MotivoDeTroca;
 };
 
 const MOTIVOS: Motivo[] = [
   /*
-   Os dois primeiros levam à MESMA folha de troca, e isso é correto: a saída é a
-   mesma, o motivo é que difere — e o motivo é o que o plano precisa saber para
-   aprender. O que estava errado era a tela não dizer isso: três linhas com seta
-   à direita, duas indo ao mesmo lugar, leem como repetição ou defeito.
-
-   Agora o detalhe distingue o que cada uma faz de diferente na escolha do
-   substituto, em vez de repetir "troca por um equivalente" duas vezes.
+   Os dois primeiros levam à MESMA folha de troca, e o motivo é o que muda o
+   que ela mostra. O detalhe de cada linha PROMETIA isso ("outro equipamento",
+   "versão mais simples") e a folha entregava a mesma lista nas duas — o
+   motivo nunca chegava a ela (Bruno, 22/08: "direciona sempre pra mesma tela
+   final"). Agora chega, e ordena os substitutos.
   */
   {
     icone: 'dumbbell',
     titulo: 'Aparelho ocupado ou indisponível',
     detalhe: 'Sugere quem trabalha o mesmo músculo com outro equipamento.',
     acao: 'trocar',
+    motivo: 'equipamento',
   },
   {
     icone: 'help',
     titulo: 'Não sei executar',
     detalhe: 'Sugere a versão mais simples do mesmo movimento.',
     acao: 'trocar',
+    motivo: 'execucao',
   },
   {
     icone: 'flag',
@@ -67,7 +70,7 @@ export function ExerciseProblemSheet({
 }: {
   open: boolean;
   onClose: () => void;
-  onTrocar: () => void;
+  onTrocar: (motivo: MotivoDeTroca) => void;
   onPular: () => void;
 }) {
   const { colors } = useTheme();
@@ -89,7 +92,7 @@ export function ExerciseProblemSheet({
           {MOTIVOS.map((motivo, i) => (
             <Pressable
               key={motivo.titulo}
-              onPress={motivo.acao === 'trocar' ? onTrocar : onPular}
+              onPress={motivo.acao === 'trocar' ? () => onTrocar(motivo.motivo ?? 'equipamento') : onPular}
               accessibilityRole="button"
               style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
             >

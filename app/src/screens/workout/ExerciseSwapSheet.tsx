@@ -11,6 +11,7 @@ import {
   type SimilarExercise,
   type WorkoutExercise,
 } from '../../services/api.service';
+import { ordenarSubstitutos, type MotivoDeTroca } from '../../domain/prescription';
 import { useTheme } from '../../theme/ThemeProvider';
 
 /**
@@ -26,15 +27,30 @@ import { useTheme } from '../../theme/ThemeProvider';
  */
 export function ExerciseSwapSheet({
   exercise,
+  motivo,
   onClose,
   onPick,
 }: {
   exercise: WorkoutExercise;
+  /** De Sinalizar: ordena a lista. `null` no botão Trocar, que não pergunta. */
+  motivo?: MotivoDeTroca | null;
   onClose: () => void;
   onPick?: (replacement: SimilarExercise) => void;
 }) {
   const { colors } = useTheme();
   const [options, setOptions] = useState<SimilarExercise[] | null>(null);
+  /*
+   A ordem é do MOTIVO. O servidor manda o mesmo equipamento primeiro; com a
+   máquina ocupada é exatamente o que não serve, e quem não sabe executar
+   quer o nível mais simples. Ordenar aqui não remove ninguém.
+  */
+  const ordenadas = options ? ordenarSubstitutos(options, motivo, exercise.equipment) : null;
+  const legenda =
+    motivo === 'equipamento'
+      ? 'Mesmo músculo, outro equipamento primeiro.'
+      : motivo === 'execucao'
+        ? 'As versões mais simples primeiro.'
+        : null;
 
   useEffect(() => {
     let alive = true;
@@ -59,18 +75,20 @@ export function ExerciseSwapSheet({
           </Pressable>
         </YStack>
 
-        {options === null ? (
+        {legenda ? <Data>{legenda}</Data> : null}
+
+        {ordenadas === null ? (
           <YStack paddingVertical="$xxl" alignItems="center">
             <ActivityIndicator color={colors.accent} />
           </YStack>
-        ) : options.length === 0 ? (
+        ) : ordenadas.length === 0 ? (
           <Body paddingVertical="$lg">
             Não encontramos um substituto equivalente para este exercício.
           </Body>
         ) : (
           <ScrollView style={{ maxHeight: 320 }}>
             <YStack gap="$md">
-              {options.map((option) => (
+              {ordenadas.map((option) => (
                 <Card
                   key={option.id}
                   onPress={() => {

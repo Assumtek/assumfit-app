@@ -32,6 +32,7 @@ import { RestOverlay } from './RestOverlay';
 import { SeriesCard } from './SeriesCard';
 import { TimedExercise } from './TimedExercise';
 import { ladosDoExercicio } from '../../domain/exerciseSides';
+import { segundosDaPrescricao, type MotivoDeTroca } from '../../domain/prescription';
 
 const DEFAULT_REST_SECONDS = 60;
 
@@ -90,6 +91,8 @@ export function TrainingScreen() {
   */
   const pedido = (route.params as { exerciseId?: string } | undefined)?.exerciseId;
   const [swapOpen, setSwapOpen] = useState(false);
+  /** Por que a pessoa está trocando — vem de Sinalizar; o botão Trocar não diz. */
+  const [swapMotivo, setSwapMotivo] = useState<MotivoDeTroca | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [problemOpen, setProblemOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
@@ -625,6 +628,7 @@ export function TrainingScreen() {
               isActive={i === activeIndex}
               simple={isSimple}
               isCardio={exercise.subtype === 'CARDIO'}
+              seconds={segundosDaPrescricao(exercise.sets[i]?.repetitions ?? exercise.sets[0]?.repetitions)}
               onChange={(patch) => setProgress(exercise.id, i, patch)}
               onToggle={() => void handleToggle(i)}
               onSkip={() => void handleToggle(i)}
@@ -698,7 +702,11 @@ export function TrainingScreen() {
       {swapOpen ? (
         <ExerciseSwapSheet
           exercise={exercise}
-          onClose={() => setSwapOpen(false)}
+          motivo={swapMotivo}
+          onClose={() => {
+            setSwapOpen(false);
+            setSwapMotivo(null);
+          }}
           /*
            `onPick` era opcional e ninguém passava: a pessoa escolhia o
            substituto, a folha fechava e o treino seguia com o mesmo exercício.
@@ -711,8 +719,9 @@ export function TrainingScreen() {
       <ExerciseProblemSheet
         open={problemOpen}
         onClose={() => setProblemOpen(false)}
-        onTrocar={() => {
+        onTrocar={(motivo) => {
           setProblemOpen(false);
+          setSwapMotivo(motivo);
           setSwapOpen(true);
         }}
         onPular={() => {
@@ -774,7 +783,8 @@ function infoLine(exercise: WorkoutExercise, setCount: number): string {
   const parts: string[] = [];
   if (setCount > 0) parts.push(`${setCount} ${setCount === 1 ? 'série' : 'séries'}`);
   const reps = exercise.sets[0]?.repetitions;
-  if (reps) parts.push(`${reps} reps`);
+  // Prescrição em tempo ("30-45 segundos") não ganha "reps" atrás.
+  if (reps) parts.push(segundosDaPrescricao(reps) ? reps : `${reps} reps`);
   const rest = exercise.sets[0]?.restTime;
   if (rest) parts.push(`${rest}s descanso`);
   return parts.join(' · ');

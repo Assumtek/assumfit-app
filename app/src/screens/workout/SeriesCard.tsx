@@ -4,6 +4,7 @@ import React from 'react';
 import { TextInput, TouchableOpacity } from 'react-native';
 
 import { Icon } from '../../components/Icon';
+import { SetTimer } from './SetTimer';
 import { useTheme } from '../../theme/ThemeProvider';
 
 /**
@@ -30,6 +31,8 @@ type Props = {
   /** Alongamento e cardio: só duração e confirmação, sem carga nem repetição. */
   simple?: boolean;
   isCardio?: boolean;
+  /** Série prescrita em segundos (prancha, isometria): relógio no lugar das reps. */
+  seconds?: number | null;
   onChange: (patch: Partial<SeriesState>) => void;
   onToggle: () => void;
   onSkip?: () => void;
@@ -42,6 +45,7 @@ export function SeriesCard({
   isActive,
   simple,
   isCardio,
+  seconds,
   onChange,
   onToggle,
   onSkip,
@@ -64,7 +68,11 @@ export function SeriesCard({
           {number}ª
         </Text>
         <Text fontSize={13} color="$mutedForeground" flex={1}>
-          {simple ? `${prescribedReps} concluído` : `${state.load || '0'}kg · ${state.reps || '0'} reps`}
+          {simple
+            ? `${prescribedReps} concluído`
+            : seconds
+              ? `${state.load || '0'}kg · ${state.reps || seconds} s`
+              : `${state.load || '0'}kg · ${state.reps || '0'} reps`}
         </Text>
         <TouchableOpacity onPress={onToggle} activeOpacity={0.7} accessibilityRole="checkbox">
           <YStack
@@ -177,12 +185,23 @@ export function SeriesCard({
           onChangeText={(v) => onChange({ load: v.replace(',', '.') })}
           keyboardType="decimal-pad"
         />
-        <NumberField
-          label={`Reps (${prescribedReps})`}
-          value={state.reps}
-          onChangeText={(v) => onChange({ reps: v.replace(/\D/g, '') })}
-          keyboardType="number-pad"
-        />
+        {seconds ? (
+          <SetTimer
+            seconds={seconds}
+            label={`Tempo (${prescribedReps})`}
+            onDone={() => {
+              onChange({ reps: String(seconds) });
+              onToggle();
+            }}
+          />
+        ) : (
+          <NumberField
+            label={`Reps (${prescribedReps})`}
+            value={state.reps}
+            onChangeText={(v) => onChange({ reps: v.replace(/\D/g, '') })}
+            keyboardType="number-pad"
+          />
+        )}
         <TouchableOpacity onPress={onToggle} activeOpacity={0.7} accessibilityRole="checkbox">
           <YStack
             width={48}
