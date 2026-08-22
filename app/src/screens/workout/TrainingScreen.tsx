@@ -342,9 +342,14 @@ export function TrainingScreen() {
   const handleToggle = async (setIndex: number) => {
     const wasCompleted = sets[setIndex]?.completed ?? false;
     await completeSet(exercise.id, setIndex);
-    // Descanso só ao CONCLUIR, e não na última série do exercício — descansar
-    // para depois trocar de aparelho é descanso que ninguém cumpre.
-    if (!wasCompleted && setIndex < sets.length - 1) {
+    /*
+     Descanso ao CONCLUIR uma série — inclusive a última. A regra anterior
+     pulava a última ("descansar para trocar de aparelho é descanso que
+     ninguém cumpre"), e um testador discordou (22/08): o intervalo antes do
+     próximo exercício é o mesmo intervalo, e ele quer o relógio. Só não há
+     descanso depois do último exercício do treino, porque não há próximo.
+    */
+    if (!wasCompleted && !(isLast && setIndex === sets.length - 1)) {
       const rest = exercise.sets[setIndex]?.restTime ?? DEFAULT_REST_SECONDS;
       if (rest > 0) startRest(rest);
     }
@@ -379,8 +384,13 @@ export function TrainingScreen() {
     }
   };
 
-  const goNext = () => {
-    clearRest();
+  /**
+   * Avança. "Pular" limpa o descanso (nada foi feito); "Concluir" o mantém,
+   * porque o relógio entre a última série e o próximo exercício é o que o
+   * testador pediu para ver — e o descanso vive na store, não no índice.
+   */
+  const goNext = (manterDescanso = false) => {
+    if (!manterDescanso) clearRest();
     if (isLast) return navigation.navigate('TrainingFinished');
     setIndex((i) => Math.min(flat.length - 1, i + 1));
   };
@@ -400,8 +410,20 @@ export function TrainingScreen() {
       for (let i = 0; i < sets.length; i++) {
         if (!sets[i]?.completed) await completeSet(exercise.id, i);
       }
+      goNext();
+      return;
     }
-    goNext();
+    /*
+     Força: concluir o exercício é o fim da última série, e o descanso que
+     ela pede vale para a troca de exercício (testador, 22/08). Se a última
+     série já armou o relógio ao ser marcada, ele segue correndo — não se
+     rearma; se a pessoa concluiu sem marcar, arma agora.
+    */
+    if (!isLast && restEndsAt === null) {
+      const rest = exercise.sets[sets.length - 1]?.restTime ?? DEFAULT_REST_SECONDS;
+      if (rest > 0) startRest(rest);
+    }
+    goNext(true);
   };
 
   return (
