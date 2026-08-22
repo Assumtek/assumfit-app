@@ -1,5 +1,8 @@
+import { BRAND_MARKS } from '../../assets/brandMarks';
 import {
   assumfitVibra,
+  MARCA_DA_CATEGORIA,
+  NOME_DA_CATEGORIA,
   BALDES_DE_OUTROS,
   comAssumfit,
   comCategoria,
@@ -83,6 +86,16 @@ describe('nomeadasLigadas', () => {
   });
 });
 
+describe('MARCA_DA_CATEGORIA', () => {
+  it('toda categoria do vocabulário tem ícone, e toda marca citada existe no arquivo gerado', () => {
+    for (const type of Object.keys(NOME_DA_CATEGORIA).map(Number)) {
+      const m = MARCA_DA_CATEGORIA[type];
+      expect(m).toBeTruthy();
+      if (m.kind === 'brand') expect(BRAND_MARKS[m.mark]).toBeTruthy();
+    }
+  });
+});
+
 describe('linhasParaTela', () => {
   it('uma linha por categoria nomeada, na ordem do firmware, e os baldes viram uma só', () => {
     const atual = filtro([
@@ -93,9 +106,9 @@ describe('linhasParaTela', () => {
       [17, false],
     ]);
     expect(linhasParaTela(atual)).toEqual([
-      { key: 'cat:0', nome: 'Telefone', enabled: true, outros: false },
-      { key: 'cat:5', nome: 'WhatsApp', enabled: false, outros: false },
-      { key: 'outros', nome: 'Outros apps', enabled: true, outros: true },
+      { key: 'cat:0', nome: 'Telefone', marca: MARCA_DA_CATEGORIA[0], enabled: true, outros: false },
+      { key: 'cat:5', nome: 'WhatsApp', marca: MARCA_DA_CATEGORIA[5], enabled: false, outros: false },
+      { key: 'outros', nome: 'Outros apps', marca: { kind: 'glyph', hex: '#8E8E93', icon: 'grid' }, enabled: true, outros: true },
     ]);
   });
 

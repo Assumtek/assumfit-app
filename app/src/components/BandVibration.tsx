@@ -2,7 +2,9 @@ import { YStack } from '@tamagui/stacks';
 import React from 'react';
 import { Switch } from 'react-native';
 
+import { AppIcon } from './AppIcon';
 import { Row, Section } from './Card';
+import { Icon } from './Icon';
 import { Body, Button, Data } from './ui';
 import {
   comAssumfit,
@@ -83,7 +85,8 @@ export function BandVibration() {
     <YStack gap="$md">
       <Section label="Avisos no pulso">
         <Row>
-          <YStack flex={1} paddingRight="$md">
+          <Icon name="smartphone" size={18} color={colors.text} />
+          <YStack flex={1} marginLeft="$md" paddingRight="$md">
             <Body color="$foreground">Todas as notificações do celular</Body>
             <Data>{tudo ? 'ligado' : 'escolha abaixo'}</Data>
           </YStack>
@@ -96,7 +99,8 @@ export function BandVibration() {
         </Row>
         {linhas.map((l, i) => (
           <Row key={l.key} last={i === linhas.length - 1}>
-            <YStack flex={1} paddingRight="$md">
+            <AppIcon mark={l.marca} />
+            <YStack flex={1} marginLeft="$md" paddingRight="$md">
               <Body color="$foreground">{l.nome}</Body>
               <Data>{l.outros ? 'inclui o AssumFit' : l.enabled ? 'ligado' : 'desligado'}</Data>
             </YStack>

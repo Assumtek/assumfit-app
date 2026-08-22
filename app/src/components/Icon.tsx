@@ -1,6 +1,10 @@
 import {
   Trophy,
   Menu,
+  Phone,
+  MessageSquare,
+  Video,
+  Smartphone,
   Brain,
   Zap,
   Flower2,
@@ -152,7 +156,11 @@ export type IconName =
   | 'circleDot'
   | 'hand'
   | 'body'
-  | 'stretch';
+  | 'stretch'
+  | 'phone'
+  | 'message'
+  | 'video'
+  | 'smartphone';
 
 /**
  * Nome semântico → componente do Lucide.
@@ -240,6 +248,10 @@ const GLYPH = {
   hand: Hand,
   body: Accessibility,
   stretch: MoveVertical,
+  phone: Phone,
+  message: MessageSquare,
+  video: Video,
+  smartphone: Smartphone,
 } as const;
 
 type Props = {

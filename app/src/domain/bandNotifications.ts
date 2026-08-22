@@ -16,6 +16,8 @@
  * Isso é limitação do hardware, não escolha nossa, e a tela precisa dizer.
  */
 
+import type { AppMark } from '../components/AppIcon';
+
 export type CategoriaDeAviso = { type: number; enabled: boolean };
 
 /**
@@ -111,11 +113,58 @@ export const NOME_DA_CATEGORIA: Record<number, string> = {
   42: 'Gmail',
 };
 
+/**
+ * O ícone de cada categoria — o do app de verdade (pedido da fundadora, 22/08).
+ *
+ * Logotipo oficial quando o pacote o tem; para os que faltam, a cor da marca
+ * com um glifo (telefone, mensagem, vídeo) ou a inicial. Toda categoria do
+ * vocabulário tem marca; o teste garante. Kakao leva o glifo escuro porque o
+ * logotipo é um balão marrom sobre amarelo, não branco.
+ */
+export const MARCA_DA_CATEGORIA: Record<number, AppMark> = {
+  0: { kind: 'glyph', hex: '#34C759', icon: 'phone' },
+  1: { kind: 'glyph', hex: '#34C759', icon: 'message' },
+  2: { kind: 'brand', mark: 'qq' },
+  3: { kind: 'brand', mark: 'wechat' },
+  4: { kind: 'brand', mark: 'facebook' },
+  5: { kind: 'brand', mark: 'whatsapp' },
+  6: { kind: 'brand', mark: 'x' },
+  7: { kind: 'glyph', hex: '#0078D4', icon: 'video' },
+  10: { kind: 'brand', mark: 'line' },
+  11: { kind: 'letter', hex: '#0A66C2', letter: 'in' },
+  12: { kind: 'brand', mark: 'instagram' },
+  13: { kind: 'letter', hex: '#004691', letter: 'T' },
+  14: { kind: 'brand', mark: 'snapchat' },
+  20: { kind: 'brand', mark: 'messenger' },
+  21: { kind: 'brand', mark: 'zalo' },
+  22: { kind: 'brand', mark: 'kakaotalk', glyphColor: '#3C1E1E' },
+  23: { kind: 'brand', mark: 'telegram' },
+  24: { kind: 'brand', mark: 'viber' },
+  25: { kind: 'brand', mark: 'signal' },
+  26: { kind: 'brand', mark: 'zoom' },
+  27: { kind: 'brand', mark: 'kik' },
+  30: { kind: 'brand', mark: 'imessage' },
+  31: { kind: 'brand', mark: 'tinder' },
+  32: { kind: 'brand', mark: 'tumblr' },
+  33: { kind: 'letter', hex: '#FFC629', letter: 'b' },
+  34: { kind: 'brand', mark: 'discord' },
+  35: { kind: 'brand', mark: 'googlemeet' },
+  36: { kind: 'letter', hex: '#D63B36', letter: 'S' },
+  37: { kind: 'letter', hex: '#1A1A1A', letter: 'M' },
+  40: { kind: 'brand', mark: 'tiktok' },
+  41: { kind: 'brand', mark: 'youtube' },
+  42: { kind: 'brand', mark: 'gmail' },
+};
+
+/** O balde de "outros apps": cinza neutro com a grade de apps. */
+export const MARCA_DE_OUTROS: AppMark = { kind: 'glyph', hex: '#8E8E93', icon: 'grid' };
+
 /** Uma linha da tela: categoria nomeada, ou o balde único de "outros apps". */
 export type LinhaDeAviso = {
   /** `cat:<type>` para as nomeadas; `outros` para o balde. Chave de lista. */
   key: string;
   nome: string;
+  marca: AppMark;
   enabled: boolean;
   /** Verdadeiro na linha que agrupa os baldes — é onde o AssumFit mora. */
   outros: boolean;
@@ -140,12 +189,13 @@ export function linhasParaTela(atual: CategoriaDeAviso[]): LinhaDeAviso[] {
     .map((c) => ({
       key: `cat:${c.type}`,
       nome: NOME_DA_CATEGORIA[c.type],
+      marca: MARCA_DA_CATEGORIA[c.type],
       enabled: c.enabled,
       outros: false,
     }));
   const temBalde = atual.some((c) => BALDES_DE_OUTROS.includes(c.type));
   return temBalde
-    ? [...nomeadas, { key: 'outros', nome: 'Outros apps', enabled: assumfitVibra(atual), outros: true }]
+    ? [...nomeadas, { key: 'outros', nome: 'Outros apps', marca: MARCA_DE_OUTROS, enabled: assumfitVibra(atual), outros: true }]
     : nomeadas;
 }
 
