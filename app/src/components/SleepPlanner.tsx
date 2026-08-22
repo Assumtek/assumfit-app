@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { Alert, Linking, Platform, Pressable } from 'react-native';
 
 import { Icon } from './Icon';
+import { alarmeNativoDisponivel, marcarAlarme } from '../../modules/alarmkit';
 import { Body, Button, Data, Label, SectionTitle } from './ui';
 import { Card } from './ui/Card';
 import {
@@ -304,18 +305,46 @@ async function definirAlarme(opcao: SleepOption, modo: Modo) {
     }
   }
 
-  // iOS: sem API de alarme. Abre o Relógio e diz o horário.
+  /*
+   iOS 26+: o AlarmKit deixa o app marcar o alarme de verdade, com permissão
+   da pessoa e a tela de alarme do sistema. Um testador (21/08, build 7) tocou
+   em "Abrir Relógio" e nada aconteceu — o esquema `clock-alarm://` não abre
+   nada no iOS 26 e a falha era engolida. O texto "o iPhone não deixa" ficou
+   velho junto.
+  */
+  if (alarmeNativoDisponivel()) {
+    const resultado = await marcarAlarme(hora, minuto, titulo);
+    if (resultado === 'scheduled') {
+      Alert.alert(
+        'Despertador marcado',
+        `${opcao.label}, pelo próprio iPhone. Dá para ver e ajustar no app Relógio.`,
+      );
+      return;
+    }
+    if (resultado === 'denied') {
+      Alert.alert(
+        'Sem permissão para alarmes',
+        `Libere em Ajustes → AssumFit → Alarmes, ou marque ${opcao.label} no app Relógio.`,
+      );
+      return;
+    }
+    // 'error' e 'unsupported' caem no caminho de abaixo.
+  }
+
+  // iOS anterior ao 26: abre o Relógio e diz o horário. E se não conseguir
+  // abrir, DIZ — antes a falha era silenciosa, e silêncio aqui lê como botão
+  // quebrado.
   Alert.alert(
     `Despertador para ${opcao.label}`,
-    'O iPhone não deixa um app criar alarmes sozinho. Vou abrir o Relógio para você tocar em “+” e marcar esse horário.',
+    'Nesta versão do iOS o app não cria alarmes. Vou abrir o Relógio para você tocar em “+” e marcar esse horário.',
     [
       { text: 'Agora não', style: 'cancel' },
       {
         text: 'Abrir Relógio',
         onPress: () => {
-          // Esquema do app Relógio da Apple. Se o sistema recusar, o alerta
-          // acima já entregou a informação que importa: o horário.
-          void Linking.openURL('clock-alarm://').catch(() => undefined);
+          void Linking.openURL('clock-alarm://').catch(() => {
+            Alert.alert('Não consegui abrir o Relógio', `Abra o app Relógio e marque ${opcao.label}.`);
+          });
         },
       },
     ],
