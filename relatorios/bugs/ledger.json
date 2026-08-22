@@ -944,6 +944,30 @@
       "nota": "Reproduzido: nos exercícios por tempo (alongamento), 'Concluir exercício' só passava para o próximo e não marcava o exercício como feito — por isso a barra não andava e a conclusão não chegava ao servidor. Agora concluir marca e avança; 'Pular' continua só pulando.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T12:47:20"
+    },
+    "AMM6k2CFlddBqcrvfIoIqrY": {
+      "commit": "dcbbd1a",
+      "nota": "Feito: no treino guiado, ao lado do cronômetro aparece o batimento ao vivo da pulseira e as calorias estimadas (a partir do batimento, do seu peso na anamnese, sexo e idade). Sem peso declarado, só o batimento.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T12:50:35"
+    },
+    "ANIPWhQYRDtNSsrg09MVJYE": {
+      "commit": "dcbbd1a",
+      "nota": "Feito: durante o descanso a Dynamic Island mostra a contagem regressiva e 'Descanso · a seguir: <exercício>'; quando o descanso acaba, volta ao relógio do treino com o exercício atual.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T12:50:38"
+    },
+    "APv3TqiHRcKestyPGHWjWgQ": {
+      "commit": "dcbbd1a",
+      "nota": "Feito: no check-in, abaixo de 'Iniciar treino', tem 'Ajustar o treino de hoje com o personal' — abre o chat já com 'hoje tenho só 30 minutos' para você confirmar ou editar, e ele propõe o ajuste só do treino de hoje.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T12:50:41"
+    },
+    "ALwb-TD-WgONkMZAEnDN3Oo": {
+      "commit": "dcbbd1a",
+      "nota": "Anotado para a Silvia decidir: os vídeos são material do MUVX, e trazer para o AssumFit é uma decisão de marca e licença, não de código. Se ela liberar, a ligação por exercício é direta.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T12:50:44"
     }
   }
 }
