@@ -23,7 +23,7 @@ import { usePersonalizacaoStore } from './src/store/personalizacao.store';
 import { useBiometricStore } from './src/store/biometric.store';
 import { ThemeProvider, useTheme } from './src/theme/ThemeProvider';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
-import { instalarRelatorDeErros } from './src/services/crash-report';
+import { aoErroFatal, instalarRelatorDeErros } from './src/services/crash-report';
 
 // Antes de qualquer render: erro que acontecer na montagem já é relatado.
 instalarRelatorDeErros();
@@ -50,6 +50,9 @@ function Root() {
   // A intro roda só no cold start. Como este estado vive na raiz e a raiz não
   // remonta, voltar do background não a reexibe — intro repetida vira atrito.
   const [introDone, setIntroDone] = useState(false);
+  // Erro fatal de JS em produção vira esta tela, não o fim do processo.
+  const [erroFatal, setErroFatal] = useState<unknown>(null);
+  useEffect(() => aoErroFatal((e) => setErroFatal(e)), []);
 
   // Uma única assinatura do wearable para a árvore inteira.
   useEffect(() => listen(), [listen]);
@@ -175,7 +178,7 @@ function Root() {
                   intro toca, a sessão é lida do Keychain e as fontes carregam. */}
               {/* Limite de erro por fora da navegação: erro de tela vira uma tela
                   de recuperação, não a morte do app (crash de 22/08). */}
-              <ErrorBoundary>
+              <ErrorBoundary key={erroFatal ? 'fatal' : 'ok'} erroExterno={erroFatal} onRecuperar={() => setErroFatal(null)}>
                 <Navigation />
               </ErrorBoundary>
               {!introDone ? <IntroScreen onFinish={() => setIntroDone(true)} /> : null}

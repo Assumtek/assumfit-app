@@ -15,8 +15,14 @@ import { relatarErro } from '../services/crash-report';
  * então "Tentar de novo" costuma bastar.
  */
 type Estado = { erro: Error | null };
+type Props = {
+  children: React.ReactNode;
+  /** Erro vindo do tratador global (fora da árvore), para mostrar a mesma tela. */
+  erroExterno?: unknown;
+  onRecuperar?: () => void;
+};
 
-export class ErrorBoundary extends React.Component<{ children: React.ReactNode }, Estado> {
+export class ErrorBoundary extends React.Component<Props, Estado> {
   state: Estado = { erro: null };
 
   static getDerivedStateFromError(erro: Error): Estado {
@@ -32,7 +38,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
   }
 
   render() {
-    if (!this.state.erro) return this.props.children;
+    if (!this.state.erro && !this.props.erroExterno) return this.props.children;
     return (
       <YStack flex={1} backgroundColor="$background" justifyContent="center" padding="$xl" gap="$lg">
         <Headline>Algo deu errado nesta tela</Headline>
@@ -40,7 +46,13 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
           O erro foi registrado e vai ser corrigido. Seus dados estão guardados — toque abaixo para
           continuar de onde estava.
         </Body>
-        <Button title="Tentar de novo" onPress={() => this.setState({ erro: null })} />
+        <Button
+          title="Tentar de novo"
+          onPress={() => {
+            this.setState({ erro: null });
+            this.props.onRecuperar?.();
+          }}
+        />
       </YStack>
     );
   }

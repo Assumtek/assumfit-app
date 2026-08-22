@@ -57,6 +57,25 @@ export function relatarErro(error: unknown, fatal: boolean, origem?: string) {
 
 let instalado = false;
 
+/**
+ * O erro fatal mais recente, para a raiz mostrar a tela de recuperação.
+ *
+ * Três crashes em dois builds (22/08) tinham a mesma assinatura — RCTFatal,
+ * erro de JS não tratado — em momentos diferentes: cancelar check-in,
+ * concluir treino, desconectar a pulseira. Em produção o tratador padrão do
+ * React Native ABORTA o processo. Aqui, em produção, o erro é relatado e a
+ * raiz troca a árvore pela tela de recuperação: o estado das stores continua
+ * de pé e "Tentar de novo" devolve o app. Em desenvolvimento o comportamento
+ * antigo fica — a tela vermelha é a ferramenta certa ali.
+ */
+let ouvintesDeFatal: ((erro: unknown) => void)[] = [];
+export function aoErroFatal(ouvinte: (erro: unknown) => void): () => void {
+  ouvintesDeFatal.push(ouvinte);
+  return () => {
+    ouvintesDeFatal = ouvintesDeFatal.filter((o) => o !== ouvinte);
+  };
+}
+
 /** Instala o observador uma vez. Chamar na raiz do app. */
 export function instalarRelatorDeErros() {
   if (instalado) return;
@@ -66,8 +85,20 @@ export function instalarRelatorDeErros() {
   utils?.setGlobalHandler?.((error, isFatal) => {
     try {
       relatarErro(error, !!isFatal);
-    } finally {
+    } catch {
+      // relatar nunca pode ser a causa de um segundo erro
+    }
+    if (__DEV__ || !isFatal) {
       anterior?.(error, isFatal);
+      return;
+    }
+    // Produção, fatal: não aborta. A raiz mostra a recuperação.
+    for (const ouvinte of ouvintesDeFatal) {
+      try {
+        ouvinte(error);
+      } catch {
+        // idem
+      }
     }
   });
 }
