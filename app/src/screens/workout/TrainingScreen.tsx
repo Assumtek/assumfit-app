@@ -15,6 +15,7 @@ import {
 
 import { Icon } from '../../components/Icon';
 import { Button } from '../../components/ui';
+import { ExerciseVideo } from '../../components/ExerciseVideo';
 import { acumularKcal, type PerfilParaEnergia } from '../../domain/workoutEnergy';
 import { fetchAnamnesis } from '../../services/api.service';
 import { useBiometricStore } from '../../store/biometric.store';
@@ -513,6 +514,9 @@ export function TrainingScreen() {
           Cardio entra aqui quando vem com duração prescrita; sem ela, cai no
           cartão de séries, que é onde distância e intensidade são registradas.
         */}
+        {/* O vídeo de como fazer, acima de tudo — vale para força e por tempo. */}
+        <ExerciseVideo videoUrl={exercise.videoUrl ?? null} thumbnailUrl={exercise.thumbnailUrl ?? null} />
+
         {tempoAlvo !== null ? (
           <TimedExercise
             name={exercise.name}

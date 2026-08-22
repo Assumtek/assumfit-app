@@ -37,6 +37,19 @@ type CatalogRow = {
 async function main() {
   const path = join(__dirname, 'data', 'exercises.json');
   const rows = JSON.parse(readFileSync(path, 'utf8')) as CatalogRow[];
+  /*
+ Vídeos demonstrativos — `prisma/data/exercise-videos.json`, gerado a partir do
+ catálogo do MUVX (mesmos ids). Arquivo ausente não é erro: é catálogo sem vídeo.
+ */
+const videos = new Map<string, { videoUrl: string; thumbnailUrl: string | null }>();
+try {
+  const lido = JSON.parse(readFileSync(join(__dirname, 'data', 'exercise-videos.json'), 'utf8')) as {
+    videos: { id: string; videoUrl: string; thumbnailUrl: string | null }[];
+  };
+  for (const v of lido.videos) videos.set(v.id, { videoUrl: v.videoUrl, thumbnailUrl: v.thumbnailUrl });
+} catch {
+  // sem arquivo, sem vídeo
+}
 
   if (rows.length === 0) {
     throw new Error(`catálogo vazio em ${path} — abortando antes de desativar tudo`);
@@ -52,10 +65,14 @@ async function main() {
       type: row.type,
       active: true,
     };
+    // Vídeo do MUVX, quando há. `null` explícito no update: exercício que
+    // perdeu o vídeo no catálogo de origem perde aqui também.
+    const video = videos.get(row.id) ?? null;
+    const comVideo = { ...data, videoUrl: video?.videoUrl ?? null, thumbnailUrl: video?.thumbnailUrl ?? null };
     await prisma.exercise.upsert({
       where: { id: row.id },
-      create: { id: row.id, ...data },
-      update: data,
+      create: { id: row.id, ...comVideo },
+      update: comVideo,
     });
   }
 
@@ -73,6 +90,7 @@ async function main() {
   });
 
   console.log(`catálogo: ${rows.length} exercícios ativos, ${retired.count} desativados`);
+  console.log(`  com vídeo: ${[...videos.keys()].filter((id) => rows.some((r) => r.id === id)).length}`);
   for (const g of byGroup.sort((a, b) => b._count - a._count)) {
     console.log(`  ${g.muscleGroup.padEnd(16)} ${g._count}`);
   }

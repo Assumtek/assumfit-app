@@ -92,7 +92,9 @@
           "photosPermission": "Para salvar o card do seu treino na galeria.",
           "savePhotosPermission": "Para salvar o card do seu treino na galeria.",
           "isAccessMediaLocationEnabled": false,
-          "granularPermissions": ["photo"]
+          "granularPermissions": [
+            "photo"
+          ]
         }
       ],
       "@bacons/apple-targets",
@@ -122,7 +124,8 @@
           "isIosBackgroundLocationEnabled": true,
           "isAndroidForegroundServiceEnabled": true
         }
-      ]
+      ],
+      "expo-video"
     ],
     "extra": {
       "eas": {

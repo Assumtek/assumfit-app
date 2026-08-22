@@ -558,6 +558,18 @@ Duas armadilhas do vidro nativo:
 - `supportsLiquidGlass` é falso em dev client sem o módulo; o fallback é
   translúcido opaco, não vidro.
 
+## Vídeos dos exercícios vêm do MUVX
+
+O catálogo (`backend/prisma/data/exercises.json`) é exportação do MUVX, com os
+mesmos ids. O vídeo demonstrativo por exercício está em
+`backend/prisma/data/exercise-videos.json`, gerado por
+`backend/scripts/exportar-videos-muvx.py` a partir do banco do MUVX
+(`MUVX_DATABASE_URL`), e entra no banco pelo `npm run seed:exercises`. Decisão
+da fundadora (22/08/2026). A primeira carga veio de HOMOLOGAÇÃO
+(`cdn-homol.muvx.app`, 116 de 370) — quando houver acesso a produção, regere.
+O app mostra thumbnail e só baixa o vídeo ao toque (`components/ExerciseVideo.tsx`,
+`expo-video` — dependência nativa).
+
 ## Regras de dados
 
 - Dado biométrico é **dado pessoal sensível** (LGPD Art. 5º II). Toda tabela nova que armazene biometria precisa de vínculo com consentimento e política de retenção. Nunca logar valor biométrico com `user_id` junto.

@@ -561,6 +561,10 @@ model Exercise {
   level       ExperienceLevel @default(INICIANTE)
   type        ExerciseType
   active      Boolean         @default(true)
+  /// Vídeo demonstrativo e thumbnail — trazidos do catálogo do MUVX por id
+  /// (decisão da fundadora, 22/08/2026). Nulo para exercício sem vídeo.
+  videoUrl     String? @map("video_url")
+  thumbnailUrl String? @map("thumbnail_url")
 
   workoutExercises WorkoutExercise[]
 

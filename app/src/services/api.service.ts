@@ -623,6 +623,9 @@ export type WorkoutExercise = {
   description: string | null;
   muscleGroup: string;
   equipment: string;
+  /** Vídeo demonstrativo do catálogo do MUVX, quando há. */
+  videoUrl: string | null;
+  thumbnailUrl: string | null;
   subtype: 'STRENGTH' | 'CARDIO' | 'MOBILITY';
   notes: string | null;
   duration: number | null;

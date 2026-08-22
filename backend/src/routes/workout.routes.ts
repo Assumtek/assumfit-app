@@ -739,6 +739,8 @@ workoutRoutes.get(
           description: item.exercise.description,
           muscleGroup: item.exercise.muscleGroup,
           equipment: item.exercise.equipment,
+          videoUrl: item.exercise.videoUrl ?? null,
+          thumbnailUrl: item.exercise.thumbnailUrl ?? null,
           subtype: item.subtype,
           notes: item.notes,
           duration: item.duration,
