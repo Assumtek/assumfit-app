@@ -59,8 +59,7 @@ export function GattScreen() {
       const stop = await ble.listenAll((data) =>
         // Teto de 200: um canal serial pode despejar dezenas por segundo, e
         // guardar tudo derruba a tela antes de a informação ser útil.
-        setFeed((f) => [data, ...f].slice(0, 200)),
-      );
+        setFeed((f) => [data, ...f].slice(0, 200)));
       stopListening.current = stop;
       setFeed([]);
     } catch (err) {
@@ -85,8 +84,7 @@ export function GattScreen() {
         throw new Error(
           usingRealDevice
             ? 'O SDK do fabricante controla o rádio e não expõe GATT. Para inspecionar o protocolo, suba o Metro com EXPO_PUBLIC_BLE=gatt.'
-            : 'Você está no wearable simulado. Suba o Metro com EXPO_PUBLIC_BLE=real.',
-        );
+            : 'Você está no wearable simulado. Suba o Metro com EXPO_PUBLIC_BLE=real.');
       }
       setServices(await ble.inspect());
     } catch (err) {
@@ -120,13 +118,13 @@ export function GattScreen() {
       {!usingRealDevice ? (
         <Note
           title="Você está no wearable simulado"
-          body="Suba o Metro com EXPO_PUBLIC_BLE=real e rode num aparelho físico. O simulador não tem Bluetooth — o CoreBluetooth reporta 'unsupported' e não faz ponte com o rádio do Mac."
+          body="Suba o Metro com EXPO_PUBLIC_BLE=real e rode num aparelho físico. O simulador não tem Bluetooth, o CoreBluetooth reporta 'unsupported' e não faz ponte com o rádio do Mac."
         />
       ) : null}
 
       <Body marginBottom="$xl" maxWidth="96%">
         Conecte o relógio pela tela de dispositivo e inspecione. O que aparecer sem nome do
-        Bluetooth SIG é proprietário — é o que falta mapear em <Mono>staranb.ts</Mono>.
+        Bluetooth SIG é proprietário, é o que falta mapear em <Mono>staranb.ts</Mono>.
       </Body>
 
       <YStack gap="$md" marginBottom="$xl">
@@ -246,7 +244,7 @@ function Mono({
 }) {
   return (
     <Text
-      fontSize={11}
+      fontSize={12}
       color={color as never}
       selectable={selectable}
       marginBottom={marginBottom as never}
@@ -284,7 +282,7 @@ function GattAction({
         borderRadius={999}
         backgroundColor={disabled ? '$control' : '$primary'}
       >
-        <Text fontSize={15} fontWeight="700" color={disabled ? '$faint' : '$primaryForeground'}>
+        <Text fontSize={16} fontWeight="700" color={disabled ? '$faint' : '$primaryForeground'}>
           {label}
         </Text>
       </YStack>

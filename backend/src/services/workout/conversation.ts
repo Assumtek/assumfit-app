@@ -95,7 +95,7 @@ function aberturaDeRetorno(firstName: string | null): string {
   const oi = firstName ? `Oi de novo, ${firstName}!` : 'Oi de novo!';
   return (
     `${oi}\n\n` +
-    'Suas respostas da última anamnese estão guardadas — não precisa preencher tudo de novo. ' +
+    'Suas respostas da última anamnese estão guardadas, não precisa preencher tudo de novo. ' +
     'Me conta o que MUDOU desde então: objetivo, rotina, alguma dor ou condição nova.\n\n' +
     'Depois eu só reconfirmo as perguntas de segurança, e o resto você revisa antes de enviar.'
   );
@@ -108,7 +108,7 @@ function abertura(firstName: string | null): string {
     'Antes de montar seu treino, quero te conhecer de verdade. Me conta com suas palavras: ' +
     'o que você busca, como é sua rotina hoje, e se tem alguma lesão ou condição de saúde ' +
     'que eu precise saber.\n\n' +
-    'Fica à vontade pra falar tudo de uma vez, do seu jeito — pode escrever ou ditar pelo ' +
+    'Fica à vontade pra falar tudo de uma vez, do seu jeito, pode escrever ou ditar pelo ' +
     'microfone do teclado. Quanto mais você me contar agora, menos perguntas eu faço depois.'
   );
 }
@@ -197,8 +197,7 @@ export async function getConversation(userId: string, id: string): Promise<Conve
 export async function answerConversation(
   userId: string,
   id: string,
-  valor: string,
-): Promise<ConversationState> {
+  valor: string): Promise<ConversationState> {
   const achada = await prisma.anamnesisConversation.findFirst({ where: { id, userId } });
   if (!achada) throw notFound('Conversa não encontrada');
   if (achada.status !== AnamnesisConversationStatus.ACTIVE) {
@@ -207,7 +206,7 @@ export async function answerConversation(
 
   const answers = (achada.answers ?? {}) as Answers;
   const pendente = nextQuestion(answers);
-  if (!pendente) throw badRequest('Não há pergunta pendente — revise e finalize');
+  if (!pendente) throw badRequest('Não há pergunta pendente, revise e finalize');
 
   /*
    Texto digitado vale tanto quanto chip tocado.
@@ -216,7 +215,7 @@ export async function answerConversation(
    pergunta de opções não pode ser rejeitado por caixa ou acento. O que se
    guarda é a opção CANÔNICA, porque o resto do sistema compara por igualdade.
   */
-  if (pendente.type === 'NUMBER' && valor.trim() !== '' && valor.trim() !== '—') {
+  if (pendente.type === 'NUMBER' && valor.trim() !== '' && valor.trim() !== '–') {
     const n = Number(valor.trim().replace(',', '.'));
     // Peso de 500 kg ou altura de 3 cm é dedo escorregando, não medida — e o
     // BMI derivado disso viraria bandeira clínica falsa.
@@ -227,8 +226,7 @@ export async function answerConversation(
   const canonico = matchOption(pendente, valor.trim());
   if (canonico === null) {
     throw badRequest(
-      `Não entendi. Responda com uma das opções: ${(pendente.options ?? []).join(', ')}.`,
-    );
+      `Não entendi. Responda com uma das opções: ${(pendente.options ?? []).join(', ')}.`);
   }
   if (pendente.required && canonico === '') {
     throw badRequest(`"${pendente.label}" é obrigatória`);
@@ -283,8 +281,7 @@ export async function answerConversation(
         })
         .join('; ');
       messages.push(
-        fala(`Já anotei do que você contou — ${rotulos}. Se algo estiver errado, dá para corrigir na revisão.`, null),
-      );
+        fala(`Já anotei do que você contou, ${rotulos}. Se algo estiver errado, dá para corrigir na revisão.`, null));
     }
   }
 
@@ -293,8 +290,7 @@ export async function answerConversation(
     messages.push(fala(proxima.ask, proxima.id));
   } else {
     messages.push(
-      fala('Terminamos. Confira suas respostas abaixo antes de eu montar o treino.', null),
-    );
+      fala('Terminamos. Confira suas respostas abaixo antes de eu montar o treino.', null));
   }
 
   const salva = await prisma.anamnesisConversation.update({
@@ -312,8 +308,7 @@ export async function editAnswer(
   userId: string,
   id: string,
   questionId: string,
-  valor: string,
-): Promise<ConversationState> {
+  valor: string): Promise<ConversationState> {
   const achada = await prisma.anamnesisConversation.findFirst({ where: { id, userId } });
   if (!achada) throw notFound('Conversa não encontrada');
 
@@ -451,7 +446,7 @@ const POSTURA: Record<string, 'sitting' | 'standing' | 'moving'> = {
 };
 
 const num = (v: string | undefined) => {
-  if (!v || v === '—') return null;
+  if (!v || v === '–') return null;
   const n = Number(v.replace(',', '.'));
   return Number.isFinite(n) && n > 0 ? n : null;
 };
@@ -469,7 +464,7 @@ const NEGATIVAS = new Set([
 ]);
 const dito = (v: string | undefined): string | null => {
   const t = v?.trim();
-  if (!t || t === '—') return null;
+  if (!t || t === '–') return null;
   const puro = t
     .toLowerCase()
     .normalize('NFD')
@@ -554,7 +549,7 @@ export function traduzirParaAnamnese(r: Answers) {
     r.horario ? `treina: ${r.horario}` : null,
     dito(r.observacaoFinal),
     dito(r.otherReasonWhich),
-  ].filter((x) => x && x !== '—');
+  ].filter((x) => x && x !== '–');
 
   return {
     parq: {

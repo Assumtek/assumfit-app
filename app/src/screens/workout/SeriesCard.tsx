@@ -64,10 +64,10 @@ export function SeriesCard({
         borderBottomColor="$border"
         opacity={0.7}
       >
-        <Text fontSize={13} color="$mutedForeground" width={28}>
+        <Text fontSize={14} color="$mutedForeground" width={28}>
           {number}ª
         </Text>
-        <Text fontSize={13} color="$mutedForeground" flex={1}>
+        <Text fontSize={14} color="$mutedForeground" flex={1}>
           {simple
             ? `${prescribedReps} concluído`
             : seconds
@@ -101,10 +101,10 @@ export function SeriesCard({
         borderBottomColor="$border"
         opacity={0.35}
       >
-        <Text fontSize={13} color="$mutedForeground" width={28}>
+        <Text fontSize={14} color="$mutedForeground" width={28}>
           {number}ª
         </Text>
-        <Text fontSize={13} color="$mutedForeground" flex={1}>
+        <Text fontSize={14} color="$mutedForeground" flex={1}>
           Pendente
         </Text>
         <YStack width={28} height={28} borderRadius={999} borderWidth={1} borderColor="$border" />
@@ -117,14 +117,14 @@ export function SeriesCard({
     return (
       <YStack paddingVertical="$lg" borderBottomWidth={1} borderBottomColor="$border">
         <XStack alignItems="center" gap="$md">
-          <Text fontSize={15} fontWeight="700" color="$foreground" width={28}>
+          <Text fontSize={16} fontWeight="700" color="$foreground" width={28}>
             {number}ª
           </Text>
           <YStack flex={1}>
-            <Text fontSize={15} fontWeight="500" color="$foreground">
+            <Text fontSize={16} fontWeight="500" color="$foreground">
               {isCardio ? `Faça por ${prescribedReps}` : `Mantenha por ${prescribedReps}`}
             </Text>
-            <Text fontSize={13} color="$mutedForeground">
+            <Text fontSize={14} color="$mutedForeground">
               {isCardio ? 'Mantenha o ritmo constante' : 'Respire calmamente e segure a posição'}
             </Text>
           </YStack>
@@ -145,7 +145,7 @@ export function SeriesCard({
         {onSkip ? (
           <TouchableOpacity onPress={onSkip} activeOpacity={0.7}>
             <XStack alignItems="center" justifyContent="center" gap="$xs" marginTop="$sm">
-              <Text fontSize={13} color="$mutedForeground">
+              <Text fontSize={14} color="$mutedForeground">
                 Pular
               </Text>
               <Icon name="arrowRight" size={12} color={colors.textMuted} />
@@ -160,16 +160,16 @@ export function SeriesCard({
   return (
     <YStack paddingVertical="$lg" borderBottomWidth={1} borderBottomColor="$border">
       <XStack alignItems="center" gap="$md">
-        <Text fontSize={15} fontWeight="700" color="$foreground" width={28}>
+        <Text fontSize={16} fontWeight="700" color="$foreground" width={28}>
           {number}ª
         </Text>
-        <Text fontSize={13} fontWeight="500" color="$primary" flex={1}>
+        <Text fontSize={14} fontWeight="500" color="$primary" flex={1}>
           Série atual
         </Text>
         {onSkip ? (
           <TouchableOpacity onPress={onSkip} activeOpacity={0.7}>
             <XStack alignItems="center" gap="$xs">
-              <Text fontSize={13} color="$mutedForeground">
+              <Text fontSize={14} color="$mutedForeground">
                 Pular
               </Text>
               <Icon name="arrowRight" size={12} color={colors.textMuted} />

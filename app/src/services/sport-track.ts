@@ -33,8 +33,7 @@ TaskManager.defineTask(TAREFA, async ({ data, error }) => {
   if (!locations?.length) return;
   useSportTrackStore.setState((s) => ({
     points: [
-      ...s.points,
-      ...locations.map((l) => ({
+      ...s.points, ...locations.map((l) => ({
         lat: l.coords.latitude,
         lon: l.coords.longitude,
         at: l.timestamp,

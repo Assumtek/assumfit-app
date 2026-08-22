@@ -58,7 +58,7 @@ export function formatSessionClock(seconds: number): string {
  */
 export function rateCompletion(completionPct: number | null): Rating {
   if (completionPct == null) {
-    return { available: false, label: '—', detail: 'sem registro', fraction: 0, state: 'normal' };
+    return { available: false, label: '–', detail: 'sem registro', fraction: 0, state: 'normal' };
   }
 
   const pct = clamp01(completionPct / 100);
@@ -81,7 +81,7 @@ export function rateCompletion(completionPct: number | null): Rating {
  */
 export function rateEffort(effort: number | null): Rating {
   if (effort == null) {
-    return { available: false, label: '—', detail: 'não informado', fraction: 0, state: 'normal' };
+    return { available: false, label: '–', detail: 'não informado', fraction: 0, state: 'normal' };
   }
 
   const fraction = clamp01(effort / 10);
@@ -100,7 +100,7 @@ export function rateEffort(effort: number | null): Rating {
  */
 export function rateConsistency(sessions: number, days: number): Rating {
   if (days <= 0) {
-    return { available: false, label: '—', detail: 'sem período', fraction: 0, state: 'normal' };
+    return { available: false, label: '–', detail: 'sem período', fraction: 0, state: 'normal' };
   }
 
   const perWeek = (sessions / days) * 7;
@@ -250,8 +250,7 @@ export function modalityMeta(modality: string | null | undefined): { label: stri
 export function workoutMetaSemRepetir(
   nome: string,
   muscleGroups: string[],
-  exerciseCount: number,
-): string {
+  exerciseCount: number): string {
   const completa = workoutMeta(muscleGroups, exerciseCount);
   const grupos = muscleGroups.slice(0, 2).map((g) => MUSCLE_LABEL[g] ?? g.toLowerCase());
   if (grupos.length === 0) return completa;

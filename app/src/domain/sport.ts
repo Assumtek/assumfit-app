@@ -185,8 +185,7 @@ export function searchSports(query: string): Sport[] {
     (s) =>
       normalizeTerm(s.label).includes(alvo) ||
       s.kind.includes(alvo) ||
-      (SYNONYMS[s.kind] ?? []).some((t) => normalizeTerm(t).includes(alvo)),
-  );
+      (SYNONYMS[s.kind] ?? []).some((t) => normalizeTerm(t).includes(alvo)));
 }
 
 /**

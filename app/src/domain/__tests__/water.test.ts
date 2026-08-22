@@ -17,14 +17,14 @@ describe('waterNudge', () => {
     expect(waterNudge(META + 500, META, COPO)).toBeNull();
   });
 
-  it('longe da meta, fala em volume — "12 copos" desanima', () => {
+  it('longe da meta, fala em volume: "12 copos" desanima', () => {
     const n = waterNudge(500, META, COPO);
     expect(n?.title).toBe('Hora da água');
     expect(n?.body).toContain('0,5 L de 2,5 L');
     expect(n?.body).toContain('2,0 L');
   });
 
-  it('no último terço, fala em copos — é o que resta de gesto', () => {
+  it('no último terço, fala em copos, é o que resta de gesto', () => {
     const n = waterNudge(1800, META, COPO);
     expect(n?.title).toBe('Faltam 0,7 L para a meta');
     expect(n?.body).toContain('4 copos');

@@ -7,7 +7,7 @@ describe('roteiro da anamnese', () => {
     expect(nextQuestion({})?.options).toBeUndefined();
   });
 
-  it('depois da abertura vem o corpo, não a clínica — ordem do MUVX', () => {
+  it('depois da abertura vem o corpo, não a clínica, ordem do MUVX', () => {
     expect(nextQuestion({ opening: 'quero ter mais energia' })?.id).toBe('weightKg');
   });
 
@@ -72,7 +72,7 @@ describe('roteiro da anamnese', () => {
     expect(campos.map((c) => c.questionId)).toEqual(['opening', 'weightKg', 'heartCondition']);
   });
 
-  it('todo id é único — id repetido sobrescreveria resposta em silêncio', () => {
+  it('todo id é único, id repetido sobrescreveria resposta em silêncio', () => {
     const ids = QUESTIONS.map((q) => q.id);
     expect(new Set(ids).size).toBe(ids.length);
   });

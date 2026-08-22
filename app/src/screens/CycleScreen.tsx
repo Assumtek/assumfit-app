@@ -38,8 +38,7 @@ function porExtenso(iso: string): string {
   const comAno = d.getFullYear() !== new Date().getFullYear();
   return d.toLocaleDateString('pt-BR', {
     day: 'numeric',
-    month: 'long',
-    ...(comAno ? { year: 'numeric' } : {}),
+    month: 'long', ...(comAno ? { year: 'numeric' } : {}),
   });
 }
 
@@ -168,8 +167,7 @@ export function CycleScreen() {
 
   const nomeDoMes = useMemo(
     () => capitaliza(new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })),
-    [],
-  );
+    []);
   const descartados = useMemo(() => (cycles ? discardedIntervals(grupos) : 0), [cycles, grupos]);
 
   /*
@@ -208,8 +206,7 @@ export function CycleScreen() {
       else await api.logCycle(dia);
       await carregar();
       setConfirmacao(
-        remover ? `Registro de ${porExtenso(dia)} removido.` : `Início registrado em ${porExtenso(dia)}.`,
-      );
+        remover ? `Registro de ${porExtenso(dia)} removido.` : `Início registrado em ${porExtenso(dia)}.`);
     } catch {
       setErro('Não foi possível salvar. Verifique a conexão e tente de novo.');
     } finally {
@@ -271,8 +268,7 @@ export function CycleScreen() {
             })();
           },
         },
-      ],
-    );
+      ]);
   };
 
   if (cycles === null) {
@@ -290,7 +286,7 @@ export function CycleScreen() {
       <DetailScreen title="Ciclo" refreshControl={refresh}>
         <Note
           title="Tela indisponível para este perfil"
-          body="O acompanhamento de ciclo existe para perfis com sexo biológico feminino no cadastro — é ele que define as faixas de referência. Se o seu cadastro está errado, corrija em Perfil."
+          body="O acompanhamento de ciclo existe para perfis com sexo biológico feminino no cadastro, é ele que define as faixas de referência. Se o seu cadastro está errado, corrija em Perfil."
         />
       </DetailScreen>
     );
@@ -341,12 +337,12 @@ export function CycleScreen() {
           <YStack marginTop="$md" marginBottom="$lg">
             <Headline>Atraso de {atraso} {atraso === 1 ? 'dia' : 'dias'}</Headline>
             <Data marginTop="$xs" color="$mutedForeground">
-              a previsão era {proxima ? porExtenso(proxima) : '—'} · ciclo atual com {estado.day} dias
+              a previsão era {proxima ? porExtenso(proxima) : '–'} · ciclo atual com {estado.day} dias
             </Data>
           </YStack>
           <Note
             title="A previsão passou"
-            body="Registre o primeiro dia quando ele vier — a previsão recalcula sozinha. Variação entre ciclos é comum."
+            body="Registre o primeiro dia quando ele vier, a previsão recalcula sozinha. Variação entre ciclos é comum."
           />
         </>
       ) : (
@@ -422,20 +418,20 @@ export function CycleScreen() {
             <Row>
               <Body flex={1} color="$foreground">Próxima menstruação</Body>
               <Data flexShrink={0} color="$foreground">
-                {proxima ? porExtenso(proxima) : '—'}
+                {proxima ? porExtenso(proxima) : '–'}
               </Data>
             </Row>
             {mes ? (
               <Row>
                 <YStack flex={1} gap={2}>
                   <Body color="$foreground" fontWeight="700">Janela fértil</Body>
-                  <Data fontSize={11}>para autoconhecimento — não é método contraceptivo</Data>
+                  <Data fontSize={12}>para autoconhecimento, não é método contraceptivo</Data>
                 </YStack>
                 <YStack alignItems="flex-end" flexShrink={0} gap={2}>
                   <Data color="$foreground">
                     {porExtenso(mes.fertile.from)} – {porExtenso(mes.fertile.to)}
                   </Data>
-                  <Data fontSize={11}>
+                  <Data fontSize={12}>
                     ovulação ~{porExtenso(mes.fertile.peak)}
                     {mes.estimating ? ' · faixa aproximada' : ''}
                   </Data>
@@ -462,7 +458,7 @@ export function CycleScreen() {
       {descartados >= 2 ? (
         <Note
           title="Previsão limitada para o seu ritmo"
-          body="Seus intervalos variam além da faixa que a previsão usa (21 a 35 dias) — ela pode errar mais no seu caso. Os registros continuam valendo."
+          body="Seus intervalos variam além da faixa que a previsão usa (21 a 35 dias), ela pode errar mais no seu caso. Os registros continuam valendo."
         />
       ) : null}
 
@@ -476,8 +472,7 @@ export function CycleScreen() {
               ? Math.round(
                   (new Date(`${c.startedAt}T12:00:00`).getTime() -
                     new Date(`${anterior.startedAt}T12:00:00`).getTime()) /
-                    86_400_000,
-                )
+                    86_400_000)
               : null;
             const partes = [
               c.durationDays && c.durationDays >= 2 ? `${c.durationDays} dias de fluxo` : null,

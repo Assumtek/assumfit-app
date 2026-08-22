@@ -19,7 +19,7 @@ describe('morningLevel', () => {
     expect(morningLevel(noite(90))).toBeGreaterThan(morningLevel(noite(50)));
   });
 
-  it('nunca acorda em zero — ninguém acorda sem reserva nenhuma', () => {
+  it('nunca acorda em zero, ninguém acorda sem reserva nenhuma', () => {
     expect(morningLevel(noite(0))).toBe(25);
   });
 
@@ -76,12 +76,10 @@ describe('calcBodyBattery', () => {
   it('não passa de 100 nem cai abaixo de zero', () => {
     const cheio = calcBodyBattery(
       noite(100),
-      Array.from({ length: 20 }, (_, i) => ({ at: as(i), value: 5 })),
-    )!;
+      Array.from({ length: 20 }, (_, i) => ({ at: as(i), value: 5 })))!;
     const vazio = calcBodyBattery(
       noite(0),
-      Array.from({ length: 20 }, (_, i) => ({ at: as(i), value: 100 })),
-    )!;
+      Array.from({ length: 20 }, (_, i) => ({ at: as(i), value: 100 })))!;
     expect(cheio.current).toBeLessThanOrEqual(100);
     expect(vazio.current).toBeGreaterThanOrEqual(0);
   });
@@ -115,7 +113,7 @@ describe('calcBodyBattery', () => {
     expect(b.recharged).toBeGreaterThan(0);
   });
 
-  it('cair e recuperar no mesmo dia É gasto — não some no saldo', () => {
+  it('cair e recuperar no mesmo dia É gasto, não some no saldo', () => {
     // Manhã tensa (85) drena; tarde calma (10) devolve. O saldo fecha perto do
     // teto, mas o dia GASTOU — era o caso que travava o número em zero.
     const b = calcBodyBattery(noite(70), [
@@ -183,7 +181,7 @@ describe('a bateria é DIÁRIA', () => {
     expect(noiteSustentaODia(noite('2026-07-31'), '2026-08-01')).toBe(true);
   });
 
-  it('sem noite do dia, a bateria é traço — não um número de outro dia', () => {
+  it('sem noite do dia, a bateria é traço, não um número de outro dia', () => {
     const estresseDeHoje = [{ at: Date.now(), value: 40 }];
     expect(calcBodyBattery(noite('2026-08-14'), estresseDeHoje, null, '2026-08-18')).toBeNull();
     // E com a noite certa ela volta a existir.

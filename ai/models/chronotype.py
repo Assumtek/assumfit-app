@@ -1,7 +1,7 @@
 """Identificação de cronótipo.
 
 A spec promete cronótipo em 7 dias. O sinal usado aqui é o **ponto médio do
-sono** (midsleep), que é o marcador padrão em cronobiologia — é o que o MSFsc
+sono** (midsleep), que é o marcador padrão em cronobiologia, é o que o MSFsc
 do Munich Chronotype Questionnaire mede, só que observado em vez de perguntado.
 
 Escolha deliberada: usar midsleep em vez do horário de pico de HRV. O HRV

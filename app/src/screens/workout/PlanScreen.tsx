@@ -79,8 +79,7 @@ export function PlanScreen() {
 
   const semana = useMemo(
     () => montarSemanaDeTreino(plan, minutos, new Date()),
-    [plan, minutos],
-  );
+    [plan, minutos]);
 
   /*
    O dia aberto na leitura. `null` significa "siga o hoje" — sem isso, a tela
@@ -106,8 +105,7 @@ export function PlanScreen() {
           <YStack gap="$sm">
             <Headline>Você ainda não tem um plano</Headline>
             <Body>
-              Algumas perguntas sobre saúde e rotina, e o treino é montado a partir delas —
-              respeitando o que você já respondeu no perfil.
+              Algumas perguntas sobre saúde e rotina, e o treino é montado a partir delas, respeitando o que você já respondeu no perfil.
             </Body>
           </YStack>
           <Button
@@ -201,7 +199,7 @@ function Leitura({
       <TrainingPanel
         ativo
         titulo={execucao.workoutName}
-        meta="Em andamento — continue de onde parou."
+        meta="Em andamento, continue de onde parou."
         acao={{ title: 'Continuar treino', onPress: onContinuar, icon: 'play' }}
       />
     );

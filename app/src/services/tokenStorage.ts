@@ -37,8 +37,7 @@ const secureStore: SecureStoreModule | null = (() => {
 
 if (!secureStore && !__DEV__) {
   throw new Error(
-    'expo-secure-store indisponível. O app não pode guardar credenciais sem armazenamento seguro do sistema.',
-  );
+    'expo-secure-store indisponível. O app não pode guardar credenciais sem armazenamento seguro do sistema.');
 }
 
 /** Só existe em desenvolvimento, quando o dev client ainda não tem o nativo. */
@@ -46,8 +45,7 @@ let devFallback: string | null = null;
 
 if (!secureStore && __DEV__) {
   console.warn(
-    '[tokenStorage] expo-secure-store ausente: usando memória. Reconstrua o dev client — em produção isto é erro fatal.',
-  );
+    '[tokenStorage] expo-secure-store ausente: usando memória. Reconstrua o dev client, em produção isto é erro fatal.');
 }
 
 /**

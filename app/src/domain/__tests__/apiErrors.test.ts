@@ -9,7 +9,7 @@ import { causaDaFalha, mensagemDaFalha } from '../apiErrors';
  * consertar o que não está quebrado e esconde o que está.
  */
 describe('causaDaFalha', () => {
-  it('401 é sessão, não conexão — o caso do relato', () => {
+  it('401 é sessão, não conexão, o caso do relato', () => {
     expect(causaDaFalha({ response: { status: 401 } })).toBe('sessao');
   });
 

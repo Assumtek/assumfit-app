@@ -144,10 +144,10 @@ export function MetricDayScreen() {
           <YStack marginTop="$md" marginBottom="$xl">
             {metric === 'pressure' ? (
               <Display>
-                {resumo.bp_systolic ?? '—'}/{resumo.bp_diastolic ?? '—'}
+                {resumo.bp_systolic ?? '–'}/{resumo.bp_diastolic ?? '–'}
               </Display>
             ) : (
-              <Display>{numeroGrande != null ? numeroGrande.toLocaleString('pt-BR') : '—'}</Display>
+              <Display>{numeroGrande != null ? numeroGrande.toLocaleString('pt-BR') : '–'}</Display>
             )}
             <Data marginTop="$sm">
               {metric === 'sleep'

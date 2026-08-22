@@ -67,15 +67,15 @@ export function MovementWeek({
       <Card>
         <XStack justifyContent="space-between" alignItems="center" marginBottom="$lg">
           <Label>agenda de movimento</Label>
-          <XStack alignItems="center" gap={5}>
+          <XStack alignItems="center" gap={6}>
             <Icon
               name="flame"
-              size={15}
+              size={16}
               color={streak > 0 ? colors.accent : colors.textMuted}
-              strokeWidth={1.5}
+              strokeWidth={2}
             />
             <Text
-              fontSize={13}
+              fontSize={14}
               fontWeight="700"
               color={streak > 0 ? '$primary' : '$mutedForeground'}
             >

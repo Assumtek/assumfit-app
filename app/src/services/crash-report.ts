@@ -50,8 +50,7 @@ export function relatarErro(error: unknown, fatal: boolean, origem?: string) {
         screen: origem ?? telaAtual ?? undefined,
         at: new Date().toISOString(),
       },
-      { timeout: 4000 },
-    )
+      { timeout: 4000 })
     .catch(() => undefined);
 }
 

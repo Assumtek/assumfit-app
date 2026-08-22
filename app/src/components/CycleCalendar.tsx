@@ -83,8 +83,7 @@ export function CycleCalendar({
 
   // Espaços em branco antes do dia 1, para o mês começar no dia da semana certo.
   const celulas: (number | null)[] = [
-    ...Array.from({ length: primeiroDiaSemana }, () => null),
-    ...Array.from({ length: diasNoMes }, (_, i) => i + 1),
+    ...Array.from({ length: primeiroDiaSemana }, () => null), ...Array.from({ length: diasNoMes }, (_, i) => i + 1),
   ];
 
   const mover = (delta: number) => {
@@ -123,7 +122,7 @@ export function CycleCalendar({
 
       <XStack>
         {SEMANA.map((d, i) => (
-          <Data key={i} flex={1} textAlign="center" fontSize={11} marginBottom="$xs">
+          <Data key={i} flex={1} textAlign="center" fontSize={12} marginBottom="$xs">
             {d}
           </Data>
         ))}
@@ -199,7 +198,7 @@ export function CycleCalendar({
                 <YStack
                   width={30}
                   height={30}
-                  borderRadius={15}
+                  borderRadius={16}
                   alignItems="center"
                   justifyContent="center"
                   style={
@@ -215,8 +214,7 @@ export function CycleCalendar({
                         registrado ? 'menstrual' : (fase?.phase ?? null),
                         futuro,
                         k === hoje,
-                        colors,
-                      ),
+                        colors),
                     }}
                   >
                     {dia}
@@ -288,8 +286,7 @@ function corDoNumero(
   fase: CyclePhase | null,
   futuro: boolean,
   ehHoje: boolean,
-  colors: { text: string; textFaint: string; hairlineStrong: string },
-): string {
+  colors: { text: string; textFaint: string; hairlineStrong: string }): string {
   // Sobre o vermelho cheio da menstruação, branco é o que alcança contraste
   // nos dois temas — o ink escuro sumia ali.
   if (fase === 'menstrual') return '#FFFFFF';

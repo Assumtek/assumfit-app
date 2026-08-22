@@ -152,7 +152,7 @@ export function RestOverlay({
           >
             Descanso
           </Text>
-          <Text fontSize={13.5} fontWeight="600" color="$foreground" numberOfLines={1}>
+          <Text fontSize={14} fontWeight="600" color="$foreground" numberOfLines={1}>
             {nextName ? `${nextLabel ?? 'A seguir'}: ${nextName}` : 'Próxima série em breve'}
           </Text>
         </YStack>
@@ -168,20 +168,20 @@ export function RestOverlay({
         >
           <YStack
             paddingHorizontal={16}
-            paddingVertical={9}
+            paddingVertical={10}
             borderRadius={999}
             backgroundColor="$primary"
           >
-            <Text fontSize={13} fontWeight="800" color="$primaryForeground">
+            <Text fontSize={14} fontWeight="800" color="$primaryForeground">
               Pular
             </Text>
           </YStack>
         </Pressable>
       </XStack>
 
-      <YStack height={3} backgroundColor="$border">
+      <YStack height={4} backgroundColor="$border">
         <YStack
-          height={3}
+          height={4}
           width={`${Math.max(elapsedRatio * 100, 2)}%`}
           backgroundColor="$primary"
           borderTopRightRadius={3}

@@ -107,8 +107,7 @@ export function MealsScreen() {
                 ? respostas.goal
                 : (useWorkoutStore.getState().plan?.goal ?? rotina?.goal ?? null),
             trainDaysPerWeek: rotina?.trainDays?.length ?? null,
-          }),
-        );
+          }));
       } catch {
         setMeta(null);
       }
@@ -282,7 +281,7 @@ export function MealsScreen() {
     if (!detalhe) return;
     const atuais = detalhe.foods as api.MealFood[];
     if (atuais.length <= 1) {
-      setAvisoDetalhe('Este é o único alimento — para tirá-lo, remova o registro inteiro.');
+      setAvisoDetalhe('Este é o único alimento, para tirá-lo, remova o registro inteiro.');
       return;
     }
     setAvisoDetalhe(null);
@@ -291,9 +290,7 @@ export function MealsScreen() {
       aplicarRegistro(
         await api.updateMealFoods(
           detalhe.id,
-          atuais.filter((_, i) => i !== index),
-        ),
-      );
+          atuais.filter((_, i) => i !== index)));
       setEditando(null);
     } catch (err) {
       setAvisoDetalhe(mensagemDaFalha(err, 'A remoção'));
@@ -330,8 +327,7 @@ export function MealsScreen() {
             kcal_min: Math.round(passo.baseKcalMin * mult),
             kcal_max: Math.round(passo.baseKcalMax * mult),
           }
-        : f,
-    );
+        : f);
     setAvisoDetalhe(null);
     setSalvandoEdicao(true);
     try {
@@ -403,7 +399,7 @@ export function MealsScreen() {
         setObsReanalise('');
         setEditando(null);
       } else if (!analysis.is_food) {
-        setAvisoDetalhe('A reanálise não identificou comida — o registro ficou como estava.');
+        setAvisoDetalhe('A reanálise não identificou comida, o registro ficou como estava.');
       }
     } catch (err) {
       setAvisoDetalhe(mensagemDaFalha(err, 'A reanálise'));
@@ -435,7 +431,7 @@ export function MealsScreen() {
           placeholder="Nome (ex.: Farofa)"
           placeholderTextColor={colors.textFaint}
           selectionColor={colors.accent}
-          style={{ fontSize: 15, color: colors.text, paddingVertical: 6 }}
+          style={{ fontSize: 16, color: colors.text, paddingVertical: 6 }}
         />
         <TextInput
           value={editando.gramas}
@@ -444,7 +440,7 @@ export function MealsScreen() {
           placeholderTextColor={colors.textFaint}
           selectionColor={colors.accent}
           keyboardType="number-pad"
-          style={{ fontSize: 15, color: colors.text, paddingVertical: 6 }}
+          style={{ fontSize: 16, color: colors.text, paddingVertical: 6 }}
         />
         <Data color="$mutedForeground">
           A caloria recalcula pela tabela TACO a partir do nome e dos gramas.
@@ -482,7 +478,7 @@ export function MealsScreen() {
         ) : (
           <Note
             title="Sem foto neste aparelho"
-            body="A foto do prato fica só no aparelho em que foi tirada — este registro veio de outro, ou a foto foi apagada."
+            body="A foto do prato fica só no aparelho em que foi tirada, este registro veio de outro, ou a foto foi apagada."
           />
         )}
 
@@ -549,7 +545,7 @@ export function MealsScreen() {
                     hitSlop={8}
                     style={({ pressed }) => [{ padding: 6 }, pressed && { opacity: 0.5 }]}
                   >
-                    <Icon name="pencil" size={15} color={colors.textMuted} strokeWidth={1.5} />
+                    <Icon name="pencil" size={16} color={colors.textMuted} strokeWidth={2} />
                   </Pressable>
                   <Pressable
                     onPress={() => void removerAlimentoEm(i)}
@@ -559,7 +555,7 @@ export function MealsScreen() {
                     hitSlop={8}
                     style={({ pressed }) => [{ padding: 6 }, pressed && { opacity: 0.5 }]}
                   >
-                    <Icon name="trash" size={15} color={colors.textMuted} strokeWidth={1.5} />
+                    <Icon name="trash" size={16} color={colors.textMuted} strokeWidth={2} />
                   </Pressable>
                 </XStack>
               </Row>
@@ -588,7 +584,7 @@ export function MealsScreen() {
                   placeholderTextColor={colors.textFaint}
                   selectionColor={colors.accent}
                   autoFocus
-                  style={{ fontSize: 15, color: colors.text, paddingVertical: 6 }}
+                  style={{ fontSize: 16, color: colors.text, paddingVertical: 6 }}
                 />
                 {adicionando.resultados.map((f) => (
                   <Pressable
@@ -628,7 +624,7 @@ export function MealsScreen() {
                   selectionColor={colors.accent}
                   keyboardType="number-pad"
                   autoFocus
-                  style={{ fontSize: 15, color: colors.text, paddingVertical: 6 }}
+                  style={{ fontSize: 16, color: colors.text, paddingVertical: 6 }}
                 />
                 <XStack gap="$md" marginTop="$xs">
                   <YStack flex={1}>
@@ -685,7 +681,7 @@ export function MealsScreen() {
             <CampoComVoz
               valor={obsReanalise}
               onChange={setObsReanalise}
-              placeholder="Diga o que está errado (ex.: tem farofa, e é frango) — opcional"
+              placeholder="Diga o que está errado (ex.: tem farofa, e é frango), opcional"
             />
             <Button
               title={reanalisando ? 'Reanalisando…' : 'Reanalisar com a foto'}
@@ -728,7 +724,7 @@ export function MealsScreen() {
             placeholder="ex.: arroz, feijão, farofa e frango grelhado"
           />
           <Data color="$mutedForeground">
-            Detalhar os alimentos deixa a estimativa mais precisa — o que você citar tem
+            Detalhar os alimentos deixa a estimativa mais precisa, o que você citar tem
             precedência na análise.
           </Data>
         </YStack>
@@ -786,7 +782,7 @@ export function MealsScreen() {
       <YStack marginBottom="$xl">
         <HeroCard eyebrow="Resumo de hoje">
           <XStack alignItems="baseline" gap="$sm">
-            <Display>{deHoje.length ? `${kcalMin}–${kcalMax}` : '—'}</Display>
+            <Display>{deHoje.length ? `${kcalMin}–${kcalMax}` : '–'}</Display>
             <Data>kcal</Data>
           </XStack>
           {meta ? (
@@ -910,7 +906,7 @@ function BarraDaMeta({ consumido, meta }: { consumido: number; meta: number }) {
  */
 function MacroColunas({ m }: { m: { p: number; c: number; g: number } }) {
   const cal = m.p * 4 + m.c * 4 + m.g * 9;
-  const pct = (kcal: number) => (cal > 0 ? `${Math.round((kcal / cal) * 100)}%` : '—');
+  const pct = (kcal: number) => (cal > 0 ? `${Math.round((kcal / cal) * 100)}%` : '–');
   const colunas = [
     { rotulo: 'Proteínas', gramas: m.p, kcal: m.p * 4 },
     { rotulo: 'Carboidratos', gramas: m.c, kcal: m.c * 4 },

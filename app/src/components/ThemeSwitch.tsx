@@ -50,7 +50,7 @@ export function ThemeSwitch() {
               backgroundColor={selected ? '$control' : 'transparent'}
             >
               <Text
-                fontSize={13}
+                fontSize={14}
                 letterSpacing={-0.2}
                 fontWeight={selected ? '600' : '400'}
                 color={selected ? '$foreground' : '$mutedForeground'}

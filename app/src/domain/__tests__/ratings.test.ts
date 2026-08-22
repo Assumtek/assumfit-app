@@ -88,11 +88,11 @@ describe('alerta é reservado para fora da faixa saudável', () => {
     expect(rateTemperature(35.1).state).toBe('alert');
   });
 
-  it('não sinaliza atividade — meta não batida não é achado clínico', () => {
+  it('não sinaliza atividade, meta não batida não é achado clínico', () => {
     expect(rateActivity({ steps: 100, goal: 10000 }).state).toBe('normal');
   });
 
-  it('não sinaliza movimento — semana parada é rotina, não achado clínico', () => {
+  it('não sinaliza movimento, semana parada é rotina, não achado clínico', () => {
     expect(rateMovement({ minutes: 0, days: 7 }).state).toBe('normal');
   });
 

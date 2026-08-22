@@ -172,7 +172,7 @@ export function SignUpScreen() {
             title="Transferência internacional"
             body="Autorizo o armazenamento desses dados em servidores fora do Brasil, onde a infraestrutura do produto é operada."
           />
-          <Data marginTop="$md" lineHeight={17}>
+          <Data marginTop="$md" lineHeight={18}>
             Você pode revogar a qualquer momento em Dispositivo → Conta. A revogação apaga seus
             dados, não apenas interrompe a coleta.
           </Data>
@@ -200,7 +200,7 @@ export function SignUpScreen() {
             backgroundColor={!canSubmit || loading ? '$control' : '$primary'}
           >
             <Text
-              fontSize={15}
+              fontSize={16}
               fontWeight="700"
               color={!canSubmit || loading ? '$faint' : '$primaryForeground'}
             >

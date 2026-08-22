@@ -44,7 +44,7 @@ export function Meter({ value, min = 0, max = 100, zones, color }: Props) {
     <YStack>
       <YStack
         height={6}
-        borderRadius={3}
+        borderRadius={4}
         backgroundColor="$track"
         justifyContent="center"
         onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
@@ -70,7 +70,7 @@ export function Meter({ value, min = 0, max = 100, zones, color }: Props) {
           left={0}
           top={0}
           bottom={0}
-          borderRadius={3}
+          borderRadius={4}
           width={`${position * 100}%`}
           opacity={0.28}
           style={{ backgroundColor: color }}
@@ -79,8 +79,8 @@ export function Meter({ value, min = 0, max = 100, zones, color }: Props) {
         {width > 0 ? (
           <YStack
             position="absolute"
-            top={-5}
-            width={3}
+            top={-6}
+            width={4}
             height={16}
             borderRadius={1.5}
             marginLeft={-1.5}
@@ -98,7 +98,7 @@ export function Meter({ value, min = 0, max = 100, zones, color }: Props) {
           return (
             <Data
               key={zone.label}
-              fontSize={11}
+              fontSize={12}
               fontWeight={active ? '700' : '400'}
               color={active ? '$foreground' : '$faint'}
             >

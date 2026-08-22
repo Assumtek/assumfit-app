@@ -85,13 +85,13 @@ export function TrainingFinishedScreen() {
             <Text fontSize={20} fontWeight="700" color="$foreground">
               {completion.label}
             </Text>
-            <Text fontSize={13} color="$mutedForeground">
+            <Text fontSize={14} color="$mutedForeground">
               {completion.detail}
             </Text>
-            <YStack height={6} borderRadius={3} backgroundColor="$track" overflow="hidden" marginTop="$sm">
+            <YStack height={6} borderRadius={4} backgroundColor="$track" overflow="hidden" marginTop="$sm">
               <YStack
                 height={6}
-                borderRadius={3}
+                borderRadius={4}
                 width={`${completion.fraction * 100}%`}
                 backgroundColor="$primary"
               />
@@ -101,7 +101,7 @@ export function TrainingFinishedScreen() {
           {effortRating.available ? (
             <Card>
               <Text
-                fontSize={11}
+                fontSize={12}
                 fontWeight="700"
                 letterSpacing={1.2}
                 color="$mutedForeground"
@@ -112,7 +112,7 @@ export function TrainingFinishedScreen() {
               <Text fontSize={18} fontWeight="700" color="$foreground" marginTop="$sm">
                 {effortRating.label}
               </Text>
-              <Text fontSize={13} color="$mutedForeground">
+              <Text fontSize={14} color="$mutedForeground">
                 {effortRating.detail}
               </Text>
             </Card>
@@ -130,7 +130,7 @@ export function TrainingFinishedScreen() {
                       color={c.fresh ? colors.accent : colors.textMuted}
                     />
                     <YStack flex={1} minWidth={0} gap={2}>
-                      <Text fontSize={15} fontWeight="700" color="$foreground">
+                      <Text fontSize={16} fontWeight="700" color="$foreground">
                         {c.title}
                       </Text>
                       <Text fontSize={12} color="$mutedForeground">
@@ -187,13 +187,13 @@ export function TrainingFinishedScreen() {
             Como foi?
           </Text>
           <Text fontSize={14} color="$mutedForeground">
-            {execution?.workoutName ?? 'Sua sessão'} — duas perguntas rápidas antes de fechar.
+            {execution?.workoutName ?? 'Sua sessão'}, duas perguntas rápidas antes de fechar.
           </Text>
         </YStack>
 
         <Card>
           <Text
-            fontSize={11}
+            fontSize={12}
             fontWeight="700"
             letterSpacing={1.2}
             color="$mutedForeground"
@@ -201,7 +201,7 @@ export function TrainingFinishedScreen() {
           >
             esforço percebido
           </Text>
-          <Text fontSize={15} color="$foreground" marginTop="$sm" marginBottom="$md">
+          <Text fontSize={16} color="$foreground" marginTop="$sm" marginBottom="$md">
             Quanto este treino puxou?
           </Text>
           <ScalePicker values={[2, 4, 6, 8, 10]} value={effort} onPick={setEffort} label="Esforço" />
@@ -217,7 +217,7 @@ export function TrainingFinishedScreen() {
 
         <Card>
           <Text
-            fontSize={11}
+            fontSize={12}
             fontWeight="700"
             letterSpacing={1.2}
             color="$mutedForeground"
@@ -225,7 +225,7 @@ export function TrainingFinishedScreen() {
           >
             nota da sessão
           </Text>
-          <Text fontSize={15} color="$foreground" marginTop="$sm" marginBottom="$md">
+          <Text fontSize={16} color="$foreground" marginTop="$sm" marginBottom="$md">
             O treino de hoje serviu para você?
           </Text>
           <ScalePicker values={[1, 2, 3, 4, 5]} value={rating} onPick={setRating} label="Nota" />
@@ -233,7 +233,7 @@ export function TrainingFinishedScreen() {
 
         <Card>
           <Text
-            fontSize={11}
+            fontSize={12}
             fontWeight="700"
             letterSpacing={1.2}
             color="$mutedForeground"
@@ -244,7 +244,7 @@ export function TrainingFinishedScreen() {
           <TextInput
             style={{
               color: colors.text,
-              fontSize: 15,
+              fontSize: 16,
               minHeight: 64,
               textAlignVertical: 'top',
               marginTop: 8,

@@ -1,14 +1,14 @@
-"""A saudação da manhã — a notificação das 7h30.
+"""A saudação da manhã, a notificação das 7h30.
 
 O texto era um molde de seis frases escolhidas por faixa de temperatura, e
 chegava igual todo dia: quem usa o app por uma semana já viu todas. Aqui ele
-passa pelo mesmo caminho da frase da home — o modelo REDIGE sobre fatos que já
+passa pelo mesmo caminho da frase da home, o modelo REDIGE sobre fatos que já
 foram apurados, e o molde continua existindo como reserva para quando a rede,
 a chave ou o classificador falharem.
 
 Duas regras herdadas do insight da home, e pelas mesmas razões:
 
-1. o modelo não inventa número — os valores vêm prontos na mensagem;
+1. o modelo não inventa número, os valores vêm prontos na mensagem;
 2. nada de conselho clínico: o produto não é dispositivo médico.
 """
 
@@ -48,7 +48,7 @@ SYSTEM = """Você escreve a notificação matinal do AssumFit, um app de esporte
 treino e bem-estar que lê biometria de uma pulseira.
 
 A pessoa vai ler isso na tela de bloqueio, recém-acordada. É uma frase curta \
-que dá o tom do dia — não um relatório.
+que dá o tom do dia, não um relatório.
 
 Regras, em ordem de importância:
 
@@ -61,7 +61,7 @@ recuperar, hidratar, dormir. Produtividade no trabalho não é o assunto.
 4. Português do Brasil, segunda pessoa ("você"), tom direto e adulto. Sem \
 exclamação, sem emoji, sem gíria, sem "bora", sem "vamos lá". Escreva "para o", \
 nunca "pro".
-5. NÃO repita a saudação "Bom dia" no corpo — ela já está no título quando cabe.
+5. NÃO repita a saudação "Bom dia" no corpo, ela já está no título quando cabe.
 6. Se a mensagem disser que há treino marcado, a frase pode convidar para ele. \
 Se disser que é dia de descanso, NÃO empurre treino.
 7. Nunca escreva valor biométrico no texto: a tela de bloqueio é vista por quem \
@@ -70,7 +70,7 @@ passa perto. Temperatura do tempo pode; batimento, pressão e oxigenação, não
 
 @dataclass(frozen=True)
 class MorningFacts:
-    """Os fatos da manhã que o modelo pode usar — e nada além deles."""
+    """Os fatos da manhã que o modelo pode usar, e nada além deles."""
 
     #: Previsão para as 7h de amanhã, em graus Celsius, já arredondada.
     temperature_c: int
@@ -90,7 +90,7 @@ def fallback_morning(f: MorningFacts) -> dict:
 
     Continua existindo porque notificação agendada não tem segunda chance: se
     a rede falhar às 23h, quem acorda às 7h30 precisa receber ALGUMA coisa
-    coerente — e um molde honesto vale mais que silêncio.
+    coerente, e um molde honesto vale mais que silêncio.
     """
     t = f.temperature_c
     if t < 15:

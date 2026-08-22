@@ -73,7 +73,7 @@ export function BodyBatteryScreen() {
           title={temNoiteDeOutroDia ? 'Sem sono medido nesta noite' : 'Falta a noite'}
           body={
             temNoiteDeOutroDia
-              ? `A bateria parte do sono da noite anterior, e não há medição para este dia — a sua noite mais recente é de ${formatDateBR(sleep!.date)}. Um número montado com o sono de um dia e o estresse de outro não descreveria nem um nem outro.`
+              ? `A bateria parte do sono da noite anterior, e não há medição para este dia, a sua noite mais recente é de ${formatDateBR(sleep!.date)}. Um número montado com o sono de um dia e o estresse de outro não descreveria nem um nem outro.`
               : 'A bateria parte do sono: é ele que diz com quanto você começou o dia. Assim que houver uma noite medida pela pulseira, esta tela se preenche.'
           }
         />
@@ -102,7 +102,7 @@ export function BodyBatteryScreen() {
             dessa bateria?" (testador, 22/08). O método fica na Ajuda. */}
         <Body marginTop="$md">
           A bateria começa no que a noite de sono recarregou e, ao longo do dia, desce com o estresse que a
-          pulseira mede e sobe nos momentos calmos — 100 é reserva cheia, e ela gasta mais rápido do que recupera.
+          pulseira mede e sobe nos momentos calmos: 100 é reserva cheia, e ela gasta mais rápido do que recupera.
         </Body>
       </YStack>
 
@@ -127,7 +127,7 @@ export function BodyBatteryScreen() {
         </Medido>
       ) : (
         <Body>
-          A curva aparece quando houver mais de uma medição de estresse no dia — é ela que move a
+          A curva aparece quando houver mais de uma medição de estresse no dia, é ela que move a
           agulha.
         </Body>
       )}

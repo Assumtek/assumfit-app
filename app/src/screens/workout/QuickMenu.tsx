@@ -77,7 +77,7 @@ function Botao({ item, onPress }: { item: Item; onPress: () => void }) {
         >
           {/* Ícone acromático: estes cinco são navegação, e o acento
               pertence ao dado — a mesma regra do resto do sistema. */}
-          <Icon name={item.icone} size={19} color={colors.textMuted} strokeWidth={1.5} />
+          <Icon name={item.icone} size={20} color={colors.textMuted} strokeWidth={2} />
         </YStack>
         <Text fontSize={12} color="$mutedForeground" numberOfLines={1}>
           {item.rotulo}

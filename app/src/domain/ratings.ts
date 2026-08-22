@@ -42,7 +42,7 @@ export type Rating = {
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
 
 /** O traço de "não medido". Um só, para a tela inteira falar a mesma língua. */
-export const DASH = '—';
+export const DASH = '–';
 
 /**
  * Formata um valor que pode não ter sido medido.
@@ -63,7 +63,7 @@ export function shown(value: number | null, format: (n: number) => string = (n) 
  */
 const semMedicao = (): Rating => ({
   available: false,
-  label: '—',
+  label: '–',
   detail: 'sem medição',
   fraction: 0,
   state: 'normal',

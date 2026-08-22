@@ -69,7 +69,7 @@ export function WaterReminder() {
                   : 'toque para escolher os horários'}
               </Data>
             </YStack>
-            <Icon name="arrowRight" size={13} color={colors.textMuted} />
+            <Icon name="arrowRight" size={14} color={colors.textMuted} />
           </XStack>
         </Pressable>
         <Switch

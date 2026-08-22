@@ -71,7 +71,7 @@ export function waterNudge(waterMl: number, goalMl: number, copoMl: number): Wat
     return {
       title: 'Você ainda não bebeu água hoje',
       route: 'Habits',
-      body: `Um copo de ${copoMl} ml já tira do zero — a meta são ${litros(goalMl)} L.`,
+      body: `Um copo de ${copoMl} ml já tira do zero, a meta são ${litros(goalMl)} L.`,
     };
   }
 
@@ -82,7 +82,7 @@ export function waterNudge(waterMl: number, goalMl: number, copoMl: number): Wat
     return {
       title: `Faltam ${litros(falta)} L para a meta`,
       route: 'Habits',
-      body: `São ${copos} ${copos === 1 ? 'copo' : 'copos'} — dá para fechar o dia.`,
+      body: `São ${copos} ${copos === 1 ? 'copo' : 'copos'}, dá para fechar o dia.`,
     };
   }
 

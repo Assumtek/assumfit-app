@@ -50,8 +50,7 @@ export function diaDe(at: number | string): DiaIso {
 export function pontosDoDia<T extends { hour: string }>(
   serie: T[],
   dia: DiaIso,
-  valor: (p: T) => number | null,
-): Ponto[] {
+  valor: (p: T) => number | null): Ponto[] {
   const pontos: Ponto[] = [];
   for (const p of serie) {
     if (diaDe(p.hour) !== dia) continue;
@@ -68,8 +67,7 @@ export function pontosDoDia<T extends { hour: string }>(
 /** Quais dias têm alguma medição da grandeza — o seletor apaga os vazios. */
 export function diasComDado<T extends { hour: string }>(
   serie: T[],
-  valor: (p: T) => number | null,
-): Set<DiaIso> {
+  valor: (p: T) => number | null): Set<DiaIso> {
   const dias = new Set<DiaIso>();
   for (const p of serie) {
     const v = valor(p);

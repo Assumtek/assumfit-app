@@ -46,7 +46,7 @@ export function AnamnesisHistoryScreen() {
       <DetailScreen title="Anamnese">
         <Note
           title="Nenhuma versão registrada"
-          body="Cada vez que você responde a anamnese, aquela versão fica guardada aqui — para você poder comparar o que mudou."
+          body="Cada vez que você responde a anamnese, aquela versão fica guardada aqui, para você poder comparar o que mudou."
         />
         <YStack marginTop="$xl">
           <Button title="Responder anamnese" onPress={() => (navigation as any).push('Anamnesis')} />

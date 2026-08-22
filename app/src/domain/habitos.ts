@@ -100,8 +100,7 @@ function metrosEntre(a: { lat: number; lon: number }, b: { lat: number; lon: num
 export function lugaresFrequentes(
   pontos: { lat: number; lon: number }[],
   raioM = 150,
-  minimo = MINIMO_DE_OCORRENCIAS,
-): Lugar[] {
+  minimo = MINIMO_DE_OCORRENCIAS): Lugar[] {
   const grupos: { soma: { lat: number; lon: number }; centro: { lat: number; lon: number }; vezes: number }[] = [];
   for (const p of pontos) {
     const g = grupos.find((x) => metrosEntre(x.centro, p) <= raioM);

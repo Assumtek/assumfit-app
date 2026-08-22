@@ -83,8 +83,7 @@ export function waterGoalReason({ weightKg, sex, activeMinToday = 0 }: WaterGoal
   partes.push(
     weightKg && weightKg > 0
       ? `${Math.round(weightKg)} kg × ${ML_POR_KG} ml`
-      : `referência para ${sex === 'f' ? 'mulheres' : 'homens'} adultos`,
-  );
+      : `referência para ${sex === 'f' ? 'mulheres' : 'homens'} adultos`);
   if (activeMinToday > 0) partes.push(`+ ${Math.round(activeMinToday)} min de treino hoje`);
   return partes.join(' ');
 }

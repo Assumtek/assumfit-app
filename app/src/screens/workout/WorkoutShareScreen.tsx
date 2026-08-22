@@ -73,8 +73,7 @@ const CHIPS: { id: BlocoId; rotulo: string }[] = [
 /** Com métricas genéricas, os chips de Duração/Exerc./Carga passam a ter o rótulo de cada métrica. */
 function chipGenerico(
   chip: { id: BlocoId; rotulo: string },
-  metricas?: { valor: string; rotulo: string }[],
-): { id: BlocoId; rotulo: string } {
+  metricas?: { valor: string; rotulo: string }[]): { id: BlocoId; rotulo: string } {
   if (!metricas) return chip;
   const i = (['duracao', 'exercicios', 'volume'] as BlocoId[]).indexOf(chip.id);
   if (i < 0) return chip;
@@ -112,8 +111,7 @@ export function WorkoutShareScreen() {
   const canvas = useRef<any>(null);
   const [foto, setFoto] = useState<string | null>(null);
   const [visiveis, setVisiveis] = useState<Set<BlocoId>>(
-    () => new Set<BlocoId>(['selo', 'nome', 'duracao', 'exercicios', 'data', 'marca']),
-  );
+    () => new Set<BlocoId>(['selo', 'nome', 'duracao', 'exercicios', 'data', 'marca']));
   const [selecionado, setSelecionado] = useState<BlocoId | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
@@ -147,8 +145,7 @@ export function WorkoutShareScreen() {
     } catch {
       Alert.alert(
         origem === 'camera' ? 'Não foi possível abrir a câmera' : 'Não foi possível abrir a galeria',
-        'Tente de novo.',
-      );
+        'Tente de novo.');
     }
   };
 
@@ -242,7 +239,7 @@ export function WorkoutShareScreen() {
                 borderColor={ver(chip.id) ? '$primary' : '$borderStrong'}
                 backgroundColor={ver(chip.id) ? '$primarySoft' : 'transparent'}
               >
-                <Icon name={ver(chip.id) ? 'check' : 'down'} size={11} />
+                <Icon name={ver(chip.id) ? 'check' : 'down'} size={12} />
                 <Text fontSize={12} color="$foreground">
                   {chip.rotulo}
                 </Text>
@@ -304,7 +301,7 @@ export function WorkoutShareScreen() {
                 borderWidth={1}
                 borderColor="rgba(135,123,240,0.55)"
               >
-                <Text fontSize={9} fontWeight="800" letterSpacing={1.2} color="#ECE7F4">
+                <Text fontSize={10} fontWeight="800" letterSpacing={1.2} color="#ECE7F4">
                   {params.selo ?? (params.titulo ? 'ASSUMFIT' : 'TREINO CONCLUÍDO')}
                 </Text>
               </XStack>
@@ -384,7 +381,7 @@ export function WorkoutShareScreen() {
               selecionado={selecionado === 'data'}
               onSelecionar={escolher('data')}
             >
-              <Text fontSize={11} color="rgba(236,231,244,0.75)">
+              <Text fontSize={12} color="rgba(236,231,244,0.75)">
                 {dataDeHoje}
               </Text>
             </BlocoEditavel>
@@ -396,7 +393,7 @@ export function WorkoutShareScreen() {
               selecionado={selecionado === 'marca'}
               onSelecionar={escolher('marca')}
             >
-              <LogoType height={13} color="#ECE7F4" />
+              <LogoType height={14} color="#ECE7F4" />
             </BlocoEditavel>
           </YStack>
         </Pressable>
@@ -445,7 +442,7 @@ function Metrica({ valor, rotulo }: { valor: string; rotulo: string }) {
       <Text fontSize={20} fontWeight="300" color="#ECE7F4" fontVariant={['tabular-nums']}>
         {valor}
       </Text>
-      <Text fontSize={9} letterSpacing={1} color="rgba(236,231,244,0.7)" textTransform="uppercase">
+      <Text fontSize={10} letterSpacing={1} color="rgba(236,231,244,0.7)" textTransform="uppercase">
         {rotulo}
       </Text>
     </YStack>

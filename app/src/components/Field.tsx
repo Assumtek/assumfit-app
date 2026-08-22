@@ -36,7 +36,7 @@ export function Field({ label, error, hint, style, ...rest }: FieldProps) {
         {...rest}
         style={[
           {
-            fontSize: 17,
+            fontSize: 18,
             fontWeight: '400',
             color: colors.text,
             paddingVertical: 12,

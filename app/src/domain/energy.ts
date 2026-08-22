@@ -177,8 +177,7 @@ export function energyState({ reading, sleep, hour, hrvBaseline }: EnergyInput):
     level,
     calibrating,
     curve,
-    nextLabel: nextTransition(curve, hour, score),
-    ...COPY[level](score),
+    nextLabel: nextTransition(curve, hour, score), ...COPY[level](score),
   };
 }
 

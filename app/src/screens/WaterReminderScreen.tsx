@@ -150,7 +150,7 @@ export function WaterReminderScreen() {
                       borderWidth={1}
                       borderColor={intervaloMin === min ? '$primary' : '$border'}
                     >
-                      <Text fontSize={13} color={intervaloMin === min ? '$foreground' : '$mutedForeground'}>
+                      <Text fontSize={14} color={intervaloMin === min ? '$foreground' : '$mutedForeground'}>
                         {min >= 60 ? `${min / 60}h${min % 60 ? String(min % 60).padStart(2, '0') : ''}` : `${min} min`}
                       </Text>
                     </YStack>
@@ -174,7 +174,7 @@ export function WaterReminderScreen() {
           <Data marginTop="$md">
             {efetivos.length > 0
               ? `${efetivos.length} lembretes por dia, de ${efetivos[0]} a ${efetivos[efetivos.length - 1]}.`
-              : 'Janela invertida — o fim precisa vir depois do começo.'}
+              : 'Janela invertida, o fim precisa vir depois do começo.'}
           </Data>
         </YStack>
       ) : null}
@@ -204,7 +204,7 @@ export function WaterReminderScreen() {
           ))}
           {horarios.length === 0 ? (
             <Row last>
-              <Data>Nenhum horário — adicione o primeiro.</Data>
+              <Data>Nenhum horário, adicione o primeiro.</Data>
             </Row>
           ) : null}
         </Section>

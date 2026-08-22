@@ -232,12 +232,11 @@ export function SportScreen() {
     if (!sport.gps) return;
     const perm = await Location.requestForegroundPermissionsAsync();
     if (perm.status !== 'granted') {
-      setAviso('Sem acesso à localização, a distância e o mapa ficam de fora — o resto funciona.');
+      setAviso('Sem acesso à localização, a distância e o mapa ficam de fora, o resto funciona.');
       return;
     }
     const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }).catch(
-      () => null,
-    );
+      () => null);
     if (pos) setPosicao({ lat: pos.coords.latitude, lon: pos.coords.longitude });
   };
 
@@ -279,11 +278,9 @@ export function SportScreen() {
           // Sem rede o mosaico mostra só o que está no aparelho.
         }
         return null;
-      }),
-    );
+      }));
     setPercursos(
-      resultados.filter((x): x is { sessao: api.SportSession; points: GeoPoint[] } => x !== null),
-    );
+      resultados.filter((x): x is { sessao: api.SportSession; points: GeoPoint[] } => x !== null));
   }, []);
 
   useEffect(() => {
@@ -416,10 +413,10 @@ export function SportScreen() {
           await iniciarRastreio();
           setRastreando(true);
         } catch {
-          setAviso('O GPS não ligou — a distância fica de fora; o resto funciona.');
+          setAviso('O GPS não ligou, a distância fica de fora; o resto funciona.');
         }
       } else {
-        setAviso('Sem acesso à localização a distância não é medida — o resto funciona.');
+        setAviso('Sem acesso à localização a distância não é medida, o resto funciona.');
       }
     }
     const stamp = Date.now();
@@ -549,7 +546,7 @@ export function SportScreen() {
       outbox.removerPendente(payload.startedAt);
       setHistorico((atual) => [registro, ...(atual ?? [])]);
     } catch {
-      setAviso('A sessão ficou guardada no aparelho — sobe sozinha na próxima abertura.');
+      setAviso('A sessão ficou guardada no aparelho, sobe sozinha na próxima abertura.');
     } finally {
       setSalvando(false);
     }
@@ -713,8 +710,7 @@ export function SportScreen() {
         encerrarIlhaDeEsporte();
       }
     },
-    [],
-  );
+    []);
 
   /*
    Os pontos chegam pelo BUFFER da tarefa de fundo, não por callback de tela:
@@ -775,12 +771,12 @@ export function SportScreen() {
 
         <ReadoutCluster>
           <Readout
-            valor={resumo.dist ? (resumo.dist / 1000).toFixed(2).replace('.', ',') : '—'}
+            valor={resumo.dist ? (resumo.dist / 1000).toFixed(2).replace('.', ',') : '–'}
             unidade="km"
             rotulo={resumo.dist ? (paceMinPerKm(resumo.dist, resumo.elapsed) ?? 'distância') : 'sem GPS'}
           />
           <Readout
-            valor={resumo.avgHr ? String(resumo.avgHr) : '—'}
+            valor={resumo.avgHr ? String(resumo.avgHr) : '–'}
             unidade="bpm"
             rotulo={
               resumo.avgHr ? (resumo.maxHr ? `média · máx ${resumo.maxHr}` : 'média') : 'sem amostras'
@@ -829,7 +825,7 @@ export function SportScreen() {
             <TextInput
               style={{
                 color: colors.text,
-                fontSize: 15,
+                fontSize: 16,
                 minHeight: 64,
                 textAlignVertical: 'top',
                 marginTop: 8,
@@ -908,7 +904,7 @@ export function SportScreen() {
           <MapaDePercurso points={detalhe.points} accent={colors.accent} />
         ) : (
           <Data marginTop="$md">
-            Sem mapa para esta sessão — ela foi gravada sem GPS, ou antes de o percurso passar a
+            Sem mapa para esta sessão, ela foi gravada sem GPS, ou antes de o percurso passar a
             ser guardado no histórico.
           </Data>
         )}
@@ -927,14 +923,14 @@ export function SportScreen() {
 
         <ReadoutCluster>
           <Readout
-            valor={d.distanceM ? (d.distanceM / 1000).toFixed(2).replace('.', ',') : '—'}
+            valor={d.distanceM ? (d.distanceM / 1000).toFixed(2).replace('.', ',') : '–'}
             unidade="km"
             rotulo={
               d.distanceM ? (paceMinPerKm(d.distanceM, d.durationS * 1000) ?? 'distância') : 'sem GPS'
             }
           />
           <Readout
-            valor={d.avgHr ? String(d.avgHr) : '—'}
+            valor={d.avgHr ? String(d.avgHr) : '–'}
             unidade="bpm"
             rotulo={d.avgHr ? (d.maxHr ? `média · máx ${d.maxHr}` : 'média') : 'sem amostras'}
           />
@@ -1013,7 +1009,7 @@ export function SportScreen() {
               <YStack
                 width={6}
                 height={6}
-                borderRadius={3}
+                borderRadius={4}
                 backgroundColor={pausado ? '$faint' : '$primary'}
               />
               <Label>{pausado ? 'pausado' : 'em andamento'}</Label>
@@ -1036,7 +1032,7 @@ export function SportScreen() {
           <ReadoutCluster>
             {/* "0,00 km" com GPS negado pareceria medição. Medido ou traço. */}
             <Readout
-              valor={sessao.sport.gps && gpsAtivo ? (dist / 1000).toFixed(2).replace('.', ',') : '—'}
+              valor={sessao.sport.gps && gpsAtivo ? (dist / 1000).toFixed(2).replace('.', ',') : '–'}
               unidade="km"
               rotulo={
                 !sessao.sport.gps
@@ -1050,13 +1046,13 @@ export function SportScreen() {
             />
             {sessao.sport.gps ? (
               <Readout
-                valor={paceAgora ?? '—'}
+                valor={paceAgora ?? '–'}
                 unidade="/km"
                 rotulo={pace ? `agora · médio ${pace.replace('/km', '')}` : gpsAtivo ? 'ritmo' : 'sem GPS'}
               />
             ) : null}
             <Readout
-              valor={bpmFresco ? String(Math.round(latest!.heartRate)) : '—'}
+              valor={bpmFresco ? String(Math.round(latest!.heartRate)) : '–'}
               unidade="bpm"
               rotulo={bpmFresco ? 'ao vivo' : 'sem sinal da pulseira'}
             />
@@ -1124,7 +1120,7 @@ export function SportScreen() {
           title={confirmando === 'descarte' ? 'Sessão muito curta' : 'Finalizar o treino?'}
           body={
             confirmando === 'descarte'
-              ? 'Menos de um minuto não entra no histórico nem no resumo. Continue mais um pouco para a sessão valer — ou descarte.'
+              ? 'Menos de um minuto não entra no histórico nem no resumo. Continue mais um pouco para a sessão valer, ou descarte.'
               : 'Ele vai para o histórico com o que foi medido até aqui.'
           }
           confirmLabel={confirmando === 'descarte' ? 'Descartar sessão' : 'Finalizar'}
@@ -1245,15 +1241,13 @@ export function SportScreen() {
     [
       ...(execucoes ?? [])
         .filter(treinoConta)
-        .map((e) => ({ date: new Date(e.startedAt), value: (e.durationSec ?? 60) / 60 })),
-      ...(historico ?? []).map((se) => ({
+        .map((e) => ({ date: new Date(e.startedAt), value: (e.durationSec ?? 60) / 60 })), ...(historico ?? []).map((se) => ({
         date: new Date(se.startedAt),
         value: se.durationS / 60,
       })),
     ],
     6,
-    hoje,
-  );
+    hoje);
   const temConstancia = constancia.some((p) => p.value > 0);
 
   /*
@@ -1315,9 +1309,9 @@ export function SportScreen() {
             ? FOTOS_DEMO.map((foto, i) => ({
                 key: `demo-${i}`,
                 foto,
-                rotulo: `Exemplo de sessão ${i + 1} — abrir foto`,
+                rotulo: `Exemplo de sessão ${i + 1}, abrir foto`,
                 onPress: () =>
-                  setFotoAberta({ foto, legenda: 'Exemplo — a sua foto entra aqui' }),
+                  setFotoAberta({ foto, legenda: 'Exemplo, a sua foto entra aqui' }),
               }))
             : percursos.map((p) => ({
                 key: p.sessao.id,
@@ -1385,7 +1379,7 @@ export function SportScreen() {
           <TrainingPanel
             ativo
             titulo={execucaoGuiada.workoutName}
-            meta="Em andamento — continue de onde parou."
+            meta="Em andamento, continue de onde parou."
             onPress={() => (navigation as any).push('Training')}
             accessibilityLabel={`Treino em andamento: ${execucaoGuiada.workoutName}. Continuar`}
           />
@@ -1439,7 +1433,7 @@ export function SportScreen() {
                     Com `colors.ink` o texto virava claro no tema claro — texto
                     quase branco sobre roxo médio, que não alcança contraste. */}
                 <Icon name="play" size={18} color={darkPalette.ink} />
-                <Text fontSize={15} fontWeight="700" style={{ color: darkPalette.ink }}>
+                <Text fontSize={16} fontWeight="700" style={{ color: darkPalette.ink }}>
                   Iniciar treino
                 </Text>
               </XStack>
@@ -1477,7 +1471,7 @@ export function SportScreen() {
             <OpcaoDeInicio
               icone="footprints"
               titulo="Registro"
-              detalhe="cronômetro, batimento e caloria — GPS onde faz sentido"
+              detalhe="cronômetro, batimento e caloria: GPS onde faz sentido"
               onPress={() => setPassoRegistro(true)}
             />
           </>
@@ -1526,8 +1520,7 @@ function EscolhaDeEsporte({
     : [
         ...(recentes.length > 0
           ? [{ chave: 'recentes', label: 'recentes', sports: recentes }]
-          : []),
-        ...sportSections().map((sec) => ({
+          : []), ...sportSections().map((sec) => ({
           chave: sec.group,
           label: sec.label,
           sports: sec.sports,
@@ -1548,7 +1541,7 @@ function EscolhaDeEsporte({
       >
         <Icon name="search" size={16} color={colors.textMuted} />
         <TextInput
-          style={{ flex: 1, color: colors.text, fontSize: 15, paddingVertical: 10 }}
+          style={{ flex: 1, color: colors.text, fontSize: 16, paddingVertical: 10 }}
           value={busca}
           onChangeText={setBusca}
           placeholder="Buscar modalidade"
@@ -1590,7 +1583,7 @@ function EscolhaDeEsporte({
                       gap="$sm"
                     >
                       <Icon name={sport.icon} size={22} color={colors.textMuted} />
-                      <Body fontSize={13} color="$foreground" numberOfLines={1}>
+                      <Body fontSize={14} color="$foreground" numberOfLines={1}>
                         {sport.label}
                       </Body>
                       <Data fontSize={10}>{sport.gps ? 'com GPS' : 'sem GPS'}</Data>
@@ -1648,8 +1641,8 @@ function OpcaoDeInicio({
       >
         <Icon name={icone} size={20} color={colors.textMuted} />
         <YStack flex={1} gap={2}>
-          <SectionTitle fontSize={15}>{titulo}</SectionTitle>
-          <Data fontSize={11}>{detalhe}</Data>
+          <SectionTitle fontSize={16}>{titulo}</SectionTitle>
+          <Data fontSize={12}>{detalhe}</Data>
         </YStack>
         <Icon name="arrowRight" size={16} color={colors.textMuted} />
       </XStack>

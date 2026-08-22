@@ -11,7 +11,7 @@ Três salvaguardas, e elas são o motivo deste arquivo existir em vez de um
    `MIN_PAIRS` não reportamos nada.
 2. **Significância, não só magnitude.** Um r de 0,6 com n=8 não é achado. Exigimos
    p < 0,05 além do tamanho de efeito.
-3. **Linguagem associativa.** O texto gerado diz "acompanha", nunca "causa" — o
+3. **Linguagem associativa.** O texto gerado diz "acompanha", nunca "causa", o
    dado é observacional e não controla nada.
 
 Melhor não mostrar insight nenhum do que mostrar um que o usuário vai usar para
@@ -76,7 +76,7 @@ def sleep_onset_vs_next_hrv(onsets: list[float], next_day_hrv: list[float]) -> I
         "sleep_onset_hrv",
         onsets,
         next_day_hrv,
-        positive_text="Dormir mais tarde acompanha HRV mais alto na manhã seguinte — padrão incomum, vale observar mais.",
+        positive_text="Dormir mais tarde acompanha HRV mais alto na manhã seguinte, padrão incomum, vale observar mais.",
         negative_text="Nas noites em que você dormiu mais cedo, seu HRV da manhã seguinte foi consistentemente maior.",
     )
 
@@ -87,7 +87,7 @@ def water_vs_energy(water_ml: list[float], energy: list[float]) -> Insight | Non
         water_ml,
         energy,
         positive_text="Os dias em que você bebeu mais água acompanham score de energia mais alto.",
-        negative_text="Beber mais água acompanha score de energia mais baixo — provavelmente coincidência, não conclusão.",
+        negative_text="Beber mais água acompanha score de energia mais baixo, provavelmente coincidência, não conclusão.",
     )
 
 
@@ -97,5 +97,5 @@ def steps_vs_deep_sleep(steps: list[float], deep_pct: list[float]) -> Insight | 
         steps,
         deep_pct,
         positive_text="Dias com mais passos acompanham mais sono profundo na noite seguinte.",
-        negative_text="Dias com mais passos acompanham menos sono profundo — vale checar horário do treino.",
+        negative_text="Dias com mais passos acompanham menos sono profundo, vale checar horário do treino.",
     )

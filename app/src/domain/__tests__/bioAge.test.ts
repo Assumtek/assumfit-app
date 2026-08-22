@@ -209,8 +209,7 @@ describe('explicacaoDaIdade', () => {
           { key: 'sleep', label: 'Sono profundo', weight: 0.2, contribution: 0.2 },
         ],
       } as never,
-      175,
-    );
+      175);
     expect(frase).toContain('envelhece');
     expect(frase).toContain('aptidão cardiorrespiratória');
     expect(frase).toContain('41,9');

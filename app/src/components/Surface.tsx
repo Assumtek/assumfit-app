@@ -154,7 +154,7 @@ const elevation = (scheme: 'light' | 'dark'): ViewStyle =>
         shadowColor: '#0E0A22',
         shadowOpacity: 0.1,
         shadowRadius: 14,
-        shadowOffset: { width: 0, height: 5 },
+        shadowOffset: { width: 0, height: 6 },
         elevation: 3,
       }
     : { overflow: 'hidden' };
@@ -171,8 +171,7 @@ const elevation = (scheme: 'light' | 'dark'): ViewStyle =>
 const sheet = (colors: Palette, scheme: Scheme) =>
   ({
     surface: {
-      backgroundColor: colors.surfaceTint,
-      ...elevation(scheme),
+      backgroundColor: colors.surfaceTint, ...elevation(scheme),
     },
     /**
      * Sem o vidro nativo não há desfoque, e translucidez sem desfoque deixa o
@@ -180,8 +179,7 @@ const sheet = (colors: Palette, scheme: Scheme) =>
      * fica quase opaco de propósito.
      */
     fallbackGlass: {
-      backgroundColor: colors.glassFallback,
-      ...elevation(scheme),
+      backgroundColor: colors.glassFallback, ...elevation(scheme),
     },
     specularTop: {
       position: 'absolute',

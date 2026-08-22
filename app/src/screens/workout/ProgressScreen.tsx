@@ -193,7 +193,7 @@ export function ProgressScreen() {
           accessibilityLabel="Compartilhar meu progresso"
           style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
         >
-          <Icon name="share" size={18} color={colors.textMuted} strokeWidth={1.5} />
+          <Icon name="share" size={18} color={colors.textMuted} strokeWidth={2} />
         </Pressable>
       </XStack>
       <SeletorDePeriodo
@@ -239,10 +239,10 @@ export function ProgressScreen() {
               <RatingText marginTop="$sm">{movimento.label}</RatingText>
               {/* Barra de PREENCHIMENTO: minutos acumulam rumo a uma régua, e a
                   régua é o fim do trilho. */}
-              <YStack height={6} borderRadius={3} backgroundColor="$track" marginTop="$md" overflow="hidden">
+              <YStack height={6} borderRadius={4} backgroundColor="$track" marginTop="$md" overflow="hidden">
                 <YStack
                   height={6}
-                  borderRadius={3}
+                  borderRadius={4}
                   backgroundColor="$primary"
                   width={`${movimento.fraction * 100}%`}
                 />
@@ -457,7 +457,7 @@ function SeletorDePeriodo({
               backgroundColor={ativo ? '$control' : 'transparent'}
             >
               <Text
-                fontSize={13}
+                fontSize={14}
                 fontWeight={ativo ? '600' : '400'}
                 color={ativo ? '$foreground' : '$mutedForeground'}
               >
@@ -478,7 +478,7 @@ function Numero({ icone, valor, rotulo }: { icone: IconName; valor: string; rotu
     <YStack flex={1}>
       <Card>
         <XStack alignItems="center" gap="$xs">
-          <Icon name={icone} size={13} color={colors.textMuted} />
+          <Icon name={icone} size={14} color={colors.textMuted} />
           <Label>{rotulo}</Label>
         </XStack>
         <MetricSm marginTop="$xs" numberOfLines={1}>
@@ -670,7 +670,7 @@ function Evolucao({
                 accessibilityLabel={`${nomeDoEsporte(sessao.sport)}, ${data}`}
               >
                 <XStack alignItems="center" gap="$md">
-                  <Icon name={meta?.icon ?? 'footprints'} size={15} color={colors.textMuted} />
+                  <Icon name={meta?.icon ?? 'footprints'} size={16} color={colors.textMuted} />
                   <YStack flex={1} minWidth={0} gap={2}>
                     <Body color="$foreground" numberOfLines={1}>
                       {nomeDoEsporte(sessao.sport)}
@@ -694,7 +694,7 @@ function Evolucao({
               accessibilityLabel={`${item.workoutName}, ${data}`}
             >
               <XStack alignItems="center" gap="$md">
-                <Icon name="dumbbell" size={15} color={colors.textMuted} />
+                <Icon name="dumbbell" size={16} color={colors.textMuted} />
                 <YStack flex={1} minWidth={0} gap={2}>
                   <Body color="$foreground" numberOfLines={1}>
                     {item.workoutName}

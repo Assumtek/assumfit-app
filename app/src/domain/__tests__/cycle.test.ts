@@ -43,7 +43,7 @@ describe('averageLength', () => {
 });
 
 describe('phaseOn', () => {
-  it('sem registro não devolve fase — não existe ciclo sem primeiro dia', () => {
+  it('sem registro não devolve fase, não existe ciclo sem primeiro dia', () => {
     expect(phaseOn('2026-07-28', [])).toBeNull();
   });
 
@@ -163,8 +163,7 @@ describe('discardedIntervals', () => {
       discardedIntervals([
         { startedAt: '2026-06-03', durationDays: null },
         { startedAt: '2026-07-01', durationDays: null }, // 28
-      ]),
-    ).toBe(0);
+      ])).toBe(0);
   });
 });
 
@@ -187,7 +186,7 @@ describe('phaseProjected', () => {
   });
 });
 
-describe('phaseProjected — retro-projeção', () => {
+describe('phaseProjected, retro-projeção', () => {
   const { phaseProjected } = require('../cycle');
 
   it('pinta os dias anteriores ao primeiro registro, marcados como projeção', () => {
@@ -206,8 +205,7 @@ describe('groupCycles', () => {
 
   it('agrupa dias consecutivos num ciclo com duração real de fluxo', () => {
     expect(
-      groupCycles(['2026-07-15', '2026-07-16', '2026-07-17', '2026-07-18']),
-    ).toEqual([{ startedAt: '2026-07-15', durationDays: 4 }]);
+      groupCycles(['2026-07-15', '2026-07-16', '2026-07-17', '2026-07-18'])).toEqual([{ startedAt: '2026-07-15', durationDays: 4 }]);
   });
 
   it('separa sequências com lacuna e ordena o que chegar embaralhado', () => {
@@ -225,7 +223,7 @@ describe('groupCycles', () => {
   });
 });
 
-describe('periodLink — a faixa contínua do período', () => {
+describe('periodLink, a faixa contínua do período', () => {
   const marcados = new Set(['2026-08-10', '2026-08-11', '2026-08-12']);
 
   it('o primeiro dia abre o trecho: fecha à esquerda, segue à direita', () => {

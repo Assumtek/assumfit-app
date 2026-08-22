@@ -96,8 +96,8 @@ export function ProfileScreen() {
 
   const rows = [
     { label: 'Nome', value: user.name },
-    { label: 'E-mail', value: profile?.email ?? '—' },
-    { label: 'Nascimento', value: profile ? formatDateBR(profile.birthDate) : '—' },
+    { label: 'E-mail', value: profile?.email ?? '–' },
+    { label: 'Nascimento', value: profile ? formatDateBR(profile.birthDate) : '–' },
     { label: 'Idade', value: `${age} anos` },
     { label: 'Sexo biológico', value: SEX_LABEL[user.sex] },
   ];
@@ -139,7 +139,7 @@ export function ProfileScreen() {
         <YStack flex={1} gap="$sm">
           <Title>{user.name}</Title>
           <Data>
-            {profile ? `assinante desde ${formatDateBR(profile.createdAt)}` : 'perfil local — sem conexão'}
+            {profile ? `assinante desde ${formatDateBR(profile.createdAt)}` : 'perfil local, sem conexão'}
           </Data>
         </YStack>
       </XStack>
@@ -163,7 +163,7 @@ export function ProfileScreen() {
               onPress={() => setEditing(false)}
               accessibilityRole="button"
             >
-              <Text fontSize={15} color="$foreground">Cancelar</Text>
+              <Text fontSize={16} color="$foreground">Cancelar</Text>
             </Pressable>
           </XStack>
         </Section>
@@ -181,7 +181,7 @@ export function ProfileScreen() {
             accessibilityRole="button"
           >
             <XStack alignItems="center" justifyContent="space-between" paddingTop="$lg">
-              <Text fontSize={15} color="$foreground">Editar cadastro</Text>
+              <Text fontSize={16} color="$foreground">Editar cadastro</Text>
               <Icon name="arrowRight" size={16} color={colors.textMuted} />
             </XStack>
           </Pressable>
@@ -231,7 +231,7 @@ export function ProfileScreen() {
           borderTopWidth={1}
           borderTopColor="$border"
         >
-          <Text fontSize={15} color="$foreground">Configurações do app</Text>
+          <Text fontSize={16} color="$foreground">Configurações do app</Text>
           <Icon name="arrowRight" size={16} color={colors.textMuted} />
         </XStack>
       </Pressable>
@@ -253,4 +253,4 @@ export function ProfileScreen() {
  * vertical, quem distribui é o conteúdo.
  */
 const RowLabel = styled(Body, { flex: 1 });
-const RowValue = styled(Data, { fontSize: 13, color: '$foreground' });
+const RowValue = styled(Data, { fontSize: 14, color: '$foreground' });

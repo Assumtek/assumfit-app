@@ -118,8 +118,7 @@ export function noiteSustentaODia(sleep: SleepNight, dia: string): boolean {
   if (!ano || !mes || !d) return false;
   const vespera = new Date(ano, mes - 1, d - 1);
   const iso = `${vespera.getFullYear()}-${String(vespera.getMonth() + 1).padStart(2, '0')}-${String(
-    vespera.getDate(),
-  ).padStart(2, '0')}`;
+    vespera.getDate()).padStart(2, '0')}`;
   return sleep.date === dia || sleep.date === iso;
 }
 
@@ -139,8 +138,7 @@ export function calcBodyBattery(
   sleep: SleepNight | null,
   stress: StressSample[],
   bedtimeLevel: number | null = null,
-  dia?: string,
-): BodyBattery | null {
+  dia?: string): BodyBattery | null {
   if (!sleep) return null;
   if (dia && !noiteSustentaODia(sleep, dia)) return null;
 

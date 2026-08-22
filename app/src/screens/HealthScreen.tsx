@@ -222,7 +222,7 @@ export function HealthScreen() {
           accessibilityLabel="Compartilhar minha saúde"
           style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
         >
-          <Icon name="share" size={18} color={colors.textMuted} strokeWidth={1.5} />
+          <Icon name="share" size={18} color={colors.textMuted} strokeWidth={2} />
         </Pressable>
       </XStack>
       <YStack alignSelf="flex-start" marginBottom="$xl">
@@ -482,7 +482,7 @@ function Celula({
   icone,
   serie,
   rating,
-  vazio = '—',
+  vazio = '–',
   onPress,
 }: {
   label: string;
@@ -505,7 +505,7 @@ function Celula({
           única coisa da célula que carrega informação.
         */}
         <XStack alignItems="center" gap="$xs">
-          <Icon name={icone} size={13} color={colors.textMuted} />
+          <Icon name={icone} size={14} color={colors.textMuted} />
           <Label>{label}</Label>
         </XStack>
         {rating ? (
@@ -520,7 +520,7 @@ function Celula({
           </>
         ) : (
           <>
-            <RatingText color="$mutedForeground">—</RatingText>
+            <RatingText color="$mutedForeground">–</RatingText>
             <Data numberOfLines={1}>{vazio}</Data>
           </>
         )}

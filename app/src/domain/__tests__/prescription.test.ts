@@ -1,7 +1,7 @@
 import { ordenarSubstitutos, segundosDaPrescricao } from '../prescription';
 
 describe('segundosDaPrescricao', () => {
-  it('a prancha do relato — "30-45s" — é tempo, e o alvo é o teto', () => {
+  it('a prancha do relato: "30-45s", é tempo, e o alvo é o teto', () => {
     expect(segundosDaPrescricao('30-45s')).toBe(45);
   });
   it('formas que o modelo escreve', () => {

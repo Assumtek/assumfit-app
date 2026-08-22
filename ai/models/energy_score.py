@@ -5,7 +5,7 @@ temperatura 5%. Quatro coisas que a fórmula sozinha não resolve e que estão
 tratadas aqui:
 
 1. **Normalização.** HRV saudável varia de ~20 a ~200 ms entre pessoas, então o
-   valor absoluto não informa nada — só o desvio contra a linha de base da
+   valor absoluto não informa nada, só o desvio contra a linha de base da
    própria pessoa. Sem baseline, caímos numa faixa populacional ampla e o
    resultado sai marcado como `calibrating`, para a interface poder ser honesta
    sobre a precisão.
@@ -21,7 +21,7 @@ tratadas aqui:
    nada, e ninguém consegue auditar depois de que veio o número.
 
 4. **Hidratação entra neutra só enquanto não houver registro.** Com registro do
-   dia, ela pesa de verdade — é o único sinal do score que depende da pessoa
+   dia, ela pesa de verdade, é o único sinal do score que depende da pessoa
    anotar, e por isso o único cuja ausência não é falha de sensor.
 
 Cada componente sai junto do resultado, com o valor legível. É isso que permite
@@ -71,7 +71,7 @@ def circadian_factor(
     justamente quando ele rende mais.
 
     `shift_hours` existe porque o cronótipo de três posições NÃO representa quem
-    trabalha à noite. Vespertino é quem tem o pico no fim da tarde — dois passos
+    trabalha à noite. Vespertino é quem tem o pico no fim da tarde, dois passos
     de curva. Quem dorme às 9h da manhã tem o ciclo inteiro invertido, coisa de
     dez passos, e classificá-lo como vespertino produzia praticamente a mesma
     curva de um trabalhador diurno. São fenômenos diferentes, e tratá-los com o

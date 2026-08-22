@@ -19,7 +19,7 @@ const ex = (name: string, muscleGroup: string) => ({ name, muscleGroup, subtype:
 
 /** O treino de segunda do plano que originou tudo, na ordem real do banco. */
 const upperA: TreinoDoProjeto = {
-  name: 'Upper A — Peito, Costas e Ombro',
+  name: 'Upper A: Peito, Costas e Ombro',
   temPreparo: true,
   principais: [
     ex('Supino Máquina', 'PEITO'),

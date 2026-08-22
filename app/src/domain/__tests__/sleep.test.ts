@@ -81,8 +81,7 @@ describe('deepSleepContinuity', () => {
   it('separa noites de mesmo total mas fragmentação diferente', () => {
     const inteiro = deepSleepContinuity([{ phase: 'deep', minutes: 90 }]);
     const picado = deepSleepContinuity(
-      Array.from({ length: 6 }, () => ({ phase: 'deep' as const, minutes: 15 })),
-    );
+      Array.from({ length: 6 }, () => ({ phase: 'deep' as const, minutes: 15 })));
     expect(inteiro).toBe(100);
     // 63 = consolidação 0,75 (bloco de 15 contra o ciclo de 20) × fragmentação
     // 0,83 (6 blocos onde 5 bastariam). O número exato fica travado aqui de
@@ -94,8 +93,7 @@ describe('deepSleepContinuity', () => {
   it('não pune quem dividiu o profundo em ciclos de tamanho normal', () => {
     // 60 min em 3 blocos de 20 é a arquitetura esperada, não fragmentação.
     const nota = deepSleepContinuity(
-      Array.from({ length: 3 }, () => ({ phase: 'deep' as const, minutes: 20 })),
-    );
+      Array.from({ length: 3 }, () => ({ phase: 'deep' as const, minutes: 20 })));
     expect(nota).toBe(100);
   });
 
@@ -142,7 +140,7 @@ describe('spo2DaNoite', () => {
     expect(spo2DaNoite(inicio, fim, [amostra(5, 94), amostra(2, 97)])).toEqual([97, 94]);
   });
 
-  it('zero não é medição — a pulseira preenche a janela antes de medir', () => {
+  it('zero não é medição, a pulseira preenche a janela antes de medir', () => {
     expect(spo2DaNoite(inicio, fim, [amostra(1, 0), amostra(2, 96)])).toEqual([96]);
   });
 

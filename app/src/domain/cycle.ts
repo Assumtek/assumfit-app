@@ -193,8 +193,7 @@ function faseDoDia(day: number, length: number, fluxo: number): CyclePhase {
  */
 export function phaseProjected(
   date: string,
-  cycles: LoggedCycle[],
-): { phase: CyclePhase; projected: boolean } | null {
+  cycles: LoggedCycle[]): { phase: CyclePhase; projected: boolean } | null {
   const estado = phaseOn(date, cycles);
   if (estado) {
     if (estado.day <= estado.length) return { phase: estado.phase, projected: false };
@@ -298,18 +297,18 @@ export function monthAhead(cycles: LoggedCycle[], today: string): MonthAhead | n
 export const PHASE_COPY: Record<CyclePhase, { label: string; body: string; training: string }> = {
   menstrual: {
     label: 'Menstruação',
-    body: 'Hormônios no ponto mais baixo — é normal a energia cair e o esforço pesar mais.',
+    body: 'Hormônios no ponto mais baixo, é normal a energia cair e o esforço pesar mais.',
     training: 'Vá de movimento leve. Se o corpo pedir descanso, ele tem razão.',
   },
   follicular: {
     label: 'Fase folicular',
     body: 'Estrogênio subindo: mais disposição e recuperação melhor.',
-    training: 'Boa janela para os treinos mais pesados — e para começar algo novo.',
+    training: 'Boa janela para os treinos mais pesados, e para começar algo novo.',
   },
   ovulatory: {
     label: 'Ovulação',
     body: 'O ponto mais alto de energia do ciclo.',
-    training: 'Dia de força e potência — só capriche no aquecimento: as articulações ficam mais soltas aqui.',
+    training: 'Dia de força e potência, só capriche no aquecimento: as articulações ficam mais soltas aqui.',
   },
   luteal: {
     label: 'Fase lútea',
@@ -332,8 +331,7 @@ export type DayLink = { antes: boolean; depois: boolean };
 export function periodLink(
   dia: string,
   marcados: Set<string>,
-  coluna: number,
-): DayLink {
+  coluna: number): DayLink {
   if (!marcados.has(dia)) return { antes: false, depois: false };
   return {
     antes: coluna > 0 && marcados.has(shiftDay(dia, -1)),

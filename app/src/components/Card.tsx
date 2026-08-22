@@ -123,10 +123,10 @@ export function HistoryRow({
   return (
     <Row last={last} gap={16}>
       <Data width={64}>{time}</Data>
-      <YStack flex={1} height={6} borderRadius={3} backgroundColor="$track" overflow="hidden">
+      <YStack flex={1} height={6} borderRadius={4} backgroundColor="$track" overflow="hidden">
         <YStack
           height={6}
-          borderRadius={3}
+          borderRadius={4}
           width={`${Math.max(0, Math.min(1, fraction)) * 100}%`}
           style={{ backgroundColor: color }}
         />

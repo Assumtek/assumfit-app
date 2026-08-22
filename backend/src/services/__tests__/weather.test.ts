@@ -24,8 +24,7 @@ const NOITE_DE_17 = Date.parse('2026-08-18T00:30:00Z');
 function serieHoraria(primeiroDia: string): string[] {
   const inicio = Date.parse(`${primeiroDia}T00:00:00Z`);
   return Array.from({ length: 48 }, (_, i) =>
-    new Date(inicio + i * 3_600_000).toISOString().slice(0, 16),
-  );
+    new Date(inicio + i * 3_600_000).toISOString().slice(0, 16));
 }
 
 describe('alvo da manhã de amanhã', () => {
@@ -35,27 +34,23 @@ describe('alvo da manhã de amanhã', () => {
 
   it('durante o dia chega ao mesmo alvo', () => {
     expect(tomorrowMorningKey(UTC_MENOS_3, [], Date.parse('2026-08-17T15:00:00Z'))).toBe(
-      '2026-08-18T07:00',
-    );
+      '2026-08-18T07:00');
   });
 
   it('a leste de Greenwich o local já virou e o alvo acompanha', () => {
     // Nova Zelândia (UTC+12): 01h de 18/08 lá, ainda 17/08 em UTC.
     expect(tomorrowMorningKey(12 * 3600, [], Date.parse('2026-08-17T13:00:00Z'))).toBe(
-      '2026-08-19T07:00',
-    );
+      '2026-08-19T07:00');
   });
 
   it('vira o ano', () => {
     expect(tomorrowMorningKey(UTC_MENOS_3, [], Date.parse('2026-12-31T23:00:00Z'))).toBe(
-      '2027-01-01T07:00',
-    );
+      '2027-01-01T07:00');
   });
 
   it('sem o deslocamento, ancora no primeiro carimbo da série', () => {
     expect(tomorrowMorningKey(undefined, serieHoraria('2026-12-31'), NOITE_DE_17)).toBe(
-      '2027-01-01T07:00',
-    );
+      '2027-01-01T07:00');
   });
 });
 

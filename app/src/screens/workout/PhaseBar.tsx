@@ -58,11 +58,11 @@ export function PhaseBar({
             semânticas que não participam do tema e não têm variante clara/escura
             — declará-las como token do Tamagui seria inflar a paleta com o que
             nunca muda. É como o MUVX também as aplica. */}
-        <YStack width={3} height={22} borderRadius={2} style={{ backgroundColor: PHASE_COLOR[current] }} />
-        <Text fontSize={15} fontWeight="500" color="$foreground" flex={1}>
+        <YStack width={4} height={22} borderRadius={2} style={{ backgroundColor: PHASE_COLOR[current] }} />
+        <Text fontSize={16} fontWeight="500" color="$foreground" flex={1}>
           {PHASE_NAME[current]}
         </Text>
-        <Text fontSize={13} color="$foreground">
+        <Text fontSize={14} color="$foreground">
           {positionInPhase} de {phaseTotal} {phaseTotal === 1 ? 'exercício' : 'exercícios'}
         </Text>
       </XStack>

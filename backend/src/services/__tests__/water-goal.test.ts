@@ -1,7 +1,7 @@
 import { waterGoalMl } from '../water-goal';
 
 describe('waterGoalMl (espelho da regra do app)', () => {
-  it('60 kg, mulher → 2.100 ml — o mesmo número da tela de Água', () => {
+  it('60 kg, mulher → 2.100 ml, o mesmo número da tela de Água', () => {
     expect(waterGoalMl(60, 'f')).toBe(2100);
   });
   it('70 kg, homem → 2.500', () => {

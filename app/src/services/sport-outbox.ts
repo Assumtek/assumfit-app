@@ -101,8 +101,7 @@ export type SessaoPendente = {
 export function guardarPendente(sessao: SessaoPendente): void {
   try {
     new File(Paths.document, `${PREFIXO}${Date.parse(sessao.startedAt)}.json`).write(
-      JSON.stringify(sessao),
-    );
+      JSON.stringify(sessao));
   } catch {
     // Sem espaço em disco não há cópia local — o POST ainda pode salvar.
   }

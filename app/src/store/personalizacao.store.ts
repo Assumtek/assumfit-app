@@ -99,8 +99,7 @@ export const usePersonalizacaoStore = create<State>((set, get) => ({
 
     const horariosRefeicao = horariosDeRefeicao(refeicoes.map((m) => Date.parse(m.at)).filter(Number.isFinite));
     const inicios = [
-      ...execucoes.filter((e) => e.status === 'FINISHED').map((e) => Date.parse(e.startedAt)),
-      ...sessoes.map((s) => Date.parse(s.startedAt)),
+      ...execucoes.filter((e) => e.status === 'FINISHED').map((e) => Date.parse(e.startedAt)), ...sessoes.map((s) => Date.parse(s.startedAt)),
     ].filter(Number.isFinite);
     const treino = horarioTipico(inicios);
     const cama = horaDeDormir(useLifestyleStore.getState().answers.bedtime);

@@ -30,21 +30,18 @@ describe('movementMinutes', () => {
   it('soma treino concluído e sessão de esporte por dia, em minutos', () => {
     const min = movementMinutes(
       [exec(new Date(2026, 7, 10, 8, 0), 40)],
-      [sessao(new Date(2026, 7, 10, 19, 0), 25), sessao(new Date(2026, 7, 11, 7, 0), 30)],
-    );
+      [sessao(new Date(2026, 7, 10, 19, 0), 25), sessao(new Date(2026, 7, 11, 7, 0), 30)]);
     expect(min.get('2026-08-10')).toBe(65);
     expect(min.get('2026-08-11')).toBe(30);
   });
 
-  it('execução aberta COM série feita conta — o app caiu antes do concluir', () => {
+  it('execução aberta COM série feita conta, o app caiu antes do concluir', () => {
     const minutos = movementMinutes(
       [{ status: 'IN_PROGRESS', startedAt: new Date(2026, 7, 20, 18).toISOString(), durationSec: 1800, completionPct: 40 }],
-      [],
-    );
+      []);
     expect(minutos.get('2026-08-20')).toBe(30);
     expect(
-      movementMinutes([{ status: 'CANCELLED', startedAt: new Date(2026, 7, 20, 18).toISOString(), durationSec: 1800, completionPct: 40 }], []).size,
-    ).toBe(0);
+      movementMinutes([{ status: 'CANCELLED', startedAt: new Date(2026, 7, 20, 18).toISOString(), durationSec: 1800, completionPct: 40 }], []).size).toBe(0);
   });
 
   it('execução não concluída não conta', () => {
@@ -54,12 +51,11 @@ describe('movementMinutes', () => {
         exec(new Date(2026, 7, 10, 9, 0), 40, 'IN_PROGRESS'),
         exec(new Date(2026, 7, 10, 10, 0), 40, 'AUTO_CLOSED'),
       ],
-      [],
-    );
+      []);
     expect(min.size).toBe(0);
   });
 
-  it('treino concluído sem duração ainda acende o dia — o caso da corrida por blocos', () => {
+  it('treino concluído sem duração ainda acende o dia, o caso da corrida por blocos', () => {
     const min = movementMinutes([exec(new Date(2026, 7, 12, 14, 0), null)], []);
     expect(min.get('2026-08-12')).toBe(1);
   });
@@ -73,8 +69,7 @@ describe('movementMinutes', () => {
   it('sessão vinculada à execução é o mesmo ato: conta uma vez, pela sessão', () => {
     const min = movementMinutes(
       [{ ...exec(new Date(2026, 7, 12, 8, 0), 40), id: 'exec-1' }],
-      [{ ...sessao(new Date(2026, 7, 12, 8, 5), 42), workoutExecutionId: 'exec-1' }],
-    );
+      [{ ...sessao(new Date(2026, 7, 12, 8, 5), 42), workoutExecutionId: 'exec-1' }]);
     expect(min.get('2026-08-12')).toBe(42);
   });
 });
@@ -94,8 +89,7 @@ describe('buildMovementWeek', () => {
   it('conta a sequência terminando hoje', () => {
     const semana = buildMovementWeek(
       mapa(['2026-08-10', 30], ['2026-08-11', 30], ['2026-08-12', 30]),
-      QUARTA,
-    );
+      QUARTA);
     expect(semana.streak).toBe(3);
     expect(semana.hojeFeito).toBe(true);
   });
@@ -114,8 +108,7 @@ describe('buildMovementWeek', () => {
   it('sequência atravessa a virada de semana e de mês', () => {
     const semana = buildMovementWeek(
       mapa(['2026-07-30', 30], ['2026-07-31', 30], ['2026-08-01', 30], ['2026-08-02', 30]),
-      new Date(2026, 7, 2, 9, 0),
-    );
+      new Date(2026, 7, 2, 9, 0));
     expect(semana.streak).toBe(4);
   });
 
@@ -141,8 +134,7 @@ describe('weeklySeries', () => {
         { date: new Date(2026, 7, 10, 7, 0), value: 40 },
       ],
       2,
-      QUARTA,
-    );
+      QUARTA);
     expect(serie).toEqual([
       { label: '3/8', value: 45 },
       { label: '10/8', value: 40 },
@@ -165,25 +157,22 @@ describe('consolidateMovement', () => {
   it('junta as duas fontes numa linha do tempo, do mais recente ao mais antigo', () => {
     const linhas = consolidateMovement(
       [exec(new Date(2026, 7, 10, 8, 0), 40)],
-      [sessao(new Date(2026, 7, 11, 19, 0), 25)],
-    );
+      [sessao(new Date(2026, 7, 11, 19, 0), 25)]);
     expect(linhas.map((l) => l.tipo)).toEqual(['esporte', 'treino']);
   });
 
   it('sessão vinculada substitui a execução: o ato aparece uma vez só', () => {
     const linhas = consolidateMovement(
       [{ ...exec(new Date(2026, 7, 12, 8, 0), 40), id: 'exec-1' }],
-      [{ ...sessao(new Date(2026, 7, 12, 8, 5), 42), workoutExecutionId: 'exec-1' }],
-    );
+      [{ ...sessao(new Date(2026, 7, 12, 8, 5), 42), workoutExecutionId: 'exec-1' }]);
     expect(linhas).toHaveLength(1);
     expect(linhas[0].tipo).toBe('esporte');
   });
 
-  it('não filtra por estado — o interrompido continua na lista', () => {
+  it('não filtra por estado, o interrompido continua na lista', () => {
     const linhas = consolidateMovement(
       [exec(new Date(2026, 7, 12, 8, 0), 12, 'CANCELLED')],
-      [],
-    );
+      []);
     expect(linhas).toHaveLength(1);
   });
 });
@@ -196,9 +185,7 @@ describe('movementTotals', () => {
           exec(new Date(2026, 7, 10, 8, 0), 40),
           exec(new Date(2026, 7, 11, 8, 0), 30, 'CANCELLED'),
         ],
-        [{ ...sessao(new Date(2026, 7, 11, 19, 0), 25), kcal: 260 }],
-      ),
-    );
+        [{ ...sessao(new Date(2026, 7, 11, 19, 0), 25), kcal: 260 }]));
     expect(totais).toEqual({ atividades: 2, minutos: 65, esportes: 1, kcal: 260 });
   });
 
@@ -218,9 +205,7 @@ describe('movementTotals', () => {
             kcal: 400,
             workoutExecutionId: 'exec-1',
           },
-        ],
-      ),
-    );
+        ]));
     expect(totais).toEqual({ atividades: 1, minutos: 42, esportes: 1, kcal: 400 });
   });
 });
@@ -262,11 +247,9 @@ describe('movementSeries', () => {
     const serie = movementSeries(
       consolidateMovement(
         [exec(new Date(2026, 7, 10, 8, 0), 40)],
-        [sessao(new Date(2026, 7, 12, 7, 0), 20)],
-      ),
+        [sessao(new Date(2026, 7, 12, 7, 0), 20)]),
       7,
-      QUARTA,
-    );
+      QUARTA);
     expect(serie).toHaveLength(7);
     expect(serie[serie.length - 1]).toEqual({ label: '12', value: 20 });
     expect(serie[serie.length - 3]).toEqual({ label: '10', value: 40 });

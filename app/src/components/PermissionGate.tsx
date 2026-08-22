@@ -31,7 +31,7 @@ const COPY: Record<PermissaoNegada, { titulo: string; corpo: string; icone: stri
   bluetooth: {
     titulo: 'O Bluetooth está bloqueado para o AssumFit',
     corpo:
-      'É por ele que a pulseira fala com o app — sem essa permissão não há batimento, sono nem score. ' +
+      'É por ele que a pulseira fala com o app, sem essa permissão não há batimento, sono nem score. ' +
       'O iPhone só pergunta uma vez, então a mudança acontece nos Ajustes.',
     icone: 'bluetooth',
   },

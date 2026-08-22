@@ -35,8 +35,7 @@ describe('montarSemanaDeTreino', () => {
     const semana = montarSemanaDeTreino(
       plano([treino('MONDAY', 'Peito e tríceps', 50), treino('WEDNESDAY', 'Costas', 45)]),
       mapa(['2026-08-10', 52]),
-      QUARTA,
-    );
+      QUARTA);
 
     expect(semana.dias).toHaveLength(7);
 
@@ -57,8 +56,7 @@ describe('montarSemanaDeTreino', () => {
     const semana = montarSemanaDeTreino(
       plano([treino('MONDAY', 'Pernas'), descanso('TUESDAY')]),
       mapa(),
-      QUARTA,
-    );
+      QUARTA);
 
     const terca = semana.dias[1];
     expect(terca.descanso).toBe(true);
@@ -66,12 +64,11 @@ describe('montarSemanaDeTreino', () => {
     expect(terca.previsto).toBeNull();
   });
 
-  it('movimento em dia de descanso CONTA — a régua mede o que houve, não o que foi combinado', () => {
+  it('movimento em dia de descanso CONTA, a régua mede o que houve, não o que foi combinado', () => {
     const semana = montarSemanaDeTreino(
       plano([descanso('TUESDAY')]),
       mapa(['2026-08-11', 30]),
-      QUARTA,
-    );
+      QUARTA);
 
     expect(semana.dias[1].descanso).toBe(true);
     expect(semana.dias[1].cumprido).toBe(30);
@@ -88,7 +85,7 @@ describe('montarSemanaDeTreino', () => {
     expect(semana.dias[2].ehHoje).toBe(true);
   });
 
-  it('o HOJE vem do plano, não do aparelho — perto da meia-noite os dois discordam', () => {
+  it('o HOJE vem do plano, não do aparelho, perto da meia-noite os dois discordam', () => {
     /*
      O servidor resolve o dia no fuso da pessoa; o aparelho resolve no dele. Uma
      tela com dois "hoje" diferentes é pior que uma tela com o "hoje" do
@@ -97,8 +94,7 @@ describe('montarSemanaDeTreino', () => {
     const semana = montarSemanaDeTreino(
       plano([treino('THURSDAY', 'Ombros')], 'THURSDAY'),
       mapa(),
-      QUARTA,
-    );
+      QUARTA);
 
     expect(semana.dias[2].ehHoje).toBe(false);
     expect(semana.dias[3].ehHoje).toBe(true);
@@ -119,22 +115,20 @@ describe('montarSemanaDeTreino', () => {
         treino('WEDNESDAY', 'C', 50),
       ]),
       mapa(['2026-08-10', 52], ['2026-08-11', 18]),
-      QUARTA,
-    );
+      QUARTA);
 
     expect(semana.previstos).toBe(3);
     expect(semana.cumpridos).toBe(2);
     expect(semana.minutos).toBe(70);
   });
 
-  it('cumprido só conta contra dia PREVISTO — treino avulso não infla o placar', () => {
+  it('cumprido só conta contra dia PREVISTO, treino avulso não infla o placar', () => {
     // Domingo não tinha nada marcado: os 60 minutos entram nos minutos da
     // semana, mas dizer "1 de 1 cumprido" seria inventar um combinado.
     const semana = montarSemanaDeTreino(
       plano([treino('MONDAY', 'A')]),
       mapa(['2026-08-16', 60]),
-      QUARTA,
-    );
+      QUARTA);
 
     expect(semana.previstos).toBe(1);
     expect(semana.cumpridos).toBe(0);

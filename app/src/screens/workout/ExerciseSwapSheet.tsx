@@ -112,7 +112,7 @@ export function ExerciseSwapSheet({
           </ScrollView>
         )}
 
-        <Data>A troca vale só para hoje — seu plano continua o mesmo.</Data>
+        <Data>A troca vale só para hoje, seu plano continua o mesmo.</Data>
       </>
     </Sheet>
   );

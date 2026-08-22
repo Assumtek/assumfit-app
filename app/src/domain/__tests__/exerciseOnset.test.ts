@@ -13,8 +13,7 @@ const leitura = (agora: number, extra: Partial<Parameters<typeof avaliarInicioDe
   heartRate: 125,
   emMovimento: true,
   emAtividadeRegistrada: false,
-  agora,
-  ...extra,
+  agora, ...extra,
 });
 
 /** Roda leituras a cada 30 s por `minutos` e devolve o estado e se perguntou em algum momento. */
@@ -29,7 +28,7 @@ function correr(estado: EstadoDeExercicio, inicio: number, minutos: number, extr
 }
 
 describe('avaliarInicioDeExercicio', () => {
-  it('batimento alto com movimento por três minutos pergunta — uma vez', () => {
+  it('batimento alto com movimento por três minutos pergunta, uma vez', () => {
     let perguntas = 0;
     let estado = ESTADO_INICIAL;
     for (let t = 0; t <= 10 * MIN; t += 30_000) {
@@ -45,7 +44,7 @@ describe('avaliarInicioDeExercicio', () => {
     expect(perguntou).toBe(false);
   });
 
-  it('batimento alto PARADO não é exercício — é assunto de outra vigia', () => {
+  it('batimento alto PARADO não é exercício, é assunto de outra vigia', () => {
     const { perguntou } = correr(ESTADO_INICIAL, 0, 10, { emMovimento: false });
     expect(perguntou).toBe(false);
   });
@@ -55,7 +54,7 @@ describe('avaliarInicioDeExercicio', () => {
     expect(perguntou).toBe(false);
   });
 
-  it('abaixo do limiar, mesmo andando, é caminhada — não pergunta', () => {
+  it('abaixo do limiar, mesmo andando, é caminhada, não pergunta', () => {
     const { perguntou } = correr(ESTADO_INICIAL, 0, 10, { heartRate: BPM_EXERCICIO - 1 });
     expect(perguntou).toBe(false);
   });

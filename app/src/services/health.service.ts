@@ -174,8 +174,7 @@ export async function fetchLastNight(now = new Date()): Promise<SleepNight | nul
       const phase = toPhase(Number(a.value));
       if (!phase) continue;
       const minutos = Math.round(
-        (new Date(a.endDate).getTime() - new Date(a.startDate).getTime()) / 60_000,
-      );
+        (new Date(a.endDate).getTime() - new Date(a.startDate).getTime()) / 60_000);
       // Amostras de menos de um minuto viram ruído no gráfico sem mudar total.
       if (minutos < 1) continue;
       segments.push({ phase, minutes: minutos });
@@ -189,8 +188,7 @@ export async function fetchLastNight(now = new Date()): Promise<SleepNight | nul
     // de Brasília para o dia seguinte.
     const noite = nightFrom(dataDaNoite(new Date(ultima[0].startDate).getTime()), segments);
     console.log(
-      `[health] noites encontradas: ${noites.length} — usando ${noite.date}, ${noite.totalMin} min`,
-    );
+      `[health] noites encontradas: ${noites.length}, usando ${noite.date}, ${noite.totalMin} min`);
     return noite;
   } catch (err) {
     // Permissão negada e ausência de dado são indistinguíveis por design do

@@ -80,8 +80,7 @@ export type SemanaDeTreino = {
 export function montarSemanaDeTreino(
   plano: { days: DiaDoPlano[]; today: string } | null,
   minutosPorDia: Map<string, number>,
-  hoje: Date,
-): SemanaDeTreino {
+  hoje: Date): SemanaDeTreino {
   const segunda = new Date(hoje);
   segunda.setHours(0, 0, 0, 0);
   segunda.setDate(segunda.getDate() - ((segunda.getDay() + 6) % 7));

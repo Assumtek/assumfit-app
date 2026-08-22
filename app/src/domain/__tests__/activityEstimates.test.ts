@@ -1,7 +1,7 @@
 import { caloriasDoDia, distanciaDoDia } from '../activityEstimates';
 
 describe('distanciaDoDia', () => {
-  it('o caso do relato: 1.253 passos não são 3,2 km — cai na estimativa', () => {
+  it('o caso do relato: 1.253 passos não são 3,2 km, cai na estimativa', () => {
     const d = distanciaDoDia(1253, 3200);
     expect(d.fonte).toBe('estimada');
     expect(d.valor).toBeCloseTo(0.877, 2);
@@ -13,7 +13,7 @@ describe('distanciaDoDia', () => {
     expect(d.valor).toBeCloseTo(4.1, 3);
   });
 
-  it('sem passos, zero — e nunca inventa distância', () => {
+  it('sem passos, zero, e nunca inventa distância', () => {
     expect(distanciaDoDia(0, 900)).toEqual({ valor: 0, fonte: 'estimada' });
   });
 
@@ -23,7 +23,7 @@ describe('distanciaDoDia', () => {
 });
 
 describe('caloriasDoDia', () => {
-  it('o caso do relato: 886.149 para 1.253 passos não cabe em unidade nenhuma — estimativa', () => {
+  it('o caso do relato: 886.149 para 1.253 passos não cabe em unidade nenhuma, estimativa', () => {
     const c = caloriasDoDia(1253, 886149);
     expect(c.fonte).toBe('estimada');
     expect(c.valor).toBe(50);

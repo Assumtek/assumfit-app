@@ -60,7 +60,7 @@ export function BarChart({ bars, width, height = 140, max, reference, labelEvery
             strokeDasharray="3 3"
           />
           {reference.label ? (
-            <SvgText x={width - 2} y={y(reference.value) - 5} fill={colors.textFaint} fontSize={9} textAnchor="end">
+            <SvgText x={width - 2} y={y(reference.value) - 5} fill={colors.textFaint} fontSize={10} textAnchor="end">
               {reference.label}
             </SvgText>
           ) : null}
@@ -68,7 +68,7 @@ export function BarChart({ bars, width, height = 140, max, reference, labelEvery
       ) : null}
 
       {/* Eixo vertical: o topo da escala, à esquerda. */}
-      <SvgText x={2} y={10} fill={colors.textFaint} fontSize={9} textAnchor="start">
+      <SvgText x={2} y={10} fill={colors.textFaint} fontSize={10} textAnchor="start">
         {String(Math.round(top))}
       </SvgText>
       {bars.map((bar, i) => {
@@ -93,13 +93,12 @@ export function BarChart({ bars, width, height = 140, max, reference, labelEvery
             x={i * slot + slot / 2}
             y={height - 4}
             fill={colors.textFaint}
-            fontSize={9}
+            fontSize={10}
             textAnchor="middle"
           >
             {bar.label}
           </SvgText>
-        ) : null,
-      )}
+        ) : null)}
     </Svg>
   );
 }

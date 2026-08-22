@@ -99,7 +99,7 @@ export function MealReminderScreen() {
           ))}
           {horarios.length === 0 ? (
             <Row last>
-              <Data>Nenhum horário — adicione o primeiro.</Data>
+              <Data>Nenhum horário, adicione o primeiro.</Data>
             </Row>
           ) : null}
         </Section>
@@ -114,7 +114,7 @@ export function MealReminderScreen() {
       </YStack>
 
       <Data marginTop="$xl" color="$mutedForeground">
-        O aviso abre a tela de Refeições — registrar leva dois toques, e é isso que fecha o hábito.
+        O aviso abre a tela de Refeições, registrar leva dois toques, e é isso que fecha o hábito.
       </Data>
 
       <Modal visible={editando} transparent animationType="slide" onRequestClose={() => setEditando(false)}>

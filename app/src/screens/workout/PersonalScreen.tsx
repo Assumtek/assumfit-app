@@ -105,8 +105,7 @@ export function PersonalScreen() {
         setAplicado(r.failReason);
       } else {
         setAplicado(
-          r.applied === 1 ? 'Pronto — 1 mudança aplicada no seu plano.' : `Pronto — ${r.applied} mudanças aplicadas no seu plano.`,
-        );
+          r.applied === 1 ? 'Pronto: 1 mudança aplicada no seu plano.' : `Pronto, ${r.applied} mudanças aplicadas no seu plano.`);
       }
       setProposta(null);
     } catch {
@@ -218,7 +217,7 @@ export function PersonalScreen() {
               placeholderTextColor={colors.textFaint}
               selectionColor={colors.accent}
               multiline
-              style={{ fontSize: 15, color: colors.text, maxHeight: 120 }}
+              style={{ fontSize: 16, color: colors.text, maxHeight: 120 }}
             />
           </YStack>
 
@@ -275,7 +274,7 @@ function Balao({ turno }: { turno: ChatTurn }) {
         borderWidth={meu ? 0 : 1}
         borderColor="$border"
       >
-        <Text fontSize={15} lineHeight={22} color={meu ? '$primaryForeground' : '$foreground'}>
+        <Text fontSize={16} lineHeight={22} color={meu ? '$primaryForeground' : '$foreground'}>
           {turno.content}
         </Text>
       </YStack>
@@ -300,7 +299,7 @@ function Sugestoes({ onEscolher }: { onEscolher: (texto: string) => void }) {
   return (
     <YStack gap="$sm" paddingTop="$md">
       <Body marginBottom="$xs">
-        Ele conhece o seu plano ativo e a sua anamnese. Pergunte sobre o treino — mudanças passam
+        Ele conhece o seu plano ativo e a sua anamnese. Pergunte sobre o treino, mudanças passam
         pelas mesmas travas clínicas da geração.
       </Body>
       {EXEMPLOS.map((exemplo) => (

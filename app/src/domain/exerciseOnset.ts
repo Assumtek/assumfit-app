@@ -57,8 +57,7 @@ export type LeituraParaExercicio = {
  */
 export function avaliarInicioDeExercicio(
   estado: EstadoDeExercicio,
-  leitura: LeituraParaExercicio,
-): { estado: EstadoDeExercicio; perguntar: boolean } {
+  leitura: LeituraParaExercicio): { estado: EstadoDeExercicio; perguntar: boolean } {
   const { heartRate, emMovimento, emAtividadeRegistrada, agora } = leitura;
 
   if (emAtividadeRegistrada || heartRate < BPM_EXERCICIO || !emMovimento) {

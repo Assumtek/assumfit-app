@@ -135,7 +135,7 @@ def catalog_errors(errors: list[str]) -> list[str]:
 
 
 def mechanical_errors(errors: list[str]) -> list[str]:
-    """Os erros de FORMA — catálogo e JSON —, que valem re-gerar."""
+    """Os erros de FORMA, catálogo e JSON, que valem re-gerar."""
     return [e for e in errors if e.startswith(MECHANICAL_ERROR_PREFIXES)]
 
 
@@ -145,7 +145,7 @@ def json_errors(errors: list[str]) -> list[str]:
 
 
 def truncation_errors(errors: list[str]) -> list[str]:
-    """Saída cortada por falta de espaço — pede plano mais enxuto, não vírgula."""
+    """Saída cortada por falta de espaço, pede plano mais enxuto, não vírgula."""
     return [e for e in errors if e.startswith("json_truncado")]
 
 
@@ -156,7 +156,7 @@ def substituir_fora_do_catalogo(
 
     Existe porque regenerar o plano inteiro por causa de um id errado custa uma
     geração completa (~150 s) e, quando o modelo insiste no mesmo erro, custa
-    isso duas vezes para nada. O resto do plano costuma estar correto — o dia, o
+    isso duas vezes para nada. O resto do plano costuma estar correto, o dia, o
     volume, a progressão. Descartar tudo por um identificador é jogar fora o
     trabalho bom.
 

@@ -60,7 +60,7 @@ export function Hypnogram({ segments, width, height = 150, id = 'hypno' }: Props
           x={0}
           y={i * laneH + laneH / 2 + 3}
           fill={colors.textFaint}
-          fontSize={9}
+          fontSize={10}
           textAnchor="start"
         >
           {lane.label}
@@ -75,7 +75,7 @@ export function Hypnogram({ segments, width, height = 150, id = 'hypno' }: Props
             x={block.x}
             y={block.laneIndex * laneH + laneH / 2 - 5.5}
             width={block.w}
-            height={11}
+            height={12}
             rx={5.5}
             fill={colors.accent}
             opacity={lane.opacity}
@@ -83,10 +83,10 @@ export function Hypnogram({ segments, width, height = 150, id = 'hypno' }: Props
         );
       })}
 
-      <SvgText x={padLeft} y={height - 4} fill={colors.textFaint} fontSize={9}>
+      <SvgText x={padLeft} y={height - 4} fill={colors.textFaint} fontSize={10}>
         adormeceu
       </SvgText>
-      <SvgText x={width - 2} y={height - 4} fill={colors.textFaint} fontSize={9} textAnchor="end">
+      <SvgText x={width - 2} y={height - 4} fill={colors.textFaint} fontSize={10} textAnchor="end">
         {hours}h depois
       </SvgText>
     </Svg>

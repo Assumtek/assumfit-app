@@ -80,8 +80,7 @@ export function SportShare({
         'ritmo',
         'data',
         'marca',
-      ]),
-  );
+      ]));
   const [selecionado, setSelecionado] = useState<BlocoId | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
@@ -91,13 +90,9 @@ export function SportShare({
   // Só chip de bloco que EXISTE nesta sessão: sem GPS não há traçado a ligar.
   const chips: { id: BlocoId; rotulo: string }[] = [
     { id: 'selo', rotulo: 'Selo' },
-    { id: 'modalidade', rotulo: 'Modalidade' },
-    ...(temTracado ? [{ id: 'tracado' as const, rotulo: 'Traçado' }] : []),
-    { id: 'tempo', rotulo: 'Tempo' },
-    ...(dist ? [{ id: 'distancia' as const, rotulo: 'Km' }] : []),
-    ...(pace ? [{ id: 'ritmo' as const, rotulo: 'Ritmo' }] : []),
-    { id: 'kcal', rotulo: 'Kcal' },
-    ...(avgHr ? [{ id: 'bpm' as const, rotulo: 'Bpm' }] : []),
+    { id: 'modalidade', rotulo: 'Modalidade' }, ...(temTracado ? [{ id: 'tracado' as const, rotulo: 'Traçado' }] : []),
+    { id: 'tempo', rotulo: 'Tempo' }, ...(dist ? [{ id: 'distancia' as const, rotulo: 'Km' }] : []), ...(pace ? [{ id: 'ritmo' as const, rotulo: 'Ritmo' }] : []),
+    { id: 'kcal', rotulo: 'Kcal' }, ...(avgHr ? [{ id: 'bpm' as const, rotulo: 'Bpm' }] : []),
     { id: 'data', rotulo: 'Data' },
     { id: 'marca', rotulo: 'AssumFit' },
   ];
@@ -131,8 +126,7 @@ export function SportShare({
     } catch {
       Alert.alert(
         origem === 'camera' ? 'Não foi possível abrir a câmera' : 'Não foi possível abrir a galeria',
-        'Tente de novo.',
-      );
+        'Tente de novo.');
     }
   };
 
@@ -223,7 +217,7 @@ export function SportShare({
                 borderColor={ver(chip.id) ? '$primary' : '$borderStrong'}
                 backgroundColor={ver(chip.id) ? '$primarySoft' : 'transparent'}
               >
-                <Icon name={ver(chip.id) ? 'check' : 'down'} size={11} />
+                <Icon name={ver(chip.id) ? 'check' : 'down'} size={12} />
                 <Text fontSize={12} color="$foreground">
                   {chip.rotulo}
                 </Text>
@@ -277,7 +271,7 @@ export function SportShare({
                 borderWidth={1}
                 borderColor="rgba(135,123,240,0.55)"
               >
-                <Text fontSize={9} fontWeight="800" letterSpacing={1.2} color="#ECE7F4">
+                <Text fontSize={10} fontWeight="800" letterSpacing={1.2} color="#ECE7F4">
                   SESSÃO CONCLUÍDA
                 </Text>
               </XStack>
@@ -376,7 +370,7 @@ export function SportShare({
               selecionado={selecionado === 'data'}
               onSelecionar={escolher('data')}
             >
-              <Text fontSize={11} color="rgba(236,231,244,0.75)">
+              <Text fontSize={12} color="rgba(236,231,244,0.75)">
                 {dataDeHoje}
               </Text>
             </BlocoEditavel>
@@ -388,7 +382,7 @@ export function SportShare({
               selecionado={selecionado === 'marca'}
               onSelecionar={escolher('marca')}
             >
-              <LogoType height={13} color="#ECE7F4" />
+              <LogoType height={14} color="#ECE7F4" />
             </BlocoEditavel>
           </YStack>
         </Pressable>
@@ -457,9 +451,9 @@ function Tracado({ points, width, height }: { points: GeoPoint[]; width: number;
   return (
     <Svg width={width} height={height}>
       {/* Halo escuro por baixo: o traçado precisa ler sobre QUALQUER foto. */}
-      <SvgPolyline points={coords.join(' ')} fill="none" stroke="rgba(0,0,0,0.45)" strokeWidth={7} strokeLinejoin="round" strokeLinecap="round" />
+      <SvgPolyline points={coords.join(' ')} fill="none" stroke="rgba(0,0,0,0.45)" strokeWidth={8} strokeLinejoin="round" strokeLinecap="round" />
       <SvgPolyline points={coords.join(' ')} fill="none" stroke="#FFFFFF" strokeWidth={3.5} strokeLinejoin="round" strokeLinecap="round" />
-      <Circle cx={x0} cy={y0} r={5} fill="#877BF0" stroke="#FFFFFF" strokeWidth={1.5} />
+      <Circle cx={x0} cy={y0} r={5} fill="#877BF0" stroke="#FFFFFF" strokeWidth={2} />
       <Circle cx={xf} cy={yf} r={5} fill="#FFFFFF" />
     </Svg>
   );
@@ -472,7 +466,7 @@ function Metrica({ valor, rotulo }: { valor: string; rotulo: string }) {
       <Text fontSize={20} fontWeight="300" color="#ECE7F4" fontVariant={['tabular-nums']}>
         {valor}
       </Text>
-      <Text fontSize={9} letterSpacing={1} color="rgba(236,231,244,0.7)" textTransform="uppercase">
+      <Text fontSize={10} letterSpacing={1} color="rgba(236,231,244,0.7)" textTransform="uppercase">
         {rotulo}
       </Text>
     </YStack>

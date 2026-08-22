@@ -87,7 +87,7 @@ export function HrvScreen() {
         {/* Uma frase de abertura: o que este número É. O método inteiro fica na
             Ajuda — pedido dos testadores (ago/2026), que queriam entender a
             métrica sem sair da tela. */}
-        <Body marginTop="$md">Variação entre um batimento e o seguinte, medida pela pulseira de hora em hora. Quanto maior, mais folga o corpo tem — e a comparação que vale é com a sua própria linha de base.</Body>
+        <Body marginTop="$md">Variação entre um batimento e o seguinte, medida pela pulseira de hora em hora. Quanto maior, mais folga o corpo tem, e a comparação que vale é com a sua própria linha de base.</Body>
       </YStack>
 
       <DayPickerRow
@@ -158,8 +158,8 @@ export function HrvScreen() {
         )}
       </YStack>
       {serie.length >= 2 ? (
-        <Data marginBottom="$sm" lineHeight={17}>
-          A faixa é a sua linha de base — HRV só significa alguma coisa contra ela, nunca em valor
+        <Data marginBottom="$sm" lineHeight={18}>
+          A faixa é a sua linha de base: HRV só significa alguma coisa contra ela, nunca em valor
           absoluto.
         </Data>
       ) : null}

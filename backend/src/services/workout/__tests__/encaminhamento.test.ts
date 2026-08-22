@@ -11,15 +11,13 @@ import { messageFor, motivoDoEncaminhamento } from '../orchestrator';
 describe('motivoDoEncaminhamento', () => {
   it('nomeia a condição que a pessoa declarou', () => {
     expect(motivoDoEncaminhamento(['cardiopata'])).toBe(
-      'Você indicou uma condição cardíaca na anamnese.',
-    );
+      'Você indicou uma condição cardíaca na anamnese.');
     expect(motivoDoEncaminhamento(['gestante'])).toBe('Você indicou gestação na anamnese.');
   });
 
   it('junta mais de uma causa em português corrente', () => {
     expect(motivoDoEncaminhamento(['cardiopata', 'gestante'])).toBe(
-      'Você indicou uma condição cardíaca e gestação na anamnese.',
-    );
+      'Você indicou uma condição cardíaca e gestação na anamnese.');
   });
 
   it('IGNORA flags que não encaminham', () => {
@@ -33,8 +31,7 @@ describe('motivoDoEncaminhamento', () => {
 
   it('mistura: só a causa real aparece', () => {
     expect(motivoDoEncaminhamento(['obeso', 'gestante', 'asma'])).toBe(
-      'Você indicou gestação na anamnese.',
-    );
+      'Você indicou gestação na anamnese.');
   });
 
   it('sem flag nenhuma não inventa causa', () => {

@@ -51,8 +51,8 @@ const DICIONARIO: { marca: string; falha: FalhaDeMedicao }[] = [
     falha: {
       titulo: 'A pulseira não aceitou medir agora',
       corpo:
-        'Ela recusa quando o sensor já está ocupado — feche o app do fabricante se ele ' +
-        'estiver medindo — e quando falta contato com a pele. Aguarde alguns segundos, ' +
+        'Ela recusa quando o sensor já está ocupado, feche o app do fabricante se ele ' +
+        'estiver medindo, e quando falta contato com a pele. Aguarde alguns segundos, ' +
         'ajuste a pulseira um dedo acima do osso do pulso e tente de novo.',
       automatico: true,
     },
@@ -98,7 +98,7 @@ const POR_CODIGO: Record<string, FalhaDeMedicao> = {
     titulo: 'A pulseira precisa ser calibrada',
     corpo:
       'Ela não mede antes da calibração de uso, que é feita uma vez. Vista a pulseira, ' +
-      'fique parado e abra o menu → Dispositivo para calibrar — leva cerca de dois minutos.',
+      'fique parado e abra o menu → Dispositivo para calibrar, leva cerca de dois minutos.',
     automatico: false,
   },
   'mal-vestida': {
@@ -114,7 +114,7 @@ const POR_CODIGO: Record<string, FalhaDeMedicao> = {
   'fim-recusado': {
     titulo: 'A medição não fechou',
     corpo:
-      'O aparelho mediu, mas não confirmou o fim — o sensor pode ter ficado ligado. ' +
+      'O aparelho mediu, mas não confirmou o fim, o sensor pode ter ficado ligado. ' +
       'Aguarde alguns segundos antes de medir de novo.',
     automatico: true,
   },
@@ -129,8 +129,7 @@ const POR_CODIGO: Record<string, FalhaDeMedicao> = {
  */
 export function falhaDeMedicao(
   mensagem: string | null | undefined,
-  codigo?: string | null,
-): FalhaDeMedicao | null {
+  codigo?: string | null): FalhaDeMedicao | null {
   if (codigo && POR_CODIGO[codigo]) return POR_CODIGO[codigo];
   if (!mensagem) return null;
   for (const { marca, falha } of DICIONARIO) {
@@ -147,8 +146,7 @@ export function falhaDeMedicao(
  */
 export function textoDaFalha(
   mensagem: string | null | undefined,
-  codigo?: string | null,
-): string | null {
+  codigo?: string | null): string | null {
   const f = falhaDeMedicao(mensagem, codigo);
   return f ? `${f.titulo}. ${f.corpo}` : null;
 }

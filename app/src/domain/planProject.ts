@@ -123,7 +123,7 @@ export function fatosDoProjeto(treinos: TreinoDoProjeto[], anamnese?: AnamneseDo
       chave: 'alternancia',
       titulo: 'Exercícios alternam entre empurrar e puxar',
       porque:
-        'Um grupo descansa enquanto o outro trabalha. A força se mantém ao longo das séries e a sessão termina mais cedo — não é erro de ordem.',
+        'Um grupo descansa enquanto o outro trabalha. A força se mantém ao longo das séries e a sessão termina mais cedo, não é erro de ordem.',
     });
   }
 
@@ -136,8 +136,7 @@ export function fatosDoProjeto(treinos: TreinoDoProjeto[], anamnese?: AnamneseDo
   }
 
   const porSessao = Math.round(
-    treinos.reduce((n, t) => n + t.principais.length, 0) / treinos.length,
-  );
+    treinos.reduce((n, t) => n + t.principais.length, 0) / treinos.length);
   if (porSessao > 0) {
     fatos.push({
       chave: 'volume',
@@ -159,7 +158,7 @@ export function fatosDoProjeto(treinos: TreinoDoProjeto[], anamnese?: AnamneseDo
     fatos.push({
       chave: 'tempo',
       titulo: `Sessões para caber em ${minutos >= 60 ? `${minutos / 60}h` : `${minutos} min`}`,
-      porque: `Você informou ter ${minutos >= 60 ? `${minutos / 60} hora${minutos > 60 ? 's' : ''}` : `${minutos} minutos`} por sessão — é o que limita a ${media} ${media === 1 ? 'exercício principal' : 'exercícios principais'} por dia, com descanso entre séries incluído.`,
+      porque: `Você informou ter ${minutos >= 60 ? `${minutos / 60} hora${minutos > 60 ? 's' : ''}` : `${minutos} minutos`} por sessão, é o que limita a ${media} ${media === 1 ? 'exercício principal' : 'exercícios principais'} por dia, com descanso entre séries incluído.`,
     });
   }
   const nivel = anamnese?.experience ? NIVEL[String(anamnese.experience)] : undefined;

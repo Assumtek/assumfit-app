@@ -60,7 +60,7 @@ describe('comAssumfit', () => {
 });
 
 describe('assumfitVibra', () => {
-  it('basta UM balde ligado — não se sabe qual o firmware usa', () => {
+  it('basta UM balde ligado, não se sabe qual o firmware usa', () => {
     expect(assumfitVibra(filtro([[15, false], [16, true], [17, false]]))).toBe(true);
     expect(assumfitVibra(filtro([[15, false], [16, false]]))).toBe(false);
   });

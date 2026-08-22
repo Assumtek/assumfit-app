@@ -40,8 +40,7 @@ export type Ponto = { at: number; value: number };
 export function comAmostraDeHrv(
   serie: Ponto[],
   reading: { hrvMs: number | null; hrvAt?: number; recordedAt: number },
-  limite = 90,
-): Ponto[] {
+  limite = 90): Ponto[] {
   if (reading.hrvMs == null) return serie;
   const at = reading.hrvAt ?? reading.recordedAt;
   if (serie.some((a) => a.at === at)) return serie;
@@ -181,16 +180,14 @@ export const TETO_BATIMENTO_VIVO_MS = 20_000;
 export function batimentoAoVivo(
   reading: { heartRate: number; heartRateAt?: number; recordedAt: number } | null,
   agora: number,
-  teto = TETO_BATIMENTO_VIVO_MS,
-): boolean {
+  teto = TETO_BATIMENTO_VIVO_MS): boolean {
   if (!reading || !reading.heartRate) return false;
   return agora - (reading.heartRateAt ?? reading.recordedAt) <= teto;
 }
 
 /** O instante em que o batimento foi medido — para a tela dizer "medido às". */
 export function batimentoMedidoEm(
-  reading: { heartRateAt?: number; recordedAt: number } | null,
-): number | null {
+  reading: { heartRateAt?: number; recordedAt: number } | null): number | null {
   if (!reading) return null;
   return reading.heartRateAt ?? reading.recordedAt;
 }

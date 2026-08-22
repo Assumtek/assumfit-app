@@ -68,8 +68,7 @@ async function aplicarCercas(lugares: Lugar[]): Promise<void> {
       radius: RAIO_M,
       notifyOnEnter: true,
       notifyOnExit: false,
-    })),
-  );
+    })));
 }
 
 export const useLocalReminderStore = create<State>((set, get) => ({

@@ -14,7 +14,7 @@ describe('falhaDeMedicao', () => {
     expect(f?.corpo).toContain('tente de novo');
   });
 
-  it('casa por conteúdo, não por igualdade — o SDK varia o prefixo', () => {
+  it('casa por conteúdo, não por igualdade, o SDK varia o prefixo', () => {
     expect(falhaDeMedicao('手环未正确佩戴')?.titulo).toBe(falhaDeMedicao('未正确佩戴手环')?.titulo);
   });
 

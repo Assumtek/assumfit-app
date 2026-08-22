@@ -1,7 +1,7 @@
 """Extração de respostas da fala livre da anamnese.
 
-A pessoa abre a entrevista contando o que quer — "tenho 34 anos, treino em
-academia há uns meses e quero ganhar massa, consigo ir 4 vezes por semana" — e
+A pessoa abre a entrevista contando o que quer: "tenho 34 anos, treino em
+academia há uns meses e quero ganhar massa, consigo ir 4 vezes por semana", e
 este módulo lê esse texto e preenche as perguntas do roteiro que JÁ FORAM
 respondidas ali. A entrevista então pergunta só o que faltou, que é o desenho
 da anamnese conversacional do MUVX (`AI_EXTRACTED` no contrato de lá).
@@ -10,7 +10,7 @@ da anamnese conversacional do MUVX (`AI_EXTRACTED` no contrato de lá).
 
 As perguntas do PAR-Q ficam fora da extração por decisão, não por limitação.
 "Minha saúde vai bem" não é resposta para "você sente dor no peito ao se
-exercitar?" — inferir um "não" clínico de uma frase otimista é exatamente o
+exercitar?", inferir um "não" clínico de uma frase otimista é exatamente o
 tipo de erro que não aparece até machucar alguém. O chamador manda a lista de
 perguntas extraíveis, e o PAR-Q nunca está nela.
 
@@ -18,7 +18,7 @@ perguntas extraíveis, e o PAR-Q nunca está nela.
 
 O prompt manda omitir o que não estiver EXPLÍCITO. Uma extração errada custa
 mais que uma pergunta a mais: a resposta extraída pula a pergunta, e o erro só
-seria visto na revisão — por alguém que não sabe que precisa procurá-lo.
+seria visto na revisão, por alguém que não sabe que precisa procurá-lo.
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ Regras:
 - Inclua uma chave apenas quando a resposta estiver EXPLÍCITA na fala.
 - Para perguntas com opções, o valor precisa ser UMA das opções, letra por letra.
 - Pergunta numérica: devolva só o número, sem unidade, convertido para a unidade \
-que a pergunta pede. Trocar a unidade dita pela pedida NÃO é dedução — "1,80m" \
+que a pergunta pede. Trocar a unidade dita pela pedida NÃO é dedução: "1,80m" \
 para altura em cm é "180", "90kg" para peso em kg é "90", "1h por treino" para \
 minutos é "60".
 - Se a fala não responde claramente uma pergunta, NÃO inclua a chave.
@@ -49,7 +49,7 @@ minutos é "60".
 quando, não de quantas vezes por semana. `daysPerWeek` só entra quando a fala \
 diz explicitamente "N vezes/dias por semana".
 - Pergunta que pede UMA opção não recebe lista: se a fala cita várias regiões, \
-vários objetivos ou vários horários, NÃO inclua a chave — o roteiro pergunta \
+vários objetivos ou vários horários, NÃO inclua a chave, o roteiro pergunta \
 depois e a pessoa escolhe.
 - Nunca deduza saúde: na dúvida, omita.
 - Fala vaga ou fora de tópico → devolva {}.
@@ -78,7 +78,7 @@ def frequencia_explicita(text: str, value: str) -> bool:
     """A fala diz `value` vezes por semana, com essas palavras?
 
     Um testador (22/08/2026) escreveu "hipertrofia em 3 meses" e o modelo
-    devolveu `daysPerWeek: 3`. O prompt agora proíbe; este filtro garante —
+    devolveu `daysPerWeek: 3`. O prompt agora proíbe; este filtro garante, 
     o modelo orienta, o código decide.
     """
     return any(m.group(1) == value.strip() for m in _FREQUENCIA.finditer(text))

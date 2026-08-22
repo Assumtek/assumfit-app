@@ -77,7 +77,7 @@ export function ExecutionDetailScreen() {
       <XStack gap="$xxl" marginBottom="$xl">
         <YStack>
           <Display fontSize={40} lineHeight={44} letterSpacing={-1.8}>
-            {detalhe.durationSec ? formatDuration(detalhe.durationSec) : '—'}
+            {detalhe.durationSec ? formatDuration(detalhe.durationSec) : '–'}
           </Display>
           <Data>duração</Data>
         </YStack>
@@ -109,7 +109,7 @@ export function ExecutionDetailScreen() {
           <YStack key={fase.type} marginTop="$xl">
             <XStack alignItems="center" gap="$sm" marginBottom="$md">
               {/* Cor calculada vai em `style` — token não aceita valor cru. */}
-              <YStack width={3} height={16} borderRadius={2} style={{ backgroundColor: PHASE_COLOR[tipo] }} />
+              <YStack width={4} height={16} borderRadius={2} style={{ backgroundColor: PHASE_COLOR[tipo] }} />
               <SectionTitle>{PHASE_NAME[tipo]}</SectionTitle>
             </XStack>
 
@@ -149,11 +149,11 @@ export function ExecutionDetailScreen() {
                           <XStack key={serie.order} alignItems="center" gap="$md">
                             <Data width={24}>{serie.order + 1}ª</Data>
                             <Data color="$foreground">
-                              {serie.load != null ? `${serie.load} kg` : '—'}
+                              {serie.load != null ? `${serie.load} kg` : '–'}
                             </Data>
                             <Data>×</Data>
                             <Data color="$foreground">
-                              {serie.repetitions != null ? `${serie.repetitions} reps` : '—'}
+                              {serie.repetitions != null ? `${serie.repetitions} reps` : '–'}
                             </Data>
                           </XStack>
                         ))}
@@ -212,12 +212,9 @@ export function ExecutionDetailScreen() {
                     e.sets.reduce(
                       (sv, set) =>
                         sv + (set.completed ? (set.load ?? 0) * (set.repetitions ?? 0) : 0),
-                      0,
-                    ),
-                  0,
-                ),
-              0,
-            );
+                      0),
+                  0),
+              0);
             (navigation as any).push('WorkoutShare', {
               workoutName: detalhe.workoutName,
               durationSec: detalhe.durationSec,

@@ -172,8 +172,7 @@ const AGUA_DIAS = 3;
  */
 export async function scheduleWaterNotifications(
   times: string[],
-  estado?: { waterMl: number; goalMl: number; copoMl: number },
-) {
+  estado?: { waterMl: number; goalMl: number; copoMl: number }) {
   if (!(await ensurePermission())) return;
   await cancelWaterNotifications();
 
@@ -243,7 +242,7 @@ export async function scheduleMealNotifications(times: string[]) {
         identifier: `${REFEICAO_PREFIXO}${slot++}`,
         content: {
           title: `Hora do ${nome}?`,
-          body: 'Registre o prato em dois toques — é o que mantém o hábito no loop.',
+          body: 'Registre o prato em dois toques, é o que mantém o hábito no loop.',
           sound: false,
           data: { route: 'Meals' },
         },
@@ -270,8 +269,7 @@ export async function scheduleDailyAt(
   prefixo: string,
   hhmm: string,
   conteudo: { title: string; body: string; route: string },
-  dias = 3,
-) {
+  dias = 3) {
   if (!(await ensurePermission())) return;
   await cancelPrefix(prefixo, dias + 2);
   const agora = new Date();
@@ -294,8 +292,7 @@ export async function scheduleWeeklyAt(
   id: string,
   weekday: number,
   hhmm: string,
-  conteudo: { title: string; body: string; route: string },
-) {
+  conteudo: { title: string; body: string; route: string }) {
   if (!(await ensurePermission())) return;
   await Notifications.cancelScheduledNotificationAsync(id).catch(() => undefined);
   const agora = new Date();
@@ -396,7 +393,7 @@ export async function armTrainingNudge(fromTomorrow = false) {
     identifier: TREINO_15H,
     content: {
       title: 'Ainda dá tempo hoje',
-      body: 'Seu treino de hoje continua te esperando — e à tarde ainda cabe.',
+      body: 'Seu treino de hoje continua te esperando, e à tarde ainda cabe.',
       sound: false,
       data: { route: 'Plan' },
     },

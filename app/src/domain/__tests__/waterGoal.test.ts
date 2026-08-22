@@ -12,7 +12,7 @@ describe('waterGoalMl', () => {
     expect(pesado).toBeGreaterThan(leve);
   });
 
-  it('70 kg dá 70 × 35 ml, arredondado à centena — a conta da tela é a conta da meta', () => {
+  it('70 kg dá 70 × 35 ml, arredondado à centena, a conta da tela é a conta da meta', () => {
     // 70 × 35 = 2450 → 2500. Sem desconto: a explicação diz "70 kg × 35 ml" e
     // o número tem que ser esse.
     expect(waterGoalMl({ weightKg: 70, sex: 'm' })).toBe(2500);
@@ -56,7 +56,7 @@ describe('waterGoalMl', () => {
     expect(waterGoalMl({ weightKg: 0, sex: 'f' })).toBeGreaterThanOrEqual(META_MINIMA_ML);
   });
 
-  it('sempre devolve centena redonda — copo não tem precisão de mililitro', () => {
+  it('sempre devolve centena redonda, copo não tem precisão de mililitro', () => {
     for (const kg of [52, 63, 71, 88, 97]) {
       expect(waterGoalMl({ weightKg: kg, sex: 'f' }) % 100).toBe(0);
     }

@@ -14,7 +14,7 @@ describe('tempo decorrido', () => {
     expect(elapsedSeconds(0, T0, T0 + 95_000)).toBe(95);
   });
 
-  it('pausado, devolve só o acumulado — não anda', () => {
+  it('pausado, devolve só o acumulado, não anda', () => {
     expect(elapsedSeconds(140, null, T0)).toBe(140);
     expect(elapsedSeconds(140, null, T0 + 600_000)).toBe(140);
   });

@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 
 class CatalogExercise(BaseModel):
-    """Exercício do catálogo — o universo permitido de prescrição.
+    """Exercício do catálogo, o universo permitido de prescrição.
 
     O agente só pode referenciar `id` que apareça nesta lista. Não é uma
     sugestão do prompt: é checado depois, em `validate.py`, e de novo pela chave

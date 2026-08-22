@@ -20,8 +20,7 @@ const reading = (over: Partial<Reading> = {}): Reading => ({
   bpDiastolic: 76,
   stressScore: 30,
   respRate: 14,
-  source: 'mock',
-  ...over,
+  source: 'mock', ...over,
 });
 
 const sleep: SleepNight = {
@@ -37,8 +36,7 @@ const sleep: SleepNight = {
 const input = (over: Partial<EnergyInput> = {}): EnergyInput => ({
   reading: reading(),
   sleep,
-  hour: 9,
-  ...over,
+  hour: 9, ...over,
 });
 
 describe('calibração', () => {

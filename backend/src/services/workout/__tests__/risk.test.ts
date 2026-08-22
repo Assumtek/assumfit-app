@@ -18,8 +18,7 @@ const BIRTH_1955 = new Date('1955-06-15T00:00:00Z');
 
 const user = (overrides: Partial<UserForContext> = {}): UserForContext => ({
   sex: 'f',
-  birthDate: BIRTH_1990,
-  ...overrides,
+  birthDate: BIRTH_1990, ...overrides,
 });
 
 describe('derivação de flags clínicas', () => {
@@ -33,8 +32,7 @@ describe('derivação de flags clínicas', () => {
     (field) => {
       const flags = deriveFlags({ parq: { [field]: true } }, user());
       expect(flags).toContain('dor-toracica-nao-investigada');
-    },
-  );
+    });
 
   it('remédio de pressão vira hipertensão', () => {
     expect(deriveFlags({ parq: { bloodPressureMedication: true } }, user())).toContain('hipertensao');
@@ -97,8 +95,7 @@ describe('derivação de flags clínicas', () => {
   it('não repete flag vinda de duas origens', () => {
     const flags = deriveFlags(
       { parq: { heartCondition: true }, conditions: ['cardiopatia'] },
-      user(),
-    );
+      user());
     expect(flags.filter((f) => f === 'cardiopata')).toHaveLength(1);
   });
 
@@ -144,12 +141,11 @@ describe('classificação de risco', () => {
     });
 
     it.each([['diabetico'], ['hipertensao'], ['obeso'], ['idoso'], ['glp1'], ['lesao-ortopedica']])(
-      '%s NÃO encaminha — gera de forma cautelosa',
+      '%s NÃO encaminha, gera de forma cautelosa',
       (flag) => {
         expect(isReferral(classify([flag]))).toBe(false);
         expect(canAutoGenerate(classify([flag]))).toBe(true);
-      },
-    );
+      });
   });
 
   it('caminho completo: PAR-Q positivo chega a encaminhamento', () => {
@@ -179,8 +175,7 @@ describe('contexto enviado ao agente', () => {
   it('as restrições carregam o que limita a prescrição', () => {
     const context = buildContext(
       { equipment: 'halteres e banco', minutesPerSession: 30, injuries: 'ombro' },
-      user({ trainPlace: 'casa' }),
-    );
+      user({ trainPlace: 'casa' }));
     expect(context.constraints).toMatchObject({
       local: 'casa',
       equipamento: 'halteres e banco',

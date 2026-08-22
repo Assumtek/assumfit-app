@@ -3,7 +3,7 @@
 **Determinística de propósito.** A partir das flags e do objetivo, GARANTE que
 as referências certas entrem no prompt, lendo os arquivos direto do disco. Não
 depende de busca por similaridade, e é essa a razão de existir: quem é
-cardiopata precisa receber a referência de cardiopatas SEMPRE — não "quando o
+cardiopata precisa receber a referência de cardiopatas SEMPRE, não "quando o
 recuperador achar que é relevante".
 
 Não há banco vetorial aqui. Se um dia entrar busca semântica, ela COMPLEMENTA
@@ -113,7 +113,7 @@ def _modalidades(inp: WorkoutGenerationInput) -> list[str]:
 
 def _esportes_praticados(inp: WorkoutGenerationInput) -> list[str]:
     """Esporte praticado FORA do plano: não vira dia prescrito, mas a
-    referência da modalidade entra — é dela que sai a gestão de carga e
+    referência da modalidade entra, é dela que sai a gestão de carga e
     recuperação em volta desse esporte."""
     return _lista(inp.profile.get("esportes_praticados") or [])
 

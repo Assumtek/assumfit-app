@@ -17,7 +17,7 @@ const vazio: SeriesDaPulseira = {
 };
 
 describe('entregasDaPulseira', () => {
-  it('sem nada, sete linhas com traço — medido ou traço, nunca inventado', () => {
+  it('sem nada, sete linhas com traço, medido ou traço, nunca inventado', () => {
     const e = entregasDaPulseira(vazio, hoje);
     expect(e).toHaveLength(7);
     expect(e.every((x) => x.lastAt === null && x.resumo === null)).toBe(true);
@@ -27,8 +27,7 @@ describe('entregasDaPulseira', () => {
   it('a hora é a da ÚLTIMA amostra de hoje; ontem não conta', () => {
     const e = entregasDaPulseira(
       { ...vazio, hrHistory: [{ at: ontem(23), value: 60 }, { at: h(9), value: 62 }, { at: h(14, 30), value: 70 }] },
-      hoje,
-    );
+      hoje);
     const bat = e.find((x) => x.step === 'heartRate')!;
     expect(bat.lastAt).toBe(h(14, 30));
     expect(bat.resumo).toBe('2 amostras');
@@ -37,8 +36,7 @@ describe('entregasDaPulseira', () => {
   it('pressão usa o carimbo ISO da aferição', () => {
     const e = entregasDaPulseira(
       { ...vazio, pressureHistory: [{ systolic: 120, diastolic: 80, at: new Date(h(8)).toISOString() }] },
-      hoje,
-    );
+      hoje);
     expect(e.find((x) => x.step === 'pressure')!.lastAt).toBe(h(8));
   });
 

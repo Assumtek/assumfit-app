@@ -32,7 +32,7 @@ export function Scale({ position, ticks, color, label }: Props) {
           <YStack
             key={i}
             position="absolute"
-            top={-3}
+            top={-4}
             left={`${(i / (ticks.length - 1)) * 100}%`}
             width={1.5}
             height={10}
@@ -41,9 +41,9 @@ export function Scale({ position, ticks, color, label }: Props) {
         ))}
         <YStack
           position="absolute"
-          top={-5}
+          top={-6}
           left={left}
-          width={3}
+          width={4}
           height={14}
           borderRadius={1.5}
           marginLeft={-1.5}

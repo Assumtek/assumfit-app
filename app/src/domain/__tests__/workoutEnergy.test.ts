@@ -19,7 +19,7 @@ describe('kcalPorMinuto', () => {
     expect(kcalPorMinuto(160, homem)).toBeGreaterThan(kcalPorMinuto(120, homem));
   });
 
-  it('nunca negativo — repouso não "desqueima"', () => {
+  it('nunca negativo, repouso não "desqueima"', () => {
     expect(kcalPorMinuto(40, mulher)).toBe(0);
   });
 
@@ -36,7 +36,7 @@ describe('acumularKcal', () => {
     expect(acumularKcal(10, 140, 60_000, homem)).toBeCloseTo(10 + porMin, 5);
   });
 
-  it('intervalo absurdo é cortado no teto — app suspenso não cobra uma hora', () => {
+  it('intervalo absurdo é cortado no teto, app suspenso não cobra uma hora', () => {
     const teto = acumularKcal(0, 140, INTERVALO_MAXIMO_MS, homem);
     expect(acumularKcal(0, 140, 3_600_000, homem)).toBeCloseTo(teto, 5);
   });

@@ -1,22 +1,18 @@
 import { ladosDoExercicio } from '../exerciseSides';
 
 describe('ladosDoExercicio', () => {
-  it('o alongamento do relato — "gire o corpo para o lado oposto" — tem dois lados', () => {
+  it('o alongamento do relato: "gire o corpo para o lado oposto", tem dois lados', () => {
     expect(
       ladosDoExercicio(
         'Alongamento de Bíceps na Parede',
-        'Apoie a palma da mão na parede com os dedos apontados para baixo e o braço estendido. Gire o corpo para o lado oposto até sentir o alongamento no bíceps e ombro. Segure de 20 a 30 segundos.',
-      ),
-    ).toBe(2);
+        'Apoie a palma da mão na parede com os dedos apontados para baixo e o braço estendido. Gire o corpo para o lado oposto até sentir o alongamento no bíceps e ombro. Segure de 20 a 30 segundos.')).toBe(2);
   });
 
-  it('o quadríceps em pé do plano de teste — "dobre um joelho… mão do mesmo lado" — também', () => {
+  it('o quadríceps em pé do plano de teste: "dobre um joelho… mão do mesmo lado", também', () => {
     expect(
       ladosDoExercicio(
         'Alongamento de Quadríceps em Pé',
-        'Em pé, dobre um joelho levando o calcanhar ao glúteo e segure o pé com a mão do mesmo lado. Mantenha o joelho apontado para baixo e o tronco ereto. Segure de 20 a 30 segundos.',
-      ),
-    ).toBe(2);
+        'Em pé, dobre um joelho levando o calcanhar ao glúteo e segure o pé com a mão do mesmo lado. Mantenha o joelho apontado para baixo e o tronco ereto. Segure de 20 a 30 segundos.')).toBe(2);
   });
 
   it('"unilateral" no nome basta', () => {
@@ -34,7 +30,7 @@ describe('ladosDoExercicio', () => {
     expect(ladosDoExercicio('Corrida leve')).toBe(1);
   });
 
-  it('"lados" no plural não é pista — "mãos nos lados do corpo" é bilateral', () => {
+  it('"lados" no plural não é pista: "mãos nos lados do corpo" é bilateral', () => {
     expect(ladosDoExercicio('Elevação de ombros', 'Braços estendidos nos lados do corpo.')).toBe(1);
   });
 });

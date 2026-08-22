@@ -47,8 +47,8 @@ export function HeartRateScreen() {
    virava a mínima dos últimos dois minutos.
   */
   const valores = historico.pontos.map((p) => p.value);
-  const min = valores.length ? Math.round(Math.min(...valores)) : '—';
-  const max = valores.length ? Math.round(Math.max(...valores)) : '—';
+  const min = valores.length ? Math.round(Math.min(...valores)) : '–';
+  const max = valores.length ? Math.round(Math.max(...valores)) : '–';
 
   return (
     <DetailScreen title="Frequência cardíaca">
@@ -71,7 +71,7 @@ export function HeartRateScreen() {
       />
 
       <YStack marginBottom="$xl">
-        <SectionTitle fontSize={15} marginBottom="$md">
+        <SectionTitle fontSize={16} marginBottom="$md">
           {historico.ehHoje ? 'Medições de hoje' : 'Medições do dia'}
         </SectionTitle>
         <DayChart
@@ -81,7 +81,7 @@ export function HeartRateScreen() {
           vazio={
             historico.ehHoje
               ? 'A pulseira registra o batimento a cada 5 minutos enquanto estiver no pulso.'
-              : 'Nenhuma medição de batimento neste dia — a pulseira provavelmente não estava no pulso.'
+              : 'Nenhuma medição de batimento neste dia, a pulseira provavelmente não estava no pulso.'
           }
         />
       </YStack>
@@ -97,15 +97,15 @@ export function HeartRateScreen() {
         ) : null}
         <Row>
           <Body flex={1}>Mínima</Body>
-          <MetricSm fontSize={17}>{min} bpm</MetricSm>
+          <MetricSm fontSize={18}>{min} bpm</MetricSm>
         </Row>
         <Row>
           <Body flex={1}>Atual</Body>
-          <MetricSm fontSize={17}>{Math.round(latest.heartRate)} bpm</MetricSm>
+          <MetricSm fontSize={18}>{Math.round(latest.heartRate)} bpm</MetricSm>
         </Row>
         <Row last>
           <Body flex={1}>Máxima</Body>
-          <MetricSm fontSize={17}>{max} bpm</MetricSm>
+          <MetricSm fontSize={18}>{max} bpm</MetricSm>
         </Row>
       </Section>
 

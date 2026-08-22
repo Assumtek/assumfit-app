@@ -158,7 +158,7 @@ export function SleepPlanner({ horaDeDormirHabitual }: { horaDeDormirHabitual?: 
       />
 
       <Data>
-        Ciclo médio de {CICLO_MIN} minutos e {LATENCIA_MIN} minutos para pegar no sono — referência
+        Ciclo médio de {CICLO_MIN} minutos e {LATENCIA_MIN} minutos para pegar no sono, referência
         de fisiologia do sono, não medida sua.
       </Data>
     </YStack>
@@ -235,7 +235,7 @@ function Aba({
         backgroundColor={ativa ? '$primarySoft' : 'transparent'}
         alignItems="center"
       >
-        <Text fontSize={13} fontWeight={ativa ? '700' : '400'} color="$foreground">
+        <Text fontSize={14} fontWeight={ativa ? '700' : '400'} color="$foreground">
           {rotulo}
         </Text>
       </YStack>
@@ -317,15 +317,13 @@ async function definirAlarme(opcao: SleepOption, modo: Modo) {
     if (resultado === 'scheduled') {
       Alert.alert(
         'Despertador marcado',
-        `${opcao.label}, pelo próprio iPhone. Dá para ver e ajustar no app Relógio.`,
-      );
+        `${opcao.label}, pelo próprio iPhone. Dá para ver e ajustar no app Relógio.`);
       return;
     }
     if (resultado === 'denied') {
       Alert.alert(
         'Sem permissão para alarmes',
-        `Libere em Ajustes → AssumFit → Alarmes, ou marque ${opcao.label} no app Relógio.`,
-      );
+        `Libere em Ajustes → AssumFit → Alarmes, ou marque ${opcao.label} no app Relógio.`);
       return;
     }
     // 'error' e 'unsupported' caem no caminho de abaixo.
@@ -347,6 +345,5 @@ async function definirAlarme(opcao: SleepOption, modo: Modo) {
           });
         },
       },
-    ],
-  );
+    ]);
 }

@@ -33,7 +33,7 @@ const liters = (ml: number) => (ml / 1000).toFixed(1).replace('.', ',');
 function remainingLabel(remainingMl: number, copoMl: number): string {
   if (remainingMl === 0) return 'Meta batida';
   const glasses = Math.ceil(remainingMl / copoMl);
-  return `Faltam ${liters(remainingMl)} L — cerca de ${glasses} ${glasses === 1 ? 'copo' : 'copos'}`;
+  return `Faltam ${liters(remainingMl)} L, cerca de ${glasses} ${glasses === 1 ? 'copo' : 'copos'}`;
 }
 
 export function HabitsScreen() {
@@ -87,8 +87,7 @@ export function HabitsScreen() {
       setPesoDeclarado(peso != null);
 
       const vinculadas = new Set(
-        sessoes.map((se) => se.workoutExecutionId).filter((id): id is string => !!id),
-      );
+        sessoes.map((se) => se.workoutExecutionId).filter((id): id is string => !!id));
       const minutos =
         execucoes
           .filter((e) => treinoConta(e) && new Date(e.startedAt) >= inicioDoDia)
@@ -167,7 +166,7 @@ export function HabitsScreen() {
             >
               <XStack alignItems="center" gap={6} paddingHorizontal="$md" paddingVertical={6} borderRadius={999} borderWidth={1} borderColor="$border">
                 <Data color="$foreground">{ml} ml</Data>
-                <Icon name="x" size={11} color={colors.textMuted} />
+                <Icon name="x" size={12} color={colors.textMuted} />
               </XStack>
             </Pressable>
           ))}
@@ -188,7 +187,7 @@ export function HabitsScreen() {
       <Sheet open={editandoTotal} onClose={() => setEditandoTotal(false)}>
         <YStack gap="$xs">
           <SectionTitle fontSize={18}>Total de hoje</SectionTitle>
-          <Data>Em mililitros. Os registros individuais de hoje são esquecidos — vale o total.</Data>
+          <Data>Em mililitros. Os registros individuais de hoje são esquecidos, vale o total.</Data>
         </YStack>
         <TextInput
           value={totalRascunho}
@@ -248,7 +247,7 @@ export function HabitsScreen() {
       <Section label="Hoje">
         <Row last>
           <Body flex={1}>Registros de água</Body>
-          <MetricSm fontSize={17}>{today.pours.length}</MetricSm>
+          <MetricSm fontSize={18}>{today.pours.length}</MetricSm>
         </Row>
       </Section>
 
@@ -266,7 +265,7 @@ export function HabitsScreen() {
         <YStack gap="$xs">
           <SectionTitle fontSize={18}>Volume dos recipientes</SectionTitle>
           <Data>
-            Use a medida dos SEUS recipientes — é o que faz o total do dia ser o seu, e não uma
+            Use a medida dos SEUS recipientes, é o que faz o total do dia ser o seu, e não uma
             média de fabricante.
           </Data>
         </YStack>
@@ -347,7 +346,7 @@ function AjusteDeVolume({
           style={{
             width: 64,
             textAlign: 'center',
-            fontSize: 17,
+            fontSize: 18,
             fontWeight: '600',
             fontVariant: ['tabular-nums'],
             color: colors.text,

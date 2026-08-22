@@ -88,7 +88,7 @@ describe('musculação avulsa', () => {
     expect(kcalRangeLabel(musculacao.met, 3_600_000)).toBe('300–425');
   });
 
-  it('dia de musculação DO PLANO continua sem gravador — a série é do treino guiado', () => {
+  it('dia de musculação DO PLANO continua sem gravador, a série é do treino guiado', () => {
     expect(sportForModality('musculacao')).toBeNull();
     expect(sportForModality('mobilidade')).toBeNull();
     expect(sportForModality('corrida')?.kind).toBe('corrida');
@@ -103,8 +103,7 @@ describe('musculação avulsa', () => {
           durationS: 50 * 60,
           workoutExecutionId: null,
         },
-      ],
-    );
+      ]);
     expect(minutos.get('2026-08-12')).toBe(50);
   });
 });
@@ -112,7 +111,7 @@ describe('musculação avulsa', () => {
 describe('busca de modalidade', () => {
   const kinds = (q: string): SportKind[] => searchSports(q).map((s) => s.kind);
 
-  it('acha sem acento e sem caixa — o teclado corrido não digita "ç"', () => {
+  it('acha sem acento e sem caixa, o teclado corrido não digita "ç"', () => {
     expect(kinds('musculacao')).toContain('musculacao');
     expect(kinds('MUSCULAÇÃO')).toContain('musculacao');
     expect(kinds('natacao')).toContain('natacao');
@@ -176,7 +175,7 @@ describe('simplifyTrack', () => {
 describe('valeRetomar', () => {
   const AGORA = 1_700_000_000_000;
 
-  it('sessão de uma hora atrás retoma — é o caso que motivou tudo', () => {
+  it('sessão de uma hora atrás retoma, é o caso que motivou tudo', () => {
     expect(valeRetomar(AGORA - 60 * 60_000, AGORA)).toBe(true);
   });
 

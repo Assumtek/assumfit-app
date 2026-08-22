@@ -46,7 +46,7 @@ export function StressScreen() {
         {/* Uma frase de abertura: o que este número É. O método inteiro fica na
             Ajuda — pedido dos testadores (ago/2026), que queriam entender a
             métrica sem sair da tela. */}
-        <Body marginTop="$md">O firmware da pulseira converte a variabilidade entre batimentos numa escala de 0 a 100. É carga do sistema nervoso, não humor — treino pesado e dia tenso dão número parecido.</Body>
+        <Body marginTop="$md">O firmware da pulseira converte a variabilidade entre batimentos numa escala de 0 a 100. É carga do sistema nervoso, não humor, treino pesado e dia tenso dão número parecido.</Body>
       </YStack>
 
       <DayPickerRow
@@ -89,8 +89,8 @@ export function StressScreen() {
             id="stress"
           />
         </YStack>
-        <Data marginTop="$md" lineHeight={17}>
-          Cada barra é uma hora fechada — picos curtos são normais. O que importa é quanto tempo
+        <Data marginTop="$md" lineHeight={18}>
+          Cada barra é uma hora fechada, picos curtos são normais. O que importa é quanto tempo
           passou acima da linha.
         </Data>
       </Section>

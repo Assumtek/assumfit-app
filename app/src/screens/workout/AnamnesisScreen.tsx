@@ -84,7 +84,7 @@ export function AnamnesisScreen() {
   if (!loaded) {
     return (
       <DetailScreen title="Saúde">
-        <Text fontSize={15} color="$mutedForeground">
+        <Text fontSize={16} color="$mutedForeground">
           Carregando…
         </Text>
       </DetailScreen>
@@ -143,7 +143,7 @@ export function AnamnesisScreen() {
             body={
               'Cada resposta muda o treino: uma condição do coração define o que fica fora, ' +
               'peso e altura mudam a escolha de exercício, e o tempo disponível decide o volume. ' +
-              'Nada aqui é cadastro — se um campo não mudasse nada, ele não estaria na lista.'
+              'Nada aqui é cadastro, se um campo não mudasse nada, ele não estaria na lista.'
             }
           />
         </YStack>
@@ -165,7 +165,7 @@ export function AnamnesisScreen() {
 
         {question.clinical ? (
           <Text
-            fontSize={11}
+            fontSize={12}
             fontWeight="700"
             letterSpacing={1.5}
             color="$primary"
@@ -236,7 +236,7 @@ function SingleChoice({ options, onPick }: { options: Option[]; onPick: (v: unkn
             {option.label}
           </Text>
           {option.detail ? (
-            <Text fontSize={13} color="$mutedForeground">
+            <Text fontSize={14} color="$mutedForeground">
               {option.detail}
             </Text>
           ) : null}
@@ -291,7 +291,7 @@ function MultiChoice({
                 borderColor="$borderStrong"
                 backgroundColor={on ? '$primary' : 'transparent'}
               >
-                {on ? <Icon name="check" size={13} color={colors.ink} /> : null}
+                {on ? <Icon name="check" size={14} color={colors.ink} /> : null}
               </YStack>
             </XStack>
           </Card>

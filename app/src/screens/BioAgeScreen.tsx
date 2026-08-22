@@ -80,12 +80,12 @@ export function BioAgeScreen() {
       <Section label="Aptidão cardiorrespiratória">
         <Row>
           <Body flex={1}>VO₂máx estimado</Body>
-          <MetricSm fontSize={17}>{bio.vo2max?.toFixed(1).replace('.', ',')}</MetricSm>
+          <MetricSm fontSize={18}>{bio.vo2max?.toFixed(1).replace('.', ',')}</MetricSm>
         </Row>
         <Row last>
           <Body flex={1}>Movimento nos últimos 7 dias</Body>
-          <MetricSm fontSize={17}>
-            {minutosAtivos == null ? '—' : `${minutosAtivos} min`}
+          <MetricSm fontSize={18}>
+            {minutosAtivos == null ? '–' : `${minutosAtivos} min`}
           </MetricSm>
         </Row>
       </Section>
@@ -109,8 +109,8 @@ export function BioAgeScreen() {
             id="factors"
           />
         </YStack>
-        <Data marginTop="$md" lineHeight={17}>
-          Cada barra é quanto aquele marcador puxa a sua idade — já com o peso dele na conta
+        <Data marginTop="$md" lineHeight={18}>
+          Cada barra é quanto aquele marcador puxa a sua idade, já com o peso dele na conta
           (aptidão {Math.round((bio.factors.find((f) => f.key === 'fitness')?.weight ?? 0) * 100)}%,
           HRV {Math.round((bio.factors.find((f) => f.key === 'hrv')?.weight ?? 0) * 100)}%, sono{' '}
           {Math.round((bio.factors.find((f) => f.key === 'sleep')?.weight ?? 0) * 100)}%). As barras
@@ -125,7 +125,7 @@ export function BioAgeScreen() {
               <Body color="$foreground">{f.label}</Body>
               <Data>{f.reference}</Data>
             </YStack>
-            <MetricSm fontSize={15}>{f.value}</MetricSm>
+            <MetricSm fontSize={16}>{f.value}</MetricSm>
           </Row>
         ))}
       </Section>
@@ -133,7 +133,7 @@ export function BioAgeScreen() {
       {imc == null ? (
         <Note
           title="Falta o seu peso e a sua altura"
-          body="Sem eles, o cálculo usa um IMC médio no lugar do seu — o resto continua sendo medida sua. Os dois são perguntas da anamnese."
+          body="Sem eles, o cálculo usa um IMC médio no lugar do seu, o resto continua sendo medida sua. Os dois são perguntas da anamnese."
           action={{ label: 'Responder anamnese', onPress: () => navigation.push('Anamnesis') }}
         />
       ) : null}
@@ -166,21 +166,21 @@ export function BioAgeScreen() {
         </Pressable>
         {referencias ? (
           <YStack gap="$md" marginTop="$sm">
-            <Data lineHeight={17}>
+            <Data lineHeight={18}>
               Jurca R, et al. Assessing cardiorespiratory fitness without performing exercise testing.
               Am J Prev Med. 2005;29(3):185-193.
             </Data>
-            <Data lineHeight={17}>
+            <Data lineHeight={18}>
               Kaminsky LA, Arena R, Myers J. Reference standards for cardiorespiratory fitness. Mayo
-              Clin Proc. 2015;90(11):1515-1523 — as medianas por idade e sexo.
+              Clin Proc. 2015;90(11):1515-1523, as medianas por idade e sexo.
             </Data>
-            <Data lineHeight={17}>
+            <Data lineHeight={18}>
               Natarajan A, et al. Heart rate variability with photoplethysmography in 8 million
-              individuals. Lancet Digit Health. 2020;2(12):e650-e657 — a curva de HRV por idade.
+              individuals. Lancet Digit Health. 2020;2(12):e650-e657, a curva de HRV por idade.
             </Data>
-            <Data lineHeight={17}>
+            <Data lineHeight={18}>
               Ohayon MM, et al. Meta-analysis of quantitative sleep parameters. Sleep.
-              2004;27(7):1255-1273 — o sono profundo esperado por idade.
+              2004;27(7):1255-1273, o sono profundo esperado por idade.
             </Data>
           </YStack>
         ) : null}

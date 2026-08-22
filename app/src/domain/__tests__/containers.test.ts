@@ -16,7 +16,7 @@ describe('clampMl', () => {
     expect(clampMl(Number.NaN)).toBe(200);
   });
 
-  it('arredonda fração — mililitro quebrado não existe no toque', () => {
+  it('arredonda fração, mililitro quebrado não existe no toque', () => {
     expect(clampMl(333.7)).toBe(334);
   });
 });

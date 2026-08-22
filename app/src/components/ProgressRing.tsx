@@ -15,7 +15,7 @@ type Props = {
 };
 
 /** Anel de progresso. Traço fino, trilho quase invisível, começa no topo. */
-export function ProgressRing({ fraction, color, size = 44, strokeWidth = 5, children }: Props) {
+export function ProgressRing({ fraction, color, size = 44, strokeWidth = 6, children }: Props) {
   const { colors } = useTheme();
   color = color ?? colors.accent;
   const r = (size - strokeWidth) / 2;

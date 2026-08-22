@@ -45,7 +45,7 @@ export function SyncProgress() {
   if (syncError) {
     return (
       <YStack gap="$sm">
-        <SectionTitle fontSize={15}>A leitura não terminou</SectionTitle>
+        <SectionTitle fontSize={16}>A leitura não terminou</SectionTitle>
         <Body>{syncError}</Body>
       </YStack>
     );
@@ -82,10 +82,10 @@ export function SyncProgress() {
   return (
     <YStack gap="$md">
       <YStack gap="$xs">
-        <SectionTitle fontSize={15}>Lendo a memória da pulseira</SectionTitle>
+        <SectionTitle fontSize={16}>Lendo a memória da pulseira</SectionTitle>
         <Body>
           Ela mede sozinha o dia todo e guarda tudo por dentro. Agora estamos trazendo cada
-          grandeza, uma por vez — leva cerca de um minuto. Pode manter a tela aberta.
+          grandeza, uma por vez, leva cerca de um minuto. Pode manter a tela aberta.
         </Body>
       </YStack>
 
@@ -127,9 +127,9 @@ export function SyncProgress() {
         A régua no acento: é o único lugar da peça em que a cor da marca aparece
         como dado, e ela mostra a mesma verdade da lista num traço só.
       */}
-      <YStack height={3} borderRadius={2} backgroundColor="$border" overflow="hidden">
+      <YStack height={4} borderRadius={2} backgroundColor="$border" overflow="hidden">
         <YStack
-          height={3}
+          height={4}
           borderRadius={2}
           backgroundColor="$primary"
           width={`${Math.round((atual.done / atual.total) * 100)}%`}

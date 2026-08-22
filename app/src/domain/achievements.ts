@@ -54,8 +54,7 @@ export function weekStreak(executions: Execution[], now: number): number {
   const semanas = new Set(
     executions
       .filter((e) => e.status === 'FINISHED')
-      .map((e) => weekStart(new Date(e.startedAt).getTime())),
-  );
+      .map((e) => weekStart(new Date(e.startedAt).getTime())));
   if (semanas.size === 0) return 0;
 
   const atual = weekStart(now);
@@ -104,7 +103,7 @@ export function achievementsFor(executions: Execution[], now: number): Achieveme
     lista.push({
       key: `streak-${sequencia}`,
       title: `${sequencia} semanas seguidas`,
-      detail: 'Constância vale mais que intensidade — é ela que muda o corpo.',
+      detail: 'Constância vale mais que intensidade, é ela que muda o corpo.',
       // Nova quando a semana corrente acabou de entrar na conta: a sessão de
       // hoje é a primeira desta semana.
       fresh: concluidos.filter((e) => weekStart(new Date(e.startedAt).getTime()) === weekStart(now)).length === 1,
@@ -122,9 +121,7 @@ export function achievementsFor(executions: Execution[], now: number): Achieveme
   }
   const estaSemana = porSemana.get(weekStart(now)) ?? 0;
   const maiorAnterior = Math.max(
-    0,
-    ...[...porSemana.entries()].filter(([s]) => s !== weekStart(now)).map(([, n]) => n),
-  );
+    0, ...[...porSemana.entries()].filter(([s]) => s !== weekStart(now)).map(([, n]) => n));
   if (estaSemana > maiorAnterior && estaSemana >= 3) {
     lista.push({
       key: `melhor-semana-${estaSemana}`,

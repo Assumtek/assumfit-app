@@ -201,11 +201,10 @@ function useSheet() {
         tagline: {
           marginTop: 32,
           letterSpacing: 2,
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: '500',
           color: colors.textFaint,
         },
       }) as const,
-    [colors],
-  );
+    [colors]);
 }

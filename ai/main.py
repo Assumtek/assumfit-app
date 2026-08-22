@@ -1,7 +1,7 @@
 """API do modelo AssumFit.
 
 Serviço sem estado: recebe o que precisa no corpo, calcula e devolve. Quem lê e
-escreve no banco é o backend Node — manter a persistência num lugar só evita
+escreve no banco é o backend Node, manter a persistência num lugar só evita
 duas conexões concorrentes ao mesmo dado e mantém este serviço trivial de testar.
 """
 
@@ -142,19 +142,19 @@ def _redigir(
     today=None,
     recent: list[str] | tuple[str, ...] = (),
 ):
-    """Molde primeiro, LLM por cima — nesta ordem, sempre.
+    """Molde primeiro, LLM por cima, nesta ordem, sempre.
 
     O determinístico é calculado ANTES de qualquer chamada de rede, e é o que
     volta se o modelo falhar, demorar ou responder algo implausível. Assim a
     tela inicial nunca depende de a API estar no ar.
 
-    O LLM não recalcula nada: recebe os fatos que o molde já apurou — score,
-    sinal dominante com o valor formatado, transição — e apenas os redige.
+    O LLM não recalcula nada: recebe os fatos que o molde já apurou, score,
+    sinal dominante com o valor formatado, transição, e apenas os redige.
 
     `recent` chega por parâmetro, e isto tem história: a primeira versão do
     anti-repetição leu `data.recent_insights` aqui dentro, onde `data` não
     existe. `NameError` em TODA chamada de `/energy/insight` por um dia
-    inteiro (21/08) — o backend recebia 500, o app caía no molde local, e a
+    inteiro (21/08), o backend recebia 500, o app caía no molde local, e a
     home mostrou a mesma frase para todo mundo. Nenhum teste chamava o
     endpoint de ponta a ponta; agora `tests/test_main_insight.py` chama.
     """
@@ -186,7 +186,7 @@ def _redigir(
 
 
 def _par(energy, key):
-    """Nome legível e valor formatado do componente — o que o modelo pode citar."""
+    """Nome legível e valor formatado do componente, o que o modelo pode citar."""
     for c in energy.components:
         if c.key == key:
             return (c.label, c.value)
@@ -231,7 +231,7 @@ class MorningInput(BaseModel):
 
 @app.post("/insights/morning")
 def morning(data: MorningInput) -> dict:
-    """O texto da notificação das 7h30 — redigido pelo modelo, com molde de reserva.
+    """O texto da notificação das 7h30, redigido pelo modelo, com molde de reserva.
 
     Devolve `source` para o chamador saber o que recebeu: numa notificação
     agendada, "veio do molde" e "veio do modelo" são indistinguíveis na tela, e
@@ -254,7 +254,7 @@ class BioAgeInput(BaseModel):
 
     `hrv_ms` e `deep_sleep_pct` são opcionais desde a reescrita de ago/2026:
     sinal ausente sai da média em vez de valer zero. O que virou indispensável
-    é a FC de repouso — sem ela não há aptidão, que é o eixo principal.
+    é a FC de repouso, sem ela não há aptidão, que é o eixo principal.
 
     `spo2_pct` e `temp_range_c` continuam aceitos e são IGNORADOS: entravam no
     cálculo antigo com peso inventado, e não há norma por idade que sustente
@@ -318,7 +318,7 @@ class CorrelationInput(BaseModel):
 def insights(data: CorrelationInput) -> dict:
     """Só devolve o que passa em amostra mínima e significância.
 
-    Lista vazia é resposta legítima — e preferível a um insight fabricado sobre
+    Lista vazia é resposta legítima, e preferível a um insight fabricado sobre
     coincidência, que o usuário usaria para mudar hábito.
     """
     found = [
@@ -453,7 +453,7 @@ from nutrition.service import (  # noqa: E402
 @app.post("/nutrition/analyze")
 async def nutrition_analyze(data: AnalyzeMealInput) -> JSONResponse:
     """Analisa a foto de um prato. NÃO é fail-soft: o backend precisa distinguir
-    sucesso de falha para oferecer retry — foto sem comida é sucesso, não erro."""
+    sucesso de falha para oferecer retry, foto sem comida é sucesso, não erro."""
     try:
         result = await analyze_meal(data)
     except MealAnalysisError as exc:
@@ -467,13 +467,13 @@ async def nutrition_analyze(data: AnalyzeMealInput) -> JSONResponse:
 
 @app.post("/nutrition/recompute")
 def nutrition_recompute(data: RecomputeInput) -> JSONResponse:
-    """Recalcula uma refeição editada pela TACO — determinístico, sem modelo."""
+    """Recalcula uma refeição editada pela TACO, determinístico, sem modelo."""
     return JSONResponse(recompute_foods(data).model_dump(mode="json"))
 
 
 @app.get("/nutrition/foods")
 def nutrition_foods(q: str = "") -> JSONResponse:
-    """Autocompletar da TACO para o "adicionar alimento" — kcal por 100 g."""
+    """Autocompletar da TACO para o "adicionar alimento", kcal por 100 g."""
     from nutrition.taco import search_foods
 
     return JSONResponse({"foods": search_foods(q)})

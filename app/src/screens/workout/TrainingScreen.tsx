@@ -210,10 +210,8 @@ export function TrainingScreen() {
   const flat = useMemo(
     () =>
       (workout?.phases ?? []).flatMap((phase) =>
-        phase.exercises.map((exercise) => ({ exercise, phase: phase.type as PhaseType })),
-      ),
-    [workout],
-  );
+        phase.exercises.map((exercise) => ({ exercise, phase: phase.type as PhaseType }))),
+    [workout]);
 
   const current = flat[index];
 
@@ -299,7 +297,7 @@ export function TrainingScreen() {
   if (!execution || !workout || !current) {
     return (
       <YStack flex={1} backgroundColor="$background" alignItems="center" justifyContent="center">
-        <Text fontSize={15} color="$mutedForeground">
+        <Text fontSize={16} color="$mutedForeground">
           Carregando treino…
         </Text>
       </YStack>
@@ -479,7 +477,7 @@ export function TrainingScreen() {
           >
             <Icon name="clock" size={16} color={colors.text} />
             <Text
-              fontSize={15}
+              fontSize={16}
               fontWeight="500"
               color="$foreground"
               // Dígitos tabulares: sem eles a largura muda a cada segundo e o
@@ -500,11 +498,11 @@ export function TrainingScreen() {
               paddingVertical="$md"
             >
               <Icon name="heart" size={16} color={colors.text} />
-              <Text fontSize={15} fontWeight="500" color="$foreground" fontVariant={['tabular-nums']}>
+              <Text fontSize={16} fontWeight="500" color="$foreground" fontVariant={['tabular-nums']}>
                 {Math.round(bpmAoVivo)}
               </Text>
               {pesoKg != null ? (
-                <Text fontSize={13} color="$mutedForeground" fontVariant={['tabular-nums']}>
+                <Text fontSize={14} color="$mutedForeground" fontVariant={['tabular-nums']}>
                   · {Math.round(kcal)} kcal
                 </Text>
               ) : null}
@@ -586,25 +584,25 @@ export function TrainingScreen() {
           {exercise.name}
         </Text>
 
-        <Text fontSize={13} color="$mutedForeground" textAlign="center" marginTop="$md">
+        <Text fontSize={14} color="$mutedForeground" textAlign="center" marginTop="$md">
           {infoLine(exercise, sets.length)}
         </Text>
 
         {exercise.description ? (
-          <Text fontSize={13} color="$mutedForeground" textAlign="center" marginTop="$xl">
+          <Text fontSize={14} color="$mutedForeground" textAlign="center" marginTop="$xl">
             {exercise.description}
           </Text>
         ) : null}
 
         {exercise.notes ? (
-          <Text fontSize={13} color="$mutedForeground" textAlign="center" marginTop="$md">
+          <Text fontSize={14} color="$mutedForeground" textAlign="center" marginTop="$md">
             {exercise.notes}
           </Text>
         ) : null}
 
         <YStack marginTop="$xxl">
           <XStack alignItems="center" justifyContent="space-between" marginBottom="$md">
-            <Text fontSize={15} fontWeight="500" color="$foreground">
+            <Text fontSize={16} fontWeight="500" color="$foreground">
               Séries ({doneCount}/{sets.length})
             </Text>
             <XStack gap="$sm">
@@ -622,7 +620,7 @@ export function TrainingScreen() {
               key={i}
               number={i + 1}
               prescribedReps={
-                exercise.sets[i]?.repetitions ?? exercise.sets[0]?.repetitions ?? '—'
+                exercise.sets[i]?.repetitions ?? exercise.sets[0]?.repetitions ?? '–'
               }
               state={set}
               isActive={i === activeIndex}
@@ -819,7 +817,7 @@ function AcaoDoExercicio({
         borderColor="$border"
       >
         <Icon name={icone} size={14} color={colors.textMuted} />
-        <Text fontSize={13} fontWeight="500" color="$mutedForeground">
+        <Text fontSize={14} fontWeight="500" color="$mutedForeground">
           {rotulo}
         </Text>
       </XStack>

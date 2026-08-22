@@ -48,7 +48,7 @@ const BANNERS: Banner[] = [
   {
     key: 'esporte',
     titulo: 'Corra com GPS e batimento',
-    corpo: 'Percurso, ritmo e caloria — o mapa fica no seu histórico.',
+    corpo: 'Percurso, ritmo e caloria, o mapa fica no seu histórico.',
     foto: require('../../assets/fotos/banner/corrida.jpg'),
     rota: 'Sport',
   },
@@ -99,8 +99,7 @@ export function HomeBanners({ aoAbrir }: { aoAbrir: (rota: string) => void }) {
   const aoTerminarGesto = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const p = Math.max(
       0,
-      Math.min(BANNERS.length - 1, Math.round(e.nativeEvent.contentOffset.x / larguraPagina)),
-    );
+      Math.min(BANNERS.length - 1, Math.round(e.nativeEvent.contentOffset.x / larguraPagina)));
     paginaRef.current = p;
     setPagina(p);
     arrastando.current = false;
@@ -141,7 +140,7 @@ export function HomeBanners({ aoAbrir }: { aoAbrir: (rota: string) => void }) {
 
                 <YStack flex={1} justifyContent="flex-end" padding="$lg" gap={2}>
                   <Text
-                    fontSize={19}
+                    fontSize={20}
                     fontWeight="800"
                     letterSpacing={-0.4}
                     numberOfLines={1}
@@ -150,7 +149,7 @@ export function HomeBanners({ aoAbrir }: { aoAbrir: (rota: string) => void }) {
                     {banner.titulo}
                   </Text>
                   <XStack alignItems="center" gap="$sm">
-                    <Text fontSize={13} flex={1} numberOfLines={2} style={{ color: TINTA_FRACA }}>
+                    <Text fontSize={14} flex={1} numberOfLines={2} style={{ color: TINTA_FRACA }}>
                       {banner.corpo}
                     </Text>
                     <Icon name="arrowRight" size={16} color={TINTA} />
@@ -169,7 +168,7 @@ export function HomeBanners({ aoAbrir }: { aoAbrir: (rota: string) => void }) {
             key={banner.key}
             width={6}
             height={6}
-            borderRadius={3}
+            borderRadius={4}
             backgroundColor={i === pagina ? '$mutedForeground' : '$track'}
           />
         ))}

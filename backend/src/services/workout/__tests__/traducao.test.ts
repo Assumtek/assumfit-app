@@ -25,8 +25,8 @@ const BASE = {
 };
 
 describe('tradução da conversa para a anamnese', () => {
-  it('pergunta pulada ("—") não vira lesão', () => {
-    const anamnese = traduzirParaAnamnese({ ...BASE, boneJointWhere: '—', cirurgias: '—' });
+  it('pergunta pulada ("–") não vira lesão', () => {
+    const anamnese = traduzirParaAnamnese({ ...BASE, boneJointWhere: '–', cirurgias: '–' });
     expect(anamnese.injuries).toBeNull();
   });
 
@@ -63,50 +63,46 @@ describe('tradução da conversa para a anamnese', () => {
     expect(flags).toContain('lesao-ortopedica');
   });
 
-  it('perfil limpo não carrega flag de lesão — o caso da rodada 1', () => {
-    const anamnese = traduzirParaAnamnese({ ...BASE, injuries: '—', cirurgias: '—' });
+  it('perfil limpo não carrega flag de lesão, o caso da rodada 1', () => {
+    const anamnese = traduzirParaAnamnese({ ...BASE, injuries: '–', cirurgias: '–' });
     const flags = deriveFlags(parseAnamnesis(anamnese), { sex: 'f', birthDate: new Date('1996-01-01') });
     expect(flags).not.toContain('lesao-ortopedica');
   });
 
   it('placeholder embrulhado não vaza para as notas', () => {
-    const anamnese = traduzirParaAnamnese({ ...BASE, observacaoFinal: '—', alimentacao: '—' });
-    expect(anamnese.notes ?? '').not.toContain('—');
+    const anamnese = traduzirParaAnamnese({ ...BASE, observacaoFinal: '–', alimentacao: '–' });
+    expect(anamnese.notes ?? '').not.toContain('–');
   });
 });
 
-describe('modalidades do plano — a decisão da pessoa na anamnese', () => {
+describe('modalidades do plano, a decisão da pessoa na anamnese', () => {
   it('sem esporte declarado, o plano é de musculação (comportamento antigo)', () => {
     expect(modalidadesDoPlano({ ...BASE })).toEqual(['musculacao']);
   });
 
   it('"Musculação e meu esporte" une as duas modalidades', () => {
     expect(
-      modalidadesDoPlano({ ...BASE, praticaEsporte: 'Sim', qualEsporte: 'Corrida', planoCobre: 'Musculação e meu esporte' }),
-    ).toEqual(['musculacao', 'corrida']);
+      modalidadesDoPlano({ ...BASE, praticaEsporte: 'Sim', qualEsporte: 'Corrida', planoCobre: 'Musculação e meu esporte' })).toEqual(['musculacao', 'corrida']);
   });
 
   it('"Só meu esporte" gera plano só do esporte', () => {
     expect(
-      modalidadesDoPlano({ ...BASE, praticaEsporte: 'Sim', qualEsporte: 'Natação', planoCobre: 'Só meu esporte' }),
-    ).toEqual(['natacao']);
+      modalidadesDoPlano({ ...BASE, praticaEsporte: 'Sim', qualEsporte: 'Natação', planoCobre: 'Só meu esporte' })).toEqual(['natacao']);
   });
 
   it('esporte declarado mas pergunta pulada mantém o padrão de musculação', () => {
     expect(
-      modalidadesDoPlano({ ...BASE, praticaEsporte: 'Sim', qualEsporte: 'Futebol' }),
-    ).toEqual(['musculacao']);
+      modalidadesDoPlano({ ...BASE, praticaEsporte: 'Sim', qualEsporte: 'Futebol' })).toEqual(['musculacao']);
   });
 
-  it('quem NÃO pratica esporte ainda pode pedir um plano de esporte — o caso do primeiro dia', () => {
+  it('quem NÃO pratica esporte ainda pode pedir um plano de esporte, o caso do primeiro dia', () => {
     expect(
       modalidadesDoPlano({
         ...BASE,
         praticaEsporte: 'Não',
         planoCobre: 'Só um esporte',
         esporteDoPlano: 'Corrida',
-      }),
-    ).toEqual(['corrida']);
+      })).toEqual(['corrida']);
   });
 
   it('o esporte do plano vence o esporte praticado', () => {
@@ -117,8 +113,7 @@ describe('modalidades do plano — a decisão da pessoa na anamnese', () => {
         qualEsporte: 'Futebol',
         planoCobre: 'Musculação e um esporte',
         esporteDoPlano: 'Corrida',
-      }),
-    ).toEqual(['musculacao', 'corrida']);
+      })).toEqual(['musculacao', 'corrida']);
   });
 
   it('a decisão viaja na anamnese em planModalities', () => {

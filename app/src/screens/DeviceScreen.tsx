@@ -77,8 +77,7 @@ export function DeviceScreen() {
         sleep,
         syncedAt: lastSyncAt,
       }),
-    [hrHistory, hrvHistory, stressHistory, spo2History, pressureHistory, stepsToday, sleep, lastSyncAt],
-  );
+    [hrHistory, hrvHistory, stressHistory, spo2History, pressureHistory, stepsToday, sleep, lastSyncAt]);
   const chegaram = chegaramHoje(razao);
   const faltam = faltamHoje(razao);
 
@@ -128,8 +127,7 @@ export function DeviceScreen() {
       setCalibracao(
         ok
           ? 'Calibração concluída. As medições sob demanda devem voltar a devolver valor.'
-          : 'A calibração não concluiu. Vista a pulseira firme, fique parado e tente de novo.',
-      );
+          : 'A calibração não concluiu. Vista a pulseira firme, fique parado e tente de novo.');
     } catch {
       setCalibracao('A calibração não concluiu. Vista a pulseira firme, fique parado e tente de novo.');
     } finally {
@@ -146,7 +144,7 @@ export function DeviceScreen() {
       <DetailScreen title="Dispositivo">
         <Note
           title="Nenhuma pulseira pareada"
-          body="Você está usando o app sem a pulseira. Quando ela chegar, conecte aqui — as medições começam sozinhas e preenchem as telas."
+          body="Você está usando o app sem a pulseira. Quando ela chegar, conecte aqui, as medições começam sozinhas e preenchem as telas."
         />
         <YStack marginTop="$xl">
           <Button title="Conectar pulseira" onPress={() => navigation.navigate('Connect' as never)} />
@@ -169,9 +167,9 @@ export function DeviceScreen() {
         última leitura são o contexto dele.
       */}
       <ReadoutCluster>
-        <Readout valor={battery != null ? String(battery) : '—'} unidade={battery != null ? '%' : undefined} rotulo="bateria" />
+        <Readout valor={battery != null ? String(battery) : '–'} unidade={battery != null ? '%' : undefined} rotulo="bateria" />
         <Readout valor={`${chegaram}`} unidade={`de ${razao.length}`} rotulo="chegou hoje" />
-        <Readout valor={lastSyncAt ? horaLocal(lastSyncAt) : '—'} rotulo="sincronizado" />
+        <Readout valor={lastSyncAt ? horaLocal(lastSyncAt) : '–'} rotulo="sincronizado" />
       </ReadoutCluster>
 
       <YStack marginTop="$lg" gap="$lg" paddingBottom="$sm">
@@ -217,7 +215,7 @@ export function DeviceScreen() {
                 title="Não deu para reconectar"
                 body={
                   connectionReason ??
-                  'Confira se a pulseira está por perto e carregada, e se o Bluetooth do iPhone está ligado — aí tente de novo.'
+                  'Confira se a pulseira está por perto e carregada, e se o Bluetooth do iPhone está ligado, aí tente de novo.'
                 }
               />
             ) : !reconectando && !conectando ? (
@@ -255,7 +253,7 @@ export function DeviceScreen() {
                 <Body color={e.lastAt != null || e.resumo || viva ? '$foreground' : '$mutedForeground'}>{e.label}</Body>
                 {e.resumo ? <Data>{e.resumo}</Data> : null}
               </YStack>
-              <Data fontSize={13} color={e.lastAt != null ? '$foreground' : '$mutedForeground'} fontVariant={['tabular-nums']}>
+              <Data fontSize={14} color={e.lastAt != null ? '$foreground' : '$mutedForeground'} fontVariant={['tabular-nums']}>
                 {viva ? 'lendo…' : e.lastAt != null ? horaLocal(e.lastAt) : e.resumo ? 'hoje' : 'sem medição'}
               </Data>
             </Row>
@@ -264,7 +262,7 @@ export function DeviceScreen() {
         {sincronizando ? (
           <Body marginTop="$lg">
             A pulseira mede sozinha o dia todo e guarda tudo por dentro. Trazer cada grandeza leva cerca de um
-            minuto — pode manter a tela aberta.
+            minuto, pode manter a tela aberta.
           </Body>
         ) : faltam.length > 0 && conectada ? (
           <Body marginTop="$lg">{explicacaoDoQueFalta(faltam)}</Body>
@@ -316,19 +314,19 @@ export function DeviceScreen() {
       <Section label="Pulseira">
         <Row>
           <Body flex={1}>Modelo</Body>
-          <Data fontSize={13} color="$foreground">AssumFit Watch</Data>
+          <Data fontSize={14} color="$foreground">AssumFit Watch</Data>
         </Row>
         <Row>
           <Body flex={1}>Identificador</Body>
-          <Data fontSize={13} color="$foreground">{pairedDeviceId ?? '—'}</Data>
+          <Data fontSize={14} color="$foreground">{pairedDeviceId ?? '–'}</Data>
         </Row>
         <Row>
           <Body flex={1}>Estado</Body>
-          <Data fontSize={13} color="$foreground">{conectada ? 'Conectada' : conectando ? 'Reconectando…' : 'Desconectada'}</Data>
+          <Data fontSize={14} color="$foreground">{conectada ? 'Conectada' : conectando ? 'Reconectando…' : 'Desconectada'}</Data>
         </Row>
         <Row last>
           <Body flex={1}>Origem dos dados</Body>
-          <Data fontSize={13} color="$foreground">{latest?.source === 'mock' ? 'Simulado' : 'Sensor'}</Data>
+          <Data fontSize={14} color="$foreground">{latest?.source === 'mock' ? 'Simulado' : 'Sensor'}</Data>
         </Row>
       </Section>
 

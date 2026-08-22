@@ -48,8 +48,7 @@ export function useBioAge(): { bio: BioAge | null; imc: number | null; minutosAt
     if (peso && altura && altura >= 100) setImc(peso / (altura / 100) ** 2);
 
     const vinculadas = new Set(
-      sessoes.map((s) => s.workoutExecutionId).filter((id): id is string => !!id),
-    );
+      sessoes.map((s) => s.workoutExecutionId).filter((id): id is string => !!id));
     const minTreino = execucoes
       .filter((e) => treinoConta(e) && Date.parse(e.startedAt) >= desde)
       .filter((e) => !vinculadas.has(e.id))

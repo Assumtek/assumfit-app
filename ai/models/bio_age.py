@@ -1,4 +1,4 @@
-"""Idade biológica — idade fisiológica estimada a partir de literatura revisada.
+"""Idade biológica, idade fisiológica estimada a partir de literatura revisada.
 
 O que este número É: a idade em que os marcadores medidos desta pessoa seriam
 a MEDIANA da população. O que ele NÃO é: um relógio epigenético, um exame ou
@@ -7,19 +7,19 @@ também.
 
 ## O caminho da conta
 
-1. **VO2max estimado** — equação de não-exercício de Jurca et al. (2005),
+1. **VO2max estimado**, equação de não-exercício de Jurca et al. (2005),
    que usa sexo, idade, IMC, FC de repouso e nível de atividade física. É a
    única das quatro entradas que o AssumFit não precisa pedir: a pulseira mede
    a FC de repouso e o app já conta os minutos de treino da semana.
-2. **Idade da aptidão** — a idade cuja mediana de VO2max (registro FRIEND,
+2. **Idade da aptidão**, a idade cuja mediana de VO2max (registro FRIEND,
    Kaminsky et al. 2015) iguala o VO2max estimado. É o mesmo raciocínio do
    "fitness age" do NTNU, com as normas americanas medidas em esteira.
-3. **Idade do HRV** — a relação do RMSSD com a idade é uma lei de potência
+3. **Idade do HRV**, a relação do RMSSD com a idade é uma lei de potência
    medida por PPG de pulseira em 8 milhões de pessoas (Natarajan et al. 2020),
    e por isso pode ser invertida analiticamente.
-4. **Idade do sono profundo** — o N3 cai cerca de 2 pontos percentuais por
+4. **Idade do sono profundo**, o N3 cai cerca de 2 pontos percentuais por
    década até os 60 anos (Ohayon et al. 2004).
-5. **Combinação** — média ponderada das idades equivalentes que existem, com
+5. **Combinação**, média ponderada das idades equivalentes que existem, com
    limite por fator e no total.
 
 A versão anterior deste arquivo comparava percentis INVENTADOS (o próprio
@@ -30,7 +30,7 @@ plausível e não significava nada.
 ## O que mudou no contrato
 
 `calc_bio_age` passou a aceitar `bmi` e `weekly_active_min`, e a FC de repouso
-virou obrigatória de fato — sem ela não há aptidão, que é o eixo principal.
+virou obrigatória de fato, sem ela não há aptidão, que é o eixo principal.
 SpO₂ e temperatura saíram do cálculo: não achei norma por idade que suporte
 converter qualquer um dos dois em anos, e fator sem fonte é exatamente o que
 esta reescrita veio remover. Os dois continuam medidos e exibidos nas telas
@@ -100,7 +100,7 @@ def activity_level(weekly_active_min: float | None) -> int:
     """Minutos semanais registrados → categoria SR-PA de Jurca (0 a 4).
 
     O artigo pergunta por autorrelato; aqui a categoria sai do que foi de fato
-    registrado no app — treino do plano concluído mais sessão de esporte. É
+    registrado no app, treino do plano concluído mais sessão de esporte. É
     dado medido no lugar de lembrança, e a única liberdade que tomamos com a
     equação original.
     """
@@ -137,7 +137,7 @@ def fitness_age(vo2max: float, sex: Sex) -> float:
     """A idade cuja mediana populacional de VO2max é este valor (FRIEND).
 
     Interpola linearmente entre os pontos médios das décadas e extrapola pela
-    inclinação das pontas — quem tem VO2max acima da mediana dos 20 anos não
+    inclinação das pontas, quem tem VO2max acima da mediana dos 20 anos não
     "não tem idade": tem uma idade estimada abaixo de 24,5, e o clamp global
     cuida do resto.
     """
@@ -177,7 +177,7 @@ def deep_sleep_age(deep_fraction: float) -> float:
 
     A relação vale até os 60 anos; depois o N3 estabiliza. Acima do platô a
     função devolve a própria idade de platô, porque ali o marcador deixa de
-    discriminar idade — afirmar 80 anos a partir de N3 baixo seria ler a
+    discriminar idade, afirmar 80 anos a partir de N3 baixo seria ler a
     curva onde ela não existe.
     """
     esperado_no_plato = _SONO["fracao_aos_30"] - _SONO["queda_por_ano"] * (
@@ -263,21 +263,21 @@ def calc_bio_age(
         Factor(
             "hrv",
             "HRV",
-            "—" if hrv_ms is None else f"{round(hrv_ms)} ms",
+            "–" if hrv_ms is None else f"{round(hrv_ms)} ms",
             f"típico aos {real_age}: {_hrv_tipico(real_age, sex):.0f} ms",
             0.0 if idade_hrv is None else idade_hrv - real_age,
         ),
         Factor(
             "sleep",
             "Sono profundo",
-            "—" if deep_sleep_pct is None else f"{round(deep_sleep_pct * 100)}%",
+            "–" if deep_sleep_pct is None else f"{round(deep_sleep_pct * 100)}%",
             f"típico aos {real_age}: {_sono_tipico(real_age) * 100:.0f}%",
             0.0 if idade_sono is None else idade_sono - real_age,
         ),
         Factor(
             "activity",
             "Atividade semanal",
-            "—" if weekly_active_min is None else f"{round(weekly_active_min)} min",
+            "–" if weekly_active_min is None else f"{round(weekly_active_min)} min",
             descricao_atividade,
             # A atividade não é um fator à parte: ela ENTRA na aptidão, e
             # somá-la de novo seria contá-la duas vezes.
@@ -295,7 +295,7 @@ def calc_bio_age(
 
 
 def _mediana_na_idade(age: int, sex: Sex) -> float:
-    """A mediana de VO2max da idade da pessoa — a régua contra a qual ela é lida."""
+    """A mediana de VO2max da idade da pessoa, a régua contra a qual ela é lida."""
     idades = _VO2_NORMA["idade_central"]
     medianas = _VO2_NORMA[sex]
     if age <= idades[0]:

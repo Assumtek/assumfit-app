@@ -370,6 +370,5 @@ export function impliesReferral(answers: Anamnesis): boolean {
       parq.chestPain ||
       parq.dizziness ||
       answers.pregnant ||
-      (answers.conditions ?? []).includes('cardiopatia'),
-  );
+      (answers.conditions ?? []).includes('cardiopatia'));
 }

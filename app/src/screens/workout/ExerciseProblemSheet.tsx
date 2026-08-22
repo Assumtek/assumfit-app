@@ -114,7 +114,7 @@ export function ExerciseProblemSheet({
           ))}
         </YStack>
 
-        <Data>Sinalizar não altera seu plano — vale para a sessão de hoje.</Data>
+        <Data>Sinalizar não altera seu plano, vale para a sessão de hoje.</Data>
       </>
     </Sheet>
   );

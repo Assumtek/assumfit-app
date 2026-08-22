@@ -257,7 +257,7 @@ export function TimedExercise({
 
       {concluido ? (
         <XStack alignItems="center" gap="$xs" marginTop="$sm">
-          <Icon name="check" size={13} color={colors.accent} />
+          <Icon name="check" size={14} color={colors.accent} />
           <Data color="$primary">tempo cumprido</Data>
         </XStack>
       ) : null}

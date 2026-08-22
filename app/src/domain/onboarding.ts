@@ -126,7 +126,7 @@ export function nextQuestion(answers: Lifestyle): Question | null {
           : 'Quantas horas por dia você fica em pé?',
       hint:
         posture === 'sitting'
-          ? 'Sem se levantar de verdade — ir ao banheiro não conta como pausa.'
+          ? 'Sem se levantar de verdade, ir ao banheiro não conta como pausa.'
           : 'Somando o dia todo, mesmo com pausas curtas.',
       options: [2, 4, 6, 8, 10].map((h) => ({ value: h, label: `${h}h`, detail: h >= 8 ? 'ou mais' : undefined })),
     };
@@ -192,7 +192,7 @@ export function nextQuestion(answers: Lifestyle): Question | null {
         id: 'blocker',
         kind: 'single',
         title: 'O que mais atrapalha hoje?',
-        hint: 'Sem julgamento — muda só o tipo de sugestão que o app faz.',
+        hint: 'Sem julgamento, muda só o tipo de sugestão que o app faz.',
         options: [
           { value: 'tempo', label: 'Falta de tempo' },
           { value: 'disposição', label: 'Falta de disposição' },
@@ -317,7 +317,7 @@ export function summarize(answers: Lifestyle): string[] {
   }
 
   if (answers.postureHours && answers.workPosture === 'sitting' && answers.postureHours >= 6) {
-    lines.push(`São ${answers.postureHours} horas seguidas sentado — o app vai lembrar de quebrar esse bloco.`);
+    lines.push(`São ${answers.postureHours} horas seguidas sentado, o app vai lembrar de quebrar esse bloco.`);
   }
 
   if (answers.exercises === 'none') {

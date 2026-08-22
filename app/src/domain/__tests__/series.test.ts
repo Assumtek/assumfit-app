@@ -116,7 +116,7 @@ describe('faixaInicial', () => {
     expect(faixaInicial([em(30), em(40)], AGORA)).toBe('7D');
   });
 
-  it('UMA medição já escolhe a faixa — ela vira ponto no gráfico', () => {
+  it('UMA medição já escolhe a faixa, ela vira ponto no gráfico', () => {
     // Exigir duas escondia a única medição que existia, justamente de quem
     // acabou de medir pela primeira vez e quer ver onde caiu.
     expect(faixaInicial([em(2)], AGORA)).toBe('6H');
@@ -153,7 +153,7 @@ describe('série no TETO: medição nova precisa ser detectável', () => {
     value: 50,
   }));
 
-  it('o tamanho NÃO muda — é por isso que contar itens mentia', () => {
+  it('o tamanho NÃO muda, é por isso que contar itens mentia', () => {
     const depois = comAmostraDeHrv(cheia, { hrvMs: 61, hrvAt: AGORA, recordedAt: AGORA }, LIMITE);
     expect(depois).toHaveLength(cheia.length);
   });
@@ -191,8 +191,7 @@ describe('medidoEm', () => {
 
   it('ano diferente aparece, porque aí ele informa', () => {
     expect(medidoEm(new Date(2025, 11, 31, 23, 40).getTime(), agora)).toBe(
-      '31/12/2025 às 23:40',
-    );
+      '31/12/2025 às 23:40');
   });
 
   it('meia-noite não vira "ontem" por arredondamento', () => {
@@ -233,7 +232,7 @@ describe('batimentoAoVivo', () => {
     expect(batimentoAoVivo({ heartRate: 148, heartRateAt: AGORA - 25_000, recordedAt: AGORA }, AGORA)).toBe(false);
   });
 
-  it('sem `heartRateAt`, cai em `recordedAt` — mock e GATT não separam os dois', () => {
+  it('sem `heartRateAt`, cai em `recordedAt`, mock e GATT não separam os dois', () => {
     expect(batimentoAoVivo({ heartRate: 60, recordedAt: AGORA - 2_000 }, AGORA)).toBe(true);
     expect(batimentoAoVivo({ heartRate: 60, recordedAt: AGORA - 60_000 }, AGORA)).toBe(false);
   });

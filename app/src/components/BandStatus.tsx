@@ -76,7 +76,7 @@ export function useBandStatus(): { text: string | null; busy: boolean } {
   if (connection === 'connecting') {
     return lenta
       ? {
-          text: 'A pulseira está demorando a responder — aproxime-a do celular.',
+          text: 'A pulseira está demorando a responder, aproxime-a do celular.',
           busy: true,
         }
       : { text: 'Conectando à pulseira…', busy: true };
@@ -112,11 +112,11 @@ export function useBandStatus(): { text: string | null; busy: boolean } {
    rodada de testes de 22/08.
   */
   if (ultimaLeituraEm != null) {
-    return { text: `Conectada — última leitura às ${horaLocal(ultimaLeituraEm)}.`, busy: false };
+    return { text: `Conectada, última leitura às ${horaLocal(ultimaLeituraEm)}.`, busy: false };
   }
 
   return {
-    text: 'Conectada — esperando a primeira leitura do sensor.',
+    text: 'Conectada, esperando a primeira leitura do sensor.',
     busy: false,
   };
 }
@@ -157,7 +157,7 @@ export function EmptyMetric({ measure }: { measure?: MeasurableKind }) {
     <YStack>
       <Body maxWidth="92%">
         {connection === 'connected'
-          ? 'Ainda não há medição desta métrica. Ela entra sozinha assim que a pulseira medir — mantenha-a firme no pulso.'
+          ? 'Ainda não há medição desta métrica. Ela entra sozinha assim que a pulseira medir, mantenha-a firme no pulso.'
           : 'Sem medição ainda. Os números desta tela vêm da pulseira; conecte-a para começar.'}
       </Body>
       <BandStatusLine marginTop="$lg" />

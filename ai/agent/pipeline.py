@@ -45,22 +45,22 @@ def _plano_minimo() -> str:
     """A instrução de desespero: o menor plano que ainda é um plano.
 
     Vale na última tentativa mecânica, quando as correções específicas já
-    falharam. Um plano curto cabe no limite de saída e parseia — e a regra do
+    falharam. Um plano curto cabe no limite de saída e parseia, e a regra do
     produto é entregar treino, não perfeição. Conservador de propósito: quem
     recebe menos volume treina; quem não recebe nada, não.
     """
     return (
-        "# Correcao obrigatoria — ultima tentativa\n"
+        "# Correcao obrigatoria, ultima tentativa\n"
         "As tentativas anteriores falharam na FORMA da resposta.\n"
         "Gere agora um plano MINIMO e conservador: no maximo 3 exercicios por "
         "sessao, sem acessorios, descricoes de uma linha. Use SOMENTE "
         "exerciseId do catalogo permitido. O JSON precisa estar completo e "
-        "valido — isso vale mais que a riqueza do plano."
+        "valido, isso vale mais que a riqueza do plano."
     )
 
 
 def _truncation_correction() -> str:
-    """A saída foi CORTADA — falta espaço, não vírgula.
+    """A saída foi CORTADA, falta espaço, não vírgula.
 
     Pedir "corrija o JSON" aqui produz outro plano do mesmo tamanho e outro
     corte. O que resolve é o plano caber: menos exercícios acessórios por dia,
@@ -70,7 +70,7 @@ def _truncation_correction() -> str:
         "# Correcao obrigatoria\n"
         "A saida anterior foi CORTADA antes do fim: o plano nao coube no limite "
         "de resposta.\n"
-        "Gere um plano MAIS ENXUTO — menos exercicios acessorios por dia, "
+        "Gere um plano MAIS ENXUTO, menos exercicios acessorios por dia, "
         "descricoes curtas e sem repetir informacao que ja esta no catalogo. "
         "Prefira 4 a 6 exercicios por sessao. O JSON precisa terminar completo."
     )
@@ -104,7 +104,7 @@ def _correcao(errors: list[str]) -> str:
 def _correcao_do_juiz(breakdown: dict) -> str:
     """A revisão pedida pelo AVALIADOR, com as objeções dele em texto.
 
-    Reprovar e parar entrega nada a quem pediu o treino — e a objeção quase
+    Reprovar e parar entrega nada a quem pediu o treino, e a objeção quase
     sempre é corrigível: volume alto demais para quem está voltando, progressão
     abrupta, frequência acima do que o perfil suporta. Devolver o parecer ao
     gerador é mais barato que uma geração nova às cegas, e mantém o critério de
@@ -137,7 +137,7 @@ def _correcao_do_juiz(breakdown: dict) -> str:
 
 
 def _ressalvas(breakdown: dict) -> list[str]:
-    """As objeções que sobraram, para a PESSOA ler — não para o modelo.
+    """As objeções que sobraram, para a PESSOA ler, não para o modelo.
 
     O parecer do avaliador é técnico e escrito para outro modelo ("RSA alta
     intensidade + heavy leg criam risco de sobrecarga em membros inferiores").
@@ -165,7 +165,7 @@ def _plano_com_nomes(plan: str, catalogo) -> str:
     """A cópia do plano que os JUÍZES leem, com o nome de cada exercício.
 
     O plano referencia o catálogo por `exerciseId`, e o juiz de clareza dava
-    nota 2 por "exercícios ilegíveis, só UUIDs" — um defeito do NOSSO payload,
+    nota 2 por "exercícios ilegíveis, só UUIDs", um defeito do NOSSO payload,
     não do plano: o app resolve os nomes pelo catálogo, o juiz não tinha como.
     Anota `exerciseName` ao lado de cada id só na cópia julgada; o plano que
     segue para o banco continua o original.
@@ -200,7 +200,7 @@ def _e_opiniao(breakdown: dict) -> bool:
 
     Checagem dura reprovada (`type == "check"`) repete idêntica em qualquer
     re-voto; nota derrubada por PENALTY também, mas aí o juiz ainda pode ter
-    variado — o re-voto converge sozinho e custa uma chamada, então só a
+    variado, o re-voto converge sozinho e custa uma chamada, então só a
     checagem dura é excluída de vez.
     """
     return all(f.get("type") != "check" for f in breakdown.get("hard_failures", []))

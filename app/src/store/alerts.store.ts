@@ -64,8 +64,7 @@ export const useAlertsStore = create<AlertsState>((set, get) => ({
     const atual = get().feed;
     if (atual.some((n) => n.id === id)) return;
     const feed = [
-      { id, at: new Date().toISOString(), titulo, corpo, rota: rota ?? null },
-      ...atual,
+      { id, at: new Date().toISOString(), titulo, corpo, rota: rota ?? null }, ...atual,
     ].slice(0, LIMITE);
     set({ feed });
     gravar(feed);

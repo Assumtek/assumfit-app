@@ -55,8 +55,7 @@ export function CheckinScreen() {
   const days = plan?.days ?? [];
   const todayDay = useMemo(
     () => days.find((d) => d.dayOfWeek === plan?.today && d.dayType === 'WORKOUT') ?? null,
-    [days, plan?.today],
-  );
+    [days, plan?.today]);
   const isRestDay = Boolean(plan) && !todayDay;
 
   const others = useMemo(() => {
@@ -104,8 +103,7 @@ export function CheckinScreen() {
         setLoadingPreview(null);
       }
     },
-    [expandedId, previews],
-  );
+    [expandedId, previews]);
 
   const goToTraining = () => navigation.navigate('Training');
 
@@ -211,7 +209,7 @@ export function CheckinScreen() {
             <Text fontSize={20} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
               Hoje é seu dia de descanso
             </Text>
-            <Text fontSize={13} color="$mutedForeground">
+            <Text fontSize={14} color="$mutedForeground">
               Recuperação é parte do treino. Quer treinar mesmo assim? Escolha um abaixo.
             </Text>
           </HeroCard>
@@ -242,7 +240,7 @@ export function CheckinScreen() {
             <XStack alignItems="center" justifyContent="space-between" gap="$md">
               <YStack gap={2} flex={1}>
                 <Text
-                  fontSize={11}
+                  fontSize={12}
                   fontWeight="700"
                   letterSpacing={1}
                   color="$mutedForeground"
@@ -250,7 +248,7 @@ export function CheckinScreen() {
                 >
                   selecionado
                 </Text>
-                <Text fontSize={15} fontWeight="700" color="$foreground" numberOfLines={1}>
+                <Text fontSize={16} fontWeight="700" color="$foreground" numberOfLines={1}>
                   {selected.workout.name}
                 </Text>
               </YStack>
@@ -418,7 +416,7 @@ function WorkoutOption({
           >
             {workout.name}
           </Text>
-          <Text fontSize={13} color="$mutedForeground" numberOfLines={1}>
+          <Text fontSize={14} color="$mutedForeground" numberOfLines={1}>
             {workoutMeta(workout.muscleGroups, workout.exerciseCount)}
           </Text>
         </YStack>
@@ -434,7 +432,7 @@ function WorkoutOption({
             borderColor="$borderStrong"
             backgroundColor={selected ? '$primary' : 'transparent'}
           >
-            {selected ? <Icon name="check" size={13} color={colors.ink} /> : null}
+            {selected ? <Icon name="check" size={14} color={colors.ink} /> : null}
           </YStack>
           {hero && workout.estimatedDuration ? (
             <Pill>
@@ -470,7 +468,7 @@ function WorkoutOption({
           ) : names && names.length > 0 ? (
             names.map((name, i) => (
               <XStack key={`${name}-${i}`} alignItems="center" gap="$sm">
-                <Text fontSize={13} color="$mutedForeground" width={20}>
+                <Text fontSize={14} color="$mutedForeground" width={20}>
                   {i + 1}.
                 </Text>
                 <Text fontSize={14} color="$foreground" flex={1} numberOfLines={1}>
@@ -479,7 +477,7 @@ function WorkoutOption({
               </XStack>
             ))
           ) : (
-            <Text fontSize={13} color="$mutedForeground">
+            <Text fontSize={14} color="$mutedForeground">
               Nenhum exercício encontrado.
             </Text>
           )}

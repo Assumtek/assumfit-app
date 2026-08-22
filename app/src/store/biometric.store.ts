@@ -167,8 +167,7 @@ type Derivado = {
  */
 function comOxigenioDaNoite(
   noite: SleepNight | null,
-  amostras: { at: number; value: number }[],
-): SleepNight | null {
+  amostras: { at: number; value: number }[]): SleepNight | null {
   if (!noite?.startAt || !noite.endAt || amostras.length === 0) return noite;
   return { ...noite, spo2Night: spo2DaNoite(noite.startAt, noite.endAt, amostras) };
 }
@@ -462,8 +461,7 @@ async function varrerSonoRetroativo(): Promise<void> {
   const noites = await comTeto(
     ble.fetchSleepHistory(),
     TETO_MEMORIA_SONO_MS,
-    'memória de sono',
-  ).catch(() => [] as const);
+    'memória de sono').catch(() => [] as const);
   for (const n of noites) api.pushSleepNight(n);
   /*
    A varredura TAMBÉM atualiza a tela. Ela só empurrava para o servidor, e o
@@ -497,8 +495,7 @@ async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
     historico = (await comTeto(
       ble.fetchHistory?.() ?? Promise.resolve(null),
       TETO_SINCRONIA_MS,
-      'sincronização',
-    )) as DayHistory | null;
+      'sincronização')) as DayHistory | null;
   } catch (err) {
     set({
       syncError: eTempoEsgotado(err)
@@ -593,8 +590,7 @@ async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
   if (vencida && ble.fetchSleep && Date.now() - ultimaBuscaDeSono > 30 * 60_000) {
     ultimaBuscaDeSono = Date.now();
     const nova = await comTeto(ble.fetchSleep(), TETO_SONO_MS, 'sono da pulseira').catch(
-      () => null,
-    );
+      () => null);
     if (nova && (!atual || nova.date > atual.date)) {
       set({ sleep: comOxigenioDaNoite(nova, get().spo2History) });
       api.pushSleepNight(nova);
@@ -622,10 +618,7 @@ async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
   */
   if (api.isAuthenticated() && Date.now() - ultimoEnvioDaMemoria > 30 * 60_000) {
     const amostras: api.MemoryReading[] = [
-      ...historico.heartRate.map((a) => ({ recordedAt: a.at, heartRate: a.value })),
-      ...historico.stress.map((a) => ({ recordedAt: a.at, stressScore: a.value })),
-      ...historico.spo2.map((a) => ({ recordedAt: a.at, spo2Pct: a.value })),
-      ...historico.steps.map((p) => ({ recordedAt: p.at, steps: p.steps })),
+      ...historico.heartRate.map((a) => ({ recordedAt: a.at, heartRate: a.value })), ...historico.stress.map((a) => ({ recordedAt: a.at, stressScore: a.value })), ...historico.spo2.map((a) => ({ recordedAt: a.at, spo2Pct: a.value })), ...historico.steps.map((p) => ({ recordedAt: p.at, steps: p.steps })),
     ];
     if (amostras.length) {
       ultimoEnvioDaMemoria = Date.now();
@@ -841,8 +834,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     const daPulseira = await comTeto(
       ble.fetchSleep?.() ?? Promise.resolve(null),
       TETO_SONO_MS,
-      'sono da pulseira',
-    ).catch(() => null);
+      'sono da pulseira').catch(() => null);
     const noite =
       daPulseira ??
       (isHealthAvailable()
@@ -1036,10 +1028,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
       const h = await ble.fetchHistory(dia).catch(() => null);
       if (!h) continue;
       const amostras: api.MemoryReading[] = [
-        ...h.heartRate.map((a) => ({ recordedAt: a.at, heartRate: a.value })),
-        ...h.stress.map((a) => ({ recordedAt: a.at, stressScore: a.value })),
-        ...h.spo2.map((a) => ({ recordedAt: a.at, spo2Pct: a.value })),
-        ...h.steps.map((p) => ({ recordedAt: p.at, steps: p.steps })),
+        ...h.heartRate.map((a) => ({ recordedAt: a.at, heartRate: a.value })), ...h.stress.map((a) => ({ recordedAt: a.at, stressScore: a.value })), ...h.spo2.map((a) => ({ recordedAt: a.at, spo2Pct: a.value })), ...h.steps.map((p) => ({ recordedAt: p.at, steps: p.steps })),
       ];
       if (amostras.length) await api.ingestMemory(amostras).catch(() => undefined);
       if (__DEV__ && amostras.length)
@@ -1053,8 +1042,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     const daPulseira = await comTeto(
       ble.fetchSleep?.() ?? Promise.resolve(null),
       TETO_SONO_MS,
-      'sono da pulseira',
-    ).catch(() => null);
+      'sono da pulseira').catch(() => null);
     if (daPulseira) {
       // O MESMO recorte dos outros caminhos: sem ele, a noite buscada pelo
       // botão chegava sem a curva de oxigênio — e "Oxigênio durante a noite"
@@ -1068,15 +1056,13 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
 
     const pediu = await requestSleepAccess();
     if (!pediu) {
-      console.warn('[health] não foi possível pedir acesso — ver aviso acima');
+      console.warn('[health] não foi possível pedir acesso, ver aviso acima');
       return false;
     }
     const noite = await comTeto(fetchLastNight(), TETO_CONSULTA_MS, 'sono do app Saúde').catch(
-      () => null,
-    );
+      () => null);
     console.log(
-      `[health] noite encontrada: ${noite ? `${noite.totalMin} min, score ${noite.score}` : 'nenhuma'}`,
-    );
+      `[health] noite encontrada: ${noite ? `${noite.totalMin} min, score ${noite.score}` : 'nenhuma'}`);
     if (noite) {
       set({ sleep: comOxigenioDaNoite(noite, get().spo2History) });
       api.pushSleepNight(noite);
@@ -1204,8 +1190,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
 
       const variabilidade = comAmostraDeHrv(hrvHistory, reading, HISTORY_SIZE);
       const coracao = [...hrHistory, { at: reading.recordedAt, value: reading.heartRate }].slice(
-        -HISTORY_SIZE,
-      );
+        -HISTORY_SIZE);
 
       gravarDerivado({
         sleep: get().sleep,

@@ -94,16 +94,13 @@ export type MovementEntry<T extends ExecutionLike, S extends SportLike> =
  */
 export function consolidateMovement<T extends ExecutionLike, S extends SportLike>(
   executions: T[],
-  sportSessions: S[],
-): MovementEntry<T, S>[] {
+  sportSessions: S[]): MovementEntry<T, S>[] {
   const vinculadas = new Set(
-    sportSessions.map((s) => s.workoutExecutionId).filter((id): id is string => !!id),
-  );
+    sportSessions.map((s) => s.workoutExecutionId).filter((id): id is string => !!id));
   const entries: MovementEntry<T, S>[] = [
     ...executions
       .filter((treino) => !(treino.id && vinculadas.has(treino.id)))
-      .map((treino) => ({ tipo: 'treino' as const, quando: Date.parse(treino.startedAt), treino })),
-    ...sportSessions.map((esporte) => ({
+      .map((treino) => ({ tipo: 'treino' as const, quando: Date.parse(treino.startedAt), treino })), ...sportSessions.map((esporte) => ({
       tipo: 'esporte' as const,
       quando: Date.parse(esporte.startedAt),
       esporte,
@@ -133,8 +130,7 @@ function counts<T extends ExecutionLike, S extends SportLike>(entry: MovementEnt
 }
 
 function entryMinutes<T extends ExecutionLike, S extends SportLike>(
-  entry: MovementEntry<T, S>,
-): number {
+  entry: MovementEntry<T, S>): number {
   const segundos = entry.tipo === 'esporte' ? entry.esporte.durationS : (entry.treino.durationSec ?? 0);
   // Concluído sem duração registrada ainda é um treino feito: vale 1 min para
   // acender o dia, em vez de sumir por falta de metadado.
@@ -146,8 +142,7 @@ function entryMinutes<T extends ExecutionLike, S extends SportLike>(
  * local, que é onde a pessoa treinou.
  */
 export function dailyMinutes<T extends ExecutionLike, S extends SportLike>(
-  entries: MovementEntry<T, S>[],
-): Map<string, number> {
+  entries: MovementEntry<T, S>[]): Map<string, number> {
   const minutos = new Map<string, number>();
   for (const entry of entries) {
     if (!counts(entry)) continue;
@@ -160,8 +155,7 @@ export function dailyMinutes<T extends ExecutionLike, S extends SportLike>(
 /** Minutos de movimento por dia, das duas fontes. */
 export function movementMinutes(
   executions: ExecutionLike[],
-  sportSessions: SportLike[],
-): Map<string, number> {
+  sportSessions: SportLike[]): Map<string, number> {
   return dailyMinutes(consolidateMovement(executions, sportSessions));
 }
 
@@ -183,8 +177,7 @@ export type MovementTotals = {
  * que a semana de corrida foi uma semana fraca.
  */
 export function movementTotals<T extends ExecutionLike, S extends SportLike>(
-  entries: MovementEntry<T, S>[],
-): MovementTotals {
+  entries: MovementEntry<T, S>[]): MovementTotals {
   const totais: MovementTotals = { atividades: 0, minutos: 0, esportes: 0, kcal: 0 };
   for (const entry of entries) {
     if (!counts(entry)) continue;
@@ -209,8 +202,7 @@ export type SportTally = {
 
 /** O inventário do lado do esporte, da modalidade mais praticada para a menos. */
 export function sportBreakdown(
-  sessions: { sport: string; durationS: number; kcal?: number; distanceM?: number | null }[],
-): SportTally[] {
+  sessions: { sport: string; durationS: number; kcal?: number; distanceM?: number | null }[]): SportTally[] {
   const porModalidade = new Map<string, SportTally>();
   for (const s of sessions) {
     const tally = porModalidade.get(s.sport) ?? {
@@ -231,8 +223,7 @@ export function sportBreakdown(
 
 /** Atividades por dia da SEMANA, domingo na posição 0 — a ordem de `Date.getDay`. */
 export function weekdayTally<T extends ExecutionLike, S extends SportLike>(
-  entries: MovementEntry<T, S>[],
-): number[] {
+  entries: MovementEntry<T, S>[]): number[] {
   const dias = new Array(7).fill(0) as number[];
   for (const entry of entries) {
     if (!counts(entry)) continue;
@@ -257,8 +248,7 @@ export type WeekPoint = SeriesPoint;
 export function movementSeries<T extends ExecutionLike, S extends SportLike>(
   entries: MovementEntry<T, S>[],
   dias: number,
-  hoje: Date,
-): SeriesPoint[] {
+  hoje: Date): SeriesPoint[] {
   const minutos = dailyMinutes(entries);
   const inicio = new Date(hoje);
   inicio.setHours(0, 0, 0, 0);
@@ -282,8 +272,7 @@ export function movementSeries<T extends ExecutionLike, S extends SportLike>(
 export function weeklySeries(
   pontos: { date: Date; value: number }[],
   semanas: number,
-  hoje: Date,
-): WeekPoint[] {
+  hoje: Date): WeekPoint[] {
   const segunda = new Date(hoje);
   segunda.setHours(0, 0, 0, 0);
   segunda.setDate(segunda.getDate() - ((segunda.getDay() + 6) % 7));

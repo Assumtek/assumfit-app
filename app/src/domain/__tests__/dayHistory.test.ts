@@ -72,7 +72,7 @@ describe('rotuloDoDia', () => {
 });
 
 describe('diaDe', () => {
-  it('usa o calendário local — não o UTC', () => {
+  it('usa o calendário local, não o UTC', () => {
     // 22h no Brasil (UTC−3) já é o dia seguinte em UTC.
     const noite = new Date(2026, 7, 18, 22, 30).toISOString();
     expect(diaDe(noite)).toBe('2026-08-18');

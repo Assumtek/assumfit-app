@@ -1,9 +1,9 @@
-"""O que a tela inicial diz — derivado do dado, não escolhido de uma lista.
+"""O que a tela inicial diz, derivado do dado, não escolhido de uma lista.
 
 Antes disto, o app tinha três parágrafos fixos, um por faixa de energia, e duas
 frases de transição cravadas no código: "começa a cair em 2h30" e "segundo pico
 às 16h". Elas apareciam sempre com o mesmo texto, independentemente da hora, do
-cronótipo e da fisiologia da pessoa — ou seja, eram **decoração com aparência de
+cronótipo e da fisiologia da pessoa, ou seja, eram **decoração com aparência de
 informação**, que é pior que não ter nada. Um vespertino às 20h lia "próximo pico
 às 16h", um horário que já tinha passado.
 
@@ -14,7 +14,7 @@ O que muda aqui:
    vez de mentir.
 2. **A explicação cita o sinal que está pesando.** O score é uma soma ponderada,
    então dá para ordenar os componentes por quanto cada um está TIRANDO do
-   resultado e nomear o maior. "Seu sono puxou o dia para baixo — 54 de 100" é
+   resultado e nomear o maior. "Seu sono puxou o dia para baixo: 54 de 100" é
    verificável; "corpo descansado e recuperado" é adivinhação.
 3. **Sinal assumido nunca vira elogio nem cobrança.** Hidratação sem registro
    entra neutra, e uma frase sobre ela seria afirmação sobre o que não foi
@@ -38,7 +38,7 @@ ActionKey = Literal["play", "calendar", "drop", "dumbbell", "footprints", "flame
 
 @dataclass(frozen=True)
 class DayContext:
-    """O dia da pessoa até agora — o que tira a home do genérico.
+    """O dia da pessoa até agora, o que tira a home do genérico.
 
     Tudo aqui veio do banco, lido na hora da chamada. Campo `None` é "não sei",
     nunca "zero": passos sem leitura não viram sedentarismo, e refeição não
@@ -58,7 +58,7 @@ class DayContext:
 def day_notes(today: DayContext | None, hour: int) -> str | None:
     """Os fatos do dia em frases curtas, para o redator citar o que couber.
 
-    Cada frase só existe se o fato foi MEDIDO — e as ausências só viram nota em
+    Cada frase só existe se o fato foi MEDIDO, e as ausências só viram nota em
     hora plausível: "nenhuma refeição registrada" às 9h da manhã seria cobrança,
     não informação.
     """
@@ -177,20 +177,20 @@ ACTIONS: dict[Level, Action] = {
 
 #: Como cada sinal é explicado quando ele é o que está pesando.
 DRIVER_TEXT = {
-    "hrv": "Sua recuperação está abaixo do seu normal — {value}.",
-    "sleep": "O sono da noite passada é o que mais pesa hoje — {value}.",
-    "hr": "Sua frequência cardíaca de repouso está alta — {value}.",
-    "hydration": "Você ainda bebeu pouca água hoje — {value}.",
-    "temp": "Sua temperatura está fora da faixa usual — {value}.",
+    "hrv": "Sua recuperação está abaixo do seu normal, {value}.",
+    "sleep": "O sono da noite passada é o que mais pesa hoje, {value}.",
+    "hr": "Sua frequência cardíaca de repouso está alta, {value}.",
+    "hydration": "Você ainda bebeu pouca água hoje, {value}.",
+    "temp": "Sua temperatura está fora da faixa usual, {value}.",
 }
 
 #: E quando ele é o que está sustentando o dia.
 LIFT_TEXT = {
-    "hrv": "Sua recuperação está acima do seu normal — {value}.",
-    "sleep": "O sono da noite passada sustentou o dia — {value}.",
-    "hr": "Sua frequência cardíaca de repouso está baixa — {value}.",
-    "hydration": "Você está bem hidratado — {value}.",
-    "temp": "Sua temperatura está estável — {value}.",
+    "hrv": "Sua recuperação está acima do seu normal, {value}.",
+    "sleep": "O sono da noite passada sustentou o dia, {value}.",
+    "hr": "Sua frequência cardíaca de repouso está baixa, {value}.",
+    "hydration": "Você está bem hidratado, {value}.",
+    "temp": "Sua temperatura está estável, {value}.",
 }
 
 ADVICE: dict[Level, str] = {
@@ -201,7 +201,7 @@ ADVICE: dict[Level, str] = {
 
 
 def _named(components: list[Component]) -> tuple[Component | None, Component | None]:
-    """O sinal que mais tira e o que mais sustenta — ignorando os assumidos.
+    """O sinal que mais tira e o que mais sustenta, ignorando os assumidos.
 
     Componente assumido entra por convenção, não por medição. Citá-lo faria o app
     afirmar algo sobre um dado que ninguém coletou.
@@ -232,7 +232,7 @@ def next_transition(curve: list, hour: int, current_score: int) -> tuple[int | N
     """Quando a faixa muda, varrendo só o que ainda resta do dia.
 
     Devolve `(None, None)` quando nada relevante muda até a meia-noite. Nesse
-    caso a tela não mostra frase nenhuma — que é a única saída honesta, e é
+    caso a tela não mostra frase nenhuma, que é a única saída honesta, e é
     exatamente o que a frase fixa antiga não sabia fazer.
     """
     level = level_of(current_score)
@@ -291,9 +291,9 @@ def build(
         # ambas verdadeiras e juntas confusas.
         if energy.base >= 0.6:
             cause = (
-                "Sua fisiologia está bem — o que pesa agora é o horário, não o corpo."
+                "Sua fisiologia está bem, o que pesa agora é o horário, não o corpo."
                 if next_hour is not None
-                else "Sua fisiologia está bem — o que pesa agora é o horário, e ele não melhora mais hoje."
+                else "Sua fisiologia está bem, o que pesa agora é o horário, e ele não melhora mais hoje."
             )
         else:
             cause = "Nenhum sinal isolado está puxando o resultado hoje."

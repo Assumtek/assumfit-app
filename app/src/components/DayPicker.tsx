@@ -110,8 +110,7 @@ export function DayPickerRow(props: React.ComponentProps<typeof DayPicker>) {
  */
 export function useHistoricoDoDia(
   extrair: (p: HourlyPoint) => number | null,
-  serieDeHoje: Ponto[],
-) {
+  serieDeHoje: Ponto[]) {
   const serie = useHistoryStore((s) => s.serie);
   const load = useHistoryStore((s) => s.load);
   const [dia, setDia] = React.useState<DiaIso>(() => isoHoje());

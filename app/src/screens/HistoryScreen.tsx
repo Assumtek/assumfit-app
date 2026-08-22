@@ -223,7 +223,7 @@ function ResumoDoDia({ dia }: { dia: api.DailySummary }) {
   return (
     <>
       <YStack marginTop="$md" marginBottom="$lg">
-        <Display>{dia.energy_score ?? '—'}</Display>
+        <Display>{dia.energy_score ?? '–'}</Display>
         <Data marginTop="$xs" color="$mutedForeground">
           {dia.energy_score != null ? 'energia média do dia' : 'sem score calculado neste dia'}
         </Data>
@@ -267,7 +267,7 @@ function ResumoDoDia({ dia }: { dia: api.DailySummary }) {
         <Pressable onPress={() => navigation.push('MetricDay', { metric: 'steps', dia: dia.day })} accessibilityRole="button">
         <Row last>
           <Body flex={1} color="$foreground">Passos</Body>
-          <Data color="$foreground">{dia.steps != null ? dia.steps.toLocaleString('pt-BR') : '—'}</Data>
+          <Data color="$foreground">{dia.steps != null ? dia.steps.toLocaleString('pt-BR') : '–'}</Data>
         </Row>
         </Pressable>
       </Section>

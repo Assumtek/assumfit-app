@@ -1,7 +1,7 @@
 """Ajuste conversacional do plano.
 
 A pessoa pede um ajuste pontual e o agente responde em português propondo, quando
-cabe, um DIFF de operações sobre o plano atual — nunca um plano novo. Quem valida
+cabe, um DIFF de operações sobre o plano atual, nunca um plano novo. Quem valida
 e aplica é o backend.
 
 A escolha de devolver operações em vez de um plano reescrito é o que torna o
@@ -112,12 +112,12 @@ class MoveWorkoutOp(BaseModel):
 
     Existe porque "meu jogo passou de terça para quarta" é o pedido mais comum
     que o chat NÃO atendia: ele mexe na estrutura da semana, então caía na regra
-    de "refaça a anamnese" — e refazer a anamnese inteira para corrigir um dia
+    de "refaça a anamnese", e refazer a anamnese inteira para corrigir um dia
     é desproporcional. Visto em produção (ago/2026): a pessoa aceitou a oferta
     de reorganizar, e recebeu de volta a instrução de recomeçar do zero.
 
     É a única operação estrutural permitida, e ela é segura por natureza: não
-    cria prescrição, não muda volume, não escolhe exercício. Só troca QUANDO —
+    cria prescrição, não muda volume, não escolhe exercício. Só troca QUANDO, 
     os mesmos treinos, em dias diferentes.
     """
 
@@ -127,13 +127,13 @@ class MoveWorkoutOp(BaseModel):
 
 
 class SetDayTypeOp(BaseModel):
-    """Abre ou fecha um dia de treino — é como a FREQUÊNCIA semanal muda.
+    """Abre ou fecha um dia de treino, é como a FREQUÊNCIA semanal muda.
 
     Fechar (`OFF`) descarta o treino daquele dia. Abrir (`WORKOUT`) cria um dia
     vazio, que só vira treino de verdade com os `ADD_EXERCISE` que vierem na
     mesma resposta: um dia aberto e vazio é pior que nenhum dia, porque aparece
     na agenda prometendo algo que não existe. Quem cobra isso é o backend, na
-    aplicação — não o prompt.
+    aplicação, não o prompt.
     """
 
     op: Literal["SET_DAY_TYPE"]
@@ -173,7 +173,7 @@ class RecordConditionOp(BaseModel):
     Existe por decisão de produto (ago/2026): condição nova relatada no chat
     deixou de mandar a pessoa refazer a anamnese inteira. Ela é registrada aqui,
     e o registro é o que faz a classificação de risco rodar de novo na próxima
-    mensagem — inclusive para ENCAMINHAR, se for o caso.
+    mensagem, inclusive para ENCAMINHAR, se for o caso.
 
     A operação não prescreve nada. Ela só grava o que a pessoa disse, no mesmo
     campo em que a anamnese gravaria. Quem decide o que fazer com isso continua

@@ -115,7 +115,7 @@ export function ConnectScreen() {
             pista, e é por isso que a lista está ordenada por ele. */}
         {filterFoundNothing ? (
           <Data maxWidth="96%">
-            Nenhum aparelho se identificou como pulseira. Ela costuma anunciar sem nome — encoste o
+            Nenhum aparelho se identificou como pulseira. Ela costuma anunciar sem nome, encoste o
             celular no pulso e toque no primeiro da lista.
           </Data>
         ) : null}
@@ -146,14 +146,14 @@ export function ConnectScreen() {
                         Dica, não filtro: firmware que não anuncia serviço
                         continua na lista, só sem o destaque. */}
                       {item.alreadyConnected ? (
-                        <Label fontSize={9} color="$primary">já conectado</Label>
+                        <Label fontSize={10} color="$primary">já conectado</Label>
                       ) : isWearable(item.serviceUUIDs) ? (
-                        <Label fontSize={9} color="$primary">wearable</Label>
+                        <Label fontSize={10} color="$primary">wearable</Label>
                       ) : null}
                     </XStack>
                     <Data>
                       {item.alreadyConnected
-                        ? 'conectado ao sistema — sinal não medido'
+                        ? 'conectado ao sistema, sinal não medido'
                         : `${signalLabel(item.rssi)} · ${item.rssi} dBm`}
                     </Data>
                   </YStack>

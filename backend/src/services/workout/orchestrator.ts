@@ -29,7 +29,7 @@ import { classify, isReferral } from './risk-tier';
  */
 const REASON_MESSAGES: Record<string, string> = {
   encaminhamento_clinico:
-    'Nesses casos, o exercício precisa ser prescrito por alguém que possa te avaliar de perto — ' +
+    'Nesses casos, o exercício precisa ser prescrito por alguém que possa te avaliar de perto: ' +
     'por segurança, não geramos um treino automático. Procure um educador físico ou um médico, ' +
     'e leve esta informação com você. Se marcou algo por engano, você pode refazer a anamnese.',
   seguranca_clinica:
@@ -40,7 +40,7 @@ const REASON_MESSAGES: Record<string, string> = {
     'Tente novamente em instantes.',
   formato:
     'A resposta do gerador veio incompleta e o treino foi descartado. ' +
-    'Isso costuma passar na segunda tentativa — pode gerar de novo.',
+    'Isso costuma passar na segunda tentativa, pode gerar de novo.',
   qualidade:
     'Não conseguimos gerar um treino adequado desta vez. Você pode tentar novamente em instantes.',
   timeout: 'A geração demorou mais que o esperado e não foi concluída. Tente gerar o treino de novo.',
@@ -152,8 +152,7 @@ const PLACE_TO_ENUM: Record<string, TrainingLocation> = {
 async function finish(
   requestId: string,
   status: GenerationStatus,
-  extra: Record<string, unknown> = {},
-): Promise<void> {
+  extra: Record<string, unknown> = {}): Promise<void> {
   await prisma.planGenerationRequest.update({
     where: { id: requestId },
     data: { status, finishedAt: new Date(), ...extra },

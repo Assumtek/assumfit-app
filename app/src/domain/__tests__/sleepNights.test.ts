@@ -17,7 +17,7 @@ const seg = (phase: SegmentoComInstante['phase'], inicio: number, minutos: numbe
 });
 
 describe('montarNoites', () => {
-  it('a noite do Leo: levantou à 1h e voltou — é UMA noite, com o intervalo acordado', () => {
+  it('a noite do Leo: levantou à 1h e voltou, é UMA noite, com o intervalo acordado', () => {
     // 23h30→0h29 num "dia" da memória; 1h30→6h45 no outro.
     const bloco1 = [seg('light', h(21, 23, 30), 31), seg('deep', h(22, 0, 1), 28)];
     const bloco2 = [seg('light', h(22, 1, 30), 40), seg('deep', h(22, 2, 10), 95), seg('rem', h(22, 3, 45), 180)];

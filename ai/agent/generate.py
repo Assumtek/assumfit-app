@@ -1,6 +1,6 @@
 """Geração do plano: monta o prompt e chama a Anthropic.
 
-O template NÃO passa por `str.format()` — o formato de saída é JSON, e as chaves
+O template NÃO passa por `str.format()`, o formato de saída é JSON, e as chaves
 do exemplo seriam interpretadas como campos de formatação. O que varia é anexado
 como bloco de conteúdo separado.
 """
@@ -103,7 +103,7 @@ def strip_code_fence(text: str) -> str:
 
 
 async def generate_plan(inp: WorkoutGenerationInput, correction: str | None = None) -> str:
-    """Devolve o JSON cru do plano candidato — ainda não validado nem julgado."""
+    """Devolve o JSON cru do plano candidato, ainda não validado nem julgado."""
     raw = await complete(
         system=build_generation_system(inp),
         user=build_generation_user(inp, correction),

@@ -53,7 +53,7 @@ export function WorkoutConsentGate({
           Antes de perguntar sobre você
         </Text>
         <Text fontSize={14} color="$mutedForeground">
-          Para montar um treino seguro, precisamos saber do seu histórico de saúde — condições,
+          Para montar um treino seguro, precisamos saber do seu histórico de saúde, condições,
           medicamentos, lesões. Isso é dado sensível, e por isso pedimos permissão separada da
           leitura da pulseira.
         </Text>
@@ -67,7 +67,7 @@ export function WorkoutConsentGate({
             'Você pode retirar esta permissão quando quiser. Ao retirar, apagamos suas respostas de saúde e os planos gerados a partir delas.',
           ].map((line) => (
             <XStack key={line} gap="$sm" alignItems="flex-start">
-              <YStack width={5} height={5} borderRadius={3} backgroundColor="$primary" marginTop={7} />
+              <YStack width={6} height={6} borderRadius={4} backgroundColor="$primary" marginTop={8} />
               <Text fontSize={14} color="$mutedForeground" flex={1}>
                 {line}
               </Text>

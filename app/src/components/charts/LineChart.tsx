@@ -97,8 +97,7 @@ export function LineChart({
       onPanResponderMove: (e) => setScrub(indiceEm(e.nativeEvent.locationX, larguraRef.current, pontosRef.current)),
       onPanResponderRelease: () => setScrub(null),
       onPanResponderTerminate: () => setScrub(null),
-    }),
-  ).current;
+    })).current;
   const padBottom = xLabels ? 18 : 0;
   const plotH = height - padBottom;
 
@@ -186,7 +185,7 @@ export function LineChart({
             strokeDasharray={t.dashed === false ? undefined : '3 3'}
           />
           {t.label ? (
-            <SvgText x={width - 2} y={geom.y(t.value) - 5} fill={colors.textFaint} fontSize={9} textAnchor="end">
+            <SvgText x={width - 2} y={geom.y(t.value) - 5} fill={colors.textFaint} fontSize={10} textAnchor="end">
               {t.label}
             </SvgText>
           ) : null}
@@ -198,7 +197,7 @@ export function LineChart({
         <Path
           d={geom.line}
           stroke={color}
-          strokeWidth={1.5}
+          strokeWidth={2}
           strokeLinejoin="round"
           strokeLinecap="round"
           fill="none"
@@ -218,7 +217,7 @@ export function LineChart({
           x={(k / (xLabels.length - 1)) * width}
           y={height - 4}
           fill={colors.textFaint}
-          fontSize={9}
+          fontSize={10}
           textAnchor={k === 0 ? 'start' : k === xLabels.length - 1 ? 'end' : 'middle'}
         >
           {label}
@@ -228,10 +227,10 @@ export function LineChart({
           suficiente para a curva ter escala sem virar planilha. */}
       {!hideAxis && data.length > 1 ? (
         <>
-          <SvgText x={2} y={10} fill={colors.textFaint} fontSize={9} textAnchor="start">
+          <SvgText x={2} y={10} fill={colors.textFaint} fontSize={10} textAnchor="start">
             {fmt(domain ? geom.max : Math.max(...data))}
           </SvgText>
-          <SvgText x={2} y={plotH - 3} fill={colors.textFaint} fontSize={9} textAnchor="start">
+          <SvgText x={2} y={plotH - 3} fill={colors.textFaint} fontSize={10} textAnchor="start">
             {fmt(domain ? geom.min : Math.min(...data))}
           </SvgText>
         </>
@@ -239,7 +238,7 @@ export function LineChart({
       {i != null ? (
         <>
           <Line x1={geom.x(i)} y1={0} x2={geom.x(i)} y2={plotH} stroke={colors.text} strokeWidth={1} opacity={0.5} />
-          <Circle cx={geom.x(i)} cy={geom.y(data[i])} r={4} fill={color} stroke={colors.ink} strokeWidth={1.5} />
+          <Circle cx={geom.x(i)} cy={geom.y(data[i])} r={4} fill={color} stroke={colors.ink} strokeWidth={2} />
           <SvgText
             x={Math.min(Math.max(geom.x(i), 28), width - 28)}
             y={Math.max(12, geom.y(data[i]) - 12)}

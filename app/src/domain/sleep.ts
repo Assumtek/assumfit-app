@@ -110,8 +110,7 @@ export function nightFrom(
   date: string,
   segments: SleepSegment[],
   spo2Night: number[] = [],
-  janela?: { startAt: number; endAt: number },
-): SleepNight {
+  janela?: { startAt: number; endAt: number }): SleepNight {
   const phases: Record<SleepPhase, number> = { rem: 0, deep: 0, light: 0, awake: 0 };
   for (const s of segments) phases[s.phase] += s.minutes;
 
@@ -147,8 +146,7 @@ export function nightFrom(
 export function spo2DaNoite(
   inicioDaNoite: number,
   fimDaNoite: number,
-  amostras: { at: number; value: number }[],
-): number[] {
+  amostras: { at: number; value: number }[]): number[] {
   if (!(fimDaNoite > inicioDaNoite)) return [];
   return amostras
     .filter((a) => a.at >= inicioDaNoite && a.at <= fimDaNoite && a.value > 0)

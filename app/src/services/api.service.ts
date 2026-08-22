@@ -24,8 +24,7 @@ const BASE_URL = (() => {
   if (configured) return configured;
   if (!__DEV__) {
     throw new Error(
-      'EXPO_PUBLIC_API_URL ausente. Defina no perfil do eas.json antes de compilar para produção.',
-    );
+      'EXPO_PUBLIC_API_URL ausente. Defina no perfil do eas.json antes de compilar para produção.');
   }
   return 'http://localhost:3001';
 })();
@@ -121,8 +120,7 @@ api.interceptors.response.use(
       }
       throw error;
     }
-  },
-);
+  });
 
 async function setSession(next: Tokens | null) {
   tokens = next;
@@ -504,8 +502,7 @@ export async function fetchLifestyle(): Promise<LifestyleProfile | null> {
  * sugestão, então o progresso parcial vale por si.
  */
 export async function saveLifestyle(
-  patch: Record<string, unknown> & { completed?: boolean },
-): Promise<LifestyleProfile> {
+  patch: Record<string, unknown> & { completed?: boolean }): Promise<LifestyleProfile> {
   const { data } = await api.put<LifestyleProfile>('/lifestyle', patch);
   return data;
 }
@@ -704,8 +701,7 @@ export async function recordSet(
     load?: number | null;
     repetitions?: number | null;
     completed: boolean;
-  },
-): Promise<void> {
+  }): Promise<void> {
   await api.patch(`/workout/execution/${executionId}`, progress);
 }
 
@@ -719,8 +715,7 @@ export type FinishedExecution = {
 
 export async function finishExecution(
   executionId: string,
-  params: { perceivedEffort?: number | null; rating?: number | null; comment?: string | null },
-): Promise<FinishedExecution> {
+  params: { perceivedEffort?: number | null; rating?: number | null; comment?: string | null }): Promise<FinishedExecution> {
   const { data } = await api.post<FinishedExecution>(`/workout/execution/${executionId}/finish`, params);
   return data;
 }
@@ -814,20 +809,17 @@ export async function startInterview(): Promise<InterviewState> {
 export async function answerInterview(id: string, value: string): Promise<InterviewState> {
   const { data } = await api.post<InterviewState>(
     `/workout/anamnesis/conversation/${id}/answer`,
-    { value },
-  );
+    { value });
   return data;
 }
 
 export async function editInterviewAnswer(
   id: string,
   questionId: string,
-  value: string,
-): Promise<InterviewState> {
+  value: string): Promise<InterviewState> {
   const { data } = await api.patch<InterviewState>(
     `/workout/anamnesis/conversation/${id}/answer`,
-    { questionId, value },
-  );
+    { questionId, value });
   return data;
 }
 
@@ -879,11 +871,9 @@ export async function fetchAnamnesisHistory(): Promise<AnamnesisVersion[]> {
 }
 
 export async function fetchAnamnesisVersion(
-  id: string,
-): Promise<AnamnesisVersion & { answers: Record<string, unknown> }> {
+  id: string): Promise<AnamnesisVersion & { answers: Record<string, unknown> }> {
   const { data } = await api.get<AnamnesisVersion & { answers: Record<string, unknown> }>(
-    `/workout/anamnesis/history/${id}`,
-  );
+    `/workout/anamnesis/history/${id}`);
   return data;
 }
 
@@ -935,8 +925,7 @@ export async function applyAdjustment(adjustmentId: string): Promise<ApplyAdjust
   const { data } = await api.post<ApplyAdjustmentReply>(
     '/workout/chat/apply',
     { adjustmentId },
-    { timeout: TETO_DO_AGENTE_MS },
-  );
+    { timeout: TETO_DO_AGENTE_MS });
   return data;
 }
 
@@ -944,8 +933,7 @@ export async function chatWithAgent(message: string, history: ChatTurn[]): Promi
   const { data } = await api.post<ChatReply>(
     '/workout/chat',
     { message, history },
-    { timeout: TETO_DO_AGENTE_MS },
-  );
+    { timeout: TETO_DO_AGENTE_MS });
   return data;
 }
 
@@ -1019,8 +1007,7 @@ export async function deleteMeal(id: string): Promise<void> {
 /** Edição calibrada: nome e gramas novos repassam pela TACO no servidor. */
 export async function updateMealFoods(
   id: string,
-  foods: Partial<MealFood>[],
-): Promise<MealRecord> {
+  foods: Partial<MealFood>[]): Promise<MealRecord> {
   const { data } = await api.patch(`/nutrition/meal/${id}`, { foods });
   return data.record;
 }
@@ -1042,8 +1029,7 @@ export async function searchFoods(q: string): Promise<TacoFood[]> {
 /** Reanalisa a MESMA refeição com a foto local e a observação da pessoa. */
 export async function reanalyzeMeal(
   id: string,
-  input: { imageBase64: string; mediaType?: string; description?: string },
-): Promise<{ record: MealRecord | null; analysis: MealAnalysis }> {
+  input: { imageBase64: string; mediaType?: string; description?: string }): Promise<{ record: MealRecord | null; analysis: MealAnalysis }> {
   const { data } = await api.post(`/nutrition/meal/${id}/reanalyze`, input, { timeout: 90_000 });
   return data;
 }
@@ -1063,8 +1049,7 @@ export async function startTranscription(key: string, format = 'm4a'): Promise<{
 }
 
 export async function getTranscription(
-  jobName: string,
-): Promise<{ status: 'TRANSCRIBING' | 'DONE' | 'FAILED';
+  jobName: string): Promise<{ status: 'TRANSCRIBING' | 'DONE' | 'FAILED';
   reason?: string; transcript?: string }> {
   const { data } = await api.get(`/transcribe/${jobName}`);
   return data;
@@ -1129,8 +1114,7 @@ export async function fetchSportSession(id: string): Promise<SportSession> {
 /** O "como foi" de uma sessão avulsa — mesma pergunta do treino guiado. */
 export async function updateSportSession(
   id: string,
-  feedback: { perceivedEffort?: number | null; rating?: number | null; comment?: string | null },
-): Promise<void> {
+  feedback: { perceivedEffort?: number | null; rating?: number | null; comment?: string | null }): Promise<void> {
   await api.patch(`/sport/session/${id}`, feedback);
 }
 

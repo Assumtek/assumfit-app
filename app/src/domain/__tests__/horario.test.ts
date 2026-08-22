@@ -19,11 +19,10 @@ describe('normalizarHorario', () => {
   });
 
   it.each(['24:00', '10:75', '99', 'abc', '', '   ', '12:3x', '1:2:3', '12345'])(
-    'recusa "%s" — lembrete na hora errada é pior que nenhum',
+    'recusa "%s", lembrete na hora errada é pior que nenhum',
     (entrada) => {
       expect(normalizarHorario(entrada)).toBeNull();
-    },
-  );
+    });
 });
 
 describe('horaCurta', () => {

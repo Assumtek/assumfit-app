@@ -153,8 +153,7 @@ workoutRoutes.put(
       });
     }
     return res.json({ granted: true });
-  }),
-);
+  }));
 
 /** A tela precisa saber antes de começar a perguntar sobre saúde. */
 workoutRoutes.get(
@@ -165,8 +164,7 @@ workoutRoutes.get(
       select: { grantedAt: true },
     });
     res.json({ granted: Boolean(consent) });
-  }),
-);
+  }));
 
 workoutRoutes.put(
   '/anamnesis',
@@ -226,16 +224,14 @@ workoutRoutes.put(
       }),
     ]);
     res.json({ updatedAt: saved.updatedAt });
-  }),
-);
+  }));
 
 workoutRoutes.get(
   '/anamnesis',
   asyncRoute<AuthedRequest>(async (req, res) => {
     const found = await prisma.healthAnamnesis.findUnique({ where: { userId: req.userId } });
     res.json(found ? { answers: found.answers, updatedAt: found.updatedAt } : null);
-  }),
-);
+  }));
 
 /**
  * As versões anteriores das respostas.
@@ -255,8 +251,7 @@ workoutRoutes.get(
       select: { id: true, createdAt: true, flags: true },
     });
     res.json(rows);
-  }),
-);
+  }));
 
 workoutRoutes.get(
   '/anamnesis/history/:id',
@@ -268,8 +263,7 @@ workoutRoutes.get(
     });
     if (!found) throw notFound('Versão não encontrada');
     res.json({ id: found.id, answers: found.answers, flags: found.flags, createdAt: found.createdAt });
-  }),
-);
+  }));
 
 // ==========================================================================
 // GERAÇÃO
@@ -283,16 +277,14 @@ workoutRoutes.post(
       .parse(req.body ?? {});
     const requestId = await requestGeneration(req.userId, feedback);
     res.status(202).json({ requestId });
-  }),
-);
+  }));
 
 
 workoutRoutes.get(
   '/exercise/:exerciseId/similar',
   asyncRoute<AuthedRequest>(async (req, res) => {
     res.json(await similarExercises(req.params.exerciseId));
-  }),
-);
+  }));
 
 // ==========================================================================
 // EXECUÇÃO
@@ -311,10 +303,8 @@ workoutRoutes.get(
             estimatedDuration: execution.workout.estimatedDuration,
             startedAt: execution.startedAt,
           }
-        : null,
-    );
-  }),
-);
+        : null);
+  }));
 
 workoutRoutes.post(
   '/execution',
@@ -329,8 +319,7 @@ workoutRoutes.post(
       workoutName: execution.workout.name,
       startedAt: execution.startedAt,
     });
-  }),
-);
+  }));
 
 workoutRoutes.patch(
   '/execution/:id',
@@ -346,8 +335,7 @@ workoutRoutes.patch(
       .parse(req.body);
     await recordSet(req.userId, req.params.id, progress);
     res.status(204).end();
-  }),
-);
+  }));
 
 workoutRoutes.post(
   '/execution/:id/finish',
@@ -367,16 +355,14 @@ workoutRoutes.post(
       completionPct: execution.completionPct,
       finishedAt: execution.finishedAt,
     });
-  }),
-);
+  }));
 
 workoutRoutes.delete(
   '/execution/:id',
   asyncRoute<AuthedRequest>(async (req, res) => {
     await cancelExecution(req.userId, req.params.id);
     res.status(204).end();
-  }),
-);
+  }));
 
 workoutRoutes.get(
   '/execution/history',
@@ -401,10 +387,8 @@ workoutRoutes.get(
         durationSec: row.durationSec,
         completionPct: row.completionPct,
         rating: row.rating,
-      })),
-    );
-  }),
-);
+      })));
+  }));
 
 /**
  * Conversa com o agente sobre o plano ativo — o "Personal".
@@ -430,8 +414,7 @@ workoutRoutes.post(
 
     const result = await applyAdjustment(req.userId, adjustmentId);
     res.json(result);
-  }),
-);
+  }));
 
 workoutRoutes.post(
   '/chat',
@@ -444,8 +427,7 @@ workoutRoutes.post(
             z.object({
               role: z.enum(['user', 'assistant']),
               content: z.string().max(2000),
-            }),
-          )
+            }))
           .max(40)
           .default([]),
       })
@@ -463,8 +445,7 @@ workoutRoutes.post(
       operationCount: result.operations.length,
       adjustmentId: result.adjustmentId,
     });
-  }),
-);
+  }));
 
 // ==========================================================================
 // ANAMNESE CONVERSACIONAL
@@ -481,23 +462,20 @@ workoutRoutes.post(
   asyncRoute<AuthedRequest>(async (req, res) => {
     await assertConsent(req.userId);
     res.json(await startConversation(req.userId));
-  }),
-);
+  }));
 
 workoutRoutes.get(
   '/anamnesis/conversation/:id',
   asyncRoute<AuthedRequest>(async (req, res) => {
     res.json(await getConversation(req.userId, req.params.id));
-  }),
-);
+  }));
 
 workoutRoutes.post(
   '/anamnesis/conversation/:id/answer',
   asyncRoute<AuthedRequest>(async (req, res) => {
     const { value } = z.object({ value: z.string().max(1000) }).parse(req.body ?? {});
     res.json(await answerConversation(req.userId, req.params.id, value));
-  }),
-);
+  }));
 
 workoutRoutes.patch(
   '/anamnesis/conversation/:id/answer',
@@ -506,8 +484,7 @@ workoutRoutes.patch(
       .object({ questionId: z.string().min(1), value: z.string().max(1000) })
       .parse(req.body ?? {});
     res.json(await editAnswer(req.userId, req.params.id, questionId, value));
-  }),
-);
+  }));
 
 /**
  * Fecha a entrevista e grava anamnese + versão.
@@ -521,8 +498,7 @@ workoutRoutes.post(
   asyncRoute<AuthedRequest>(async (req, res) => {
     const { answers } = await finalizeConversation(req.userId, req.params.id);
     res.json({ answers });
-  }),
-);
+  }));
 
 /**
  * Relatório de progresso — o que o `StudentProgressReport` do MUVX mostra.
@@ -538,8 +514,7 @@ workoutRoutes.get(
       .object({ days: z.coerce.number().int().refine((d) => [1, 7, 30, 90].includes(d)).default(30) })
       .parse(req.query);
     res.json(await buildDashboard(req.userId, days as 1 | 7 | 30 | 90, janelaDeDatas(req.query)));
-  }),
-);
+  }));
 
 /**
  * O detalhe de UMA execução, série a série.
@@ -628,8 +603,7 @@ workoutRoutes.get(
         }),
       })),
     });
-  }),
-);
+  }));
 
 /*
  A rota genérica `/:workoutId` é declarada por ÚLTIMO, e isso é regra, não
@@ -669,8 +643,7 @@ workoutRoutes.get(
       // (qualidade, timeout) ou não (encaminhamento).
       reason: request.blockReason,
     });
-  }),
-);
+  }));
 
 // ==========================================================================
 // PLANO E TREINOS
@@ -714,8 +687,7 @@ workoutRoutes.get(
           : null,
       })),
     });
-  }),
-);
+  }));
 
 workoutRoutes.get(
   '/:workoutId',
@@ -758,8 +730,7 @@ workoutRoutes.get(
         })),
       })),
     });
-  }),
-);
+  }));
 
 /** Guarda: `/:workoutId` é genérico e engoliria qualquer caminho não previsto. */
 workoutRoutes.use((req) => {

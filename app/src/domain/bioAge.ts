@@ -217,16 +217,14 @@ export function calcBioAge(input: BioAgeInput): BioAge {
   const idadeAptidao = clamp(
     clamp(fitnessAge(vo2, sex), VO2_NORMA.idadeMinima, VO2_NORMA.idadeMaxima),
     realAge - limite,
-    realAge + limite,
-  );
+    realAge + limite);
   const idadeHrv =
     hrvMs == null
       ? null
       : clamp(
           clamp(hrvAge(hrvMs, sex), HRV_NORMA.idadeMinima, HRV_NORMA.idadeMaxima),
           realAge - limite,
-          realAge + limite,
-        );
+          realAge + limite);
   const idadeSono =
     deepSleepPct == null
       ? null
@@ -242,8 +240,7 @@ export function calcBioAge(input: BioAgeInput): BioAge {
   const desvio = clamp(
     idadeEstimada - realAge,
     -LIMITES.desvioMaximoTotal,
-    LIMITES.desvioMaximoTotal,
-  );
+    LIMITES.desvioMaximoTotal);
   const bioAge = Math.max(LIMITES.idadeMinima, Math.round(realAge + desvio));
 
   const nivel = activityLevel(input.weeklyActiveMin);
@@ -329,7 +326,7 @@ export function explicacaoDaIdade(bio: BioAge, minutosAtivos: number | null): st
   const anos = formatYears(Math.abs(maior.contribution)).replace(/^[+−-]/, '');
   const origem =
     maior.key === 'fitness'
-      ? `vem do VO₂máx estimado (${bio.vo2max?.toFixed(1).replace('.', ',') ?? '—'}), calculado pelo batimento em repouso e pelos ${minutosAtivos ?? 0} min de treino e esporte registrados na semana — passos não entram nessa conta`
+      ? `vem do VO₂máx estimado (${bio.vo2max?.toFixed(1).replace('.', ',') ?? '–'}), calculado pelo batimento em repouso e pelos ${minutosAtivos ?? 0} min de treino e esporte registrados na semana, passos não entram nessa conta`
       : maior.key === 'hrv'
         ? 'vem da variabilidade cardíaca medida pela pulseira'
         : 'vem da fração de sono profundo das últimas noites';

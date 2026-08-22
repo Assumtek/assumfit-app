@@ -35,7 +35,7 @@ describe('formatMinutes / parseMinutes', () => {
   });
 });
 
-describe('wakeOptions — deitar agora, acordar quando?', () => {
+describe('wakeOptions, deitar agora, acordar quando?', () => {
   it('conta a latência de pegar no sono', () => {
     // Deitar 23h + 15 min para dormir + 6 ciclos (9h) = 08:15.
     const [seis] = wakeOptions(23 * 60);
@@ -57,7 +57,7 @@ describe('wakeOptions — deitar agora, acordar quando?', () => {
   });
 });
 
-describe('bedOptions — acordar às X, deitar quando?', () => {
+describe('bedOptions, acordar às X, deitar quando?', () => {
   it('volta no tempo a partir da hora de acordar', () => {
     // 06:30 − 15 min − 6 ciclos (9h) = 21:15 do dia anterior.
     const seis = bedOptions(6 * 60 + 30).find((o) => o.cycles === 6)!;

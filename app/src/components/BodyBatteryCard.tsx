@@ -88,7 +88,7 @@ export function BodyBatteryCard({ onPress }: { onPress?: () => void }) {
             />
           </Svg>
           <YStack paddingBottom="$xs" flexShrink={1}>
-            <MetricSm>{bateria ? bateria.current : '—'}</MetricSm>
+            <MetricSm>{bateria ? bateria.current : '–'}</MetricSm>
             <Data marginTop="$xs">{bateria ? 'de 100 · reserva' : 'sem noite medida'}</Data>
           </YStack>
         </XStack>

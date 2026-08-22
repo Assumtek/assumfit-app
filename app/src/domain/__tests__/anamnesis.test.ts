@@ -69,12 +69,11 @@ describe('caminho e ramificação', () => {
   it('o caminho com condição é mais longo que o sem', () => {
     const semCondicao = walk({}, answerNo).ids.length;
     const comCondicao = walk({}, (id) =>
-      id === 'conditions' ? ['diabetes'] : answerNo(id),
-    ).ids.length;
+      id === 'conditions' ? ['diabetes'] : answerNo(id)).ids.length;
     expect(comCondicao).toBeGreaterThan(semCondicao);
   });
 
-  it('termina — o grafo não tem ciclo', () => {
+  it('termina, o grafo não tem ciclo', () => {
     const { final } = walk({}, answerNo);
     expect(nextQuestion(final)).toBeNull();
   });
@@ -175,7 +174,7 @@ describe('antecipação do encaminhamento', () => {
     expect(impliesReferral(final)).toBe(false);
   });
 
-  it('espelha a decisão do servidor — se divergir, um dos dois mudou sozinho', () => {
+  it('espelha a decisão do servidor, se divergir, um dos dois mudou sozinho', () => {
     // Os mesmos gatilhos que `services/workout/risk-tier.ts` classifica como
     // TIER_3 ou TIER_4. Este teste é o alarme de divergência entre os dois.
     const serverReferralFlags = ['cardiopata', 'gestante', 'dor-toracica-nao-investigada'];

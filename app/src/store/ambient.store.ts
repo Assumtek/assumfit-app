@@ -154,8 +154,7 @@ export const useAmbientStore = create<AmbientState>((set, get) => ({
         try {
           const previsao = await fetchMorningForecast(
             position.coords.latitude,
-            position.coords.longitude,
-          );
+            position.coords.longitude);
           /*
            Quem REDIGE é a IA, no servidor: ela cruza esta previsão com o
            plano de amanhã e a sequência de movimento. O aparelho continua

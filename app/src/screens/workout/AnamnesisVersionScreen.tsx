@@ -22,8 +22,7 @@ import { fetchAnamnesisVersion, type AnamnesisVersion } from '../../services/api
 export function AnamnesisVersionScreen() {
   const { id } = (useRoute().params ?? {}) as { id?: string };
   const [versao, setVersao] = useState<(AnamnesisVersion & { answers: Record<string, unknown> }) | null>(
-    null,
-  );
+    null);
   const [erro, setErro] = useState<unknown>(null);
 
   useEffect(() => {
@@ -137,6 +136,6 @@ const rotuloDePergunta = (chave: string) =>
 
 function formatarResposta(valor: unknown): string {
   if (typeof valor === 'boolean') return valor ? 'Sim' : 'Não';
-  if (Array.isArray(valor)) return valor.length ? valor.join(', ') : '—';
+  if (Array.isArray(valor)) return valor.length ? valor.join(', ') : '–';
   return String(valor);
 }

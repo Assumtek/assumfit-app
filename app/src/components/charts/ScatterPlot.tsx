@@ -90,12 +90,12 @@ export function ScatterPlot({
       ) : null}
 
       {yLabel ? (
-        <SvgText x={0} y={10} fill={colors.textFaint} fontSize={9}>
+        <SvgText x={0} y={10} fill={colors.textFaint} fontSize={10}>
           {yLabel}
         </SvgText>
       ) : null}
       {xLabel ? (
-        <SvgText x={width - 2} y={height - 4} fill={colors.textFaint} fontSize={9} textAnchor="end">
+        <SvgText x={width - 2} y={height - 4} fill={colors.textFaint} fontSize={10} textAnchor="end">
           {xLabel}
         </SvgText>
       ) : null}

@@ -86,7 +86,7 @@ function realService(): BleService | null {
  e o tempo vai todo para o lado errado do problema.
  */
 if (__DEV__ && wantsMock) {
-  console.warn('[ble] SIMULADO por pedido explícito (EXPO_PUBLIC_BLE=mock) — nenhum dado vem da pulseira.');
+  console.warn('[ble] SIMULADO por pedido explícito (EXPO_PUBLIC_BLE=mock), nenhum dado vem da pulseira.');
 }
 
 const resolved = wantsReal ? realService() : null;
@@ -98,9 +98,8 @@ const resolved = wantsReal ? realService() : null;
  */
 if (__DEV__ && wantsReal && resolved === null) {
   console.warn(
-    '[ble] SEM RÁDIO neste ambiente — caindo no simulado.\n' +
-      '      O simulador não tem Bluetooth. Para dado de verdade, use aparelho físico.',
-  );
+    '[ble] SEM RÁDIO neste ambiente, caindo no simulado.\n' +
+      '      O simulador não tem Bluetooth. Para dado de verdade, use aparelho físico.');
 }
 
 export const ble: BleService = resolved ?? new MockBleService();

@@ -55,7 +55,7 @@ export function mensagemDaFalha(err: unknown, oQueFalhou: string): string {
     case 'permissao':
       return `${oQueFalhou} não foi autorizada. Verifique se o consentimento segue ativo em Configurações.`;
     case 'servidor':
-      return `${oQueFalhou} falhou no servidor. Não é problema seu — tente de novo em alguns minutos.`;
+      return `${oQueFalhou} falhou no servidor. Não é problema seu, tente de novo em alguns minutos.`;
     case 'tempo':
       return `${oQueFalhou} demorou demais e foi interrompida. Tente de novo.`;
     case 'conexao':

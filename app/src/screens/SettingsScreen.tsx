@@ -85,15 +85,14 @@ export function SettingsScreen() {
             }
           },
         },
-      ],
-    );
+      ]);
 
   return (
     <DetailScreen title="Configurações">
       <Section label="Aparência" divider={false}>
         <ThemeSwitch />
         <Data marginTop="$md">
-          Em “Sistema”, o app acompanha o modo do aparelho — inclusive o agendamento noturno.
+          Em “Sistema”, o app acompanha o modo do aparelho, inclusive o agendamento noturno.
         </Data>
       </Section>
 
@@ -240,7 +239,7 @@ export function SettingsScreen() {
  * vertical, quem distribui é o conteúdo.
  */
 const RowLabel = styled(Body, { flex: 1 });
-const RowValue = styled(Data, { fontSize: 13, color: '$foreground' });
+const RowValue = styled(Data, { fontSize: 14, color: '$foreground' });
 
 /**
  * Ação de navegação dentro de uma seção.
@@ -276,7 +275,7 @@ function LinkRow({
         borderTopWidth={1}
         borderTopColor="$border"
       >
-        <Text fontSize={15} color={destructive ? '$destructive' : '$foreground'}>
+        <Text fontSize={16} color={destructive ? '$destructive' : '$foreground'}>
           {label}
         </Text>
         {arrow ? <Icon name="arrowRight" size={16} color={colors.textMuted} /> : null}

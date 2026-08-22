@@ -261,8 +261,7 @@ export class StaranbBleService implements BleService {
             console.log(
               `[ble] ${device.id} | nome=${device.name ?? device.localName ?? '(sem nome)'}` +
                 ` | rssi=${device.rssi} | conectável=${device.isConnectable}` +
-                ` | serviços=${(device.serviceUUIDs ?? []).join(',') || '(nenhum anunciado)'}`,
-            );
+                ` | serviços=${(device.serviceUUIDs ?? []).join(',') || '(nenhum anunciado)'}`);
           }
         }
 
@@ -436,8 +435,7 @@ export class StaranbBleService implements BleService {
             // cada iteração torna o ciclo lento demais para ser útil.
             if (__DEV__) console.log(`[gatt] ${frame.charUuid.slice(0, 8)} ${frame.hex} |${frame.ascii}|`);
             onData(frame);
-          }),
-        );
+          }));
       }
     }
 
@@ -489,11 +487,9 @@ export class StaranbBleService implements BleService {
                     .then((r) => (r.value ? toHex(decodeBase64(r.value)) : null))
                     .catch(() => null)
                 : null,
-            })),
-          ),
+            }))),
         };
-      }),
-    );
+      }));
   }
 
   private async readBattery(device: Device) {
@@ -530,8 +526,7 @@ export class StaranbBleService implements BleService {
         // aceitar byte corrompido é pior que perder a amostra.
         if (!isValidColmi(bytes)) return;
         this.onColmiFrame(bytes);
-      },
-    );
+      });
     this.subscriptions.push(sub);
 
     // Bateria primeiro: é a resposta mais simples do protocolo e serve de
@@ -680,8 +675,7 @@ export class StaranbBleService implements BleService {
         if (__DEV__ && hrv == null && !this.warnedNoRr) {
           this.warnedNoRr = true;
           console.warn(
-            `[ble] FC recebida (${bpm} bpm) mas sem intervalos RR — esta pulseira não expõe HRV pelo perfil padrão.`,
-          );
+            `[ble] FC recebida (${bpm} bpm) mas sem intervalos RR, esta pulseira não expõe HRV pelo perfil padrão.`);
         }
 
         const reading: Reading = {
@@ -699,8 +693,7 @@ export class StaranbBleService implements BleService {
           source: 'staranb',
         };
         this.readingListeners.forEach((l) => l(reading));
-      },
-    );
+      });
     this.subscriptions.push(sub);
   }
 }

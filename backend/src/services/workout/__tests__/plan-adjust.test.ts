@@ -143,15 +143,13 @@ describe('MOVE_WORKOUT', () => {
   it('mover de um dia sem treino é proposta vencida', async () => {
     const { tx } = bancoFalso();
     await expect(
-      aplicarOperacoes(tx, 'p1', [{ op: 'MOVE_WORKOUT', from_day: 'TUESDAY', to_day: 'MONDAY' }]),
-    ).rejects.toThrow(PropostaVencida);
+      aplicarOperacoes(tx, 'p1', [{ op: 'MOVE_WORKOUT', from_day: 'TUESDAY', to_day: 'MONDAY' }])).rejects.toThrow(PropostaVencida);
   });
 
   it('dia que não existe no plano é proposta vencida, não erro interno', async () => {
     const { tx } = bancoFalso();
     await expect(
-      aplicarOperacoes(tx, 'p1', [{ op: 'MOVE_WORKOUT', from_day: 'MONDAY', to_day: 'SUNDAY' }]),
-    ).rejects.toThrow(/não tem SUNDAY/);
+      aplicarOperacoes(tx, 'p1', [{ op: 'MOVE_WORKOUT', from_day: 'MONDAY', to_day: 'SUNDAY' }])).rejects.toThrow(/não tem SUNDAY/);
   });
 });
 
@@ -174,13 +172,12 @@ describe('SET_DAY_TYPE', () => {
     expect(criado.muscleGroups).toEqual(['QUADRICEPS']);
   });
 
-  it('abrir sem nome é recusado — a agenda mostraria um dia sem rótulo', async () => {
+  it('abrir sem nome é recusado, a agenda mostraria um dia sem rótulo', async () => {
     const { tx } = bancoFalso();
     await expect(
       aplicarOperacoes(tx, 'p1', [
         { op: 'SET_DAY_TYPE', day_of_week: 'TUESDAY', day_type: 'WORKOUT' },
-      ]),
-    ).rejects.toThrow(/exige o nome/);
+      ])).rejects.toThrow(/exige o nome/);
   });
 
   it('fechar um dia solta o vínculo E apaga o treino órfão', async () => {
@@ -206,8 +203,7 @@ describe('operações de exercício', () => {
           target_exercise_id: 'ex-remada',
           new_exercise_id: 'ex-puxada',
         },
-      ]),
-    ).rejects.toThrow(/não está mais nesse dia/);
+      ])).rejects.toThrow(/não está mais nesse dia/);
   });
 
   it('exercício fora do catálogo é recusado mesmo vindo do agente', async () => {
@@ -220,8 +216,7 @@ describe('operações de exercício', () => {
           target_exercise_id: 'ex-supino',
           new_exercise_id: 'inventado-123',
         },
-      ]),
-    ).rejects.toThrow(/fora do catálogo/);
+      ])).rejects.toThrow(/fora do catálogo/);
   });
 
   it('ADJUST_SETS substitui a lista inteira, e a carga em texto vira nulo', async () => {
@@ -275,8 +270,7 @@ describe('operações de exercício', () => {
           subtype: 'STRENGTH',
           sets: [{ repetitions: '12' }],
         },
-      ]),
-    ).rejects.toThrow(/fase inválida/);
+      ])).rejects.toThrow(/fase inválida/);
   });
 });
 
@@ -287,11 +281,10 @@ describe('lote', () => {
     // errado semanas depois.
     const { tx } = bancoFalso();
     await expect(
-      aplicarOperacoes(tx, 'p1', [{ op: 'INVENTADA' } as unknown as AdjustOperation]),
-    ).rejects.toThrow(/não suportada/);
+      aplicarOperacoes(tx, 'p1', [{ op: 'INVENTADA' } as unknown as AdjustOperation])).rejects.toThrow(/não suportada/);
   });
 
-  it('aplica na ORDEM recebida — abrir o dia antes de povoá-lo', async () => {
+  it('aplica na ORDEM recebida, abrir o dia antes de povoá-lo', async () => {
     const { tx, escritas } = bancoFalso();
     await aplicarOperacoes(tx, 'p1', [
       {
@@ -331,12 +324,11 @@ describe('RECORD_CONDITION', () => {
       tx,
       'p1',
       [{ op: 'RECORD_CONDITION', condition: 'hipertensao' }],
-      'u1',
-    );
+      'u1');
     expect(anamnese.answers.conditions).toEqual(['hipertensao']);
   });
 
-  it('gestação tem campo PRÓPRIO — em `conditions` ela não viraria flag', async () => {
+  it('gestação tem campo PRÓPRIO, em `conditions` ela não viraria flag', async () => {
     const { tx, anamnese } = bancoFalso();
     await aplicarOperacoes(tx, 'p1', [{ op: 'RECORD_CONDITION', condition: 'gestante' }], 'u1');
     expect(anamnese.answers.pregnant).toBe(true);
@@ -350,7 +342,7 @@ describe('RECORD_CONDITION', () => {
     expect(anamnese.answers.conditions).toBeUndefined();
   });
 
-  it('o relato ACUMULA, com data — não sobrescreve o que já estava lá', async () => {
+  it('o relato ACUMULA, com data, não sobrescreve o que já estava lá', async () => {
     // `deriveFlags` também varre esse texto livre. Sobrescrever apagaria o
     // histórico que um profissional leria antes de decidir qualquer coisa.
     const { tx, anamnese } = bancoFalso();
@@ -359,18 +351,16 @@ describe('RECORD_CONDITION', () => {
       tx,
       'p1',
       [{ op: 'RECORD_CONDITION', condition: 'asma', detail: 'falta de ar subindo escada' }],
-      'u1',
-    );
+      'u1');
     const texto = anamnese.answers.conditionsDetail as string;
     expect(texto).toContain('anterior');
     expect(texto).toContain('falta de ar subindo escada');
     expect(texto).toContain('pelo chat');
   });
 
-  it('sem usuário, recusa — registrar condição no anônimo não existe', async () => {
+  it('sem usuário, recusa, registrar condição no anônimo não existe', async () => {
     const { tx } = bancoFalso();
     await expect(
-      aplicarOperacoes(tx, 'p1', [{ op: 'RECORD_CONDITION', condition: 'asma' }]),
-    ).rejects.toThrow(/exige usuário/);
+      aplicarOperacoes(tx, 'p1', [{ op: 'RECORD_CONDITION', condition: 'asma' }])).rejects.toThrow(/exige usuário/);
   });
 });

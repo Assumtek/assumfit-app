@@ -56,8 +56,7 @@ export function ActivityScreen() {
     ]).then(([execucoes, sessoes]) => {
       if (!vivo) return;
       const vinculadas = new Set(
-        sessoes.map((se) => se.workoutExecutionId).filter((id): id is string => !!id),
-      );
+        sessoes.map((se) => se.workoutExecutionId).filter((id): id is string => !!id));
       const minutos =
         execucoes
           .filter((e) => treinoConta(e) && new Date(e.startedAt) >= inicioDoDia)
@@ -121,7 +120,7 @@ export function ActivityScreen() {
             accessibilityLabel="Compartilhar minha atividade"
             style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
           >
-            <Icon name="share" size={18} color={colors.textMuted} strokeWidth={1.5} />
+            <Icon name="share" size={18} color={colors.textMuted} strokeWidth={2} />
           </Pressable>
         </XStack>
         <Display>{activity.steps.toLocaleString('pt-BR')}</Display>
@@ -135,10 +134,10 @@ export function ActivityScreen() {
 
       {/* Aqui a barra de PREENCHIMENTO é a certa: passos acumulam rumo a uma
           meta, e a meta é o fim da régua. */}
-      <YStack height={6} borderRadius={3} backgroundColor="$track">
+      <YStack height={6} borderRadius={4} backgroundColor="$track">
         <YStack
           height={6}
-          borderRadius={3}
+          borderRadius={4}
           backgroundColor="$primary"
           width={`${rating.fraction * 100}%`}
         />
@@ -157,7 +156,7 @@ export function ActivityScreen() {
             id="steps"
           />
         </YStack>
-        <Data marginTop="$md" lineHeight={17}>
+        <Data marginTop="$md" lineHeight={18}>
           Curva acumulada, não barras por hora: o que interessa é se você chega à meta antes do dia
           acabar.
         </Data>
@@ -186,7 +185,7 @@ export function ActivityScreen() {
         {rows.map((row, i) => (
           <Row key={row.label} last={i === rows.length - 1}>
             <Body flex={1}>{row.label}</Body>
-            <MetricSm fontSize={17}>{row.value}</MetricSm>
+            <MetricSm fontSize={18}>{row.value}</MetricSm>
           </Row>
         ))}
       </Section>

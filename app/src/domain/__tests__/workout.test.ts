@@ -39,7 +39,7 @@ describe('conclusão da sessão', () => {
   it('ausência atravessa a avaliação intacta', () => {
     const rating = rateCompletion(null);
     expect(rating.available).toBe(false);
-    expect(rating.label).toBe('—');
+    expect(rating.label).toBe('–');
     expect(rating.fraction).toBe(0);
   });
 
@@ -83,7 +83,7 @@ describe('conclusão da sessão', () => {
 });
 
 describe('esforço percebido', () => {
-  it('traduz o número em palavra — ninguém sabe o que "7" significa', () => {
+  it('traduz o número em palavra, ninguém sabe o que "7" significa', () => {
     expect(rateEffort(2).label).toBe('Leve');
     expect(rateEffort(5).label).toBe('Moderado');
     expect(rateEffort(8).label).toBe('Puxado');
@@ -169,7 +169,7 @@ describe('cronômetro da sessão', () => {
     expect(formatSessionClock(600)).toBe('10:00');
   });
 
-  it('não vira horas — quem treina conta em minutos', () => {
+  it('não vira horas, quem treina conta em minutos', () => {
     expect(formatSessionClock(3735)).toBe('62:15');
   });
 
@@ -197,15 +197,13 @@ describe('workoutMetaSemRepetir', () => {
 
   it('título diferente dos grupos mantém a meta completa', () => {
     expect(workoutMetaSemRepetir('Treino A', ['PEITO', 'TRICEPS'], 6)).toBe(
-      'peito e tríceps · 6 exercícios',
-    );
+      'peito e tríceps · 6 exercícios');
   });
 
   it('repetição PARCIAL não conta: um grupo fora do título mantém a lista', () => {
     // "Peito" está no nome, "costas" não — omitir os dois esconderia informação.
     expect(workoutMetaSemRepetir('Peito', ['PEITO', 'COSTAS'], 5)).toBe(
-      'peito e costas · 5 exercícios',
-    );
+      'peito e costas · 5 exercícios');
   });
 
   it('sem grupo nenhum, devolve o que a meta comum devolve', () => {

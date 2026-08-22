@@ -110,7 +110,7 @@ export function HeroCard({
         <YStack gap="$md" zIndex={1}>
           {eyebrow ? (
             <Text
-              fontSize={11}
+              fontSize={12}
               fontWeight="700"
               letterSpacing={1.5}
               color="$primary"
@@ -163,7 +163,7 @@ export function Pill({ children }: { children: React.ReactNode }) {
 
 export function PillText({ children }: { children: React.ReactNode }) {
   return (
-    <Text fontSize={10.5} fontWeight="700" color="$primary" letterSpacing={0.5}>
+    <Text fontSize={10} fontWeight="700" color="$primary" letterSpacing={0.5}>
       {children}
     </Text>
   );

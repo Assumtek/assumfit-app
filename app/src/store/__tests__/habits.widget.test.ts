@@ -23,7 +23,7 @@ describe('widget de água', () => {
     expect(mockPublicar.mock.calls[0][0]).toMatchObject({ metaMl: depois, data: useHabitsStore.getState().today.date });
   });
 
-  it('meta igual não republica — o widget não precisa acordar à toa', () => {
+  it('meta igual não republica, o widget não precisa acordar à toa', () => {
     useHabitsStore.getState().refreshGoal({ weightKg: 90, sex: 'm', activeMinToday: 60 });
     mockPublicar.mockClear();
     useHabitsStore.getState().refreshGoal({ weightKg: 90, sex: 'm', activeMinToday: 60 });

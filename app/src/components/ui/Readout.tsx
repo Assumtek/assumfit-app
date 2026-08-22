@@ -35,15 +35,15 @@ export function Readout({
     <YStack
       flex={1}
       alignItems="center"
-      gap={3}
+      gap={4}
       accessible
       accessibilityLabel={`${valor}${unidade ? ` ${unidade}` : ''}, ${rotulo}`}
     >
-      <XStack alignItems="baseline" gap={3}>
+      <XStack alignItems="baseline" gap={4}>
         <MetricSm fontSize={26}>{valor}</MetricSm>
         {unidade ? <Data>{unidade}</Data> : null}
       </XStack>
-      <Data fontSize={11} numberOfLines={1}>
+      <Data fontSize={12} numberOfLines={1}>
         {rotulo}
       </Data>
     </YStack>

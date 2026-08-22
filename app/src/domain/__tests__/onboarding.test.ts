@@ -12,7 +12,7 @@ function walk(answer: (q: ReturnType<typeof nextQuestion>) => unknown, start: Li
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (answers as any)[question.id] = answer(question);
   }
-  throw new Error('fluxo não terminou — provável laço no grafo');
+  throw new Error('fluxo não terminou, provável laço no grafo');
 }
 
 describe('ramificação', () => {
@@ -41,8 +41,7 @@ describe('ramificação', () => {
     });
 
     expect(asked).toEqual(
-      expect.arrayContaining(['activities', 'trainDays', 'trainPeriod', 'trainPlace']),
-    );
+      expect.arrayContaining(['activities', 'trainDays', 'trainPeriod', 'trainPlace']));
     expect(asked).not.toContain('blocker');
   });
 

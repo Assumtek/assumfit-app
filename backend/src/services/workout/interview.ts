@@ -149,7 +149,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: 'condicaoControlada',
-    ask: 'Essa condição está controlada — com acompanhamento ou medicação?',
+    ask: 'Essa condição está controlada, com acompanhamento ou medicação?',
     label: 'Condição controlada',
     type: 'YES_NO',
     options: SIM_NAO,

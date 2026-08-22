@@ -90,8 +90,7 @@ export function VoiceInput({
         [
           { text: 'Agora não', style: 'cancel' },
           { text: 'Abrir Ajustes', onPress: () => void Linking.openSettings() },
-        ],
-      );
+        ]);
       return;
     }
     try {
@@ -178,8 +177,7 @@ export function VoiceInput({
       falha(
         status === 503
           ? 'O ditado por voz está indisponível no servidor no momento.'
-          : mensagemDaFalha(err, 'A transcrição'),
-      );
+          : mensagemDaFalha(err, 'A transcrição'));
     }
   };
 
@@ -228,7 +226,7 @@ export function VoiceInput({
         ) : null}
         <Icon
           name="mic"
-          size={17}
+          size={18}
           color={estado === 'gravando' ? colors.alert : colors.textMuted}
         />
       </YStack>

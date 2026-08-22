@@ -50,8 +50,7 @@ export function ProgressPhotos() {
 
   const alternar = (f: FotoDeEvolucao) =>
     setEscolhidas((atual) =>
-      atual.includes(f.nome) ? atual.filter((n) => n !== f.nome) : [...atual.slice(-1), f.nome],
-    );
+      atual.includes(f.nome) ? atual.filter((n) => n !== f.nome) : [...atual.slice(-1), f.nome]);
 
   const confirmarRemocao = (f: FotoDeEvolucao) =>
     Alert.alert('Remover esta foto?', formatDateBR(f.em.slice(0, 10)), [
@@ -102,7 +101,7 @@ export function ProgressPhotos() {
                       borderColor: marcada ? colors.accent : colors.hairlineStrong,
                     }}
                   />
-                  <Data fontSize={11}>{formatDateBR(f.em.slice(0, 10)).slice(0, 5)}</Data>
+                  <Data fontSize={12}>{formatDateBR(f.em.slice(0, 10)).slice(0, 5)}</Data>
                 </YStack>
               </Pressable>
             );

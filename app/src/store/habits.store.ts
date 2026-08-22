@@ -157,8 +157,7 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
 
   setContainerMl: (key, ml) => {
     const containers = get().containers.map((c) =>
-      c.key === key ? { ...c, ml: clampMl(ml) } : c,
-    );
+      c.key === key ? { ...c, ml: clampMl(ml) } : c);
     // Aplica antes de gravar: o ajuste precisa responder no mesmo quadro, e a
     // escrita é assíncrona. Falhou? Vale para esta sessão.
     set({ containers });
@@ -285,8 +284,7 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
       // caracteres devolve exatamente o dia gravado, sem passar pelo fuso.
       const { data } = await api.get<{ date: string; waterMl: number }[]>(
         '/habits',
-        { params: { days: 8 } },
-      );
+        { params: { days: 8 } });
       const porDia = new Map(data.map((h) => [h.date.slice(0, 10), h]));
 
       const week = semanaVazia().map((d) => ({

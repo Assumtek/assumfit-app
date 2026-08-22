@@ -7,7 +7,7 @@ Aqui um LLM redige a partir dos MESMOS fatos já calculados.
 O que este módulo NÃO faz, e por que:
 
 1. **Não calcula nada.** Score, componentes, curva e transição continuam saindo
-   de `energy_score.py` e `insight.py` — código determinístico, com paridade
+   de `energy_score.py` e `insight.py`, código determinístico, com paridade
    testada contra a implementação TypeScript do app. Um número de saúde que muda
    de valor entre duas chamadas com o mesmo dado seria indefensável.
 2. **Não recebe o dado bruto.** O modelo recebe os fatos já apurados, em texto,
@@ -15,14 +15,14 @@ O que este módulo NÃO faz, e por que:
 3. **Não decide a ação.** O botão da home continua vindo da faixa de energia,
    porque ele navega para telas específicas do app.
 
-E se falhar — sem chave, sem rede, timeout, resposta fora do formato — devolve
+E se falhar, sem chave, sem rede, timeout, resposta fora do formato, devolve
 `None` e quem chama usa o molde determinístico. A tela nunca fica sem frase.
 
 ## Fornecedor
 
 Desde 21/08/2026 (decisão da fundadora) a frase é redigida pela **API da
 OpenAI**. O motivo foi operacional: a tela mostrava o molde quase sempre, e o
-log não dizia nada — `write()` saía em silêncio por falta de chave no
+log não dizia nada, `write()` saía em silêncio por falta de chave no
 contêiner. A troca veio junto com duas regras novas: **chave ausente vira
 linha de log** (uma por processo, não uma por chamada), e a Anthropic fica
 como segunda via enquanto a chave da OpenAI não estiver em produção, para o
@@ -88,17 +88,17 @@ prontos na mensagem.
 Regras, em ordem de importância:
 
 1. NUNCA invente, estime ou arredonde um número. Use exatamente os valores dados. \
-Se um sinal não aparece na mensagem, ele não foi medido — não fale dele.
+Se um sinal não aparece na mensagem, ele não foi medido, não fale dele.
 2. NUNCA dê conselho médico, diagnóstico ou alerta clínico. O produto não é \
 dispositivo médico. Nada de "procure um médico", "pode ser sinal de", "risco de".
 3. Fale com a pessoa sobre o dia dela em termos de MOVIMENTO: prontidão para \
 treinar, esporte, recuperação, descanso, sono e hidratação. O app incentiva \
-treino e bem-estar — produtividade no trabalho (reuniões, foco, tarefas) não é \
+treino e bem-estar, produtividade no trabalho (reuniões, foco, tarefas) não é \
 o assunto e não deve ser sugerida.
 4. Português do Brasil, segunda pessoa ("você"), tom direto e adulto. Sem \
 exclamação, sem emoji, sem "vamos lá", sem elogio vazio.
 4a. Registro NEUTRO, não coloquial. Escreva "para o", não "pro"; "Aproveite", \
-não "Aproveita". A marca é sóbria — nada de gíria ou intimidade forçada.
+não "Aproveita". A marca é sóbria, nada de gíria ou intimidade forçada.
 4b. Capitalização: `eyebrow` todo em minúscula; `headline` e `detail` começam \
 com maiúscula. Isso é regra de design da tela, não preferência.
 5. O `detail` cita o número do sinal que está pesando. É o que separa observação \
@@ -111,7 +111,7 @@ Diga que o dia está equilibrado e siga para a orientação.
 
 @dataclass(frozen=True)
 class Facts:
-    """Os fatos apurados que o modelo pode usar — e nada além deles."""
+    """Os fatos apurados que o modelo pode usar, e nada além deles."""
 
     score: int
     level: str
@@ -151,10 +151,10 @@ def _prompt(f: Facts) -> str:
 
     if f.driver:
         nome, valor = f.driver
-        linhas.append(f"Sinal que mais PUXA PARA BAIXO: {nome} — {valor}.")
+        linhas.append(f"Sinal que mais PUXA PARA BAIXO: {nome}, {valor}.")
     if f.lift:
         nome, valor = f.lift
-        linhas.append(f"Sinal que mais SUSTENTA: {nome} — {valor}.")
+        linhas.append(f"Sinal que mais SUSTENTA: {nome}, {valor}.")
     if not f.driver and not f.lift:
         linhas.append(
             "Nenhum sinal isolado se destaca hoje, para cima ou para baixo. "
@@ -168,7 +168,7 @@ def _prompt(f: Facts) -> str:
     if f.day_notes:
         linhas.append(
             f"Fatos do dia da pessoa: {f.day_notes}. "
-            "Teça NO MÁXIMO um deles no texto — o mais relevante para a orientação "
+            "Teça NO MÁXIMO um deles no texto, o mais relevante para a orientação "
             "de agora. Não liste todos; não cobre o que não foi feito, apenas oriente."
         )
 
@@ -192,7 +192,7 @@ _avisou_sem_chave = False
 
 
 def write(facts: Facts, fallback: HomeInsight) -> HomeInsight | None:
-    """Redige a frase. `None` em qualquer falha — quem chama usa o molde.
+    """Redige a frase. `None` em qualquer falha, quem chama usa o molde.
 
     `fallback` entra para preservar o que o modelo NÃO decide: a ação do botão
     e o rótulo de transição, ambos calculados.
@@ -322,7 +322,7 @@ def _plausivel(dados: dict, facts: Facts) -> bool:
     """Barreira final: o texto pode ser recusado, mas nunca corrigido.
 
     O esquema garante a forma, não o conteúdo. Estas checagens pegam o que dá
-    para verificar mecanicamente — comprimento absurdo e, principalmente, número
+    para verificar mecanicamente, comprimento absurdo e, principalmente, número
     que não foi fornecido. Reescrever a saída do modelo seria pior: produziria
     uma frase que nem o modelo nem o molde escreveram.
     """

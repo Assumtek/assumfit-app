@@ -122,8 +122,7 @@ export function ProjectScreen() {
         <HeroCard>
           <Headline>{plan.name}</Headline>
           <Body>
-            Por que o seu treino ficou assim. Cada escolha abaixo sai da própria prescrição —
-            dá para conferir abrindo qualquer sessão.
+            Por que o seu treino ficou assim. Cada escolha abaixo sai da própria prescrição, dá para conferir abrindo qualquer sessão.
           </Body>
         </HeroCard>
       </YStack>
@@ -216,7 +215,7 @@ function Escolha({
         {/* Alinha o traço do ícone com a primeira linha do texto, não com o
             topo da caixa — sem isso ele flutua acima da maiúscula. */}
         <YStack paddingTop={2}>
-          <Icon name={icone} size={16} color={colors.textMuted} strokeWidth={1.5} />
+          <Icon name={icone} size={16} color={colors.textMuted} strokeWidth={2} />
         </YStack>
         <YStack flex={1} gap="$xs">
           {titulo ? <SectionTitle>{titulo}</SectionTitle> : null}

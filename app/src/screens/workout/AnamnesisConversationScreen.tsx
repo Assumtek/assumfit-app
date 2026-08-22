@@ -114,8 +114,7 @@ export function AnamnesisConversationScreen() {
               ? 'Falta o consentimento de dados de saúde. Volte e toque em "Concordo, pode perguntar".'
               : status != null
                 ? `O servidor não conseguiu iniciar a anamnese (erro ${status}). Tente de novo em instantes.`
-                : mensagemDaFalha(err, 'A anamnese'),
-        );
+                : mensagemDaFalha(err, 'A anamnese'));
       });
   }, []);
 
@@ -139,8 +138,7 @@ export function AnamnesisConversationScreen() {
 
   const totalAssistente = useMemo(
     () => (estado?.messages ?? []).filter((m) => m.role === 'ASSISTANT').length,
-    [estado?.messages],
-  );
+    [estado?.messages]);
 
   // Chegou fala nova: mostra "pensando" por um instante e então revela.
   useEffect(() => {
@@ -382,7 +380,7 @@ export function AnamnesisConversationScreen() {
                   multiline
                   editable={!enviando && pendente !== null}
                   keyboardType={pendente?.type === 'NUMBER' ? 'number-pad' : 'default'}
-                  style={{ fontSize: 15, color: colors.text, maxHeight: 110 }}
+                  style={{ fontSize: 16, color: colors.text, maxHeight: 110 }}
                 />
               </YStack>
               {/* Ditado por voz — o transcrito entra no campo para revisão,
@@ -412,7 +410,7 @@ export function AnamnesisConversationScreen() {
           )}
 
           {pendente && !pendente.isRequired && !estado.readyToFinalize ? (
-            <Pressable onPress={() => void responder('—')} accessibilityRole="button">
+            <Pressable onPress={() => void responder('–')} accessibilityRole="button">
               <Data textAlign="center" textDecorationLine="underline">
                 Prefiro não dizer
               </Data>
@@ -482,7 +480,7 @@ function Balao({
         borderColor="$border"
       >
         <Text
-          fontSize={15}
+          fontSize={16}
           lineHeight={22}
           color={doAssistente ? '$foreground' : '$primaryForeground'}
         >
@@ -559,7 +557,7 @@ function Revisao({
                       borderColor={opcao === campo.value ? '$primary' : '$borderStrong'}
                       backgroundColor={opcao === campo.value ? '$primarySoft' : 'transparent'}
                     >
-                      <Text fontSize={13} color="$foreground">
+                      <Text fontSize={14} color="$foreground">
                         {opcao}
                       </Text>
                     </YStack>
@@ -594,7 +592,7 @@ function Revisao({
                 <Pressable
                   onPress={() => {
                     setEditando(null);
-                    void onEditar(campo.questionId, textoEdicao.trim() || '—');
+                    void onEditar(campo.questionId, textoEdicao.trim() || '–');
                   }}
                   accessibilityRole="button"
                   accessibilityLabel="Salvar correção"
@@ -602,7 +600,7 @@ function Revisao({
                   <YStack
                     width={38}
                     height={38}
-                    borderRadius={19}
+                    borderRadius={20}
                     alignItems="center"
                     justifyContent="center"
                     backgroundColor="$primary"
@@ -619,7 +617,7 @@ function Revisao({
                 <Pressable
                   onPress={() => {
                     setEditando(campo.questionId);
-                    if (!campo.options) setTextoEdicao(campo.value === '—' ? '' : campo.value);
+                    if (!campo.options) setTextoEdicao(campo.value === '–' ? '' : campo.value);
                   }}
                   hitSlop={10}
                   accessibilityRole="button"

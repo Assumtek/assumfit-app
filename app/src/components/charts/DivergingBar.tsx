@@ -43,7 +43,7 @@ export function DivergingBar({ items, width, rowHeight = 40, id = 'diverge' }: P
       <GridPaper width={plotW} height={height - 16} x={padLeft} id={id} />
 
       {/* Eixo zero: a idade cronológica. */}
-      <Line x1={center} y1={0} x2={center} y2={height - 16} stroke={colors.hairlineStrong} strokeWidth={1.5} />
+      <Line x1={center} y1={0} x2={center} y2={height - 16} stroke={colors.hairlineStrong} strokeWidth={2} />
 
       {items.map((item, i) => {
         const y = i * rowHeight + rowHeight / 2;
@@ -51,14 +51,14 @@ export function DivergingBar({ items, width, rowHeight = 40, id = 'diverge' }: P
         const rejuvenates = item.value <= 0;
         return (
           <React.Fragment key={item.label}>
-            <SvgText x={0} y={y + 3} fill={colors.text} fontSize={11}>
+            <SvgText x={0} y={y + 3} fill={colors.text} fontSize={12}>
               {item.label}
             </SvgText>
             <Rect
               x={rejuvenates ? center - w : center}
               y={y - 6.5}
               width={Math.max(4, w)}
-              height={13}
+              height={14}
               rx={6.5}
               fill={rejuvenates ? colors.accent : colors.alert}
             />
@@ -66,7 +66,7 @@ export function DivergingBar({ items, width, rowHeight = 40, id = 'diverge' }: P
               x={width - 2}
               y={y + 3}
               fill={rejuvenates ? colors.text : colors.alert}
-              fontSize={11}
+              fontSize={12}
               textAnchor="end"
             >
               {item.display}
@@ -75,10 +75,10 @@ export function DivergingBar({ items, width, rowHeight = 40, id = 'diverge' }: P
         );
       })}
 
-      <SvgText x={center - 4} y={height - 2} fill={colors.textFaint} fontSize={9} textAnchor="end">
+      <SvgText x={center - 4} y={height - 2} fill={colors.textFaint} fontSize={10} textAnchor="end">
         rejuvenesce
       </SvgText>
-      <SvgText x={center + 4} y={height - 2} fill={colors.textFaint} fontSize={9}>
+      <SvgText x={center + 4} y={height - 2} fill={colors.textFaint} fontSize={10}>
         envelhece
       </SvgText>
     </Svg>

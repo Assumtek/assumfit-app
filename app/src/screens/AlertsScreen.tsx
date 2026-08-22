@@ -150,7 +150,7 @@ export function AlertsScreen() {
               accessibilityLabel={aviso.titulo}
             >
               <XStack alignItems="center" gap="$xs">
-                <Icon name={aviso.icone} size={13} color={colors.textMuted} />
+                <Icon name={aviso.icone} size={14} color={colors.textMuted} />
                 <Label>{aviso.acao}</Label>
               </XStack>
               <SectionTitle marginTop="$xs">{aviso.titulo}</SectionTitle>

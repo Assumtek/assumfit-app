@@ -1,6 +1,6 @@
 """O perfil de rotina entrando no cálculo.
 
-Sem este módulo o onboarding seria um formulário que não muda nada — e um
+Sem este módulo o onboarding seria um formulário que não muda nada, e um
 formulário que não muda nada é atrito puro, cobrado da pessoa logo no primeiro
 uso. Cada campo coletado precisa alterar uma recomendação concreta, e é aqui que
 isso acontece.
@@ -9,7 +9,7 @@ Três usos, em ordem de impacto:
 
 1. **Turno desloca a curva.** É de longe o mais importante. Quem trabalha à
    noite tem o ritmo circadiano invertido, e a curva padrão erra em TODA hora do
-   dia para essa pessoa — não é um ajuste fino, é a diferença entre o app servir
+   dia para essa pessoa, não é um ajuste fino, é a diferença entre o app servir
    ou não servir. O cronótipo estimado aqui vale até haver sete noites medidas,
    quando o dado real substitui a estimativa.
 
@@ -65,7 +65,7 @@ def chronotype_from(lifestyle: Lifestyle | None) -> Chronotype:
 
     É explicitamente inferior ao cronótipo observado por `chronotype.py`, que usa
     o ponto médio do sono de sete noites. Mas na primeira semana a alternativa
-    seria assumir "intermediário" para todo mundo — e para quem trabalha de
+    seria assumir "intermediário" para todo mundo, e para quem trabalha de
     madrugada isso significa o app inteiro errado justamente no período em que a
     pessoa decide se continua assinando.
     """
@@ -114,7 +114,7 @@ def personalize(
 
     Uma frase, não três: o espaço da tela inicial é o recurso escasso do produto,
     e empilhar contexto genérico afogaria a informação que veio da fisiologia.
-    A ordem abaixo é de prioridade — a primeira regra que casar, ganha.
+    A ordem abaixo é de prioridade, a primeira regra que casar, ganha.
     """
     if lifestyle is None:
         return None
@@ -130,7 +130,7 @@ def personalize(
             if projetado is not None:
                 if level == "low":
                     return Context(
-                        f"Hoje é dia de treino, e seu corpo está pedindo pausa. Às {alvo}h a projeção é {projetado} —"
+                        f"Hoje é dia de treino, e seu corpo está pedindo pausa. Às {alvo}h a projeção é {projetado}: "
                         " treino leve rende mais que forçar.",
                         action_override="rest",
                     )
@@ -138,7 +138,7 @@ def personalize(
                     f"Hoje é dia de treino. Às {alvo}h sua energia projetada é {projetado}.",
                 )
         elif alvo is not None and alvo <= hour and level == "low":
-            return Context("Você treinou hoje. A queda de agora é esperada — recuperação é parte do treino.")
+            return Context("Você treinou hoje. A queda de agora é esperada, recuperação é parte do treino.")
 
     # 2. Postura, só quando a energia não está alta. Com energia alta a pessoa
     #    tem coisa melhor a fazer do que ouvir sobre a cadeira.
@@ -149,7 +149,7 @@ def personalize(
                 f"São {horas}h seguidas sentado no seu dia: cinco minutos em pé agora recuperam parte do alerta"
                 " sem custo nenhum.",
             )
-        return Context("Você trabalha sentado — levantar por alguns minutos custa pouco e ajuda agora.")
+        return Context("Você trabalha sentado, levantar por alguns minutos custa pouco e ajuda agora.")
 
     if level != "high" and lifestyle.work_posture in {"standing", "moving"}:
         return Context(
@@ -179,7 +179,7 @@ def circadian_shift(lifestyle: Lifestyle | None) -> float | None:
     atrás, e sem essa normalização o deslocamento sairia pelo lado errado do
     relógio.
 
-    Devolve `None` quando não há o que deslocar — aí vale o cronótipo, medido ou
+    Devolve `None` quando não há o que deslocar, aí vale o cronótipo, medido ou
     estimado.
     """
     if lifestyle is None:

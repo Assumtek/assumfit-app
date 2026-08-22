@@ -118,13 +118,13 @@ export function SleepScreen() {
         {/* Uma frase de abertura: o que este número É. O método inteiro fica na
             Ajuda — pedido dos testadores (ago/2026), que queriam entender a
             métrica sem sair da tela. */}
-        <Body marginTop="$md">O score nasce das fases medidas: metade é quanto você dormiu, um quarto é o sono profundo, o resto é REM e continuidade — uma noite longa e picada pode pontuar menos que uma curta e inteira.</Body>
+        <Body marginTop="$md">O score nasce das fases medidas: metade é quanto você dormiu, um quarto é o sono profundo, o resto é REM e continuidade, uma noite longa e picada pode pontuar menos que uma curta e inteira.</Body>
       </YStack>
 
       <YStack onLayout={(e: LayoutChangeEvent) => setChartWidth(e.nativeEvent.layout.width)}>
         <Hypnogram segments={sleep.segments} width={chartWidth} />
       </YStack>
-      <Data marginTop="$md" marginBottom="$sm" lineHeight={17}>
+      <Data marginTop="$md" marginBottom="$sm" lineHeight={18}>
         A ordem importa mais que o total: profundo concentrado nos primeiros ciclos é o padrão
         fisiológico.
       </Data>
@@ -160,7 +160,7 @@ export function SleepScreen() {
             />
             <Body flex={1}>{p.label}</Body>
             <Data marginRight="$xl">{duration(sleep.phases[p.key])}</Data>
-            <MetricSm fontSize={17} minWidth={48} textAlign="right">
+            <MetricSm fontSize={18} minWidth={48} textAlign="right">
               {pct(sleep.phases[p.key])}%
             </MetricSm>
           </Row>
@@ -202,8 +202,7 @@ function UltimasNoites() {
         setNoites(
           linhas
             .filter((l) => l.sleepScore != null && l.sleepMinutes != null)
-            .sort((a, b) => (a.date < b.date ? 1 : -1)),
-        );
+            .sort((a, b) => (a.date < b.date ? 1 : -1)));
       })
       .catch(() => vivo && setNoites([]));
     return () => {

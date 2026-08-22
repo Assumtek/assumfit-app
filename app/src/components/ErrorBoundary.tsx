@@ -34,8 +34,7 @@ export class ErrorBoundary extends React.Component<Props, Estado> {
     relatarErro(
       { message: erro.message, stack: `${erro.stack ?? ''}\n--- componentes ---${info.componentStack ?? ''}` },
       false,
-      'ErrorBoundary',
-    );
+      'ErrorBoundary');
   }
 
   render() {
@@ -51,13 +50,13 @@ export class ErrorBoundary extends React.Component<Props, Estado> {
     */
     const compartilhar = () =>
       void Share.share({
-        message: `AssumFit — erro\n${erro?.message ?? String(erro)}\n\n${(erro?.stack ?? '').slice(0, 3000)}`,
+        message: `AssumFit, erro\n${erro?.message ?? String(erro)}\n\n${(erro?.stack ?? '').slice(0, 3000)}`,
       }).catch(() => undefined);
     return (
       <YStack flex={1} backgroundColor="$background" justifyContent="center" padding="$xl" gap="$lg">
         <Headline>Algo deu errado nesta tela</Headline>
         <Body>
-          O erro foi registrado e vai ser corrigido. Seus dados estão guardados — toque abaixo para
+          O erro foi registrado e vai ser corrigido. Seus dados estão guardados, toque abaixo para
           continuar de onde estava.
         </Body>
         {mensagem ? <Data>{mensagem}</Data> : null}

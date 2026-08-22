@@ -187,8 +187,8 @@ export function HomeScreen() {
                 estado abaixo, que narra a etapa em curso e muda sozinha. */}
             <Body marginTop="$lg" maxWidth="92%">
               {conectado
-                ? 'Pulseira conectada. A primeira leitura entra sozinha — mantenha-a no pulso, firme e com o sensor encostado na pele.'
-                : 'Sem leitura não há score — o resto do app continua acessível pelo menu.'}
+                ? 'Pulseira conectada. A primeira leitura entra sozinha, mantenha-a no pulso, firme e com o sensor encostado na pele.'
+                : 'Sem leitura não há score, o resto do app continua acessível pelo menu.'}
             </Body>
 
             {/*
@@ -257,8 +257,7 @@ export function HomeScreen() {
                         : 'Device'
                       : pairedDeviceId
                         ? 'Device'
-                        : 'Connect') as never,
-                  )
+                        : 'Connect') as never)
                 }
                 // Fixo nos dois temas, como o `primaryForeground` do config e
                 // pelo mesmo motivo (ver Button.tsx): sobre o roxo, só o ink
@@ -344,10 +343,10 @@ export function HomeScreen() {
     plan !== 'loading' && plan ? plan.days.find((d) => d.dayOfWeek === plan.today) : undefined;
   const conselhoTreino =
     energy.level === 'high'
-      ? 'Prontidão alta — bom dia para intensidade.'
+      ? 'Prontidão alta, bom dia para intensidade.'
       : energy.level === 'mid'
-        ? 'Prontidão média — mantenha a execução confortável.'
-        : 'Prontidão baixa — reduza o volume ou priorize técnica leve.';
+        ? 'Prontidão média, mantenha a execução confortável.'
+        : 'Prontidão baixa, reduza o volume ou priorize técnica leve.';
 
   const cardTreino: HomeCard =
     plan === 'loading'
@@ -371,7 +370,7 @@ export function HomeScreen() {
               key: 'treino',
               title: 'treino',
               headline: 'Hoje é dia de descanso',
-              body: 'O plano reserva hoje para recuperar — movimento leve conta a favor.',
+              body: 'O plano reserva hoje para recuperar, movimento leve conta a favor.',
               onPress: () => abrir('Plan'),
             }
           : {
@@ -425,7 +424,7 @@ export function HomeScreen() {
       : insightStatus === 'loading'
         ? 'gerando o insight do dia…'
         : insightStatus === 'offline'
-          ? 'sem rede — texto do cálculo local'
+          ? 'sem rede, texto do cálculo local'
           : null,
     onPress: () => abrir('Health'),
   };
@@ -436,8 +435,7 @@ export function HomeScreen() {
       onPanResponderRelease: (_, g) => {
         if (g.dx > 48) useUiStore.getState().openSidebar();
       },
-    }),
-  ).current;
+    })).current;
 
   return (
     <View style={{ flex: 1 }}>
@@ -503,8 +501,8 @@ export function HomeScreen() {
             style={({ pressed }) => pressed && { opacity: 0.6 }}
           >
             <XStack alignItems="center" gap="$sm">
-              <Icon name="watch" size={18} color={colors.textMuted} strokeWidth={1.5} />
-              <Data>{batteryPct != null ? `${batteryPct}%` : '—'}</Data>
+              <Icon name="watch" size={18} color={colors.textMuted} strokeWidth={2} />
+              <Data>{batteryPct != null ? `${batteryPct}%` : '–'}</Data>
             </XStack>
           </Pressable>
         </YStack>
@@ -539,7 +537,7 @@ export function HomeScreen() {
           <Card onPress={() => abrir('Sport')} accessibilityLabel="Começar um treino">
             <Label marginBottom="$sm">movimento</Label>
             <Body>
-              Não deu para carregar sua sequência agora. O treino de hoje não depende disso — toque
+              Não deu para carregar sua sequência agora. O treino de hoje não depende disso, toque
               para começar.
             </Body>
           </Card>
@@ -635,7 +633,7 @@ function Cabecalho({
           accessibilityRole="button"
           accessibilityLabel="Ajuda"
         >
-          <Icon name="help" size={19} color={colors.textMuted} />
+          <Icon name="help" size={20} color={colors.textMuted} />
         </Pressable>
 
         <Pressable
@@ -644,7 +642,7 @@ function Cabecalho({
           accessibilityRole="button"
           accessibilityLabel="Avisos"
         >
-          <Icon name="bell" size={19} color={colors.textMuted} />
+          <Icon name="bell" size={20} color={colors.textMuted} />
         </Pressable>
 
         <XStack alignItems="center" gap="$sm">

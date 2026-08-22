@@ -159,7 +159,7 @@ export function GeneratingScreen() {
         */
         falhasSeguidas += 1;
         if (falhasSeguidas >= FALHAS_ATE_DESISTIR) {
-          setError('Perdemos a conexão com o servidor. O plano pode ter sido gerado — volte ao Treino em alguns minutos.');
+          setError('Perdemos a conexão com o servidor. O plano pode ter sido gerado, volte ao Treino em alguns minutos.');
           return;
         }
         // Espera crescente: a rede que voltou não precisa ser martelada.
@@ -275,7 +275,7 @@ export function GeneratingScreen() {
               title="escopo do AssumFit"
               body={
                 'O AssumFit é um produto de esporte, bem-estar e autoconhecimento, não um dispositivo médico. ' +
-                'Ele não diagnostica nem substitui avaliação profissional — e quando o seu perfil ' +
+                'Ele não diagnostica nem substitui avaliação profissional, e quando o seu perfil ' +
                 'pede essa avaliação, o certo é dizer isso em vez de gerar um treino mesmo assim.'
               }
             />
@@ -316,10 +316,10 @@ export function GeneratingScreen() {
               <YStack
                 width={6}
                 height={6}
-                borderRadius={3}
+                borderRadius={4}
                 backgroundColor={i <= step ? '$primary' : '$track'}
               />
-              <Text fontSize={13} color={i <= step ? '$foreground' : '$mutedForeground'}>
+              <Text fontSize={14} color={i <= step ? '$foreground' : '$mutedForeground'}>
                 {label}
               </Text>
             </XStack>

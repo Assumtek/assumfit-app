@@ -48,8 +48,7 @@ export const CATEGORIA_SMS = 1;
  */
 export function comAssumfit(atual: CategoriaDeAviso[], ligado: boolean): CategoriaDeAviso[] {
   return atual.map((c) =>
-    BALDES_DE_OUTROS.includes(c.type) ? { ...c, enabled: ligado } : c,
-  );
+    BALDES_DE_OUTROS.includes(c.type) ? { ...c, enabled: ligado } : c);
 }
 
 /** O AssumFit vibra hoje? Verdadeiro se qualquer balde de "outros" está ligado. */

@@ -124,7 +124,7 @@ export function Sidebar() {
             exatamente o caso para o qual a camada de vidro existe. */}
         <Glass variant="regular" style={StyleSheet.absoluteFill} />
         <YStack marginBottom="$xl">
-          <LogoType height={17} />
+          <LogoType height={18} />
         </YStack>
 
         {/* Identidade da conta no topo do painel — é onde se procura por ela em
@@ -144,7 +144,7 @@ export function Sidebar() {
             {avatarUri ? (
               <Image
                 source={{ uri: avatarUri }}
-                style={{ width: 34, height: 34, borderRadius: 17 }}
+                style={{ width: 34, height: 34, borderRadius: 18 }}
                 accessibilityIgnoresInvertColors
               />
             ) : (
@@ -152,7 +152,7 @@ export function Sidebar() {
               <YStack
                 width={34}
                 height={34}
-                borderRadius={17}
+                borderRadius={18}
                 borderWidth={1}
                 borderColor="$borderStrong"
                 alignItems="center"
@@ -164,7 +164,7 @@ export function Sidebar() {
               </YStack>
             )}
             <YStack flex={1} gap={2}>
-              <Text fontSize={15} letterSpacing={-0.2} color="$foreground" numberOfLines={1}>
+              <Text fontSize={16} letterSpacing={-0.2} color="$foreground" numberOfLines={1}>
                 {user.name}
               </Text>
               <Data numberOfLines={1}>{profile?.email ?? 'perfil e assinatura'}</Data>
@@ -310,7 +310,7 @@ function Entry({
         />
         <YStack flex={1} gap="$xs">
           <Text
-            fontSize={15}
+            fontSize={16}
             letterSpacing={-0.2}
             color={active ? '$foreground' : '$mutedForeground'}
           >

@@ -117,14 +117,13 @@ export class QCBandService implements BleService {
         this.state = event.state;
         this.stateReason = event.reason;
         if (__DEV__)
-          console.log(`[qcband] estado: ${event.state}${event.reason ? ` — ${event.reason}` : ''}`);
+          console.log(`[qcband] estado: ${event.state}${event.reason ? `, ${event.reason}` : ''}`);
         this.stateListeners.forEach((l) => l(event.state, event.reason));
         // Saiu de conectado, a etapa morreu junto — sem isto a tela seguiria
         // dizendo "medindo estresse" com a pulseira já fora do alcance.
         if (event.state !== 'connected') this.setActivity(null);
         if (event.state === 'connected') void this.afterConnect();
-      }),
-    );
+      }));
 
     /*
      O módulo nativo emitia `onLog` desde o início e NINGUÉM escutava.
@@ -144,8 +143,7 @@ export class QCBandService implements BleService {
         if (!__DEV__) return;
         if (raw.startsWith('[AnyHashable') && process.env.EXPO_PUBLIC_BLE_VERBOSE !== '1') return;
         console.log('[qcband]', raw);
-      }),
-    );
+      }));
 
     this.subscriptions.push(QCBand.addListener('onReading', (event) => this.ingest(event)));
   }
@@ -182,8 +180,7 @@ export class QCBandService implements BleService {
     if (!QCBand) return;
 
     const features = await QCBand.getFeatures().catch(
-      () => ({}) as Record<string, boolean | number>,
-    );
+      () => ({}) as Record<string, boolean | number>);
 
     /*
      As chaves são as que o APARELHO devolve, não as constantes do cabeçalho.
@@ -223,7 +220,7 @@ export class QCBandService implements BleService {
   private async measureAll(features: Record<string, boolean | number>) {
     if (!QCBand) return;
     if (Date.now() - this.ultimaSequencia < QCBandService.INTERVALO_SEQUENCIA_MS) {
-      if (__DEV__) console.log('[qcband] sequência automática pulada — rodou há pouco');
+      if (__DEV__) console.log('[qcband] sequência automática pulada, rodou há pouco');
       return;
     }
     this.ultimaSequencia = Date.now();
@@ -243,8 +240,7 @@ export class QCBandService implements BleService {
     if (estado) {
       console.log(
         `[qcband] agendado: estresse=${estado.stress} hrv=${estado.hrv} ` +
-          `pressão=${estado.bloodPressure} spo2=${estado.spo2} fc=${estado.heartRate}`,
-      );
+          `pressão=${estado.bloodPressure} spo2=${estado.spo2} fc=${estado.heartRate}`);
 
       /*
        Os CINCO, não dois.
@@ -336,9 +332,7 @@ export class QCBandService implements BleService {
           comTeto(
             QCBand!.measure(kind as Parameters<NonNullable<typeof QCBand>['measure']>[0]),
             TETO_MEDICAO_MS,
-            kind,
-          ),
-        );
+            kind));
         if (__DEV__) console.log(`[qcband] medição concluída: ${kind}`);
       } catch (err) {
         // Falha de medição é rotina, não erro de programa: pulseira frouxa no
@@ -476,7 +470,7 @@ export class QCBandService implements BleService {
         return;
       case 'measuringFail':
         // Pulseira mal encaixada: o aparelho avisa em vez de inventar número.
-        console.warn('[qcband] medição falhou — verifique o encaixe no pulso');
+        console.warn('[qcband] medição falhou, verifique o encaixe no pulso');
         return;
       default:
         return;
@@ -752,8 +746,7 @@ export class QCBandService implements BleService {
       if (__DEV__) {
         console.log(
           `[qcband] histórico do dia: fc=${historico.heartRate.length} estresse=${historico.stress.length} ` +
-            `spo2=${historico.spo2.length} pressão=${historico.pressure.length} passos=${historico.steps.length}`,
-        );
+            `spo2=${historico.spo2.length} pressão=${historico.pressure.length} passos=${historico.steps.length}`);
       }
       return historico;
     } finally {
@@ -797,8 +790,7 @@ export class QCBandService implements BleService {
     const filtro = await comTeto(
       QCBand.getNotificationFilter(),
       TETO_CONSULTA_MS,
-      'filtro de avisos',
-    ).catch(() => [] as { type: number; enabled: boolean }[]);
+      'filtro de avisos').catch(() => [] as { type: number; enabled: boolean }[]);
     if (__DEV__) {
       // A SONDAGEM: o cabeçalho documenta um vocabulário fixo sem identificador
       // de app, e é aqui que se vê o que ESTE firmware devolve de fato.
@@ -812,8 +804,7 @@ export class QCBandService implements BleService {
     return comTeto(
       QCBand.setNotificationFilter(entries),
       TETO_CONSULTA_MS,
-      'filtro de avisos',
-    ).catch(() => false);
+      'filtro de avisos').catch(() => false);
   }
 
   async fetchSleep(): Promise<SleepNight | null> {
@@ -936,8 +927,7 @@ export class QCBandService implements BleService {
       });
       const timer = setTimeout(
         () => finalizar(new Error('Pulseira não encontrada por perto')),
-        prazoMs,
-      );
+        prazoMs);
     });
   }
 
@@ -958,8 +948,7 @@ export class QCBandService implements BleService {
     const estado = { start: 1, pause: 2, continue: 3, stop: 4 }[state];
     if (state === 'start') await QCBand.stopRealtimeHeartRate().catch(() => undefined);
     await comTeto(QCBand.setSportMode(tipo, estado), TETO_CONSULTA_MS, 'modo esporte').catch(
-      (err) => console.warn(`[qcband] modo esporte ${kind}/${state}:`, err),
-    );
+      (err) => console.warn(`[qcband] modo esporte ${kind}/${state}:`, err));
     if (state === 'stop') await QCBand.startRealtimeHeartRate().catch(() => undefined);
   }
 
@@ -1052,8 +1041,7 @@ function amostrasDeSerie(series: QCHrvSeries[], nome = 'serie'): Sample[] {
     const base = new Date(`${serie.date}T00:00:00`).getTime();
     console.log(
         `valores=${serie.values.length} positivos=${serie.values.filter((v) => v > 0).length} ` +
-        `base=${Number.isNaN(base) ? 'NaN — DATA NÃO PARSEIA' : new Date(base).toISOString()}`,
-    );
+        `base=${Number.isNaN(base) ? 'NaN: DATA NÃO PARSEIA' : new Date(base).toISOString()}`);
     if (Number.isNaN(base)) continue;
     serie.values.forEach((value, i) => {
       if (value > 0) amostras.push({ at: base + i * serie.secondInterval * 1000, value });
@@ -1063,8 +1051,7 @@ function amostrasDeSerie(series: QCHrvSeries[], nome = 'serie'): Sample[] {
   console.log(
       (r.length
         ? ` · de ${new Date(r[0].at).toISOString()} a ${new Date(r[r.length - 1].at).toISOString()}`
-        : ''),
-  );
+        : ''));
   return r;
 }
 

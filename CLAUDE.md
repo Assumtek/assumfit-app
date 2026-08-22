@@ -479,6 +479,14 @@ lá. As seis que mais se quebra por descuido:
 6. **Ícone é outline monolinear** de 1,5px. `components/Icon.tsx` só desenha
    traço; se um glifo novo precisar de `fill`, ele não pertence a este sistema.
 
+7. **Sem travessão, em lugar nenhum.** Texto de tela, notificação, commit,
+   comentário, relatório: vírgula, dois-pontos ou ponto no lugar do "—". O
+   ponto médio (·) continua sendo o separador de dado. Decisão da fundadora
+   (22/08/2026). Marcador de "sem dado" é "–".
+8. **Todo número de layout é múltiplo de dois.** Fonte, padding, gap, largura,
+   altura, raio, ícone: 13 vira 14, 15 vira 16. Exceções: hairline de 1 px e
+   o 999 do pill. Regra da proporcionalidade (22/08/2026).
+
 **Regra de ouro:** o destaque é a avaliação em linguagem humana; o número
 técnico é sub-label. Nenhuma tela formata número cru.
 

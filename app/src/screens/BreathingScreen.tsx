@@ -147,7 +147,7 @@ export function BreathingScreen() {
 
         <Body textAlign="center" maxWidth="80%">
           {terminado
-            ? 'Duas rodadas completas. Repare no seu batimento — e repita quando precisar.'
+            ? 'Duas rodadas completas. Repare no seu batimento, e repita quando precisar.'
             : 'Quatro segundos inspirando, seis soltando. É a expiração longa que desacelera o coração.'}
         </Body>
       </YStack>

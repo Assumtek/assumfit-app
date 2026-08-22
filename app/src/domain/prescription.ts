@@ -43,8 +43,7 @@ const ORDEM_DE_NIVEL: Record<string, number> = { INICIANTE: 0, INTERMEDIARIO: 1,
 export function ordenarSubstitutos<T extends { equipment: string; level: string }>(
   opcoes: T[],
   motivo: MotivoDeTroca | null | undefined,
-  equipamentoAtual: string,
-): T[] {
+  equipamentoAtual: string): T[] {
   if (!motivo) return opcoes;
   const chave = (o: T) =>
     motivo === 'equipamento'

@@ -120,7 +120,7 @@ function normalizarSets(sets: SetInput[]) {
     const carga = typeof s.load === 'number' ? s.load : Number(s.load);
     return {
       order: i + 1,
-      repetitions: s.repetitions == null ? '—' : String(s.repetitions),
+      repetitions: s.repetitions == null ? '–' : String(s.repetitions),
       restTime: s.restTime ?? s.rest_time ?? null,
       load: Number.isFinite(carga) ? carga : null,
     };
@@ -145,8 +145,7 @@ export async function aplicarOperacoes(
   tx: Tx,
   planId: string,
   operations: AdjustOperation[],
-  userId?: string,
-): Promise<number> {
+  userId?: string): Promise<number> {
   for (const op of operations) {
     switch (op.op) {
       case 'MOVE_WORKOUT': {
@@ -247,8 +246,7 @@ async function moverTreino(tx: Tx, planId: string, de: string, para: string) {
 async function definirTipoDoDia(
   tx: Tx,
   planId: string,
-  op: Extract<AdjustOperation, { op: 'SET_DAY_TYPE' }>,
-) {
+  op: Extract<AdjustOperation, { op: 'SET_DAY_TYPE' }>) {
   const dia = await diaDoPlano(tx, planId, op.day_of_week);
 
   if (op.day_type === 'OFF') {
@@ -287,8 +285,7 @@ async function definirTipoDoDia(
 async function adicionarExercicio(
   tx: Tx,
   planId: string,
-  op: Extract<AdjustOperation, { op: 'ADD_EXERCISE' }>,
-) {
+  op: Extract<AdjustOperation, { op: 'ADD_EXERCISE' }>) {
   const dia = await diaDoPlano(tx, planId, op.day_of_week);
   if (!dia.workoutId) throw new PropostaVencida(`${op.day_of_week} não é dia de treino`);
   await garantirNoCatalogo(tx, op.exercise_id);
@@ -362,16 +359,14 @@ async function registrarCondicao(
   tx: Tx,
   userId: string,
   condition: string,
-  detail: string | null,
-) {
+  detail: string | null) {
   const anamnese = await tx.healthAnamnesis.findUnique({ where: { userId } });
   if (!anamnese) throw new PropostaVencida('sem anamnese para registrar a condição');
 
   const respostas = (anamnese.answers ?? {}) as Record<string, unknown>;
   const parq = { ...((respostas.parq as Record<string, unknown>) ?? {}) };
   const condicoes = new Set<string>(
-    Array.isArray(respostas.conditions) ? (respostas.conditions as string[]) : [],
-  );
+    Array.isArray(respostas.conditions) ? (respostas.conditions as string[]) : []);
 
   // As do PAR-Q moram noutro campo, e é por ele que `deriveFlags` as lê.
   const NO_PARQ: Record<string, string> = {

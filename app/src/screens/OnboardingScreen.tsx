@@ -104,7 +104,7 @@ export function OnboardingScreen() {
 
           <YStack marginTop="$xxl" gap="$lg">
             {lines.map((line) => (
-              <Body key={line} fontSize={15} lineHeight={23} color="$foreground">
+              <Body key={line} fontSize={16} lineHeight={24} color="$foreground">
                 {line}
               </Body>
             ))}

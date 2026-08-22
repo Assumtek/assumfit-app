@@ -69,7 +69,7 @@ export function OxygenScreen() {
       />
 
       <YStack marginBottom="$xl">
-        <SectionTitle fontSize={15} marginBottom="$md">
+        <SectionTitle fontSize={16} marginBottom="$md">
           {historico.ehHoje ? 'Medições de hoje' : 'Medições do dia'}
         </SectionTitle>
         <DayChart

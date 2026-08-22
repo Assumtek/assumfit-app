@@ -89,7 +89,7 @@ export function PressureScreen() {
             id="bp"
           />
         </YStack>
-        <Data marginTop="$md" lineHeight={17}>
+        <Data marginTop="$md" lineHeight={18}>
           Sistólica e diastólica não são duas séries: são um par, e o diagnóstico depende da
           combinação. Por isso o plano cartesiano, e não duas linhas lado a lado.
         </Data>

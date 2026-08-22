@@ -103,8 +103,7 @@ function hourStart(now = new Date()): Date {
  */
 async function habitsToday(
   userId: string,
-  tzOffsetMin: number,
-): Promise<{ waterMl: number | null; sleepScore: number | null }> {
+  tzOffsetMin: number): Promise<{ waterMl: number | null; sleepScore: number | null }> {
   const habit = await prisma.dailyHabit.findUnique({
     where: { userId_date: { userId, date: startOfLocalDay(tzOffsetMin) } },
     select: { waterMl: true, sleepScore: true },
@@ -216,8 +215,7 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
         today.meals_count,
         today.workout?.done ?? null,
         today.steps === null ? null : Math.floor(today.steps / 500),
-      ]),
-    )
+      ]))
     .digest('hex');
 
   const cached = await prisma.energyScore.findUnique({
@@ -253,7 +251,7 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
   const recentInsights = recentes
     .map((r) => (r.insight as { insight?: { headline?: string; detail?: string; source?: string } } | null)?.insight)
     .filter((i): i is { headline?: string; detail?: string; source?: string } => !!i && i.source === 'llm')
-    .map((i) => `${i.headline ?? ''} — ${i.detail ?? ''}`.trim())
+    .map((i) => `${i.headline ?? ''}, ${i.detail ?? ''}`.trim())
     .slice(0, 4);
 
   const { data } = await axios.post<EnergyResponse>(
@@ -290,8 +288,7 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
       },
       today,
     },
-    { timeout: 8000 },
-  );
+    { timeout: 8000 });
 
   if (options.persist !== false) await persistEnergy(userId, data, reading.hrvMs, sleep, inputsHash);
   return data;
@@ -311,8 +308,7 @@ async function persistEnergy(
   result: EnergyResponse,
   hrvUsed: number,
   sleepUsed: number | null,
-  inputsHash: string,
-): Promise<void> {
+  inputsHash: string): Promise<void> {
   const hour = hourStart();
   await prisma.energyScore
     .upsert({
@@ -393,8 +389,7 @@ export async function bioAgeNow(userId: string): Promise<BioAgeResponse | null> 
       bmi: await imcDaAnamnese(userId),
       weekly_active_min: await minutosAtivosNaSemana(userId),
     },
-    { timeout: 8000 },
-  );
+    { timeout: 8000 });
 
   const byKey = Object.fromEntries(data.factors.map((f) => [f.key, f.years]));
   await prisma.bioAgeScore
@@ -468,8 +463,7 @@ async function minutosAtivosNaSemana(userId: string): Promise<number> {
   // regra da agenda de movimento do app — sem ela, o dia de corrida do plano
   // registrado por GPS contaria em dobro e inflaria a aptidão.
   const vinculadas = new Set(
-    sessoes.map((s) => s.workoutExecutionId).filter((id): id is string => !!id),
-  );
+    sessoes.map((s) => s.workoutExecutionId).filter((id): id is string => !!id));
   const minutosDeTreino = execucoes
     .filter((e) => !vinculadas.has(e.id))
     .reduce((soma, e) => soma + (e.durationSec ?? 0) / 60, 0);

@@ -110,7 +110,7 @@ export const Body = styled(Text, {
   ...base,
   fontSize: 14,
   fontWeight: '400',
-  lineHeight: 21,
+  lineHeight: 22,
   color: '$mutedForeground',
 });
 
@@ -133,7 +133,7 @@ export const Data = styled(Text, {
 /** Etiqueta de laboratório: caixa alta, tracking largo. 11 é o piso do iOS. */
 export const Label = styled(Text, {
   ...base,
-  fontSize: 11,
+  fontSize: 12,
   fontWeight: '700',
   letterSpacing: 1.6,
   textTransform: 'uppercase',
