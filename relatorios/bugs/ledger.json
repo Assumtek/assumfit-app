@@ -908,6 +908,12 @@
       "nota": "Reproduzido: a pulseira grava a noite em blocos, e quando você levanta no meio eles caem em dias diferentes da memória — o app pegava só o primeiro (os 59 min). Agora os blocos da mesma noite são juntados, com o tempo em que você levantou contado como acordado. A sua noite de ontem volta inteira na próxima sincronização depois de instalar o build.",
       "versao": "1.0.5 (2)",
       "em": "2026-08-22T07:08:46"
+    },
+    "AKU_9-mig0AHMcBj0DKnhwE": {
+      "commit": "e4e0974",
+      "nota": "Feito: a tela de Sono mostra 'dormiu 23:30 · acordou 06:45' abaixo da data e, quando você levantou de madrugada, uma seção 'Acordou durante a noite' com cada trecho e a duração.",
+      "versao": "1.0.5 (2)",
+      "em": "2026-08-22T09:19:47"
     }
   }
 }
