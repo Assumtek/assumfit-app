@@ -1028,6 +1028,24 @@
       "nota": "O treino selecionado e o Iniciar treino agora ficam antes da lista de outros treinos — não precisa mais rolar até o fim.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T15:28:45"
+    },
+    "AFvHTD7mPyglrbwf-5vOkbA": {
+      "commit": "3dc2220",
+      "nota": "Ao tocar em Iniciar, o relógio conta 3-2-1 antes de começar.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T15:59:00"
+    },
+    "AFrgGGSq0adzKGTe46Eg6S0": {
+      "commit": "3dc2220",
+      "nota": "A pulseira vibra junto com o celular quando o tempo termina.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T15:59:00"
+    },
+    "AD320gmiHzmwnriHqQEEUgI": {
+      "commit": "3dc2220",
+      "nota": "Alongamento unilateral agora roda o cronômetro uma vez por lado, com o botão Outro lado entre eles.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T15:59:00"
     }
   }
 }
