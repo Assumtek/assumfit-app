@@ -1,7 +1,8 @@
 import { YStack } from '@tamagui/stacks';
 import React from 'react';
+import { Share } from 'react-native';
 
-import { Body, Button, Headline } from './ui';
+import { Body, Button, Data, Headline } from './ui';
 import { relatarErro } from '../services/crash-report';
 
 /**
@@ -39,6 +40,19 @@ export class ErrorBoundary extends React.Component<Props, Estado> {
 
   render() {
     if (!this.state.erro && !this.props.erroExterno) return this.props.children;
+    const erro = (this.state.erro ?? this.props.erroExterno) as { message?: string; stack?: string } | null;
+    const mensagem = (erro?.message ?? String(erro ?? '')).slice(0, 300);
+    /*
+     A mensagem técnica aparece, e dá para compartilhar. Um crash na abertura
+     (22/08) chegou pelo TestFlight sem a mensagem — o log da Apple não a
+     carrega — e o envio ao servidor depende de um deploy que pode não existir.
+     O testador com a tela na mão é o único canal garantido: ele manda o
+     texto, e o texto é o diagnóstico.
+    */
+    const compartilhar = () =>
+      void Share.share({
+        message: `AssumFit — erro\n${erro?.message ?? String(erro)}\n\n${(erro?.stack ?? '').slice(0, 3000)}`,
+      }).catch(() => undefined);
     return (
       <YStack flex={1} backgroundColor="$background" justifyContent="center" padding="$xl" gap="$lg">
         <Headline>Algo deu errado nesta tela</Headline>
@@ -46,6 +60,7 @@ export class ErrorBoundary extends React.Component<Props, Estado> {
           O erro foi registrado e vai ser corrigido. Seus dados estão guardados — toque abaixo para
           continuar de onde estava.
         </Body>
+        {mensagem ? <Data>{mensagem}</Data> : null}
         <Button
           title="Tentar de novo"
           onPress={() => {
@@ -53,6 +68,7 @@ export class ErrorBoundary extends React.Component<Props, Estado> {
             this.props.onRecuperar?.();
           }}
         />
+        <Button title="Compartilhar o erro" variant="ghost" onPress={compartilhar} />
       </YStack>
     );
   }
