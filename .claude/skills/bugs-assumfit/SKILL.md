@@ -102,7 +102,10 @@ Qualquer vermelho: não commita, registra no relatório o que travou.
 - Classificado como "recurso já existe" ou "elogio" também responde: diz onde
   o recurso está. Silêncio numa mensagem respondida lê como ignorada. Para
   pergunta ou elogio use `--done --so-resposta` — a nota vai sem o prefixo
-  "Resolvido"; para conversa da própria fundadora, `--silencioso`.
+  "Resolvido". **Mensagem da fundadora no canal também recebe resposta** —
+  ela relata como testadora ali, e "só não me respondeu" (21/08) foi a
+  correção. `--silencioso` fica para o que não é relato: instrução de
+  processo, conversa entre ela e o time.
 - Item do TestFlight: o `--done` **anuncia no canal** (mensagem nova, citando o
   relato e o testador) — foi a pergunta do Leo, e a resposta é sim.
 
