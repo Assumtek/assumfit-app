@@ -1,5 +1,5 @@
 import type { Reading } from '../../domain/types';
-import type { BleService, ConnectionState, DiscoveredDevice } from './types';
+import type { BandActivity, BleService, ConnectionState, DayHistory, DiscoveredDevice, SyncStep } from './types';
 
 const DEVICE: DiscoveredDevice = {
   id: 'E4:C3:B2:A1:00:1F',
@@ -20,6 +20,18 @@ export class MockBleService implements BleService {
   private state: ConnectionState = 'idle';
   private stateListeners = new Set<(s: ConnectionState) => void>();
   private readingListeners = new Set<(r: Reading) => void>();
+  private activityListeners = new Set<(a: BandActivity | null) => void>();
+  /** O filtro de avisos que o mock "guarda", para a seção da tela existir em desenvolvimento. */
+  private filtro: { type: number; enabled: boolean }[] = [
+    { type: 0, enabled: true },
+    { type: 1, enabled: false },
+    { type: 5, enabled: true },
+    { type: 12, enabled: false },
+    { type: 23, enabled: false },
+    { type: 15, enabled: false },
+    { type: 16, enabled: false },
+    { type: 17, enabled: false },
+  ];
   private timer: ReturnType<typeof setInterval> | null = null;
 
   private hrv = 72;
@@ -75,6 +87,55 @@ export class MockBleService implements BleService {
     return () => {
       this.stateListeners.delete(listener);
     };
+  }
+
+  onActivity(listener: (activity: BandActivity | null) => void): () => void {
+    this.activityListeners.add(listener);
+    return () => this.activityListeners.delete(listener);
+  }
+
+  private emitActivity(a: BandActivity | null) {
+    this.activityListeners.forEach((l) => l(a));
+  }
+
+  /**
+   * A memória do dia, NARRADA etapa a etapa como a pulseira real — seis
+   * consultas, ~700 ms cada. Sem isto a tela de Dispositivo nunca mostrava o
+   * estado "sincronizando" em desenvolvimento (revisão de acabamento, 22/08),
+   * e o coração dela era código não visto. Devolve séries pequenas e
+   * plausíveis, carimbadas em hoje.
+   */
+  async fetchHistory(): Promise<DayHistory> {
+    const etapas: SyncStep[] = ['heartRate', 'hrv', 'stress', 'spo2', 'pressure', 'steps'];
+    for (let i = 0; i < etapas.length; i++) {
+      this.emitActivity({ kind: 'sync', step: etapas[i], done: i + 1, total: etapas.length });
+      await new Promise((r) => setTimeout(r, 700));
+    }
+    this.emitActivity(null);
+    const agora = Date.now();
+    const serie = (n: number, base: number, amp: number, passoMin: number) =>
+      Array.from({ length: n }, (_, i) => ({ at: agora - (n - i) * passoMin * 60_000, value: Math.round(base + Math.sin(i) * amp) }));
+    return {
+      heartRate: serie(48, 64, 8, 5),
+      hrv: serie(6, 70, 12, 60),
+      stress: serie(6, 35, 10, 60),
+      spo2: serie(4, 97, 1, 90),
+      pressure: [{ at: agora - 3 * 3_600_000, systolic: 118, diastolic: 76 }],
+      steps: Array.from({ length: 8 }, (_, i) => ({ at: agora - (8 - i) * 3_600_000, steps: 400 + i * 120 })),
+    };
+  }
+
+  async getNotificationFilter(): Promise<{ type: number; enabled: boolean }[]> {
+    return this.filtro.map((f) => ({ ...f }));
+  }
+
+  async setNotificationFilter(entries: { type: number; enabled: boolean }[]): Promise<boolean> {
+    this.filtro = entries.map((f) => ({ ...f }));
+    return true;
+  }
+
+  async enableAncs(): Promise<boolean> {
+    return true;
   }
 
   getBatteryLevel(): number {

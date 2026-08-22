@@ -305,6 +305,8 @@ type BiometricState = {
   connectionReason: string | null;
   /** Etapa em curso no canal da pulseira — o que preenche a espera com verdade. */
   bandActivity: BandActivity | null;
+  /** Quando a última sincronização com dado na mão terminou. Tela de Dispositivo. */
+  lastSyncAt: number | null;
   devices: DiscoveredDevice[];
   latest: Reading | null;
   /**
@@ -606,6 +608,7 @@ async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
   // Marcado só com dado na mão: leitura que falhou não deve bloquear a próxima
   // tentativa pelo intervalo mínimo.
   ultimaSincronia = Date.now();
+  set({ lastSyncAt: ultimaSincronia });
 
   /*
    A memória de HOJE também vai ao servidor.
@@ -671,6 +674,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
   stressHistory: [],
   pressureHistory: [],
   batteryPct: null,
+  lastSyncAt: null,
   connectError: null,
   measuring: null,
   measureStartedAt: null,

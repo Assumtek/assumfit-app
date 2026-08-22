@@ -1,20 +1,40 @@
+/*
+ DIREÇÃO — tela de Dispositivo (refeita em 22/08/2026, sorteio de estrutura 4ebeabc6)
+
+ THESIS: a tela responde a UMA pergunta — "o que a pulseira já entregou hoje, e
+ o que falta?" — e recusa o formulário de propriedades (modelo, identificador,
+ estado) como abertura; isso desce para o fim, onde se consulta.
+ OWN-WORLD: o sistema do AssumFit, fixo — tinta, acento roxo só no dado e na
+ única ação primária, faixa de instrumento com hairline, seções separadas por
+ linha, peso 300 no número grande. Sem cartão por linha.
+ STORY: a pessoa abre porque um número não apareceu. Vê na faixa quantas
+ grandezas chegaram, bate em Sincronizar, acompanha o razão marcar cada
+ chegada com a hora, e sai sabendo o que ficou faltando e por quê.
+ FIRST VIEWPORT: faixa de instrumento (bateria · última leitura · chegou hoje
+ N de 7), linha de estado, botão primário Sincronizar, e o razão começando.
+ FORM: livro-razão por grandeza — candidato 4 da lista ordenada; o experimento
+ de medição combinada sai (decisão da fundadora).
+ FINISH: unreviewed and undocumented is unfinished; this build ends with the
+ finish review, the verdict, and DESIGN.md.
+*/
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
-import { Pressable } from 'react-native';
+import { ActivityIndicator, Pressable } from 'react-native';
 
 import { YStack } from '@tamagui/stacks';
 
 import { BandStatusLine } from '../components/BandStatus';
 import { BandVibration } from '../components/BandVibration';
 import { Note, Row, Section } from '../components/Card';
-import { ble } from '../services/ble';
 import { DetailScreen } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
-import { MeasureButton } from '../components/MeasureButton';
 import { SedentaryReminder } from '../components/SedentaryReminder';
 import { SyncProgress } from '../components/SyncProgress';
 import { Body, Button, Data } from '../components/ui';
-import { Card } from '../components/ui/Card';
+import { Readout, ReadoutCluster } from '../components/ui/Readout';
+import { chegaramHoje, entregasDaPulseira, faltamHoje, ORDEM_DO_RAZAO } from '../domain/bandLedger';
+import { horaLocal } from '../domain/sleep';
+import { ble } from '../services/ble';
 import { useBiometricStore } from '../store/biometric.store';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -25,13 +45,42 @@ export function DeviceScreen() {
   const syncHistory = useBiometricStore((s) => s.syncHistory);
   const sincronizando = useBiometricStore((s) => s.syncing);
   const syncError = useBiometricStore((s) => s.syncError);
+  const bandActivity = useBiometricStore((s) => s.bandActivity);
   const battery = useBiometricStore((s) => s.batteryPct);
   const latest = useBiometricStore((s) => s.latest);
+  const lastSyncAt = useBiometricStore((s) => s.lastSyncAt);
   const disconnect = useBiometricStore((s) => s.disconnect);
   const connect = useBiometricStore((s) => s.connect);
   const connectError = useBiometricStore((s) => s.connectError);
   const connectionReason = useBiometricStore((s) => s.connectionReason);
   const pairedDeviceId = useBiometricStore((s) => s.pairedDeviceId);
+
+  // As séries que o razão lê. Seletores separados: a tela só re-renderiza
+  // quando uma delas muda, não a cada leitura ao vivo.
+  const hrHistory = useBiometricStore((s) => s.hrHistory);
+  const hrvHistory = useBiometricStore((s) => s.hrvHistory);
+  const stressHistory = useBiometricStore((s) => s.stressHistory);
+  const spo2History = useBiometricStore((s) => s.spo2History);
+  const pressureHistory = useBiometricStore((s) => s.pressureHistory);
+  const stepsToday = useBiometricStore((s) => s.activity.steps);
+  const sleep = useBiometricStore((s) => s.sleep);
+
+  const razao = React.useMemo(
+    () =>
+      entregasDaPulseira({
+        hrHistory,
+        hrvHistory,
+        stressHistory,
+        spo2History,
+        pressureHistory,
+        stepsToday,
+        sleep,
+        syncedAt: lastSyncAt,
+      }),
+    [hrHistory, hrvHistory, stressHistory, spo2History, pressureHistory, stepsToday, sleep, lastSyncAt],
+  );
+  const chegaram = chegaramHoje(razao);
+  const faltam = faltamHoje(razao);
 
   const onDisconnect = async () => {
     await disconnect();
@@ -64,16 +113,10 @@ export function DeviceScreen() {
   };
 
   /*
-   Calibração de uso — o passo que faltava.
-
-   Uma pulseira não calibrada aceita o comando de medir, mede, e conclui sem
-   valor: o SDK 1.0.0.20260812 documentou esse desfecho como `error.code == -4`,
-   e é o que `domain/bandErrors.ts` traduz para "precisa ser calibrada". Este
-   botão é o destino que aquela mensagem promete — sem ele, a tela mandaria a
-   pessoa a um lugar que não existe.
-
-   Leva até dois minutos e o rótulo diz isso ANTES, não depois: um botão que
-   trava por dois minutos sem avisar é um botão quebrado aos olhos de quem toca.
+   Calibração de uso. Uma pulseira não calibrada aceita o comando de medir,
+   mede, e conclui sem valor (`error.code == -4` no SDK); `bandErrors.ts`
+   traduz para "precisa ser calibrada", e esta é a linha que aquela mensagem
+   promete. Leva até dois minutos, e o rótulo diz isso ANTES.
   */
   const [calibrando, setCalibrando] = React.useState(false);
   const [calibracao, setCalibracao] = React.useState<string | null>(null);
@@ -88,9 +131,7 @@ export function DeviceScreen() {
           : 'A calibração não concluiu. Vista a pulseira firme, fique parado e tente de novo.',
       );
     } catch {
-      setCalibracao(
-        'A calibração não concluiu. Vista a pulseira firme, fique parado e tente de novo.',
-      );
+      setCalibracao('A calibração não concluiu. Vista a pulseira firme, fique parado e tente de novo.');
     } finally {
       setCalibrando(false);
     }
@@ -98,8 +139,7 @@ export function DeviceScreen() {
 
   /*
    Quem entrou por "Explorar sem pulseira" chega aqui SEM aparelho — e a tela
-   de aparelho pareado mentiria um Staranb desconectado. Este é o caminho de
-   volta para o pareamento quando a pulseira chegar.
+   de aparelho pareado mentiria um Staranb desconectado.
   */
   if (!pairedDeviceId && connection !== 'connected') {
     return (
@@ -109,162 +149,189 @@ export function DeviceScreen() {
           body="Você está usando o app sem a pulseira. Quando ela chegar, conecte aqui — as medições começam sozinhas e preenchem as telas."
         />
         <YStack marginTop="$xl">
-          <Button
-            title="Conectar pulseira"
-            onPress={() => navigation.navigate('Connect' as never)}
-          />
+          <Button title="Conectar pulseira" onPress={() => navigation.navigate('Connect' as never)} />
         </YStack>
       </DetailScreen>
     );
   }
 
+  const conectada = connection === 'connected';
   const conectando = connection === 'connecting';
-  const rows = [
-    { label: 'Modelo', value: 'AssumFit Watch' },
-    // O identificador REAL do pareamento — havia um MAC fixo escrito aqui, e
-    // identificador inventado numa tela de hardware é mentira com cara de dado.
-    { label: 'Identificador', value: pairedDeviceId ?? '—' },
-    {
-      label: 'Estado',
-      value: connection === 'connected' ? 'Conectado' : conectando ? 'Reconectando…' : 'Desconectado',
-    },
-    { label: 'Bateria', value: battery != null ? `${battery}%` : '—' },
-    { label: 'Origem dos dados', value: latest?.source === 'mock' ? 'Simulado' : 'Sensor' },
-  ];
+  const etapaViva = bandActivity?.kind === 'sync' ? bandActivity.step : null;
+  const indiceVivo = etapaViva ? ORDEM_DO_RAZAO.findIndex((o) => o.step === etapaViva) : -1;
 
   return (
     <DetailScreen title="Dispositivo">
-      <Section label="Dispositivo pareado" divider={false}>
-        {rows.map((row, i) => (
-          <Row key={row.label} last={i === rows.length - 1}>
-            <Body flex={1}>{row.label}</Body>
-            <Data fontSize={13} color="$foreground">
-              {row.value}
-            </Data>
-          </Row>
-        ))}
-      </Section>
+      {/*
+        A faixa de instrumento: três mostradores, uma linha. É o mesmo
+        vocabulário do treino (Readout), e responde de relance à pergunta que
+        trouxe a pessoa aqui. "Chegou hoje" é o dado desta tela; bateria e
+        última leitura são o contexto dele.
+      */}
+      <ReadoutCluster>
+        <Readout valor={battery != null ? String(battery) : '—'} unidade={battery != null ? '%' : undefined} rotulo="bateria" />
+        <Readout valor={`${chegaram}`} unidade={`de ${razao.length}`} rotulo="chegou hoje" />
+        <Readout valor={lastSyncAt ? horaLocal(lastSyncAt) : '—'} rotulo="sincronizado" />
+      </ReadoutCluster>
+
+      <YStack marginTop="$lg" gap="$lg" paddingBottom="$sm">
+        <BandStatusLine />
+
+        {conectada ? (
+          <>
+            {/*
+              A ÚNICA ação primária da tela. Sincronizar é o verbo desta tela;
+              o resto é ferramenta.
+            */}
+            <Button
+              title={sincronizando ? 'Lendo a pulseira…' : 'Sincronizar agora'}
+              icon={<Icon name="refresh" size={16} color={colors.ink} />}
+              onPress={() => void syncHistory(true)}
+              disabled={sincronizando}
+              loading={sincronizando}
+            />
+            {syncError ? (
+              // Hairline, não cartão: a tela inteira é linha, e o erro não é
+              // uma peça de destaque — é uma linha de estado com explicação.
+              <YStack borderTopWidth={1} borderBottomWidth={1} borderColor="$border" paddingVertical="$md">
+                <SyncProgress />
+              </YStack>
+            ) : null}
+          </>
+        ) : (
+          /*
+           Reconectar SEM cerimônia: o aparelho já está pareado — cair de volta
+           na tela de pareamento inicial trata uma queda de sinal como decisão
+           nova. Um toque aqui, e o app volta a tentar sozinho a cada retorno ao
+           primeiro plano (ver App.tsx).
+          */
+          <>
+            <Button
+              title={reconectando || conectando ? 'Reconectando…' : 'Reconectar'}
+              onPress={() => void reconectar()}
+              disabled={reconectando || conectando || !pairedDeviceId}
+              loading={reconectando || conectando}
+            />
+            {(connectError || connectionReason) && !reconectando && !conectando ? (
+              <Note
+                title="Não deu para reconectar"
+                body={
+                  connectionReason ??
+                  'Confira se a pulseira está por perto e carregada, e se o Bluetooth do iPhone está ligado — aí tente de novo.'
+                }
+              />
+            ) : !reconectando && !conectando ? (
+              <Note
+                title="Sem conexão com a pulseira"
+                body="O que já chegou continua abaixo e em todas as telas. Medição nova, bateria e localizar voltam quando reconectar."
+              />
+            ) : null}
+          </>
+        )}
+      </YStack>
 
       {/*
-        Localizar: a pulseira vibra até a pessoa achá-la. Só aparece conectada —
-        fora de alcance o rádio não entrega o comando, e um botão que não faz
-        nada ensina a desconfiar dos outros.
+        O RAZÃO. Cada grandeza que a pulseira entrega, com a hora em que a
+        última chegou hoje — ou o traço. Durante a sincronização, a linha que
+        está sendo lida gira e as anteriores ganham o tique; terminada, as
+        horas ficam. É o progresso que antes sumia quando a leitura acabava.
       */}
-      {connection === 'connected' ? (
-        <YStack marginTop="$xl" gap="$lg">
-          {/* O que a pulseira está fazendo agora — sincronizando, medindo.
-              É a resposta à pergunta que traz a pessoa a esta tela quando
-              algum número ainda não apareceu. */}
-          <BandStatusLine />
+      <Section label="O que chegou hoje">
+        {razao.map((e, i) => {
+          const viva = sincronizando && e.step === etapaViva;
+          const lida = sincronizando && indiceVivo >= 0 && i < indiceVivo;
+          return (
+            <Row key={e.step} last={i === razao.length - 1}>
+              <YStack width={20} height={20} alignItems="center" justifyContent="center" marginRight="$md">
+                {viva ? (
+                  <ActivityIndicator size="small" color={colors.accent} />
+                ) : lida || e.lastAt != null || e.resumo ? (
+                  <Icon name="check" size={16} color={e.lastAt != null || e.resumo ? colors.accent : colors.textMuted} />
+                ) : (
+                  <YStack width={8} height={8} borderRadius={4} borderWidth={1} borderColor="$border" />
+                )}
+              </YStack>
+              <YStack flex={1} gap={2}>
+                <Body color={e.lastAt != null || e.resumo || viva ? '$foreground' : '$mutedForeground'}>{e.label}</Body>
+                {e.resumo ? <Data>{e.resumo}</Data> : null}
+              </YStack>
+              <Data fontSize={13} color={e.lastAt != null ? '$foreground' : '$mutedForeground'} fontVariant={['tabular-nums']}>
+                {viva ? 'lendo…' : e.lastAt != null ? horaLocal(e.lastAt) : e.resumo ? 'hoje' : 'sem medição'}
+              </Data>
+            </Row>
+          );
+        })}
+        {sincronizando ? (
+          <Body marginTop="$lg">
+            A pulseira mede sozinha o dia todo e guarda tudo por dentro. Trazer cada grandeza leva cerca de um
+            minuto — pode manter a tela aberta.
+          </Body>
+        ) : faltam.length > 0 && conectada ? (
+          <Body marginTop="$lg">{explicacaoDoQueFalta(faltam)}</Body>
+        ) : null}
+      </Section>
 
-          {/*
-            Sincronizar tem lugar PRÓPRIO, com a lista de etapas do lado.
+      {conectada ? (
+        <Section label="Ferramentas">
+          <Pressable onPress={() => void localizar()} disabled={localizando} accessibilityRole="button">
+            <Row>
+              <Icon name="target" size={16} color={colors.text} />
+              <YStack flex={1} marginLeft="$md" gap={2}>
+                <Body color="$foreground">Localizar pulseira</Body>
+                <Data>{localizando ? 'Vibrando…' : 'Vibra por alguns segundos.'}</Data>
+              </YStack>
+              <Icon name="arrowRight" size={14} color={colors.textMuted} />
+            </Row>
+          </Pressable>
+          <Pressable onPress={() => void calibrar()} disabled={calibrando} accessibilityRole="button">
+            <Row last>
+              <Icon name="watch" size={16} color={colors.text} />
+              <YStack flex={1} marginLeft="$md" gap={2}>
+                <Body color="$foreground">Calibrar uso da pulseira</Body>
+                <Data>
+                  {calibrando
+                    ? 'Calibrando… fique parado, com a pulseira vestida (até 2 min).'
+                    : (calibracao ?? 'Se a medição sob demanda volta vazia, a pulseira pede isto.')}
+                </Data>
+              </YStack>
+              {calibrando ? (
+                <ActivityIndicator size="small" color={colors.accent} />
+              ) : (
+                <Icon name="arrowRight" size={14} color={colors.textMuted} />
+              )}
+            </Row>
+          </Pressable>
+        </Section>
+      ) : null}
 
-            Antes só existia como puxar-para-atualizar dentro das telas de
-            métrica: invisível para quem não conhece o gesto, e mudo enquanto
-            corria. Aqui é um botão nomeado, e o painel ao lado conta o que está
-            sendo lido — foi a falta exata disso que fez uma pessoa em teste
-            achar o app quebrado.
-          */}
-          {sincronizando || syncError ? (
-            <Card>
-              <SyncProgress />
-            </Card>
-          ) : null}
-          <Button
-            title={sincronizando ? 'Lendo a pulseira…' : 'Sincronizar agora'}
-            variant="secondary"
-            icon={<Icon name="refresh" size={16} color={colors.text} />}
-            onPress={() => void syncHistory(true)}
-            disabled={sincronizando}
-            loading={sincronizando}
-          />
-          <Button
-            title={localizando ? 'Vibrando…' : 'Localizar pulseira'}
-            variant="secondary"
-            onPress={() => void localizar()}
-            disabled={localizando}
-          />
+      {/* Mora aqui porque o filtro é lido da pulseira e escrito nela. */}
+      {conectada ? <BandVibration /> : null}
 
-          <Button
-            title={calibrando ? 'Calibrando… (até 2 min)' : 'Calibrar uso da pulseira'}
-            variant="secondary"
-            onPress={() => void calibrar()}
-            disabled={calibrando}
-            loading={calibrando}
-          />
-          {calibrando ? (
-            <Data>Fique parado, com a pulseira vestida, até a calibração terminar.</Data>
-          ) : calibracao ? (
-            <Data>{calibracao}</Data>
-          ) : null}
-
-          {/*
-            EXPERIMENTO — mede tudo numa corrida só, se o firmware deixar.
-
-            O cabeçalho do SDK descreve um modelo de retorno com batimento, HRV,
-            estresse, RRI e pressão juntos. Se esta pulseira responder a ele, as
-            três medições de hoje (30 s + 30 s + 80 s) viram uma de 30 s. Se não
-            responder, volta vazio e nada muda — por isso mora aqui, na tela de
-            manutenção, e não numa tela de saúde.
-
-            Como conferir: toque, espere, e veja se Estresse e HRV mudaram.
-          */}
-          <MeasureButton kind="oneKeyFull" label="Testar medição combinada" />
-          <Data>
-            Experimento: tenta trazer batimento, pressão, oxigenação, estresse e HRV numa medição
-            só. Depois confira se as telas de Estresse e HRV mudaram.
-          </Data>
-
-          {/*
-            Mora aqui, e não em Configurações, porque só faz sentido com a
-            pulseira conectada: o filtro é lido dela e escrito nela.
-          */}
-          <BandVibration />
-        </YStack>
-      ) : (
-        /*
-         Reconectar SEM cerimônia: o aparelho já está pareado — cair de volta
-         na tela de pareamento inicial trata uma queda de sinal como se fosse
-         uma decisão nova. Um toque aqui, e o app volta a tentar sozinho a
-         cada retorno ao primeiro plano (ver App.tsx).
-        */
-        <YStack marginTop="$xl" gap="$md">
-          <Button
-            title={reconectando || conectando ? 'Reconectando…' : 'Reconectar'}
-            onPress={() => void reconectar()}
-            disabled={reconectando || conectando || !pairedDeviceId}
-            loading={reconectando || conectando}
-          />
-          {(connectError || connectionReason) && !reconectando && !conectando ? (
-            <Note
-              title="Não deu para reconectar"
-              // O motivo específico vem do serviço quando ele sabe — "feche o
-              // app do fabricante" pede uma ação que o conselho genérico de
-              // alcance e bateria nunca mencionaria.
-              body={
-                connectionReason ??
-                'Confira se a pulseira está por perto e carregada, e se o Bluetooth do iPhone está ligado — aí tente de novo.'
-              }
-            />
-          ) : null}
-          <Note
-            title="Sem conexão com a pulseira"
-            body="Seu histórico continua disponível em todas as telas. O que depende do rádio — medição nova, bateria e localizar — volta quando reconectar."
-          />
-        </YStack>
-      )}
-
-      {/* O lar do alerta de sedentarismo desde ago/2026: a tela de Hábitos
-          ficou só com a água. */}
       <SedentaryReminder />
 
       {/*
-        Só quando a fonte É o mock. Este texto ficava fixo — escrito quando o
-        gerador era o único wearable — e afirmava "dados simulados" para quem
-        estava com a pulseira real no pulso. Num produto de saúde, dizer que o
-        dado é falso quando ele é real é tão grave quanto o contrário.
+        As propriedades, por ÚLTIMO: é o que se consulta, não o que se lê. O
+        identificador é o real do pareamento — nunca um MAC inventado.
       */}
+      <Section label="Pulseira">
+        <Row>
+          <Body flex={1}>Modelo</Body>
+          <Data fontSize={13} color="$foreground">AssumFit Watch</Data>
+        </Row>
+        <Row>
+          <Body flex={1}>Identificador</Body>
+          <Data fontSize={13} color="$foreground">{pairedDeviceId ?? '—'}</Data>
+        </Row>
+        <Row>
+          <Body flex={1}>Estado</Body>
+          <Data fontSize={13} color="$foreground">{conectada ? 'Conectada' : conectando ? 'Reconectando…' : 'Desconectada'}</Data>
+        </Row>
+        <Row last>
+          <Body flex={1}>Origem dos dados</Body>
+          <Data fontSize={13} color="$foreground">{latest?.source === 'mock' ? 'Simulado' : 'Sensor'}</Data>
+        </Row>
+      </Section>
+
       {latest?.source === 'mock' ? (
         <Note
           title="Wearable simulado"
@@ -281,4 +348,25 @@ export function DeviceScreen() {
       </Pressable>
     </DetailScreen>
   );
+}
+
+/**
+ * Por que cada grandeza pode faltar — dito só para as que faltam. A versão
+ * anterior era uma frase fixa que citava HRV com HRV já na tela (revisão de
+ * acabamento, 22/08); citar o que está acima com outra verdade é o jeito mais
+ * rápido de perder a confiança de quem lê.
+ */
+function explicacaoDoQueFalta(faltam: string[]): string {
+  const motivos: Record<string, string> = {
+    'Variabilidade cardíaca': 'depende das janelas agendadas no firmware',
+    Estresse: 'depende das janelas agendadas no firmware',
+    Oxigenação: 'depende das janelas agendadas no firmware',
+    Pressão: 'só chega quando você mede',
+    'Sono da noite': 'chega depois da noite dormida com a pulseira',
+    Batimentos: 'chega com a primeira leitura ao vivo',
+    Passos: 'chega com a primeira leitura ao vivo',
+  };
+  const partes = faltam.map((f) => `${f.toLowerCase()} ${motivos[f] ?? 'ainda não foi medido'}`);
+  const lista = partes.length === 1 ? partes[0] : `${partes.slice(0, -1).join('; ')}; e ${partes[partes.length - 1]}`;
+  return `Sem medição não é falha: ${lista}.`;
 }
