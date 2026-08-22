@@ -914,6 +914,12 @@
       "nota": "Feito: a tela de Sono mostra 'dormiu 23:30 · acordou 06:45' abaixo da data e, quando você levantou de madrugada, uma seção 'Acordou durante a noite' com cada trecho e a duração.",
       "versao": "1.0.5 (2)",
       "em": "2026-08-22T09:19:47"
+    },
+    "AGBHlSaYYGn5Pme2-ziecr4": {
+      "commit": "7d656f4",
+      "nota": "Corrigido: a folha de horário agora sobe junto com o teclado, e o campo 'ou digite' fica visível.",
+      "versao": "1.0.5 (2)",
+      "em": "2026-08-22T10:00:37"
     }
   }
 }
