@@ -172,3 +172,68 @@ export function dataDaNoite(inicio: number): string {
   if (d.getHours() < 12) d.setDate(d.getDate() - 1);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
+
+/** Segmento de sono com instante — o que a pulseira entrega, já convertido. */
+export type SegmentoComInstante = SleepSegment & { startAt: number; endAt: number };
+
+/**
+ * Quanto tempo ACORDADO ainda é a mesma noite.
+ *
+ * Um testador (22/08/2026) dormiu 23h30, levantou à 1h, voltou e dormiu até
+ * 6h45 — e o app mostrou 59 minutos. A pulseira grava o sono em blocos, e um
+ * bloco que termina de um lado da meia-noite do firmware e outro que começa do
+ * outro caíam em "dias" diferentes; o app pegava o primeiro dia com sono e
+ * parava. Três horas é folga para ir ao banheiro, acalmar um filho ou ler um
+ * pouco; mais que isso é cochilo separado, não a mesma noite.
+ */
+export const INTERVALO_MAXIMO_NA_NOITE_MS = 3 * 3_600_000;
+
+/**
+ * Segmentos soltos → noites inteiras.
+ *
+ * Ordena pelo início, descarta duplicata exata (o mesmo bloco pode vir em dois
+ * "dias" da memória), e junta numa noite só tudo que dista menos que
+ * `INTERVALO_MAXIMO_NA_NOITE_MS` do bloco anterior. O intervalo vira um
+ * segmento "acordado" — é verdade (a pessoa levantou) e é o que faz a
+ * continuidade e o hipnograma contarem a noite como ela foi. A data de cada
+ * noite é a da TARDE em que ela começou (`dataDaNoite`). Devolve da mais
+ * recente para a mais antiga.
+ */
+export function montarNoites(segmentos: SegmentoComInstante[]): SleepNight[] {
+  const vistos = new Set<string>();
+  const ordenados = segmentos
+    .filter((s) => s.minutes > 0 && Number.isFinite(s.startAt) && s.startAt > 0)
+    .filter((s) => {
+      const chave = `${s.startAt}|${s.phase}|${s.minutes}`;
+      if (vistos.has(chave)) return false;
+      vistos.add(chave);
+      return true;
+    })
+    .sort((a, b) => a.startAt - b.startAt);
+  if (ordenados.length === 0) return [];
+
+  const grupos: SegmentoComInstante[][] = [];
+  for (const seg of ordenados) {
+    const atual = grupos[grupos.length - 1];
+    const fimAnterior = atual ? Math.max(...atual.map((x) => x.endAt)) : null;
+    if (atual && fimAnterior !== null && seg.startAt - fimAnterior <= INTERVALO_MAXIMO_NA_NOITE_MS) {
+      atual.push(seg);
+    } else {
+      grupos.push([seg]);
+    }
+  }
+
+  const noites = grupos.map((grupo) => {
+    const segments: SleepSegment[] = [];
+    let fim = grupo[0].startAt;
+    for (const seg of grupo) {
+      const intervalo = Math.round((seg.startAt - fim) / 60_000);
+      if (segments.length > 0 && intervalo >= 1) segments.push({ phase: 'awake', minutes: intervalo });
+      segments.push({ phase: seg.phase, minutes: seg.minutes });
+      fim = Math.max(fim, seg.endAt);
+    }
+    return nightFrom(dataDaNoite(grupo[0].startAt), segments, [], { startAt: grupo[0].startAt, endAt: fim });
+  });
+
+  return noites.sort((a, b) => (b.startAt ?? 0) - (a.startAt ?? 0));
+}

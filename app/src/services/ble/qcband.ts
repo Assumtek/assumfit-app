@@ -6,7 +6,7 @@ import {
   type QCState,
 } from '../../../modules/qcband';
 import { nightFrom } from '../../domain/sleep';
-import { dataDaNoite } from '../../domain/sleep';
+import { montarNoites, type SegmentoComInstante } from '../../domain/sleep';
 import type { SportKind } from '../../domain/sport';
 import type { Reading, SleepNight, SleepPhase, SleepSegment } from '../../domain/types';
 import { comTeto, eTempoEsgotado, TETO_CONSULTA_MS, TETO_MEDICAO_MS } from './timeout';
@@ -821,13 +821,22 @@ export class QCBandService implements BleService {
 
     this.setActivity({ kind: 'sync', step: 'sleep', done: 1, total: 1 });
     try {
+      /*
+       Os DOIS dias juntos, e só depois a noite.
+
+       Era "dia 1, depois dia 0, devolve o primeiro com sono". Uma noite com
+       levantada no meio fica partida em dois dias da memória — um testador
+       (22/08) dormiu 23h30, levantou à 1h, voltou até 6h45 e o app mostrou os
+       59 minutos do primeiro bloco. Quem junta os blocos é o domínio
+       (`montarNoites`); aqui só se recolhe tudo e se entrega a mais recente.
+      */
+      const bruto: SegmentoBruto[] = [];
       for (const dia of [1, 0]) {
-        const bruto = await comTeto(QCBand.getSleep(dia), TETO_CONSULTA_MS, 'sono').catch(() => []);
-        if (__DEV__) console.log(`[qcband] sono do dia ${dia}: ${bruto.length} segmentos`);
-        const noite = montarNoite(bruto);
-        if (noite) return noite;
+        const doDia = await comTeto(QCBand.getSleep(dia), TETO_CONSULTA_MS, 'sono').catch(() => []);
+        if (__DEV__) console.log(`[qcband] sono do dia ${dia}: ${doDia.length} segmentos`);
+        bruto.push(...doDia);
       }
-      return null;
+      return noitesDoBruto(bruto)[0] ?? null;
     } finally {
       if (this.activity?.kind === 'sync') this.setActivity(null);
     }
@@ -853,13 +862,15 @@ export class QCBandService implements BleService {
      Lendo ao contrário, o corte custa a noite de seis dias atrás, que é o que
      menos falta.
     */
-    const noites: SleepNight[] = [];
+    // Recolhe os sete dias e monta as noites de uma vez: noite que cruza a
+    // fronteira de "dia" do firmware (levantada na madrugada) sai inteira.
+    const bruto: SegmentoBruto[] = [];
     for (let dia = 0; dia <= 6; dia++) {
       this.setActivity({ kind: 'sync', step: 'memory', done: dia + 1, total: 7 });
-      const bruto = await comTeto(QCBand.getSleep(dia), TETO_CONSULTA_MS, 'sono').catch(() => []);
-      const noite = montarNoite(bruto);
-      if (noite) noites.push(noite);
+      const doDia = await comTeto(QCBand.getSleep(dia), TETO_CONSULTA_MS, 'sono').catch(() => []);
+      bruto.push(...doDia);
     }
+    const noites = noitesDoBruto(bruto);
     if (__DEV__) console.log(`[qcband] noites na memória: ${noites.length}`);
     if (this.activity?.kind === 'sync') this.setActivity(null);
     return noites;
@@ -991,36 +1002,27 @@ export class QCBandService implements BleService {
  * Zero significa "não mediu nesta janela", não "batimento zero" — a pulseira
  * preenche o vetor inteiro do dia mesmo antes de o dia acabar.
  */
-/** Segmentos crus do SDK → noite do domínio. `null` quando o dia não tem sono. */
-function montarNoite(bruto: { type: number; minutes: number; start: string }[]): SleepNight | null {
+type SegmentoBruto = { type: number; minutes: number; start: string; end?: string };
+
+/**
+ * Segmentos crus do SDK → noites do domínio, da mais recente para a mais antiga.
+ *
+ * O firmware numera as fases (1 acordado, 2 leve, 3 profundo, 4 REM) e carimba
+ * início e fim de cada bloco. Aqui só se traduz; quem decide o que é "a mesma
+ * noite" é `montarNoites`, no domínio, onde isso é testável sem pulseira.
+ */
+function noitesDoBruto(bruto: SegmentoBruto[]): SleepNight[] {
   const fases: Record<number, SleepPhase> = { 1: 'awake', 2: 'light', 3: 'deep', 4: 'rem' };
-  if (!bruto.length) return null;
-
-  const segments: SleepSegment[] = bruto
-    .filter((s) => fases[s.type] && s.minutes > 0)
-    .map((s) => ({ phase: fases[s.type], minutes: s.minutes }));
-  if (!segments.length) return null;
-
-  // A noite pertence à TARDE em que começou — inclusive quando o sono só veio
-  // depois da meia-noite (ver `dataDaNoite`). Sem início legível, fica a de
-  // ontem à noite, que é a única resposta que não inventa uma data futura.
-  const inicioLocal = instanteDoFirmware(bruto[0].start ?? '');
-  const data = dataDaNoite(inicioLocal > 0 ? inicioLocal : Date.now() - 12 * 3_600_000);
-
-  /*
-   A JANELA da noite, que a pulseira já entrega e a gente descartava.
-
-   Sem ela não havia como recortar a série de SpO₂ do dia inteiro para o trecho
-   dormido — e era por isso que o gráfico "Oxigênio durante a noite" nascia
-   vazio e assim ficava.
-  */
-  const inicio = instanteDoFirmware(bruto[0].start ?? '');
-  const janela =
-    inicio > 0
-      ? { startAt: inicio, endAt: inicio + bruto.reduce((t, x) => t + x.minutes, 0) * 60_000 }
-      : undefined;
-
-  return nightFrom(data, segments, [], janela);
+  const segmentos: SegmentoComInstante[] = [];
+  for (const s of bruto) {
+    const phase = fases[s.type];
+    if (!phase || !(s.minutes > 0)) continue;
+    const startAt = instanteDoFirmware(s.start ?? '');
+    if (startAt <= 0) continue;
+    const fim = instanteDoFirmware(s.end ?? '');
+    segmentos.push({ phase, minutes: s.minutes, startAt, endAt: fim > startAt ? fim : startAt + s.minutes * 60_000 });
+  }
+  return montarNoites(segmentos);
 }
 
 /**
