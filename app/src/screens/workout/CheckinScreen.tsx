@@ -230,34 +230,15 @@ export function CheckinScreen() {
           />
         ) : null}
 
-        {others.length > 0 ? (
-          <YStack gap="$md">
-            <Text fontSize={16} fontWeight="700" color="$foreground">
-              {isRestDay ? 'Escolha um treino' : 'Ou escolha outro'}
-            </Text>
-            {others.map((day) => (
-              <WorkoutOption
-                key={day.id}
-                day={day}
-                selected={selected?.id === day.id}
-                expanded={expandedId === day.workout!.id}
-                loading={loadingPreview === day.workout!.id}
-                names={previews[day.workout!.id]}
-                onSelect={() => setSelected(day)}
-                onTogglePreview={() => togglePreview(day)}
-              />
-            ))}
-          </YStack>
-        ) : null}
-
-        {error ? (
-          <Text fontSize={14} color="$destructive">
-            {error}
-          </Text>
-        ) : null}
-
+        {/*
+          O selecionado e o "Iniciar treino" ficam ANTES da lista de outros
+          treinos, não depois dela. Era o rodapé: com cinco cards expandíveis no
+          meio, quem só queria começar o de hoje rolava a tela inteira para
+          achar o botão (Bruno, 22/08). Agora a ordem é a da decisão — o treino
+          de hoje, o botão de começar, e só então "ou escolha outro".
+        */}
         {selected?.workout ? (
-          <YStack gap="$md" paddingTop="$sm">
+          <YStack gap="$md">
             <XStack alignItems="center" justifyContent="space-between" gap="$md">
               <YStack gap={2} flex={1}>
                 <Text
@@ -357,6 +338,33 @@ export function CheckinScreen() {
             })()}
           </YStack>
         ) : null}
+
+        {others.length > 0 ? (
+          <YStack gap="$md">
+            <Text fontSize={16} fontWeight="700" color="$foreground">
+              {isRestDay ? 'Escolha um treino' : 'Ou escolha outro'}
+            </Text>
+            {others.map((day) => (
+              <WorkoutOption
+                key={day.id}
+                day={day}
+                selected={selected?.id === day.id}
+                expanded={expandedId === day.workout!.id}
+                loading={loadingPreview === day.workout!.id}
+                names={previews[day.workout!.id]}
+                onSelect={() => setSelected(day)}
+                onTogglePreview={() => togglePreview(day)}
+              />
+            ))}
+          </YStack>
+        ) : null}
+
+        {error ? (
+          <Text fontSize={14} color="$destructive">
+            {error}
+          </Text>
+        ) : null}
+
       </YStack>
     </DetailScreen>
   );
