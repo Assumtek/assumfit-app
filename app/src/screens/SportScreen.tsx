@@ -38,7 +38,7 @@ import { ScalePicker } from '../components/ScalePicker';
 import { ConfirmDialog, Sheet } from '../components/ui/Dialog';
 import { ShadowView } from '../components/ui/ShadowView';
 import { useFabShadow } from '../components/ui/elevation';
-import { buildMovementWeek, movementMinutes, weeklySeries } from '../domain/movement';
+import { buildMovementWeek, movementMinutes, treinoConta, weeklySeries } from '../domain/movement';
 import { batimentoAoVivo } from '../domain/series';
 import { montarSemanaDeTreino } from '../domain/trainingWeek';
 import { formatDuration, isSportDay, modalityMeta, workoutMeta } from '../domain/workout';
@@ -1244,7 +1244,7 @@ export function SportScreen() {
   const constancia = weeklySeries(
     [
       ...(execucoes ?? [])
-        .filter((e) => e.status === 'FINISHED')
+        .filter(treinoConta)
         .map((e) => ({ date: new Date(e.startedAt), value: (e.durationSec ?? 60) / 60 })),
       ...(historico ?? []).map((se) => ({
         date: new Date(se.startedAt),

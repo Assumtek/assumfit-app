@@ -2,6 +2,7 @@ import {
   alternaEmpurrarEPuxar,
   fatosDoProjeto,
   frequenciaPorGrupo,
+  semanaDoProjeto,
   type TreinoDoProjeto,
 } from '../planProject';
 
@@ -114,5 +115,39 @@ describe('fatosDoProjeto', () => {
 
   it('plano vazio não inventa fato nenhum', () => {
     expect(fatosDoProjeto([])).toEqual([]);
+  });
+});
+
+describe('semanaDoProjeto', () => {
+  it('segunda a domingo, na ordem da semana, com descanso nos dias sem treino', () => {
+    const semana = semanaDoProjeto([
+      { dayOfWeek: 'THURSDAY', dayType: 'WORKOUT', workout: { name: 'Superior B' } },
+      { dayOfWeek: 'SUNDAY', dayType: 'WORKOUT', workout: { name: 'Inferior B' } },
+      { dayOfWeek: 'MONDAY', dayType: 'WORKOUT', workout: { name: 'Sprints' } },
+      { dayOfWeek: 'FRIDAY', dayType: 'OFF' },
+    ]);
+    expect(semana.map((d) => d.dayOfWeek)).toEqual(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']);
+    expect(semana.map((d) => d.nome)).toEqual(['Sprints', null, null, 'Superior B', null, null, 'Inferior B']);
+  });
+});
+
+describe('fatosDoProjeto com anamnese', () => {
+  const treino = (name: string, n: number) => ({
+    name,
+    temPreparo: true,
+    principais: Array.from({ length: n }, (_, i) => ({ name: `e${i}`, muscleGroup: i % 2 ? 'PEITO' : 'COSTAS', subtype: 'STRENGTH' as const })),
+  });
+  it('cita os dias informados quando o plano os obedece, e o tempo por sessão', () => {
+    const fatos = fatosDoProjeto([treino('A', 4), treino('B', 4), treino('C', 4)], { daysPerWeek: 3, minutesPerSession: 45, experience: 'intermediario' });
+    expect(fatos.find((f) => f.chave === 'frequencia')?.porque).toContain('3 dias por semana que você informou');
+    expect(fatos.find((f) => f.chave === 'tempo')?.porque).toContain('45 minutos por sessão');
+    expect(fatos.find((f) => f.chave === 'nivel')?.titulo).toContain('constância');
+  });
+  it('dias que não batem não viram promessa', () => {
+    const fatos = fatosDoProjeto([treino('A', 4), treino('B', 4)], { daysPerWeek: 4 });
+    expect(fatos.find((f) => f.chave === 'frequencia')?.porque ?? '').not.toContain('informou');
+  });
+  it('sem anamnese, nada muda', () => {
+    expect(fatosDoProjeto([treino('A', 4), treino('B', 4)]).some((f) => f.chave === 'nivel' || f.chave === 'tempo')).toBe(false);
   });
 });

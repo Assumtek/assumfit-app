@@ -59,6 +59,8 @@ type ExecutionLike = {
   status: string;
   startedAt: string;
   durationSec: number | null;
+  /** Fração de séries concluídas (0–100), quando o servidor informa. */
+  completionPct?: number | null;
 };
 
 /** O mínimo de uma sessão do cronômetro de esporte. */
@@ -110,9 +112,24 @@ export function consolidateMovement<T extends ExecutionLike, S extends SportLike
   return entries.sort((a, b) => b.quando - a.quando);
 }
 
-/** Esporte registrado sempre conta; treino do plano só concluído — cancelado ou esquecido aberto não é movimento. */
+/**
+ * Treino do plano que CONTA como movimento.
+ *
+ * Concluído conta. Cancelado não. E o que ficou aberto — esquecido, ou
+ * derrubado pelo app antes do "concluir" — conta se houve série feita: um
+ * testador (22/08) treinou três dias, o app caiu ao concluir nos três, e o
+ * gráfico dizia que ele não tinha se mexido. Série marcada é prova de treino;
+ * a conclusão é só o carimbo.
+ */
+export function treinoConta(treino: ExecutionLike): boolean {
+  if (treino.status === 'FINISHED') return true;
+  if (treino.status === 'CANCELLED') return false;
+  return (treino.completionPct ?? 0) > 0;
+}
+
+/** Esporte registrado sempre conta; treino do plano pelas regras de `treinoConta`. */
 function counts<T extends ExecutionLike, S extends SportLike>(entry: MovementEntry<T, S>): boolean {
-  return entry.tipo === 'esporte' || entry.treino.status === 'FINISHED';
+  return entry.tipo === 'esporte' || treinoConta(entry.treino);
 }
 
 function entryMinutes<T extends ExecutionLike, S extends SportLike>(

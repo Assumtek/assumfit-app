@@ -13,6 +13,7 @@ import { Body, Button, Data, Display, Label, MetricSm, RatingText, SectionTitle 
 import { Card } from '../components/ui/Card';
 import { Sheet } from '../components/ui/Dialog';
 import { MAX_ML, MIN_ML, STEP_ML, type Container } from '../domain/containers';
+import { treinoConta } from '../domain/movement';
 import * as api from '../services/api.service';
 import { WaterRing } from '../components/WaterRing';
 import { useHabitsStore } from '../store/habits.store';
@@ -90,7 +91,7 @@ export function HabitsScreen() {
       );
       const minutos =
         execucoes
-          .filter((e) => e.status === 'FINISHED' && new Date(e.startedAt) >= inicioDoDia)
+          .filter((e) => treinoConta(e) && new Date(e.startedAt) >= inicioDoDia)
           .filter((e) => !vinculadas.has(e.id))
           .reduce((soma, e) => soma + (e.durationSec ?? 0) / 60, 0) +
         sessoes

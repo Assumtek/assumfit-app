@@ -6,7 +6,7 @@ import { Note, Row, Section } from '../../components/Card';
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon, type IconName } from '../../components/Icon';
 import { Body, Button, Data, Headline, HeroCard, SectionTitle } from '../../components/ui';
-import { fatosDoProjeto, type FatoDoProjeto, type TreinoDoProjeto } from '../../domain/planProject';
+import { fatosDoProjeto, semanaDoProjeto, type FatoDoProjeto, type TreinoDoProjeto } from '../../domain/planProject';
 import { DAY_LABEL } from '../../domain/workout';
 import * as api from '../../services/api.service';
 import { useWorkoutStore } from '../../store/workout.store';
@@ -45,12 +45,25 @@ const ICONE: Record<FatoDoProjeto['chave'], IconName> = {
   alternancia: 'swap',
   preparo: 'stretch',
   volume: 'checklist',
+  tempo: 'clock',
+  nivel: 'gauge',
 };
 
 export function ProjectScreen() {
   const { colors } = useTheme();
   const plan = useWorkoutStore((s) => s.plan);
   const [treinos, setTreinos] = useState<TreinoDoProjeto[] | null>(null);
+  const [anamnese, setAnamnese] = useState<Record<string, unknown> | null>(null);
+  useEffect(() => {
+    let vivo = true;
+    api
+      .fetchAnamnesis()
+      .then((a) => vivo && setAnamnese(a?.answers ?? null))
+      .catch(() => undefined);
+    return () => {
+      vivo = false;
+    };
+  }, []);
 
   const carregar = useCallback(async () => {
     const dias = (plan?.days ?? []).filter((d) => d.workout);
@@ -95,9 +108,9 @@ export function ProjectScreen() {
     );
   }
 
-  const fatos = treinos ? fatosDoProjeto(treinos) : [];
+  const fatos = treinos ? fatosDoProjeto(treinos, anamnese) : [];
   const contido = plan.revisionNotes ?? [];
-  const diasDeTreino = plan.days.filter((d) => d.dayType === 'WORKOUT');
+  const semana = semanaDoProjeto(plan.days);
 
   return (
     <DetailScreen title="Meu projeto" refreshControl={puxar}>
@@ -150,12 +163,18 @@ export function ProjectScreen() {
       ) : null}
 
       <Section label="a semana">
-        {diasDeTreino.map((dia, i) => (
-          <Row key={dia.id} last={i === diasDeTreino.length - 1}>
-            <Body flex={1} numberOfLines={1}>
-              {dia.workout?.name}
-            </Body>
-            <Data flexShrink={0}>{DAY_LABEL[dia.dayOfWeek]}</Data>
+        {semana.map((dia, i) => (
+          <Row key={dia.dayOfWeek} last={i === semana.length - 1}>
+            <Data flexShrink={0} width={72}>
+              {DAY_LABEL[dia.dayOfWeek]}
+            </Data>
+            {dia.nome ? (
+              <Body flex={1} numberOfLines={1} color="$foreground">
+                {dia.nome}
+              </Body>
+            ) : (
+              <Data flex={1}>Descanso</Data>
+            )}
           </Row>
         ))}
       </Section>

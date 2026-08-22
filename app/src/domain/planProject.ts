@@ -1,3 +1,4 @@
+import { WEEK_ORDER } from './workout';
 /**
  * O PROJETO por trás do plano — o que dá para afirmar lendo a prescrição.
  *
@@ -31,7 +32,7 @@ export type TreinoDoProjeto = {
 
 export type FatoDoProjeto = {
   /** Chave estável, para a tela escolher ícone e ordem sem casar string. */
-  chave: 'frequencia' | 'alternancia' | 'preparo' | 'volume';
+  chave: 'frequencia' | 'alternancia' | 'preparo' | 'volume' | 'nivel' | 'tempo';
   titulo: string;
   /** Por que a escolha existe. Uma ou duas frases, sem prometer resultado. */
   porque: string;
@@ -72,7 +73,35 @@ export function alternaEmpurrarEPuxar(principais: ExercicioDoProjeto[]): boolean
  * fato que a pessoa não consiga conferir abrindo o próprio treino não deveria
  * estar numa tela que se propõe a explicar o treino.
  */
-export function fatosDoProjeto(treinos: TreinoDoProjeto[]): FatoDoProjeto[] {
+/**
+ * As respostas da anamnese que FUNDAMENTAM decisões — só as que o plano
+ * comprovadamente obedece (dias, tempo por sessão, nível). Um testador (22/08)
+ * pediu que as explicações mostrassem "que foi de fato personalizado": a
+ * forma honesta é citar o que a pessoa respondeu e apontar onde isso aparece
+ * no plano, não prometer ciência.
+ */
+export type AnamneseDoProjeto = {
+  daysPerWeek?: number | string | null;
+  minutesPerSession?: number | string | null;
+  experience?: string | null;
+};
+
+const NIVEL: Record<string, { titulo: string; porque: string }> = {
+  iniciante: {
+    titulo: 'Cargas e progressão de quem está começando',
+    porque: 'Você respondeu que nunca treinou ou parou há muito tempo: as primeiras semanas priorizam técnica e volume baixo, e a carga sobe quando a execução está estável.',
+  },
+  intermediario: {
+    titulo: 'Progressão de quem já treina com constância',
+    porque: 'Você respondeu que já treinou com constância: o plano parte de um volume que o corpo conhece e progride em carga e séries ao longo das semanas.',
+  },
+  avancado: {
+    titulo: 'Volume e variação de quem treina há anos',
+    porque: 'Você respondeu que treina há anos sem pausa longa: o plano usa mais séries por grupo e mais variação de estímulo dentro da semana.',
+  },
+};
+
+export function fatosDoProjeto(treinos: TreinoDoProjeto[], anamnese?: AnamneseDoProjeto | null): FatoDoProjeto[] {
   const fatos: FatoDoProjeto[] = [];
   if (treinos.length === 0) return fatos;
 
@@ -118,5 +147,44 @@ export function fatosDoProjeto(treinos: TreinoDoProjeto[]): FatoDoProjeto[] {
     });
   }
 
+  // O que a anamnese fundamenta, citado como resposta da pessoa.
+  const dias = Number(anamnese?.daysPerWeek);
+  const freq = fatos.find((f) => f.chave === 'frequencia');
+  if (freq && Number.isFinite(dias) && dias === treinos.length) {
+    freq.porque += ` São os ${dias} dias por semana que você informou na anamnese.`;
+  }
+  const minutos = Number(anamnese?.minutesPerSession);
+  if (Number.isFinite(minutos) && minutos > 0) {
+    const media = Math.round(treinos.reduce((n, t) => n + t.principais.length, 0) / treinos.length);
+    fatos.push({
+      chave: 'tempo',
+      titulo: `Sessões para caber em ${minutos >= 60 ? `${minutos / 60}h` : `${minutos} min`}`,
+      porque: `Você informou ter ${minutos >= 60 ? `${minutos / 60} hora${minutos > 60 ? 's' : ''}` : `${minutos} minutos`} por sessão — é o que limita a ${media} ${media === 1 ? 'exercício principal' : 'exercícios principais'} por dia, com descanso entre séries incluído.`,
+    });
+  }
+  const nivel = anamnese?.experience ? NIVEL[String(anamnese.experience)] : undefined;
+  if (nivel) fatos.push({ chave: 'nivel', ...nivel });
   return fatos;
+}
+
+/** O mínimo de um dia do plano para montar a semana. */
+export type DiaDoPlano = {
+  dayOfWeek: string;
+  dayType: 'WORKOUT' | 'OFF';
+  workout?: { name: string } | null;
+};
+
+/**
+ * A semana em ORDEM DE SEMANA, com os dias de descanso.
+ *
+ * A tela listava só os dias com treino, na ordem em que o plano os gerou
+ * ("quinta, domingo, segunda…"), e o descanso não aparecia — um testador
+ * (22/08) leu como desordem. Segunda a domingo, um dia por linha; dia sem
+ * treino é "Descanso", que é decisão do plano tanto quanto o treino.
+ */
+export function semanaDoProjeto(days: DiaDoPlano[]): { dayOfWeek: string; nome: string | null }[] {
+  return WEEK_ORDER.map((dow) => {
+    const dia = days.find((d) => d.dayOfWeek === dow && d.dayType === 'WORKOUT' && d.workout);
+    return { dayOfWeek: dow, nome: dia?.workout?.name ?? null };
+  });
 }

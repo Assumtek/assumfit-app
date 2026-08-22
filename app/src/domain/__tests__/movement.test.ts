@@ -36,6 +36,17 @@ describe('movementMinutes', () => {
     expect(min.get('2026-08-11')).toBe(30);
   });
 
+  it('execução aberta COM série feita conta — o app caiu antes do concluir', () => {
+    const minutos = movementMinutes(
+      [{ status: 'IN_PROGRESS', startedAt: new Date(2026, 7, 20, 18).toISOString(), durationSec: 1800, completionPct: 40 }],
+      [],
+    );
+    expect(minutos.get('2026-08-20')).toBe(30);
+    expect(
+      movementMinutes([{ status: 'CANCELLED', startedAt: new Date(2026, 7, 20, 18).toISOString(), durationSec: 1800, completionPct: 40 }], []).size,
+    ).toBe(0);
+  });
+
   it('execução não concluída não conta', () => {
     const min = movementMinutes(
       [

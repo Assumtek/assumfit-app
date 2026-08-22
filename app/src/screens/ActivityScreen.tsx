@@ -11,6 +11,7 @@ import { MeasuredAt } from '../components/MeasuredAt';
 import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
 import { rateActivity } from '../domain/ratings';
 import { caloriasDoDia, distanciaDoDia } from '../domain/activityEstimates';
+import { treinoConta } from '../domain/movement';
 import * as api from '../services/api.service';
 import { useBiometricStore } from '../store/biometric.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -41,7 +42,7 @@ export function ActivityScreen() {
       );
       const minutos =
         execucoes
-          .filter((e) => e.status === 'FINISHED' && new Date(e.startedAt) >= inicioDoDia)
+          .filter((e) => treinoConta(e) && new Date(e.startedAt) >= inicioDoDia)
           .filter((e) => !vinculadas.has(e.id))
           .reduce((soma, e) => soma + (e.durationSec ?? 0) / 60, 0) +
         sessoes
