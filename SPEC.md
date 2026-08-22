@@ -1,4 +1,4 @@
-# AssuмFit — Especificação de Produto
+# AssuмFit: Especificação de Produto
 
 > Versão 2.0 · Julho 2026 · Atualizada com decisões de produto e design da sessão completa.
 
@@ -6,15 +6,15 @@
 
 ## Visão geral
 
-AssuмFit é um produto de consumo (B2C) que cruza dados biométricos reais com produtividade pessoal. A premissa central: **o corpo sabe quando você vai performar melhor — o app traduz isso em ações concretas em linguagem humana**.
+AssuмFit é um produto de consumo (B2C) que cruza dados biométricos reais com produtividade pessoal. A premissa central: **o corpo sabe quando você vai performar melhor, o app traduz isso em ações concretas em linguagem humana**.
 
 Três camadas:
 
-1. **Wearable próprio** — Staranb ANB-X1 (SDK aberto, dados PPG brutos via BLE GATT)
-2. **App mobile** — leitura biométrica ao vivo + coach de produtividade + idade biológica
-3. **Modelo de IA** — score de energia, cronótipo, correlações automáticas, bio age
+1. **Wearable próprio**: Staranb ANB-X1 (SDK aberto, dados PPG brutos via BLE GATT)
+2. **App mobile**, leitura biométrica ao vivo + coach de produtividade + idade biológica
+3. **Modelo de IA**, score de energia, cronótipo, correlações automáticas, bio age
 
-O usuário é a pessoa física. Não há empresa contratante, gestor, RH nem visão agregada de time em nenhum ponto do produto — os dados são do usuário e só ele os vê.
+O usuário é a pessoa física. Não há empresa contratante, gestor, RH nem visão agregada de time em nenhum ponto do produto, os dados são do usuário e só ele os vê.
 
 ---
 
@@ -24,12 +24,12 @@ O usuário é a pessoa física. Não há empresa contratante, gestor, RH nem vis
 
 Consequências que moldam o produto:
 
-- **O aparelho é custo antecipado por assinante.** Cada nova assinatura gasta US$15–30 antes de faturar o primeiro mês. Existe um período de payback — churn antes dele é prejuízo direto, não margem menor. Retenção não é métrica de crescimento aqui, é a condição de viabilidade.
+- **O aparelho é custo antecipado por assinante.** Cada nova assinatura gasta US$15–30 antes de faturar o primeiro mês. Existe um período de payback, churn antes dele é prejuízo direto, não margem menor. Retenção não é métrica de crescimento aqui, é a condição de viabilidade.
 - **Cancelamento tem logística reversa.** Precisa de política de devolução, custo de frete e decisão sobre o que fazer com aparelho devolvido (recondicionar ou descartar).
 - **Cobrança in-app custa 15–30% para a loja.** Com hardware já no custo, a diferença entre cobrar pelo app ou por fora é material.
 - **Distribuir rádio BLE no Brasil exige homologação ANATEL.** Vale para o ANB-X1 independentemente de ser vendido ou emprestado na assinatura.
 
-Números de preço, payback e frete ainda não estão definidos — ver [PLANO.md](PLANO.md).
+Números de preço, payback e frete ainda não estão definidos, ver [PLANO.md](PLANO.md).
 
 ---
 
@@ -67,7 +67,7 @@ Números de preço, payback e frete ainda não estão definidos — ver [PLANO.m
 
 ---
 
-## Hardware — Staranb ANB-X1
+## Hardware: Staranb ANB-X1
 
 ### Sensores
 
@@ -76,19 +76,19 @@ Números de preço, payback e frete ainda não estão definidos — ver [PLANO.m
 | PPG (MAX86141)   | FC, HRV, SpO₂    | A cada 5 min (contínuo disponível) |
 | Acelerômetro 6 eixos | Passos, atividade, sono | Contínuo                  |
 | NTC              | Temperatura de pele | A cada 10 min               |
-| Chip             | Nordic NRF54L15  | —                              |
+| Chip             | Nordic NRF54L15  |, |
 
 ### Vantagens sobre Big 4
 
-- **SDK aberto com dados PPG brutos** — único do mercado (WHOOP, Apple, Samsung, Garmin só expõem dados processados)
-- **Bateria 45–50 dias** — supera WHOOP MG (14 dias) e todos os smartwatches
-- **Custo ~US$15–30/unidade** atacado — 20× mais barato que WHOOP
-- **White-label confirmado** — hardware com logo AssuмFit
+- **SDK aberto com dados PPG brutos**, único do mercado (WHOOP, Apple, Samsung, Garmin só expõem dados processados)
+- **Bateria 45–50 dias**, supera WHOOP MG (14 dias) e todos os smartwatches
+- **Custo ~US$15–30/unidade** atacado: 20× mais barato que WHOOP
+- **White-label confirmado**, hardware com logo AssuмFit
 
 ### Gap vs. concorrentes
 
-- Sem ECG certificado (FDA) — não é bloqueio para o produto de produtividade
-- Resistência 1ATM (vs. 10ATM dos smartwatches) — uso em escritório e academia, não natação
+- Sem ECG certificado (FDA), não é bloqueio para o produto de produtividade
+- Resistência 1ATM (vs. 10ATM dos smartwatches), uso em escritório e academia, não natação
 - Precisão do HRV precisa ser validada contra Polar H10 ao receber o hardware
 
 ### Primeira ação ao receber
@@ -140,10 +140,10 @@ val response = client.readRecords(
 
 ### Wearables com SDK (fase 2)
 
-- Garmin Connect IQ — HRV, Body Battery, stress, sono
-- Fitbit / Google SDK — OAuth + Web API
-- Samsung Health SDK — stress via BioActive Sensor
-- Polar AccessLink — REST API, referência clínica de HRV
+- Garmin Connect IQ: HRV, Body Battery, stress, sono
+- Fitbit / Google SDK: OAuth + Web API
+- Samsung Health SDK, stress via BioActive Sensor
+- Polar AccessLink: REST API, referência clínica de HRV
 
 ---
 
@@ -151,7 +151,7 @@ val response = client.readRecords(
 
 ### Como aprende
 
-**Dia 1 — Prior científico (cronobiologia):**
+**Dia 1: Prior científico (cronobiologia):**
 
 - Temperatura sobe ao longo da manhã, pico 12h–14h → melhor performance física
 - Vale de alerta 13h–15h → reuniões, revisões, tarefas leves
@@ -217,11 +217,11 @@ def calc_bio_age(real_age, hrv, hr, spo2, sleep_deep_pct):
 
 ### O que a tela mostra
 
-1. **Número** — idade biológica vs. real com delta em anos e cor (verde/âmbar/vermelho)
-2. **Breakdown por fator** — contribuição de cada métrica em anos (ex: HRV −3,2a, sono −2,1a)
-3. **Ação principal** — a mudança de hábito que mais impacta, baseada nos dados do usuário
-4. **Tendência 30 dias** — sparkline mostrando evolução da bio age ao longo do mês
-5. **Disclaimer** — não é diagnóstico médico, é indicador de tendência cardiovascular
+1. **Número**, idade biológica vs. real com delta em anos e cor (verde/âmbar/vermelho)
+2. **Breakdown por fator**, contribuição de cada métrica em anos (ex: HRV −3,2a, sono −2,1a)
+3. **Ação principal**, a mudança de hábito que mais impacta, baseada nos dados do usuário
+4. **Tendência 30 dias**, sparkline mostrando evolução da bio age ao longo do mês
+5. **Disclaimer**, não é diagnóstico médico, é indicador de tendência cardiovascular
 
 ---
 
@@ -307,13 +307,13 @@ CREATE TABLE daily_habits (
 
 **Sidebar (menu hamburguer):** acesso a todas as telas com valores ao vivo e badges de avaliação.
 
-## Design system — minimalismo clínico
+## Design system, minimalismo clínico
 
 > Substitui a paleta multicolorida das versões anteriores. Linhagem:
 > Rams/Braun → Muji → Apple → Aesop → DTC (Oura, Ritual). Vocabulário de
 > instrumento de medição, não de app de consumo.
 
-### Paleta — do manual de marca
+### Paleta, do manual de marca
 
 As três cores base vêm do **Manual de Marca AssumFit**, não foram escolhidas no
 código. O kit completo está em [`app/assets/brand/`](app/assets/brand/), com o
@@ -321,14 +321,14 @@ manual em PDF, os SVG de símbolo e logotipo e as aplicações.
 
 | Token            | Valor                      | Origem / uso                            |
 | ---------------- | -------------------------- | --------------------------------------- |
-| `ink`            | `#0E0A22`                  | Manual. Fundo — quase-preto com viés roxo |
+| `ink`            | `#0E0A22`                  | Manual. Fundo, quase-preto com viés roxo |
 | `text`           | `#ECE7F4`                  | Manual. Off-white levemente lilás       |
 | `accent`         | `#877BF0`                  | Manual. **Só o dado.** Nunca texto, botão ou nav |
 | `textMuted`      | `rgba(236,231,244,.56)`    | Corpo, descrições                       |
 | `textFaint`      | `rgba(236,231,244,.36)`    | Rótulos, unidades, dados secundários    |
 | `hairline`       | `rgba(236,231,244,.10)`    | Divisórias                              |
 | `track`          | `rgba(236,231,244,.09)`    | Trilho de anéis, arcos e réguas         |
-| `alert`          | `#D08A62`                  | **Não está no manual** — a identidade não previa cor de alerta, e um app de saúde precisa de uma. Só fora da faixa saudável |
+| `alert`          | `#D08A62`                  | **Não está no manual**, a identidade não previa cor de alerta, e um app de saúde precisa de uma. Só fora da faixa saudável |
 
 Nenhum tom além do `alert` foi inventado. Se algum divergir do manual, o manual
 ganha.
@@ -341,14 +341,14 @@ Símbolo e logotipo são **vetores oficiais**, gerados a partir dos SVG do kit e
 - O logotipo é **desenhado, não texto**. A identidade usa uma sans geométrica
   que não está instalada no app; renderizar "assumfit" com a fonte do sistema
   produziria outro desenho de letra.
-- No logotipo, **só o pingo do "i" é roxo** — não a sílaba "fit".
+- No logotipo, **só o pingo do "i" é roxo**, não a sílaba "fit".
 - O símbolo tem simetria rotacional, o que o torna adequado a animação de giro:
   em qualquer ângulo a composição segue equilibrada.
 - Se a marca mudar, **regerar** o componente a partir do SVG novo. Não editar
   path à mão.
 
 **Um acento, e ele pertence ao dado.** Saturação alta aparece exclusivamente na
-visualização — ela é merecida. Navegação, rótulo, botão e ícone são acromáticos.
+visualização, ela é merecida. Navegação, rótulo, botão e ícone são acromáticos.
 
 **Alert é reservado.** Aparece quando o valor sai da faixa saudável de verdade,
 nunca para graduar o que está bem: "Bom" e "Excelente" têm a mesma cor. Neutro
@@ -364,19 +364,19 @@ até ser anormal, como instrumento.
 
 ### Linha, espaço e forma
 
-- **A linha substitui a caixa.** Não existe card com borda — existe divisória
+- **A linha substitui a caixa.** Não existe card com borda, existe divisória
   hairline. Se algo ganhar fundo e borda nos quatro lados, o sistema regrediu.
 - Hairlines sempre em opacidade baixa, nunca cinza sólido.
 - Ícones **monolineares outline**, traço 1,5px constante, cantos arredondados,
   desenhados em grid de 24×24. Glifo preenchido não entra.
 - Escala de espaçamento em múltiplos de 4. Margem lateral de 24.
 - **Alinhamento à esquerda e assimetria**, não centralização. Conteúdo que não
-  preenche a tela — espaço negativo é o sinal de preço.
+  preenche a tela, espaço negativo é o sinal de preço.
 
 ### Relevo e material
 
 O sistema não é chapado. O relevo vem de **material**, nunca de sombra
-projetada — a peça deve parecer ter espessura sob luz difusa, não flutuar sobre
+projetada, a peça deve parecer ter espessura sob luz difusa, não flutuar sobre
 uma mesa. Na prática: translucidez, aresta clara no topo e escura no rodapé,
 divisória em baixo-relevo.
 
@@ -384,7 +384,7 @@ divisória em baixo-relevo.
 painel lateral, ação flutuante e modal usam Liquid Glass
 (`expo-glass-effect`, iOS 26, com fallback translúcido). Métrica, lista e
 gráfico usam superfície discreta ou nada. É a mesma regra que a Apple aplica ao
-próprio material — vidro em tudo vira decoração e derruba a contenção.
+próprio material, vidro em tudo vira decoração e derruba a contenção.
 
 Fora deste sistema: `shadowColor` colorido, `elevation` alta, borda desenhada
 nos quatro lados, gradiente decorativo.
@@ -392,8 +392,7 @@ nos quatro lados, gradiente decorativo.
 ### Dataviz como ornamento
 
 Não há ilustração, padronagem nem grafismo decorativo neste produto. O gráfico
-é o ornamento: anéis finos, arcos finos, sparklines, réguas. Monocromáticos —
-gradiente vermelho→verde é leitura de semáforo, não de instrumento.
+é o ornamento: anéis finos, arcos finos, sparklines, réguas. Monocromáticos, gradiente vermelho→verde é leitura de semáforo, não de instrumento.
 
 ### Regra de ouro
 
@@ -517,7 +516,7 @@ volumes:
 
 ---
 
-## FastAPI — endpoints principais
+## FastAPI, endpoints principais
 
 ```python
 # ai/main.py
@@ -596,7 +595,7 @@ EXPO_PUBLIC_AI_URL=http://localhost:8000
 
 ---
 
-## Checklist — primeiro dia de desenvolvimento
+## Checklist, primeiro dia de desenvolvimento
 
 ```bash
 # 1. Criar repo e estrutura
@@ -645,7 +644,7 @@ docker compose up -d postgres
 
 ## Roadmap
 
-### Fase 1 — MVP (meses 1–3)
+### Fase 1: MVP (meses 1–3)
 
 Validar com 10–50 beta testers.
 
@@ -659,7 +658,7 @@ Validar com 10–50 beta testers.
 - [ ] Sidebar com todas as métricas
 - [ ] Tela de idade biológica (cálculo local, sem modelo treinado)
 
-### Fase 2 — Lançamento nas lojas (meses 4–6)
+### Fase 2: Lançamento nas lojas (meses 4–6)
 
 Abrir para o público.
 
@@ -672,14 +671,14 @@ Abrir para o público.
 - [ ] Correlações automáticas no app de produtividade
 - [ ] Assinatura: cobrança recorrente, cancelamento, período de teste
 - [ ] Onboarding com termo de consentimento LGPD e política de privacidade
-- [ ] Homologação ANATEL do ANB-X1 — **bloqueia a distribuição, começar cedo**
+- [ ] Homologação ANATEL do ANB-X1, **bloqueia a distribuição, começar cedo**
 - [ ] Fluxo de devolução do aparelho no cancelamento
 
-### Fase 3 — Escala (meses 7–12)
+### Fase 3: Escala (meses 7–12)
 
 Crescer a base e segurar a retenção.
 
-- [ ] Coach conversacional — perguntar sobre os próprios dados em linguagem natural
+- [ ] Coach conversacional, perguntar sobre os próprios dados em linguagem natural
 - [ ] Relatório semanal e retrospectiva mensal (motor de reengajamento)
 - [ ] Plano anual e plano família
 - [ ] Programa de indicação
@@ -691,9 +690,9 @@ Crescer a base e segurar a retenção.
 
 ## Referências de design
 
-Protótipos interativos — usar como referência fiel para o React Native:
+Protótipos interativos, usar como referência fiel para o React Native:
 
-- [`mockups/assumfit-app.html`](mockups/assumfit-app.html) — app de leitura biométrica com sidebar e todas as 9 telas de saúde + bio age
+- [`mockups/assumfit-app.html`](mockups/assumfit-app.html), app de leitura biométrica com sidebar e todas as 9 telas de saúde + bio age
 
 **Regra de ouro do design:** qualquer número técnico (HRV em ms, SpO₂ em %) aparece como sub-label. O destaque visual é sempre a avaliação em linguagem humana (Excelente, Bom, Pode melhorar).
 
@@ -714,4 +713,4 @@ Protótipos interativos — usar como referência fiel para o React Native:
 
 ---
 
-_Versão 2.0 — Julho 2026. Atualizar conforme o desenvolvimento avança._
+_Versão 2.0: Julho 2026. Atualizar conforme o desenvolvimento avança._

@@ -1,4 +1,4 @@
-# Rodada de testes — 22/08/2026 — o que entrou nos últimos pedidos
+# Rodada de testes: 22/08/2026, o que entrou nos últimos pedidos
 
 Adaptação do orquestrador do MUVX ao AssumFit: simulador iOS (iPhone 17 Pro, iOS 26)
 com a pulseira em **mock**, contra **produção** com a conta de teste
