@@ -1106,6 +1106,12 @@
       "nota": "Os treinos em que o app caiu antes de concluir ficaram abertos e não contavam; agora treino com série feita conta no gráfico.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T18:06:07"
+    },
+    "ANWetfNxSvRpNZ9L_8k-Bps": {
+      "commit": "e301e82",
+      "nota": "O widget só atualizava a meta ao registrar um gole, por isso mostrava um total diferente do app. Agora a meta nova (peso, treino do dia) e a virada do dia chegam ao widget na hora.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T18:43:21"
     }
   }
 }
