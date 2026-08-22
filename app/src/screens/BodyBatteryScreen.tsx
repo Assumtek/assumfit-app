@@ -98,6 +98,12 @@ export function BodyBatteryScreen() {
         <RatingText marginTop="$sm" style={{ color: ratingTextColor(rating.state, colors) }}>
           {rating.label}
         </RatingText>
+        {/* Uma frase de abertura: o que este número É. "Qual a explicação
+            dessa bateria?" (testador, 22/08). O método fica na Ajuda. */}
+        <Body marginTop="$md">
+          A bateria começa no que a noite de sono recarregou e, ao longo do dia, desce com o estresse que a
+          pulseira mede e sobe nos momentos calmos — 100 é reserva cheia, e ela gasta mais rápido do que recupera.
+        </Body>
       </YStack>
 
       {/*
