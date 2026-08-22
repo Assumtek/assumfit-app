@@ -475,9 +475,9 @@ lá. As seis que mais se quebra por descuido:
    traço; se um glifo novo precisar de `fill`, ele não pertence a este sistema.
 
 7. **Sem travessão, em lugar nenhum.** Texto de tela, notificação, commit,
-   comentário, relatório: vírgula, dois-pontos ou ponto no lugar do ": ". O
+   comentário, relatório: vírgula, dois-pontos ou ponto no lugar do traço longo (U+2014). O
    ponto médio (·) continua sendo o separador de dado. Decisão da fundadora
-   (22/08/2026). Marcador de "sem dado" é "–".
+   (22/08/2026). Marcador de "sem dado" é o traço curto (U+2013).
 8. **Todo número de layout é múltiplo de dois.** Fonte, padding, gap, largura,
    altura, raio, ícone: 13 vira 14, 15 vira 16. Exceções: hairline de 1 px e
    o 999 do pill. Regra da proporcionalidade (22/08/2026).

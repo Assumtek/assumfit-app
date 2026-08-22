@@ -2,17 +2,17 @@
   "tratados": {
     "AL6V34ogjfycc6HXb867YeA": {
       "commit": "b386f2f",
-      "nota": "batimento no treino livre — modo esporte na pulseira",
+      "nota": "batimento no treino livre, modo esporte na pulseira",
       "em": "2026-08-20T22:30:00"
     },
     "AOHbMvj-m7VDJl2Vbfm-Xlo": {
       "commit": "b386f2f",
-      "nota": "meta calórica por objetivo — lia só a anamnese (recurso existia)",
+      "nota": "meta calórica por objetivo, lia só a anamnese (recurso existia)",
       "em": "2026-08-20T22:30:00"
     },
     "AKcVIMKRuqEeWb3oITR95BM": {
       "commit": "b386f2f",
-      "nota": "água pelo peso — regra passou a ser mostrada (recurso existia)",
+      "nota": "água pelo peso, regra passou a ser mostrada (recurso existia)",
       "em": "2026-08-20T22:30:00"
     },
     "AAflwXjUWO0kWYsb9XET4IQ": {
@@ -22,362 +22,362 @@
     },
     "AI-4BFnTP3xdZoJCvdWqEOM": {
       "commit": "b386f2f",
-      "nota": "agente sem responder — teto de 10 s no cliente",
+      "nota": "agente sem responder, teto de 10 s no cliente",
       "em": "2026-08-20T22:30:00"
     },
     "slack:1787273293.670859": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Silvia Beatriz Sousa",
       "trecho": "tornou o canal *público*. Qualquer membro do workspace pode vê-lo e entrar nele."
     },
     "slack:1787268433.988869": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Sugestao: possibilitar o modo fitness ao iniciar treino automaticamente, se for "
     },
     "slack:1787268152.121019": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Showww"
     },
     "slack:1787268130.880779": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Silvia Beatriz Sousa",
       "trecho": "Recebi sim"
     },
     "slack:1787258050.255619": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Esqueci de perguntar "
     },
     "slack:1787258033.358709": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Quando eu printei a tela eu vi que tinha a opção de reportar direto"
     },
     "slack:1787258020.152369": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Sil, reportei ums bugs pelo beta ali do TF vc recebeu esses prints?"
     },
     "slack:1787224756.327309": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Mais um ponto: o app fica deslogando igual era o MUVX"
     },
     "slack:1787224743.897219": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": ":saluting_face::saluting_face:"
     },
     "slack:1787197639.291529": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Silvia Beatriz Sousa",
       "trecho": "Tudo que estava aqui no canal foi resolvido\n\n1.0.3 (4) no testflight, versão agu"
     },
     "slack:1787184043.076949": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Bruno Martins",
       "trecho": "Ele entendeu “ótimo, entendi que você quer ganhar massa”"
     },
     "slack:1787184038.385739": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Bruno Martins",
       "trecho": "Na anamnese eu falei que meu objetivo era ficar grande rápido "
     },
     "slack:1787183377.635509": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Ta azeitado kkkkkkk"
     },
     "slack:1787182989.568749": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Silvia Beatriz Sousa",
       "trecho": "Olha que louco identificou os picoles pelo papel kkk"
     },
     "slack:1787182750.589319": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Acredito que isso pode gerar embasamento e autoridade pra prescrição "
     },
     "slack:1787182738.119139": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Igual aquele que montei no passado "
     },
     "slack:1787182728.128849": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Tipo montar como se fosse um documento mesmo do projeto"
     },
     "slack:1787182714.439389": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Ah esse é um ponto bacana, o app mostrar o projeto de treino, qual o racional po"
     },
     "slack:1787182628.893039": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Bruno Martins",
       "trecho": "Não sei qual a metodologia, mas ele tá intercalando entre exercício de peito e c"
     },
     "slack:1787182478.503399": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Bruno Martins",
       "trecho": "Três botões levando para o mesmo lugar \n\nTroca\nSinalizar &gt; aparelho ocupado d"
     },
     "slack:1787182377.350149": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Bruno Martins",
       "trecho": "Não consigo selecionar o exercício no checklist"
     },
     "slack:1787182320.591729": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Bruno Martins",
       "trecho": "Teclado sobrepondo "
     },
     "slack:1787182246.299789": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Bruno Martins",
       "trecho": "Válido aquele ajuste que íamos fazer no MUVX \n\nEu que conheço cliquei no treino "
     },
     "slack:1787182164.091639": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Bruno Martins",
       "trecho": "Gerou mesmo"
     },
     "slack:1787182134.827839": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Silvia Beatriz Sousa",
       "trecho": "Veja se gerou o treino, já corrigi pra não dar esse erro"
     },
     "slack:1787182032.121869": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Bruno Martins",
       "trecho": "Pode ser realmente que seja minha conexão "
     },
     "slack:1787182020.329079": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Bruno Martins",
       "trecho": "Foi até 95% e caiu "
     },
     "slack:1787181727.370969": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Bruno Martins",
       "trecho": "Fui gerar o treino e enquanto estava carregando,  bloquei a tela e gerou esse er"
     },
     "slack:1787181636.862489": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": ""
     },
     "slack:1787181629.000369": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "O TF deu ruim, tinha tentado ja cedo"
     },
     "slack:1787181589.899789": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Sem registro do bpm durante treino"
     },
     "slack:1787155436.922249": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": ""
     },
     "slack:1787152591.653969": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Silvia Beatriz Sousa",
       "trecho": "Vamo testar mais um pouco, validar a nossa proposta não vamos enviar assim ainda"
     },
     "slack:1787152500.160349": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Bruno Martins",
       "trecho": "falei pra ele que enviaremos essa semana"
     },
     "slack:1787152490.106559": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Bruno Martins",
       "trecho": "deixa comigo, só falta compilar os feedbacks e mandar aqui"
     },
     "slack:1787152224.222249": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "vai dando feedback ai tbm Brunao"
     },
     "slack:1787152215.834539": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "só fazer os ajustes que temos pq tem algumas coisas ainda ali que nao estao bate"
     },
     "slack:1787152200.291959": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "vamos mandar essa semana"
     },
     "slack:1787152014.876519": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Bruno Martins",
       "trecho": "esse maluco usando vai encher de feedback"
     },
     "slack:1787141471.895829": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Hoje registrei o meu treino durante o tenis, ele nao gravou, o app deslogou e pa"
     },
     "slack:1787136821.303829": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "fyi - ainda n estou no TF nao apareceu"
     },
     "slack:1787136808.452689": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "App nao atualizou minha noite de sono"
     },
     "slack:1787109020.636009": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Silvia Beatriz Sousa",
       "trecho": "Tem uma versão nova no TF + uma versão em revisão 1.0.2 que resolve todos os pon"
     },
     "slack:1787101356.956459": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": ""
     },
     "slack:1787084773.688079": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Achei a anamnese um pouco repetitiva, alguns botoes nao estão disponíveis ai tem"
     },
     "slack:1787084701.932479": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": ""
     },
     "slack:1787083662.507429": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Sil me\nColoca no testflight?"
     },
     "slack:1787063587.538919": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Outra coisa, será que da pra gente controlar para que tipo de notificação a puls"
     },
     "slack:1787063359.282199": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Um ponto que notei hoje Sil, é que a questão da agua ele nao resetou de ontem pr"
     },
     "slack:1787063339.735789": {
       "commit": "3403f24",
-      "nota": "histórico do canal anterior ao fluxo — tratado até o build 6, ou conversa",
+      "nota": "histórico do canal anterior ao fluxo, tratado até o build 6, ou conversa",
       "em": "2026-08-20T22:50:00",
       "autor": "Leonardo Assumpção",
       "trecho": "Criando esse canal pra centralizarmos os feedbacks de uso e correções"
     },
     "slack:1787274315.457289": {
       "commit": "8a326b6",
-      "nota": "Não era outra conta: o Keychain perdia o token renovado com o iPhone bloqueado e, ao atualizar, o app apresentava o antigo — o servidor derrubava a sessão por segurança, e o \"Rafael\" era um nome de exemplo que ficava na tela enquanto o perfil não carregava. Os três pontos corrigidos.",
+      "nota": "Não era outra conta: o Keychain perdia o token renovado com o iPhone bloqueado e, ao atualizar, o app apresentava o antigo, o servidor derrubava a sessão por segurança, e o \"Rafael\" era um nome de exemplo que ficava na tela enquanto o perfil não carregava. Os três pontos corrigidos.",
       "versao": "1.0.4 (1)",
       "em": "2026-08-20T22:12:13"
     },
@@ -389,7 +389,7 @@
     },
     "slack:1787274022.107979": {
       "commit": "8a326b6",
-      "nota": "mensagem da fundadora sobre o fluxo — conversa",
+      "nota": "mensagem da fundadora sobre o fluxo, conversa",
       "versao": "1.0.4 (1)",
       "em": "2026-08-20T22:12:14"
     },
@@ -407,25 +407,25 @@
     },
     "ABU0OPqni1VqNJrWmKBwbGM": {
       "commit": "5cce484",
-      "nota": "Era isso mesmo: você adormeceu depois da meia-noite e a noite ganhou a data do dia seguinte (por isso o 19 sumiu do histórico). Agora a noite pertence à tarde em que começou — dormiu de madrugada do dia 20, a noite é de 19/08.",
+      "nota": "Era isso mesmo: você adormeceu depois da meia-noite e a noite ganhou a data do dia seguinte (por isso o 19 sumiu do histórico). Agora a noite pertence à tarde em que começou, dormiu de madrugada do dia 20, a noite é de 19/08.",
       "versao": "1.0.4 (2)",
       "em": "2026-08-20T22:42:26"
     },
     "ABSgjDABuVtp_TIFE6cWo68": {
       "commit": "5cce484",
-      "nota": "Dois ajustes: quando você insiste em algo que a proposta já atende, o agente diz \"já está assim\" e só pede confirmação em vez de repetir; e o dia de esporte passa a se chamar pelo seu esporte (Tênis), não \"Esportes Coletivos\" — esse nome era o que fazia parecer que ele não tinha entendido. O plano que você já tem mantém o nome até ser regenerado ou até o agente renomear numa próxima conversa.",
+      "nota": "Dois ajustes: quando você insiste em algo que a proposta já atende, o agente diz \"já está assim\" e só pede confirmação em vez de repetir; e o dia de esporte passa a se chamar pelo seu esporte (Tênis), não \"Esportes Coletivos\", esse nome era o que fazia parecer que ele não tinha entendido. O plano que você já tem mantém o nome até ser regenerado ou até o agente renomear numa próxima conversa.",
       "versao": "1.0.4 (2)",
       "em": "2026-08-20T22:42:28"
     },
     "slack:1787276516.255149": {
       "commit": "8b78089",
-      "nota": "Valeu pela análise, Bruno — foi direto pro código. Três mudanças: o gerador passa a escrever a fundamentação em quatro frases curtas, pra pessoa, como decisão e sem palavras de sistema (tier, flag, siglas); a supervisão aparece no máximo uma vez, no fim, como cuidado; e a tela dobra o texto completo atrás de \"Ver detalhes técnicos\". Seu plano atual mantém o texto antigo até ser regenerado — a regra nova vale pra geração daqui em diante.",
+      "nota": "Valeu pela análise, Bruno, foi direto pro código. Três mudanças: o gerador passa a escrever a fundamentação em quatro frases curtas, pra pessoa, como decisão e sem palavras de sistema (tier, flag, siglas); a supervisão aparece no máximo uma vez, no fim, como cuidado; e a tela dobra o texto completo atrás de \"Ver detalhes técnicos\". Seu plano atual mantém o texto antigo até ser regenerado, a regra nova vale pra geração daqui em diante.",
       "versao": "1.0.4 (2)",
       "em": "2026-08-20T22:50:37"
     },
     "AFwc_1dmPxkBcoNbJj_FQ3s": {
       "commit": "8b78089",
-      "nota": "Eram duas contas diferentes: o card calculava sem IMC e sem minutos ativos, o detalhe com os dois. Agora é uma montagem só pras duas telas — o número bate.",
+      "nota": "Eram duas contas diferentes: o card calculava sem IMC e sem minutos ativos, o detalhe com os dois. Agora é uma montagem só pras duas telas, o número bate.",
       "versao": "1.0.4 (2)",
       "em": "2026-08-20T22:50:38"
     },
@@ -443,13 +443,13 @@
     },
     "ABK-ucLCSMu3r1xy0YvjBG8": {
       "commit": "8b78089",
-      "nota": "Explicação do estresse na Ajuda: o firmware converte a variabilidade entre batimentos (HRV) numa escala 0–100 — calmo abaixo de 30, moderado até 59, elevado a partir de 60. Sobe na 1.0.4 (2).",
+      "nota": "Explicação do estresse na Ajuda: o firmware converte a variabilidade entre batimentos (HRV) numa escala 0–100, calmo abaixo de 30, moderado até 59, elevado a partir de 60. Sobe na 1.0.4 (2).",
       "versao": "1.0.4 (2)",
       "em": "2026-08-20T22:50:46"
     },
     "slack:1787276821.259859": {
       "commit": "eceb4d0",
-      "nota": "Feito, Bruno: o número do recipiente virou um campo — toca, digita 610, pronto. Os botões de 50 em 50 continuam.",
+      "nota": "Feito, Bruno: o número do recipiente virou um campo, toca, digita 610, pronto. Os botões de 50 em 50 continuam.",
       "versao": "1.0.4 (2)",
       "em": "2026-08-20T22:53:05"
     },
@@ -461,13 +461,13 @@
     },
     "AAIVkLq3nXxD1l4HWRmpLso": {
       "commit": "b386f2f",
-      "nota": "Já é assim: a meta de água é 35 ml por kg do seu peso da anamnese, menos a parte que vem dos alimentos, mais o treino do dia — e desde a 1.0.4 a linha da meta mostra essa conta (\"80 kg × 35 ml + 40 min de treino\").",
+      "nota": "Já é assim: a meta de água é 35 ml por kg do seu peso da anamnese, menos a parte que vem dos alimentos, mais o treino do dia, e desde a 1.0.4 a linha da meta mostra essa conta (\"80 kg × 35 ml + 40 min de treino\").",
       "versao": "1.0.4 (2)",
       "em": "2026-08-20T22:53:41"
     },
     "slack:1787277030.597219": {
       "commit": "eceb4d0",
-      "nota": "Anotado como proposta, Bruno: lembrete a cada N minutos dentro de uma janela (ex.: 30 em 30 das 8h às 21h). Hoje o lembrete é por lista de horários; o modo por intervalo é uma tela nova e vai pra decisão da Silvia com os outros pedidos de recurso — não entra por rodada de bugs.",
+      "nota": "Anotado como proposta, Bruno: lembrete a cada N minutos dentro de uma janela (ex.: 30 em 30 das 8h às 21h). Hoje o lembrete é por lista de horários; o modo por intervalo é uma tela nova e vai pra decisão da Silvia com os outros pedidos de recurso, não entra por rodada de bugs.",
       "versao": "1.0.4 (2)",
       "em": "2026-08-20T22:53:44"
     },
@@ -479,7 +479,7 @@
     },
     "AH6e7PkaL2J7M5Edft6yPjc": {
       "commit": "eceb4d0",
-      "nota": "Anotado como proposta de design: imagens no banner da visão geral alinhadas à identidade visual. Vai pra decisão da Silvia — é escolha de marca, não correção.",
+      "nota": "Anotado como proposta de design: imagens no banner da visão geral alinhadas à identidade visual. Vai pra decisão da Silvia, é escolha de marca, não correção.",
       "versao": "1.0.4 (2)",
       "em": "2026-08-20T22:53:47"
     },
@@ -491,37 +491,37 @@
     },
     "AO44SYWf9ndhLGEFMNpbuhM": {
       "commit": "a1f4d47",
-      "nota": "Treino e esporte já tinham story pra compartilhar; a saúde não — agora a tela Saúde tem \"Compartilhar minha saúde\", com sono, idade biológica e HRV no mesmo card 9:16, direto pro Instagram ou galeria.",
+      "nota": "Treino e esporte já tinham story pra compartilhar; a saúde não, agora a tela Saúde tem \"Compartilhar minha saúde\", com sono, idade biológica e HRV no mesmo card 9:16, direto pro Instagram ou galeria.",
       "versao": "1.0.4 (2)",
       "em": "2026-08-20T23:07:45"
     },
     "slack:1787277577.805849": {
       "commit": "9812abf",
-      "nota": "Boa pegada, Bruno. Eram dois problemas: (1) card e detalhe montavam entradas diferentes — isso já tinha sido unificado hoje; (2) a composição mostrava a idade que cada marcador sugere, e a idade final é MÉDIA ponderada dessas idades, não soma — a tela não dizia, e somar era a leitura natural. Agora cada barra é a contribuição (anos × peso), e elas somam o desvio do título; o texto mostra os pesos (aptidão 60%, HRV 25%, sono 15%). Terceira fonte não existe — o servidor calcula pro score, mas nenhuma tela mostra. Não movi pra um endpoint: o cálculo é offline de propósito e a paridade com o modelo é testada.",
+      "nota": "Boa pegada, Bruno. Eram dois problemas: (1) card e detalhe montavam entradas diferentes, isso já tinha sido unificado hoje; (2) a composição mostrava a idade que cada marcador sugere, e a idade final é MÉDIA ponderada dessas idades, não soma, a tela não dizia, e somar era a leitura natural. Agora cada barra é a contribuição (anos × peso), e elas somam o desvio do título; o texto mostra os pesos (aptidão 60%, HRV 25%, sono 15%). Terceira fonte não existe, o servidor calcula pro score, mas nenhuma tela mostra. Não movi pra um endpoint: o cálculo é offline de propósito e a paridade com o modelo é testada.",
       "versao": "1.0.4 (2)",
       "em": "2026-08-20T23:12:09"
     },
     "slack:1787277785.327589": {
       "commit": "9812abf",
-      "nota": "Não era só por ter um esporte: as duas telas abriam com o mesmo primeiro quadro (régua da semana, treino de hoje, menu). A Esporte agora abre com o que é dela — suas sessões e a constância — e o plano vira rodapé.",
+      "nota": "Não era só por ter um esporte: as duas telas abriam com o mesmo primeiro quadro (régua da semana, treino de hoje, menu). A Esporte agora abre com o que é dela, suas sessões e a constância, e o plano vira rodapé.",
       "versao": "1.0.4 (2)",
       "em": "2026-08-20T23:12:10"
     },
     "slack:1787278788.839099": {
       "commit": "1c11fac",
-      "nota": "Valeu, Bruno! Boa parte desse 'cada vez melhor' veio daqui do canal — seus relatos tinham causa, passo a passo e o que fazer, e isso encurta tudo. A 1.0.4 (2) já está subindo com a leva de hoje. Segue mandando que a gente segue fechando.",
+      "nota": "Valeu, Bruno! Boa parte desse 'cada vez melhor' veio daqui do canal, seus relatos tinham causa, passo a passo e o que fazer, e isso encurta tudo. A 1.0.4 (2) já está subindo com a leva de hoje. Segue mandando que a gente segue fechando.",
       "versao": "1.0.4 (3)",
       "em": "2026-08-20T23:22:40"
     },
     "slack:1787279654.083289": {
       "commit": "2887268",
-      "nota": "Era memória: a foto entrava no tamanho original (12 MP) e estourava ao gerar o story. Agora ela é redimensionada pra 1080 ao entrar — é o tamanho que o story usa mesmo.",
+      "nota": "Era memória: a foto entrava no tamanho original (12 MP) e estourava ao gerar o story. Agora ela é redimensionada pra 1080 ao entrar, é o tamanho que o story usa mesmo.",
       "versao": "1.0.4 (3)",
       "em": "2026-08-20T23:37:51"
     },
     "slack:1787279287.872199": {
       "commit": "2887268",
-      "nota": "Valeu — o campo novo morava numa folha que não subia com o teclado. Toda folha de ajuste passa a subir; o volume fica visível enquanto você digita.",
+      "nota": "Valeu, o campo novo morava numa folha que não subia com o teclado. Toda folha de ajuste passa a subir; o volume fica visível enquanto você digita.",
       "versao": "1.0.4 (3)",
       "em": "2026-08-20T23:37:51"
     },
@@ -533,7 +533,7 @@
     },
     "slack:1787279733.775769": {
       "commit": "b19a038",
-      "nota": "Feito: no Progresso, o seletor de período ganhou \"Outro\" — você digita de/até e os números, gráficos e histórico passam a valer pra esse intervalo.",
+      "nota": "Feito: no Progresso, o seletor de período ganhou \"Outro\", você digita de/até e os números, gráficos e histórico passam a valer pra esse intervalo.",
       "versao": "1.0.4 (3)",
       "em": "2026-08-20T23:44:28"
     },
@@ -545,7 +545,7 @@
     },
     "ACsUuyjt8yfvb3292hw4ru8": {
       "commit": "1f1b985",
-      "nota": "Achei pelo log de falha com o dSYM: o gesto de arrastar os blocos do story rodava no runtime errado (o Reanimated entra por dependência e o gesture-handler manda os callbacks pra lá). Tocar num bloco derrubava o app — valia pro compartilhar saúde e pro compartilhar com foto. Corrigido na origem, nos cinco gestos do canvas.",
+      "nota": "Achei pelo log de falha com o dSYM: o gesto de arrastar os blocos do story rodava no runtime errado (o Reanimated entra por dependência e o gesture-handler manda os callbacks pra lá). Tocar num bloco derrubava o app, valia pro compartilhar saúde e pro compartilhar com foto. Corrigido na origem, nos cinco gestos do canvas.",
       "versao": "1.0.4 (3)",
       "em": "2026-08-21T00:04:28"
     },
@@ -737,19 +737,19 @@
     },
     "slack:1787276103.674679": {
       "commit": "b19a038",
-      "nota": "Valeu, Leo! Quem tá top é quem testa de verdade — segue mandando.",
+      "nota": "Valeu, Leo! Quem tá top é quem testa de verdade, segue mandando.",
       "versao": "1.0.4 (3)",
       "em": "2026-08-20T23:46:42"
     },
     "slack:1787280032.373699": {
       "commit": "1f1b985",
-      "nota": "Boa: o véu sobre a foto ganhou um gradiente mais denso embaixo, onde ficam os números — texto branco fica legível mesmo com fundo claro.",
+      "nota": "Boa: o véu sobre a foto ganhou um gradiente mais denso embaixo, onde ficam os números, texto branco fica legível mesmo com fundo claro.",
       "versao": "1.0.4 (3)",
       "em": "2026-08-21T00:04:31"
     },
     "slack:1787279983.364899": {
       "commit": "1f1b985",
-      "nota": "Feito de forma geral: toda tela com rolagem passa a subir o conteúdo com o teclado, e toda folha de ajuste também — não é mais caso a caso.",
+      "nota": "Feito de forma geral: toda tela com rolagem passa a subir o conteúdo com o teclado, e toda folha de ajuste também, não é mais caso a caso.",
       "versao": "1.0.4 (3)",
       "em": "2026-08-21T00:04:39"
     },
@@ -761,19 +761,19 @@
     },
     "slack:1787280435.572349": {
       "commit": "1f1b985",
-      "nota": "Combinado, chef. E agora eu escuto o canal em tempo real — mensagem nova aqui já entra na fila na hora.",
+      "nota": "Combinado, chef. E agora eu escuto o canal em tempo real, mensagem nova aqui já entra na fila na hora.",
       "versao": "1.0.4 (3)",
       "em": "2026-08-21T00:04:54"
     },
     "slack:1787312880.514559": {
       "commit": "28d1bca",
-      "nota": "Feito, Bruno (opcional, em Configurações → Notificações → \"Lembrar ao chegar no lugar do treino\"): o app guarda onde suas sessões começam, e quando um lugar se repete vira uma cerca de 150 m — chegar lá dispara o lembrete de check-in. Pede localização \"sempre\", por isso é um interruptor.",
+      "nota": "Feito, Bruno (opcional, em Configurações → Notificações → \"Lembrar ao chegar no lugar do treino\"): o app guarda onde suas sessões começam, e quando um lugar se repete vira uma cerca de 150 m, chegar lá dispara o lembrete de check-in. Pede localização \"sempre\", por isso é um interruptor.",
       "versao": "1.0.4 (5)",
       "em": "2026-08-21T09:48:01"
     },
     "slack:1787311812.351499": {
       "commit": "28d1bca",
-      "nota": "Feito, Leo — e do jeito que você descreveu: opcional, em Configurações → \"Notificações personalizadas — quanto mais você usa, mais ele aprende\". Ligado, ele lê 30 dias de refeições, treinos e a hora de dormir, e agenda lembretes nos seus horários típicos (nada com menos de 3 ocorrências). Inclui o relatório semanal de sono no domingo à noite.",
+      "nota": "Feito, Leo, e do jeito que você descreveu: opcional, em Configurações → \"Notificações personalizadas, quanto mais você usa, mais ele aprende\". Ligado, ele lê 30 dias de refeições, treinos e a hora de dormir, e agenda lembretes nos seus horários típicos (nada com menos de 3 ocorrências). Inclui o relatório semanal de sono no domingo à noite.",
       "versao": "1.0.4 (5)",
       "em": "2026-08-21T09:48:09"
     },
@@ -797,7 +797,7 @@
     },
     "AHfvchjatARq-T48iBeRvd0": {
       "commit": "28d1bca",
-      "nota": "Revertido um ajuste de teclado na rolagem que entrou ontem e coincide com isso. Se a tela de Atividade voltar a travar vazia ao rolar, me avisa com o print — aí isolo no aparelho.",
+      "nota": "Revertido um ajuste de teclado na rolagem que entrou ontem e coincide com isso. Se a tela de Atividade voltar a travar vazia ao rolar, me avisa com o print, aí isolo no aparelho.",
       "versao": "1.0.4 (5)",
       "em": "2026-08-21T09:48:30"
     },
@@ -815,19 +815,19 @@
     },
     "AAEbVGcLsEAAqb2Jei1VkhY": {
       "commit": "28d1bca",
-      "nota": "Passos, distância e calorias eram restaurados do disco sem data — amanheciam com o valor de ontem até a pulseira mandar o primeiro passo. Agora o dia vira: gravado em outro dia, zera.",
+      "nota": "Passos, distância e calorias eram restaurados do disco sem data, amanheciam com o valor de ontem até a pulseira mandar o primeiro passo. Agora o dia vira: gravado em outro dia, zera.",
       "versao": "1.0.4 (5)",
       "em": "2026-08-21T09:48:39"
     },
     "slack:1787317637.685769": {
       "commit": "ff902be",
-      "nota": "Kkkk sem processo, Bruno — aqui o pagamento é relato bem escrito, e você tá adiantado.",
+      "nota": "Kkkk sem processo, Bruno, aqui o pagamento é relato bem escrito, e você tá adiantado.",
       "versao": "1.0.4 (6)",
       "em": "2026-08-21T10:41:27"
     },
     "slack:1787317413.934939": {
       "commit": "ff902be",
-      "nota": "Valeu, Leo! Vi o dos passos zerados no build 5 — já estou em cima.",
+      "nota": "Valeu, Leo! Vi o dos passos zerados no build 5, já estou em cima.",
       "versao": "1.0.4 (6)",
       "em": "2026-08-21T10:41:34"
     },
@@ -845,7 +845,7 @@
     },
     "slack:1787319956.005739": {
       "commit": "dbbd3f7",
-      "nota": "Dois acertos, Bruno. O aviso de batimento agora só dispara com você PARADO — sem treino, sem sessão, sem passos nos últimos 10 min — e com o batimento alto por 10 minutos seguidos; exercício não conta. E o histórico que sumiu: a sincronização com a memória da pulseira (a cada 4 min, grão de 5 min, atrasada) substituía a curva ao vivo e apagava o pico recente; agora ela é a base e o que chegou ao vivo depois continua.",
+      "nota": "Dois acertos, Bruno. O aviso de batimento agora só dispara com você PARADO, sem treino, sem sessão, sem passos nos últimos 10 min, e com o batimento alto por 10 minutos seguidos; exercício não conta. E o histórico que sumiu: a sincronização com a memória da pulseira (a cada 4 min, grão de 5 min, atrasada) substituía a curva ao vivo e apagava o pico recente; agora ela é a base e o que chegou ao vivo depois continua.",
       "versao": "1.0.4 (6)",
       "em": "2026-08-21T10:49:17"
     },
@@ -857,37 +857,37 @@
     },
     "slack:1787321592.707449": {
       "commit": "ae56de9",
-      "nota": "Feito, com uma ressalva de hardware. Em Configurações → Avisos no pulso, agora cada categoria que a pulseira conhece (Telefone, WhatsApp, Instagram, Telegram…) tem o próprio interruptor, e um mestre no topo liga ou desliga todas as notificações do celular de uma vez. A parte 'só o AssumFit' o firmware não permite: o filtro dele é por categoria de app, sem identificador, e o AssumFit só existe no balde 'Outros apps' — ligando esse balde, ela vibra com qualquer app que o firmware não reconhece. A tela diz isso antes de você ligar.",
+      "nota": "Feito, com uma ressalva de hardware. Em Configurações → Avisos no pulso, agora cada categoria que a pulseira conhece (Telefone, WhatsApp, Instagram, Telegram…) tem o próprio interruptor, e um mestre no topo liga ou desliga todas as notificações do celular de uma vez. A parte 'só o AssumFit' o firmware não permite: o filtro dele é por categoria de app, sem identificador, e o AssumFit só existe no balde 'Outros apps', ligando esse balde, ela vibra com qualquer app que o firmware não reconhece. A tela diz isso antes de você ligar.",
       "versao": "1.0.4 (7)",
       "em": "2026-08-21T11:16:26"
     },
     "slack:1787346794.437769": {
       "commit": "1924ffa",
-      "nota": "Feito. Quando o batimento passa de 110 com você em movimento por três minutos e não há treino nem sessão aberta, chega uma notificação perguntando 'Começou a treinar?' — tocar abre a tela de esporte para registrar. Sem som, uma por episódio, no máximo uma a cada duas horas; parado com batimento alto continua sendo o convite de respiração, não essa.",
+      "nota": "Feito. Quando o batimento passa de 110 com você em movimento por três minutos e não há treino nem sessão aberta, chega uma notificação perguntando 'Começou a treinar?', tocar abre a tela de esporte para registrar. Sem som, uma por episódio, no máximo uma a cada duas horas; parado com batimento alto continua sendo o convite de respiração, não essa.",
       "versao": "1.0.4 (7)",
       "em": "2026-08-21T18:15:36"
     },
     "slack:1787353131.090459": {
       "commit": "f9cda69",
-      "nota": "Feito. No lembrete de água e no de refeições, ao adicionar um horário agora tem o campo 'ou digite' ao lado da roda — aceita 7:55, 0755, 19h30. A roda continua lá para quem prefere.",
+      "nota": "Feito. No lembrete de água e no de refeições, ao adicionar um horário agora tem o campo 'ou digite' ao lado da roda, aceita 7:55, 0755, 19h30. A roda continua lá para quem prefere.",
       "versao": "1.0.5 (1)",
       "em": "2026-08-21T20:06:44"
     },
     "slack:1787353419.119869": {
       "commit": "f805b81",
-      "nota": "Feito. Na tela de Treino, quando o de ontem ficou sem registro, o painel de hoje mostra 'Fazer o de ontem que ficou' — um toque e o check-in abre já com aquele treino selecionado. E se você abrir o dia passado na régua da semana, o botão vira 'Fazer este treino hoje'. Vale dentro da semana corrente.",
+      "nota": "Feito. Na tela de Treino, quando o de ontem ficou sem registro, o painel de hoje mostra 'Fazer o de ontem que ficou', um toque e o check-in abre já com aquele treino selecionado. E se você abrir o dia passado na régua da semana, o botão vira 'Fazer este treino hoje'. Vale dentro da semana corrente.",
       "versao": "1.0.5 (1)",
       "em": "2026-08-21T20:06:52"
     },
     "AIWVvYYZmaLE2lJD44jYFwQ": {
       "commit": "0146075",
-      "nota": "Feito: widget 'Água de hoje' para a tela de início, com o anel do dia e um botão '+ copo' que registra sem abrir o app (iOS 17+). O gole entra no seu histórico na próxima vez que o app abrir. É código nativo, então chega só com o build 1.0.5 (1) — depois de instalar, segure a tela de início → + → AssumFit.",
+      "nota": "Feito: widget 'Água de hoje' para a tela de início, com o anel do dia e um botão '+ copo' que registra sem abrir o app (iOS 17+). O gole entra no seu histórico na próxima vez que o app abrir. É código nativo, então chega só com o build 1.0.5 (1), depois de instalar, segure a tela de início → + → AssumFit.",
       "versao": "1.0.5 (1)",
       "em": "2026-08-21T20:07:40"
     },
     "slack:1787353929.063599": {
       "commit": "0146075",
-      "nota": "Valeu, Leo! Continue mandando — cada ideia dessas vira build.",
+      "nota": "Valeu, Leo! Continue mandando, cada ideia dessas vira build.",
       "versao": "1.0.5 (1)",
       "em": "2026-08-21T20:12:18"
     },
@@ -899,13 +899,13 @@
     },
     "AGXmsO-bg55KxjCEdAB5Uqs": {
       "commit": "961e28c",
-      "nota": "Era o 'Abrir Relógio' do planejador de sono: o atalho para o app Relógio não funciona no iOS 26 e a falha ficava muda. Agora, no iOS 26, o AssumFit marca o despertador sozinho — pede permissão uma vez e o alarme aparece como qualquer outro do iPhone. Em iOS anterior, abre o Relógio e avisa se não conseguir.",
+      "nota": "Era o 'Abrir Relógio' do planejador de sono: o atalho para o app Relógio não funciona no iOS 26 e a falha ficava muda. Agora, no iOS 26, o AssumFit marca o despertador sozinho, pede permissão uma vez e o alarme aparece como qualquer outro do iPhone. Em iOS anterior, abre o Relógio e avisa se não conseguir.",
       "versao": "1.0.5 (2)",
       "em": "2026-08-21T21:20:51"
     },
     "AAmFordpsBRXozixAr5MQso": {
       "commit": "cc7a063",
-      "nota": "Reproduzido: a pulseira grava a noite em blocos, e quando você levanta no meio eles caem em dias diferentes da memória — o app pegava só o primeiro (os 59 min). Agora os blocos da mesma noite são juntados, com o tempo em que você levantou contado como acordado. A sua noite de ontem volta inteira na próxima sincronização depois de instalar o build.",
+      "nota": "Reproduzido: a pulseira grava a noite em blocos, e quando você levanta no meio eles caem em dias diferentes da memória, o app pegava só o primeiro (os 59 min). Agora os blocos da mesma noite são juntados, com o tempo em que você levantou contado como acordado. A sua noite de ontem volta inteira na próxima sincronização depois de instalar o build.",
       "versao": "1.0.5 (2)",
       "em": "2026-08-22T07:08:46"
     },
@@ -923,25 +923,25 @@
     },
     "AK_-R6yfe8dKCwIbGcBeb4s": {
       "commit": "9506923",
-      "nota": "Não era o carro: a pulseira mandou 3,2 km e 886 mil kcal para 1.253 passos, e o app mostrava o que chegava. Agora distância e calorias só entram se couberem nos passos (por passo, como um pedômetro); fora disso o app estima e diz que é estimativa — o seu dia vira ~0,9 km e ~50 kcal. Sobre passos dentro do carro: quem conta é a pulseira, pelo movimento do pulso; o app não tem como saber que você estava dirigindo.",
+      "nota": "Não era o carro: a pulseira mandou 3,2 km e 886 mil kcal para 1.253 passos, e o app mostrava o que chegava. Agora distância e calorias só entram se couberem nos passos (por passo, como um pedômetro); fora disso o app estima e diz que é estimativa, o seu dia vira ~0,9 km e ~50 kcal. Sobre passos dentro do carro: quem conta é a pulseira, pelo movimento do pulso; o app não tem como saber que você estava dirigindo.",
       "versao": "1.0.5 (3)",
       "em": "2026-08-22T11:34:26"
     },
     "AJgFy8w0c4WewUa1QYyQE7A": {
       "commit": "1a840b4",
-      "nota": "A tela da Bateria ganhou uma frase de abertura: ela parte do que a noite recarregou, desce com o estresse que a pulseira mede e sobe nos momentos calmos — 100 é reserva cheia. O detalhe do cálculo está na Ajuda, em 'Bateria do corpo'.",
+      "nota": "A tela da Bateria ganhou uma frase de abertura: ela parte do que a noite recarregou, desce com o estresse que a pulseira mede e sobe nos momentos calmos: 100 é reserva cheia. O detalhe do cálculo está na Ajuda, em 'Bateria do corpo'.",
       "versao": "1.0.5 (3)",
       "em": "2026-08-22T11:34:28"
     },
     "AFUcIjxalEdce_B9AcHLmtY": {
       "commit": "c7b208a",
-      "nota": "Corrigido: o selo do cartão agora é de cada origem — 'ATIVIDADE DO DIA', 'MINHA SAÚDE', 'MEU PROGRESSO' — e 'TREINO CONCLUÍDO' só aparece no treino de verdade. O layout continua o mesmo, com os blocos editáveis.",
+      "nota": "Corrigido: o selo do cartão agora é de cada origem, 'ATIVIDADE DO DIA', 'MINHA SAÚDE', 'MEU PROGRESSO', e 'TREINO CONCLUÍDO' só aparece no treino de verdade. O layout continua o mesmo, com os blocos editáveis.",
       "versao": "1.0.5 (3)",
       "em": "2026-08-22T11:42:31"
     },
     "AKzqzCLnVC9A1ww9GnLxdi8": {
       "commit": "d5079d7",
-      "nota": "Reproduzido: nos exercícios por tempo (alongamento), 'Concluir exercício' só passava para o próximo e não marcava o exercício como feito — por isso a barra não andava e a conclusão não chegava ao servidor. Agora concluir marca e avança; 'Pular' continua só pulando.",
+      "nota": "Reproduzido: nos exercícios por tempo (alongamento), 'Concluir exercício' só passava para o próximo e não marcava o exercício como feito, por isso a barra não andava e a conclusão não chegava ao servidor. Agora concluir marca e avança; 'Pular' continua só pulando.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T12:47:20"
     },
@@ -959,7 +959,7 @@
     },
     "APv3TqiHRcKestyPGHWjWgQ": {
       "commit": "dcbbd1a",
-      "nota": "Feito: no check-in, abaixo de 'Iniciar treino', tem 'Ajustar o treino de hoje com o personal' — abre o chat já com 'hoje tenho só 30 minutos' para você confirmar ou editar, e ele propõe o ajuste só do treino de hoje.",
+      "nota": "Feito: no check-in, abaixo de 'Iniciar treino', tem 'Ajustar o treino de hoje com o personal', abre o chat já com 'hoje tenho só 30 minutos' para você confirmar ou editar, e ele propõe o ajuste só do treino de hoje.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T12:50:41"
     },
@@ -971,61 +971,61 @@
     },
     "slack:1787414068.880199": {
       "commit": "dcbbd1a",
-      "nota": "Boa pergunta — hoje o app tem a meta calórica (pela anamnese e pelo objetivo) e o registro de refeição por foto com a TACO; um plano alimentar recomendado, fechando o ciclo com o treino, ainda não existe. É decisão de produto da Silvia, e tem uma fronteira a respeitar: prescrever dieta encosta no clínico, que o AssumFit não faz. Anotei no plano para ela avaliar.",
+      "nota": "Boa pergunta, hoje o app tem a meta calórica (pela anamnese e pelo objetivo) e o registro de refeição por foto com a TACO; um plano alimentar recomendado, fechando o ciclo com o treino, ainda não existe. É decisão de produto da Silvia, e tem uma fronteira a respeitar: prescrever dieta encosta no clínico, que o AssumFit não faz. Anotei no plano para ela avaliar.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T12:55:15"
     },
     "AEx4U_Kb3E0gujyvKdRp4U4": {
       "commit": "31705e9",
-      "nota": "Reproduzido pela sua captura: 'em 3 meses' virou 'dias por semana: 3', e a lista de regiões virou 'Costas'. O extrator agora sabe que prazo não é frequência (e só aceita 'N vezes por semana' dito com essas palavras) e não preenche uma pergunta de uma opção com uma lista — essas ficam para o roteiro perguntar. Na revisão da anamnese dá para corrigir o que já ficou gravado.",
+      "nota": "Reproduzido pela sua captura: 'em 3 meses' virou 'dias por semana: 3', e a lista de regiões virou 'Costas'. O extrator agora sabe que prazo não é frequência (e só aceita 'N vezes por semana' dito com essas palavras) e não preenche uma pergunta de uma opção com uma lista, essas ficam para o roteiro perguntar. Na revisão da anamnese dá para corrigir o que já ficou gravado.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T12:58:35"
     },
     "ALLHQx2WYBilGmpx_kJxgHA": {
       "commit": "31705e9",
-      "nota": "O serviço de transcrição recusou o áudio e o app só dizia 'falhou'. Duas mudanças: áudio curto demais (toque rápido no microfone) não sobe mais — a tela explica como gravar; e quando o serviço recusa, o motivo chega e a mensagem diz o que foi. Se acontecer de novo, me manda a frase que apareceu.",
+      "nota": "O serviço de transcrição recusou o áudio e o app só dizia 'falhou'. Duas mudanças: áudio curto demais (toque rápido no microfone) não sobe mais, a tela explica como gravar; e quando o serviço recusa, o motivo chega e a mensagem diz o que foi. Se acontecer de novo, me manda a frase que apareceu.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T12:58:38"
     },
     "AGkKDSOtNxBsQtaW9RoIRig": {
       "commit": "0cf474a",
-      "nota": "Crash ao concluir o treino: o log da Apple chega sem a mensagem do erro de JavaScript, então a linha exata ainda não dá para apontar. O que muda a partir do próximo build: erro desse tipo deixa de fechar o app — aparece uma tela de recuperação com 'Tentar de novo', e a mensagem do erro chega para nós com a pilha. Se acontecer de novo, vem com nome.",
+      "nota": "Crash ao concluir o treino: o log da Apple chega sem a mensagem do erro de JavaScript, então a linha exata ainda não dá para apontar. O que muda a partir do próximo build: erro desse tipo deixa de fechar o app, aparece uma tela de recuperação com 'Tentar de novo', e a mensagem do erro chega para nós com a pilha. Se acontecer de novo, vem com nome.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T12:59:03"
     },
     "AMc5EkUrmBRhKa-btZy4irE": {
       "commit": "0cf474a",
-      "nota": "Crash ao desconectar a pulseira (ainda na 1.0.4 (7)): mesma assinatura dos outros — erro de JavaScript sem mensagem no log da Apple. A partir do próximo build, erro assim não fecha o app (vira tela de recuperação) e a mensagem chega para nós. Se repetir, vem com a linha.",
+      "nota": "Crash ao desconectar a pulseira (ainda na 1.0.4 (7)): mesma assinatura dos outros, erro de JavaScript sem mensagem no log da Apple. A partir do próximo build, erro assim não fecha o app (vira tela de recuperação) e a mensagem chega para nós. Se repetir, vem com a linha.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T12:59:06"
     },
     "ANXQspJ3cdmNte4oHiHFiRU": {
       "commit": "9f1872d",
-      "nota": "Verdade — o texto expandido era o que o gerador escreve para o revisor (TIER, RIR, referências). Agora a fundamentação que vai para a tela passa por uma reescrita para a pessoa, em segunda pessoa e sem siglas; a técnica fica guardada à parte. Vale para planos gerados daqui em diante — o seu atual só muda se você gerar de novo (ou ajustar com o personal).",
+      "nota": "Verdade, o texto expandido era o que o gerador escreve para o revisor (TIER, RIR, referências). Agora a fundamentação que vai para a tela passa por uma reescrita para a pessoa, em segunda pessoa e sem siglas; a técnica fica guardada à parte. Vale para planos gerados daqui em diante, o seu atual só muda se você gerar de novo (ou ajustar com o personal).",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T13:05:53"
     },
     "AF3UCZ1IV_qKL1G4H8phdWo": {
       "commit": "d86dcd5",
-      "nota": "Crash ao cancelar o check-in — encontrado e corrigido de verdade: a rodada de testes no simulador reproduziu ('Rendered fewer hooks than expected'), um efeito da tela de treino vivia depois do retorno de 'sem sessão'; ao cancelar ou concluir, o app fechava. Corrigido; sobe no próximo build. Os crashes ao concluir e ao desconectar têm a mesma causa.",
+      "nota": "Crash ao cancelar o check-in, encontrado e corrigido de verdade: a rodada de testes no simulador reproduziu ('Rendered fewer hooks than expected'), um efeito da tela de treino vivia depois do retorno de 'sem sessão'; ao cancelar ou concluir, o app fechava. Corrigido; sobe no próximo build. Os crashes ao concluir e ao desconectar têm a mesma causa.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T14:30:38"
     },
     "ACx2C-2-dhBRbHHSBfnbmCE": {
       "commit": "d86dcd5",
-      "nota": "Boa ideia, e é decisão de produto da Silvia: modos (saúde, condicionamento, atleta) mudariam metas e regras em várias telas — água por kg, faixas de batimento, volume de treino. Anotei no plano com o seu exemplo dos 50 ml/kg para ela avaliar.",
+      "nota": "Boa ideia, e é decisão de produto da Silvia: modos (saúde, condicionamento, atleta) mudariam metas e regras em várias telas, água por kg, faixas de batimento, volume de treino. Anotei no plano com o seu exemplo dos 50 ml/kg para ela avaliar.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T14:30:43"
     },
     "AAIkuQo0F3U3LSCeoWZGK34": {
       "commit": "bd1e09e",
-      "nota": "Feito na parte que o plano suporta: dia de esporte coletivo sem exercícios prescritos mostra só 'Registrar' no check-in (cronômetro ou GPS), sem o treino guiado vazio. Esporte e musculação no mesmo dia como dois cards separados precisa de dois treinos por dia no plano — hoje é um por dia; ficou anotado para a Silvia decidir.",
+      "nota": "Feito na parte que o plano suporta: dia de esporte coletivo sem exercícios prescritos mostra só 'Registrar' no check-in (cronômetro ou GPS), sem o treino guiado vazio. Esporte e musculação no mesmo dia como dois cards separados precisa de dois treinos por dia no plano, hoje é um por dia; ficou anotado para a Silvia decidir.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T14:31:06"
     },
     "ANl7QjAhE50YZrXQJnuZAmU": {
       "commit": "f26deb1",
-      "nota": "O treino selecionado e o Iniciar treino agora ficam antes da lista de outros treinos — não precisa mais rolar até o fim.",
+      "nota": "O treino selecionado e o Iniciar treino agora ficam antes da lista de outros treinos, não precisa mais rolar até o fim.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T15:28:45"
     },
@@ -1067,7 +1067,7 @@
     },
     "AOX18QuO-fwXXyltAdO3g4o": {
       "commit": "9b80ad7",
-      "nota": "A pulseira já vibra no fim do descanso: com o app aberto, direto; com a tela apagada, pela notificação — para isso, em Dispositivo → Avisos no pulso, ligue 'Outros apps' e aceite o emparelhamento quando o iPhone pedir. A tela agora explica isso.",
+      "nota": "A pulseira já vibra no fim do descanso: com o app aberto, direto; com a tela apagada, pela notificação, para isso, em Dispositivo → Avisos no pulso, ligue 'Outros apps' e aceite o emparelhamento quando o iPhone pedir. A tela agora explica isso.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T16:12:11"
     },
@@ -1079,19 +1079,19 @@
     },
     "AI4uzR9f5WVG4kGjJMA6FqA": {
       "commit": "e5f872a",
-      "nota": "A folha de troca agora muda com o motivo: 'aparelho ocupado' lista outro equipamento primeiro, 'não sei executar' lista as versões mais simples primeiro — e diz isso no topo.",
+      "nota": "A folha de troca agora muda com o motivo: 'aparelho ocupado' lista outro equipamento primeiro, 'não sei executar' lista as versões mais simples primeiro, e diz isso no topo.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T16:25:24"
     },
     "AFK9ocCcleQmIkywB26h-w0": {
       "commit": "d86dcd5",
-      "nota": "Crash ao concluir/cancelar o treino já corrigido (ordem de hooks na tela de treino, achado na rodada de testes de 22/08) — o build 3 saiu antes da correção; sobe no próximo.",
+      "nota": "Crash ao concluir/cancelar o treino já corrigido (ordem de hooks na tela de treino, achado na rodada de testes de 22/08), o build 3 saiu antes da correção; sobe no próximo.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T16:38:48"
     },
     "slack:1787427591.445789": {
       "commit": "d86dcd5",
-      "nota": "O crash ao concluir já está corrigido e sobe no próximo build. O relógio continuar contando é esperado: o app caiu antes de a conclusão chegar ao servidor, então o treino ficou aberto — e ao reabrir ele mostra o tempo desde o início real. Para fechar esse treino, toque em Finalizar; no próximo build, Concluir funciona.",
+      "nota": "O crash ao concluir já está corrigido e sobe no próximo build. O relógio continuar contando é esperado: o app caiu antes de a conclusão chegar ao servidor, então o treino ficou aberto, e ao reabrir ele mostra o tempo desde o início real. Para fechar esse treino, toque em Finalizar; no próximo build, Concluir funciona.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T16:40:42"
     },
@@ -1115,7 +1115,7 @@
     },
     "ABXPMFbTBYYxsP4T3d_AmUI": {
       "commit": "ba0f3bc",
-      "nota": "A tela agora abre com uma frase dizendo qual marcador mais puxa a sua idade e de onde ele vem. No seu caso é a aptidão: o VO₂máx estimado usa batimento em repouso e minutos de treino registrados — passos não entram nessa conta, e os treinos em que o app caiu antes de concluir também não contavam (agora contam).",
+      "nota": "A tela agora abre com uma frase dizendo qual marcador mais puxa a sua idade e de onde ele vem. No seu caso é a aptidão: o VO₂máx estimado usa batimento em repouso e minutos de treino registrados, passos não entram nessa conta, e os treinos em que o app caiu antes de concluir também não contavam (agora contam).",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T18:53:49"
     },

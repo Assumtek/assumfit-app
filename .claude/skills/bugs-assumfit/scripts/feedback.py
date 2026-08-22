@@ -138,7 +138,7 @@ def slack_feedbacks() -> list[dict]:
                 cid = c["id"]
         cursor = d.get("response_metadata", {}).get("next_cursor") or None
         if cid is None and not cursor:
-            raise RuntimeError(f"canal #{canal} não encontrado — o bot foi convidado?")
+            raise RuntimeError(f"canal #{canal} não encontrado, o bot foi convidado?")
     h = slack_get(token, "conversations.history", channel=cid, limit=200)
     usuarios: dict[str, str] = {}
     out = []
@@ -252,7 +252,7 @@ def main() -> None:
         print(f"registrado {fid} → {sha} · sobe na {versao}")
         # Regra da fundadora (ago/2026): resolveu, avisa NA MENSAGEM, com a versão.
         # `--so-resposta`: pergunta ou elogio — a nota vai sem o prefixo de correção.
-        texto = " ".join(nota).strip() if so_resposta else f"Resolvido ✅ ({sha}) — sobe na {versao}. {' '.join(nota)}".strip()
+        texto = " ".join(nota).strip() if so_resposta else f"Resolvido ✅ ({sha}), sobe na {versao}. {' '.join(nota)}".strip()
         if silencioso:
             return
         try:
@@ -264,7 +264,7 @@ def main() -> None:
                 f = next((x for x in feedbacks() if x["id"] == fid), None)
                 citacao = f'"{f["comentario"][:120]}"' if f else "relato do TestFlight"
                 quem = f" ({f['testador']})" if f and f.get("testador") else ""
-                slack_anunciar(f"TestFlight{quem}: {citacao} — {texto}")
+                slack_anunciar(f"TestFlight{quem}: {citacao}. {texto}")
                 print("  anunciado no canal")
         except Exception as e:  # noqa: BLE001
             print(f"  sem aviso no Slack: {e}", file=sys.stderr)
