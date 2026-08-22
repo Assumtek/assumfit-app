@@ -31,6 +31,7 @@ import { PhaseBar, type PhaseProgress, type PhaseType } from './PhaseBar';
 import { RestOverlay } from './RestOverlay';
 import { SeriesCard } from './SeriesCard';
 import { TimedExercise } from './TimedExercise';
+import { ladosDoExercicio } from '../../domain/exerciseSides';
 
 const DEFAULT_REST_SECONDS = 60;
 
@@ -533,6 +534,7 @@ export function TrainingScreen() {
             seconds={tempoAlvo}
             description={exercise.description ?? exercise.notes}
             phase={phase}
+            lados={ladosDoExercicio(exercise.name, exercise.description ?? exercise.notes)}
           />
         ) : (
         <>
