@@ -1094,6 +1094,18 @@
       "nota": "O crash ao concluir já está corrigido e sobe no próximo build. O relógio continuar contando é esperado: o app caiu antes de a conclusão chegar ao servidor, então o treino ficou aberto — e ao reabrir ele mostra o tempo desde o início real. Para fechar esse treino, toque em Finalizar; no próximo build, Concluir funciona.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T16:40:42"
+    },
+    "AOWOjDcj5LhVfxtVng9h2Wc": {
+      "commit": "8b265b0",
+      "nota": "A semana agora vai de segunda a domingo com os dias de descanso, e as decisões citam o que você respondeu na anamnese (dias, tempo por sessão, nível).",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T18:06:07"
+    },
+    "AI0F3LmBBBo7PUw5YB4RBYE": {
+      "commit": "8b265b0",
+      "nota": "Os treinos em que o app caiu antes de concluir ficaram abertos e não contavam; agora treino com série feita conta no gráfico.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T18:06:07"
     }
   }
 }
