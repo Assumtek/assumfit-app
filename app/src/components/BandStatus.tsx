@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 
 import type { MeasurableKind, SyncStep } from '../services/ble';
+import { horaLocal } from '../domain/sleep';
 import { useBiometricStore } from '../store/biometric.store';
 import { useTheme } from '../theme/ThemeProvider';
 import { Body, Data } from './ui';
@@ -57,6 +58,7 @@ export function useBandStatus(): { text: string | null; busy: boolean } {
   const reason = useBiometricStore((s) => s.connectionReason);
   const bandActivity = useBiometricStore((s) => s.bandActivity);
   const measuring = useBiometricStore((s) => s.measuring);
+  const ultimaLeituraEm = useBiometricStore((s) => s.latest?.recordedAt ?? null);
 
   /*
    O relógio da paciência: "conectando" além de ~12 s quase sempre é alcance
@@ -101,6 +103,16 @@ export function useBandStatus(): { text: string | null; busy: boolean } {
     const { step, done, total } = bandActivity;
     const sufixo = total > 1 ? ` · ${done} de ${total}` : '';
     return { text: `${SYNC_LABEL[step]}${sufixo}`, busy: true };
+  }
+
+  /*
+   Com leitura chegando, a linha DIZ que está chegando. Ficava em "esperando a
+   primeira leitura" para sempre quando o serviço não narra etapas (mock, GATT
+   próprio) — mesmo com a Home já mostrando estresse e recuperação. Achado na
+   rodada de testes de 22/08.
+  */
+  if (ultimaLeituraEm != null) {
+    return { text: `Conectada — última leitura às ${horaLocal(ultimaLeituraEm)}.`, busy: false };
   }
 
   return {
