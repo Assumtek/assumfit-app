@@ -986,6 +986,18 @@
       "nota": "O serviço de transcrição recusou o áudio e o app só dizia 'falhou'. Duas mudanças: áudio curto demais (toque rápido no microfone) não sobe mais — a tela explica como gravar; e quando o serviço recusa, o motivo chega e a mensagem diz o que foi. Se acontecer de novo, me manda a frase que apareceu.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T12:58:38"
+    },
+    "AGkKDSOtNxBsQtaW9RoIRig": {
+      "commit": "0cf474a",
+      "nota": "Crash ao concluir o treino: o log da Apple chega sem a mensagem do erro de JavaScript, então a linha exata ainda não dá para apontar. O que muda a partir do próximo build: erro desse tipo deixa de fechar o app — aparece uma tela de recuperação com 'Tentar de novo', e a mensagem do erro chega para nós com a pilha. Se acontecer de novo, vem com nome.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T12:59:03"
+    },
+    "AMc5EkUrmBRhKa-btZy4irE": {
+      "commit": "0cf474a",
+      "nota": "Crash ao desconectar a pulseira (ainda na 1.0.4 (7)): mesma assinatura dos outros — erro de JavaScript sem mensagem no log da Apple. A partir do próximo build, erro assim não fecha o app (vira tela de recuperação) e a mensagem chega para nós. Se repetir, vem com a linha.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T12:59:06"
     }
   }
 }
