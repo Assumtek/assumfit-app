@@ -1082,6 +1082,12 @@
       "nota": "A folha de troca agora muda com o motivo: 'aparelho ocupado' lista outro equipamento primeiro, 'não sei executar' lista as versões mais simples primeiro — e diz isso no topo.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T16:25:24"
+    },
+    "AFK9ocCcleQmIkywB26h-w0": {
+      "commit": "d86dcd5",
+      "nota": "Crash ao concluir/cancelar o treino já corrigido (ordem de hooks na tela de treino, achado na rodada de testes de 22/08) — o build 3 saiu antes da correção; sobe no próximo.",
+      "versao": "1.0.5 (4)",
+      "em": "2026-08-22T16:38:48"
     }
   }
 }
