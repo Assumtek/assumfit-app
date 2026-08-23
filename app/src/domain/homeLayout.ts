@@ -18,6 +18,7 @@
 
 export type ChaveDeBloco =
   | 'resumo'
+  | 'aneis'
   | 'indicadores'
   | 'semana'
   | 'metas'
@@ -48,6 +49,19 @@ export const BLOCOS: DescricaoDeBloco[] = [
     titulo: 'Resumo de saúde',
     descricao: 'A leitura do seu dia em uma frase, com o porquê.',
     padrao: true,
+  },
+  {
+    chave: 'aneis',
+    titulo: 'Três anéis',
+    descricao: 'Sono, estresse e recuperação, em anel, no alto da tela.',
+    /*
+     Desligado de fábrica. Os anéis saíram do padrão por decisão da fundadora
+     (22/08/2026), e um testador os pediu de volta no dia seguinte à home
+     configurável (Leonardo, 23/08): "a tela inicial tem que chamar atenção".
+     A home configurável existe justamente para os dois terem razão, e quem
+     decide o PADRÃO continua sendo o produto.
+    */
+    padrao: false,
   },
   {
     chave: 'indicadores',
@@ -103,7 +117,16 @@ export function descricaoDe(chave: ChaveDeBloco): DescricaoDeBloco | undefined {
 
 /**
  * Conserta o que veio do disco: descarta bloco que não existe mais, mantém a
- * ordem escolhida e acrescenta no fim o que a versão nova trouxe.
+ * ordem escolhida e encaixa o que a versão nova trouxe.
+ *
+ * "Encaixa" e não "acrescenta no fim": o bloco novo entra ao lado do vizinho
+ * que ele tem na ordem de FÁBRICA. Jogar tudo no fim parecia inofensivo até o
+ * primeiro caso real, o bloco dos três anéis, cujo lugar é o alto da tela:
+ * ligá-lo o fazia aparecer depois dos atalhos, no rodapé, e quem pediu anéis
+ * no topo concluiria que a opção não funciona.
+ *
+ * A ordem que a pessoa escolheu continua intocada: o novo se posiciona em
+ * relação a ela, nunca o contrário.
  */
 export function normalizarLayout(salvo: unknown): Bloco[] {
   if (!Array.isArray(salvo)) return layoutPadrao();
@@ -117,8 +140,21 @@ export function normalizarLayout(salvo: unknown): Bloco[] {
     validos.push({ chave, ligado: (item as Bloco).ligado !== false });
   }
   if (validos.length === 0) return layoutPadrao();
-  for (const b of BLOCOS) {
-    if (!vistos.has(b.chave)) validos.push({ chave: b.chave, ligado: b.padrao });
+  for (let i = 0; i < BLOCOS.length; i++) {
+    const b = BLOCOS[i];
+    if (vistos.has(b.chave)) continue;
+    // De trás para frente, o primeiro vizinho de fábrica que a pessoa já tem:
+    // o bloco novo entra logo depois dele. Sem vizinho, vai para o fim.
+    let posicao = validos.length;
+    for (let j = i - 1; j >= 0; j--) {
+      const onde = validos.findIndex((v) => v.chave === BLOCOS[j].chave);
+      if (onde >= 0) {
+        posicao = onde + 1;
+        break;
+      }
+    }
+    validos.splice(posicao, 0, { chave: b.chave, ligado: b.padrao });
+    vistos.add(b.chave);
   }
   return validos;
 }

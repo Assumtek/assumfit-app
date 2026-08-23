@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BandStatusLine } from '../components/BandStatus';
 import { HomeBanners } from '../components/HomeBanners';
+import { HomeRings } from '../components/HomeRings';
 import { IndicatorList } from '../components/IndicatorList';
 import { BlocoConquistas } from '../components/home/BlocoConquistas';
 import { BlocoMetas } from '../components/home/BlocoMetas';
@@ -23,7 +24,7 @@ import { Card } from '../components/ui/Card';
 import { LineChart } from '../components/charts/LineChart';
 import { LiveDot } from '../components/charts/LiveChart';
 import { energyState } from '../domain/energy';
-import { rateSleep, rateStress, stateColor } from '../domain/ratings';
+import { rateSleep, rateStress, shown, stateColor } from '../domain/ratings';
 import { faixaInicial, noPeriodo, rotulosDoPeriodo } from '../domain/series';
 import { isSportDay, modalityMeta } from '../domain/workout';
 import * as api from '../services/api.service';
@@ -432,6 +433,47 @@ export function HomeScreen() {
                 </Pressable>
               );
 
+            case 'aneis':
+              /*
+               Os três anéis, de volta como OPÇÃO. Saíram do padrão em 22/08 e
+               um testador os pediu no dia seguinte: com a home configurável,
+               não é preciso escolher entre as duas pessoas.
+              */
+              return (
+                <HomeRings
+                  key={bloco.chave}
+                  items={[
+                    {
+                      key: 'sono',
+                      label: 'Sono',
+                      value: shown(sleep?.score ?? null),
+                      fraction: sono.fraction,
+                      color: stateColor(sono.state, colors),
+                      accessibilityLabel: `Sono: ${sono.label}, ${sono.detail}`,
+                      onPress: () => abrir('Sleep'),
+                    },
+                    {
+                      key: 'stress',
+                      label: 'Stress',
+                      value: shown(stressAtual),
+                      fraction: stress.fraction,
+                      color: stateColor(stress.state, colors),
+                      accessibilityLabel: `Stress: ${stress.label}, ${stress.detail}`,
+                      onPress: () => abrir('Stress'),
+                    },
+                    {
+                      key: 'recuperacao',
+                      label: 'Recuperação',
+                      value: String(energy.score),
+                      fraction: energy.score / 100,
+                      color: colors.accent,
+                      accessibilityLabel: `Recuperação: prontidão ${energy.score} de 100`,
+                      onPress: () => abrir('Hrv'),
+                    },
+                  ]}
+                />
+              );
+
             case 'indicadores':
               return (
                 <IndicatorList
@@ -488,6 +530,24 @@ export function HomeScreen() {
               return null;
           }
         })}
+
+        {/*
+          O caminho para a personalização, na própria home.
+          Estava só no menu lateral, em Aparência, e um testador pediu de volta
+          algo que já dava para ligar ali (Leonardo, 23/08). Opção que não se
+          encontra não existe. Discreto de propósito: é ajuste, não conteúdo.
+        */}
+        <Pressable
+          onPress={() => abrir('HomeLayout')}
+          accessibilityRole="button"
+          accessibilityLabel="Personalizar a home"
+          style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
+        >
+          <XStack alignItems="center" gap="$sm">
+            <Icon name="grid" size={14} color={colors.textMuted} strokeWidth={1.5} />
+            <Data>Personalizar a home</Data>
+          </XStack>
+        </Pressable>
       </YStack>
 
     </ScrollView>
