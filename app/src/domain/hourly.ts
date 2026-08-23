@@ -160,3 +160,91 @@ export function rotulosDoAcumulado(horaAtual: number, quantos = 4): string[] {
     `${String(Math.round(i * passo)).padStart(2, '0')}h`,
   );
 }
+
+/**
+ * As fatias do firmware são delta ou acumulado? A série responde.
+ *
+ * O cabeçalho do fabricante chama o campo de `totalStepCount`, "总步数", total
+ * de passos, sem dizer total DE QUÊ: da fatia ou do dia até ali. Nós assumimos
+ * delta e somamos, e o efeito apareceu no pulso de quem testou: 10.000 passos
+ * na nossa tela contra 2.147 no app do fabricante, quase cinco vezes mais.
+ * Somar uma série acumulada dá aproximadamente metade do número de fatias
+ * vezes o total, que é a ordem exata do erro relatado.
+ *
+ * A decisão não pode depender de fé no cabeçalho, então ela é medida:
+ *
+ * - Série **não decrescente** cuja soma passa folgadamente do último valor só
+ *   acontece quando cada ponto já contém os anteriores. Deltas reais sobem e
+ *   descem conforme a pessoa anda e para.
+ * - Na dúvida, delta, que é a leitura que NUNCA infla: interpretar acumulado
+ *   como delta erraria para cima, e num app de saúde o erro que mente para
+ *   melhor é o pior dos dois.
+ */
+export type ModoDaSerie = 'delta' | 'acumulado';
+
+export function modoDaSerie(amostras: { steps: number }[]): ModoDaSerie {
+  const passos = amostras.map((a) => a.steps).filter((v) => Number.isFinite(v));
+  if (passos.length < 2) return 'delta';
+  const naoDecrescente = passos.every((v, i) => i === 0 || v >= passos[i - 1]);
+  if (!naoDecrescente) return 'delta';
+  const soma = passos.reduce((s, v) => s + v, 0);
+  const ultimo = passos[passos.length - 1];
+  return soma > ultimo * 1.25 ? 'acumulado' : 'delta';
+}
+
+/**
+ * Converte a série para DELTAS, qualquer que seja o formato de origem.
+ *
+ * Acumulado vira diferença entre pontos consecutivos, com o primeiro ponto
+ * valendo ele mesmo (o que aconteceu desde a meia-noite até a primeira fatia).
+ * Contador que anda para trás vale zero, não passo negativo.
+ */
+export function comoDeltas<T extends { steps: number; kcal?: number }>(amostras: T[]): T[] {
+  if (modoDaSerie(amostras) === 'delta') return amostras;
+  let anteriorPassos = 0;
+  let anteriorKcal = 0;
+  return amostras.map((a) => {
+    const passos = Math.max(0, a.steps - anteriorPassos);
+    const kcal = Math.max(0, (a.kcal ?? 0) - anteriorKcal);
+    anteriorPassos = a.steps;
+    anteriorKcal = a.kcal ?? anteriorKcal;
+    return { ...a, steps: passos, kcal };
+  });
+}
+
+/**
+ * O total do dia, com o contador do aparelho como ÂNCORA.
+ *
+ * O contador ao vivo é o mesmo número que o app do fabricante mostra, e é a
+ * referência: a memória serve para preencher o dia quando ele ainda não chegou
+ * (app aberto de manhã, antes do primeiro evento), não para corrigi-lo para
+ * cima. Era exatamente isso que a soma fazia, e por isso vencia sempre.
+ */
+export function totalDoDiaComAncora(
+  fatias: FatiaDoDia[],
+  contadorDoAparelho: number | null | undefined,
+): number {
+  const daMemoria = totalDoDia(fatias).passos;
+  if (contadorDoAparelho == null || !Number.isFinite(contadorDoAparelho)) return daMemoria;
+  if (contadorDoAparelho <= 0) return daMemoria;
+  return contadorDoAparelho;
+}
+
+/**
+ * Converte para ACUMULADO, que é o formato que o servidor espera.
+ *
+ * O resumo diário toma `max(steps)` do dia, e o comentário do serviço diz por
+ * quê: um contador acumulado tem no máximo o total do dia. Enviar deltas para
+ * lá guarda a MAIOR FATIA como se fosse o dia inteiro, o que subestima sem
+ * nenhum sintoma visível, o oposto do erro que a tela mostrava.
+ *
+ * Passa por `comoDeltas` antes, então funciona qualquer que seja o formato de
+ * origem.
+ */
+export function comoAcumulado<T extends { steps: number }>(amostras: T[]): T[] {
+  let soma = 0;
+  return comoDeltas(amostras).map((a) => {
+    soma += Math.max(0, a.steps);
+    return { ...a, steps: soma };
+  });
+}

@@ -267,10 +267,13 @@ import {
 import {
   comDeltaNaHora,
   comFatiasDaMemoria,
+  comoAcumulado,
+  comoDeltas,
   deltaDoAcumulado,
+  modoDaSerie,
   fatiasVazias,
   normalizar,
-  totalDoDia,
+  totalDoDiaComAncora,
   type FatiaDoDia,
 } from '../domain/hourly';
 import { spo2DaNoite } from '../domain/sleep';
@@ -564,19 +567,36 @@ async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
         }))
         .slice(-14)
     : get().pressureHistory;
-  const fatias = historico.steps.length
-    ? comFatiasDaMemoria(get().horas, historico.steps)
-    : get().horas;
   /*
-   O TOTAL de hoje também vem da memória: a soma das horas. Sem isto, um app
-   aberto de manhã mostrava zero até a pulseira mandar o próximo evento de
-   passos — e quem já tinha andado muito lia "zerado" (relato de 21/08).
-   Só sobe: o evento ao vivo pode estar à frente da memória.
+   A memória vem em DELTAS ou em ACUMULADO, e o cabeçalho do fabricante não
+   diz qual: `comoDeltas` decide pela forma da própria série. Sem isso, uma
+   série acumulada era somada e o dia inchava, 10.000 passos aqui contra 2.147
+   no app do fabricante (relato da fundadora, 23/08).
   */
-  const totalDaMemoria = totalDoDia(fatias).passos;
+  const fatias = historico.steps.length
+    ? comFatiasDaMemoria(get().horas, comoDeltas(historico.steps))
+    : get().horas;
+  if (__DEV__ && historico.steps.length) {
+    // Qual formato este firmware usa é a pergunta que originou o defeito;
+    // deixá-la respondida no log poupa a próxima investigação.
+    console.log(
+      `[passos] memória em ${modoDaSerie(historico.steps)}, ${historico.steps.length} fatias, ` +
+        `contador do aparelho=${get().latest?.steps ?? 'sem leitura'}`,
+    );
+  }
+  /*
+   O TOTAL de hoje: o contador do aparelho é a ÂNCORA, porque é o mesmo número
+   que o app do fabricante mostra. A memória preenche o dia quando esse
+   contador ainda não chegou (app aberto de manhã, antes do primeiro evento;
+   relato de 21/08), nunca para corrigi-lo para cima.
+  */
   const atividade = get().activity;
+  const contador = get().latest?.steps ?? null;
+  const totalDeHoje = totalDoDiaComAncora(fatias, contador);
   const atividadeAtualizada =
-    totalDaMemoria > atividade.steps ? { ...atividade, steps: totalDaMemoria } : atividade;
+    totalDeHoje > atividade.steps || contador != null
+      ? { ...atividade, steps: totalDeHoje }
+      : atividade;
   // Memória como base, e o que chegou ao vivo DEPOIS dela continua: o pico de
   // agora não some quando a memória (atrasada, grão de 5 min) chega.
   const fc = mesclarSeries(historico.heartRate, get().hrHistory, 90);
@@ -1072,7 +1092,11 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
       const h = await ble.fetchHistory(dia).catch(() => null);
       if (!h) continue;
       const amostras: api.MemoryReading[] = [
-        ...h.heartRate.map((a) => ({ recordedAt: a.at, heartRate: a.value })), ...h.stress.map((a) => ({ recordedAt: a.at, stressScore: a.value })), ...h.spo2.map((a) => ({ recordedAt: a.at, spo2Pct: a.value })), ...h.steps.map((p) => ({ recordedAt: p.at, steps: p.steps })),
+        ...h.heartRate.map((a) => ({ recordedAt: a.at, heartRate: a.value })), ...h.stress.map((a) => ({ recordedAt: a.at, stressScore: a.value })), ...h.spo2.map((a) => ({ recordedAt: a.at, spo2Pct: a.value })), /*
+         O servidor guarda `max(steps)` por dia, ou seja, espera CONTADOR: em
+         delta ele guardaria a maior fatia como se fosse o dia inteiro.
+        */
+        ...comoAcumulado(h.steps).map((p) => ({ recordedAt: p.at, steps: p.steps })),
       ];
       if (amostras.length) await api.ingestMemory(amostras).catch(() => undefined);
       if (__DEV__ && amostras.length)

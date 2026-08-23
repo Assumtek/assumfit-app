@@ -628,6 +628,21 @@ aparelho), o que produzia uma rampa quadrática.
 **A caloria por hora vem do firmware**, não de estimativa: ela sempre esteve em
 `getStepsHistory` e a ponte a descartava.
 
+**O firmware não diz se a fatia é delta ou acumulado.** O cabeçalho chama o
+campo de `totalStepCount` ("总步数", total de passos), sem dizer total de quê,
+e nós assumíamos delta e somávamos: 10.000 passos na nossa tela contra 2.147 no
+app do fabricante (fundadora, 23/08/2026), que é a ordem exata de somar uma
+série acumulada. Quem decide agora é a forma da série (`modoDaSerie`), e na
+dúvida é delta, a leitura que nunca infla.
+
+**O contador do aparelho é a ÂNCORA do total do dia.** É o mesmo número que o
+app do fabricante mostra. A memória preenche o dia enquanto esse contador não
+chegou (app aberto de manhã), nunca o corrige para cima.
+
+**Para o SERVIDOR, vai acumulado** (`comoAcumulado`): o resumo diário toma
+`max(steps)`, então delta lá guardaria a maior fatia como se fosse o dia
+inteiro, subestimando sem nenhum sintoma visível.
+
 ## Tendência é janela contra janela
 
 `domain/trend.ts`: 28 dias contra os 84 anteriores, **sem sobreposição** (a

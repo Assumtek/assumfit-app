@@ -3,12 +3,16 @@ import {
   barrasDoDia,
   comDeltaNaHora,
   comFatiasDaMemoria,
+  comoAcumulado,
+  comoDeltas,
   deltaDoAcumulado,
   fatiasVazias,
   horaMaisAtiva,
+  modoDaSerie,
   normalizar,
   rotulosDoAcumulado,
   totalDoDia,
+  totalDoDiaComAncora,
 } from '../hourly';
 
 /** Instante local de hoje, na hora pedida. */
@@ -128,5 +132,86 @@ describe('rotulosDoAcumulado', () => {
 
   it('à meia-noite existe um rótulo só', () => {
     expect(rotulosDoAcumulado(0)).toEqual(['00h']);
+  });
+});
+
+describe('modoDaSerie', () => {
+  it('série que sobe e desce é delta, é assim que passo real se comporta', () => {
+    expect(modoDaSerie([{ steps: 300 }, { steps: 80 }, { steps: 640 }])).toBe('delta');
+  });
+
+  it('série sempre crescente cuja soma passa do último é acumulado', () => {
+    // O caso do relato: fatias com o total do dia até ali.
+    expect(
+      modoDaSerie([{ steps: 210 }, { steps: 640 }, { steps: 980 }, { steps: 2147 }]),
+    ).toBe('acumulado');
+  });
+
+  it('série crescente curta, com soma próxima do último, continua delta', () => {
+    // Duas fatias pequenas em ordem crescente por acaso não provam acúmulo.
+    expect(modoDaSerie([{ steps: 100 }, { steps: 900 }])).toBe('delta');
+  });
+
+  it('um ponto só não decide nada, e o padrão nunca infla', () => {
+    expect(modoDaSerie([{ steps: 2147 }])).toBe('delta');
+    expect(modoDaSerie([])).toBe('delta');
+  });
+});
+
+describe('comoDeltas', () => {
+  it('converte acumulado em diferença entre pontos, preservando o total', () => {
+    const bruto = [
+      { at: 1, steps: 210, kcal: 8 },
+      { at: 2, steps: 640, kcal: 25 },
+      { at: 3, steps: 2147, kcal: 84 },
+    ];
+    const deltas = comoDeltas(bruto);
+    expect(deltas.map((d) => d.steps)).toEqual([210, 430, 1507]);
+    expect(deltas.reduce((s, d) => s + d.steps, 0)).toBe(2147);
+    expect(deltas.map((d) => d.kcal)).toEqual([8, 17, 59]);
+  });
+
+  it('série que já é delta passa intacta', () => {
+    const bruto = [
+      { at: 1, steps: 300, kcal: 12 },
+      { at: 2, steps: 80, kcal: 3 },
+      { at: 3, steps: 640, kcal: 26 },
+    ];
+    expect(comoDeltas(bruto)).toEqual(bruto);
+  });
+
+  it('queda no contador acumulado não vira passo negativo', () => {
+    const deltas = comoDeltas([
+      { at: 1, steps: 500, kcal: 20 },
+      { at: 2, steps: 1200, kcal: 48 },
+      { at: 3, steps: 1200, kcal: 48 },
+    ]);
+    expect(deltas.map((d) => d.steps)).toEqual([500, 700, 0]);
+  });
+});
+
+describe('totalDoDiaComAncora', () => {
+  it('o contador do aparelho manda, é o número que o app do fabricante mostra', () => {
+    let f = comDeltaNaHora(fatiasVazias(), 8, 5000, 200);
+    f = comDeltaNaHora(f, 9, 5000, 200);
+    expect(totalDoDiaComAncora(f, 2147)).toBe(2147);
+  });
+
+  it('sem contador, o total vem da memória, que é o que existe de manhã', () => {
+    const f = comDeltaNaHora(fatiasVazias(), 7, 830, 33);
+    expect(totalDoDiaComAncora(f, null)).toBe(830);
+    expect(totalDoDiaComAncora(f, 0)).toBe(830);
+  });
+});
+
+describe('comoAcumulado', () => {
+  it('deltas viram contador crescente, e o último ponto é o dia', () => {
+    const acc = comoAcumulado([{ steps: 300 }, { steps: 80 }, { steps: 640 }]);
+    expect(acc.map((a) => a.steps)).toEqual([300, 380, 1020]);
+  });
+
+  it('série que já é acumulada continua a mesma', () => {
+    const bruto = [{ steps: 210 }, { steps: 640 }, { steps: 2147 }];
+    expect(comoAcumulado(bruto).map((a) => a.steps)).toEqual([210, 640, 2147]);
   });
 });
