@@ -178,33 +178,8 @@ export function HealthScreen() {
         </YStack>
       ) : null}
 
-      {/*
-        O texto do dia, INTEIRO.
-
-        Na home ele vive num cartão de carrossel, com manchete em duas linhas e
-        corpo em três — e some com reticências justamente quando tem mais a
-        dizer. Não havia onde lê-lo completo: esta tela mostrava as nove
-        métricas e nenhuma frase. Aqui não há corte, e é o lugar certo, porque
-        o texto explica exatamente os números que vêm logo abaixo.
-      */}
-      {/*
-        O parágrafo ATUALIZA de hora em hora com a tela aberta (relógio do
-        `useHoraLocal`) e a pessoa pode pedir agora: "Analisar agora" força a
-        releitura do dia — horário, medições, treinos, refeições e água já
-        entram no modelo — e rediz a frase (fundadora, ago/2026). À direita, o
-        compartilhar como ícone discreto, não como botão.
-      */}
-      <XStack alignItems="flex-start" justifyContent="space-between" gap="$md" marginBottom={leituraDoDia ? '$sm' : '$xl'}>
-        <YStack flex={1} gap="$sm">
-          {leituraDoDia ? (
-            <>
-              <RatingText>{leituraDoDia.headline}</RatingText>
-              <Body>{leituraDoDia.detail}</Body>
-            </>
-          ) : (
-            <Data>{insightStatus === 'loading' ? 'analisando o seu dia…' : 'sem leitura do dia ainda'}</Data>
-          )}
-        </YStack>
+      {/* O resumo do dia saiu daqui: mora na Home (fundadora, 23/08/2026). Fica o compartilhar. */}
+      <XStack justifyContent="flex-end" marginBottom="$xl">
         <Pressable
           onPress={() =>
             (navigation as any).push('WorkoutShare', {
@@ -225,15 +200,6 @@ export function HealthScreen() {
           <Icon name="share" size={20} color={colors.textMuted} strokeWidth={1.5} />
         </Pressable>
       </XStack>
-      <YStack alignSelf="flex-start" marginBottom="$xl">
-        <Button
-          title={insightStatus === 'loading' ? 'Analisando…' : 'Analisar agora'}
-          variant="ghost"
-          disabled={insightStatus === 'loading'}
-          onPress={() => void refreshInsight(hora, { force: true })}
-        />
-      </YStack>
-
       {/*
         UMA medição para três números.
 

@@ -1,7 +1,7 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
-import React, { useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '../../components/Icon';
@@ -78,7 +78,11 @@ export function PersonalScreen() {
 
     try {
       const r = await chatWithAgent(pergunta, turnos);
-      setTurnos([...comPergunta, { role: 'assistant', content: r.reply }]);
+      // A resposta entra DIGITANDO, como num chat de verdade (fundadora,
+      // 23/08): a bolha cresce caractere a caractere e a proposta de ajuste
+      // só aparece quando o texto terminou de chegar à tela.
+      setPensando(false);
+      await digitar(r.reply, (parcial) => setTurnos([...comPergunta, { role: 'assistant', content: parcial }]));
       setProposta(r.adjustmentId);
     } catch {
       setErro('Não foi possível falar com o agente agora. Tente de novo em instantes.');
@@ -160,12 +164,7 @@ export function PersonalScreen() {
             <Balao key={i} turno={turno} />
           ))}
 
-          {pensando ? (
-            <XStack alignItems="center" gap="$sm" paddingVertical="$md">
-              <ActivityIndicator size="small" color={colors.textMuted} />
-              <Data>pensando…</Data>
-            </XStack>
-          ) : null}
+          {pensando ? <Digitando /> : null}
 
           {/*
             Confirmar é o passo que faltava no produto inteiro.
@@ -320,5 +319,48 @@ function Sugestoes({ onEscolher }: { onEscolher: (texto: string) => void }) {
         </Pressable>
       ))}
     </YStack>
+  );
+}
+
+/**
+ * Revela o texto aos poucos: blocos de 2 a 3 caracteres a cada 12 ms, que é
+ * rápido o bastante para não irritar e lento o bastante para parecer escrita.
+ * Texto longo acelera, para a resposta inteira não passar de ~3 s.
+ */
+async function digitar(texto: string, aoAvancar: (parcial: string) => void): Promise<void> {
+  const passo = Math.max(2, Math.ceil(texto.length / 250));
+  for (let i = passo; i < texto.length; i += passo) {
+    aoAvancar(texto.slice(0, i));
+    await new Promise((r) => setTimeout(r, 12));
+  }
+  aoAvancar(texto);
+}
+
+/** Os três pontos que pulsam enquanto o personal pensa, no lugar do indicador giratório. */
+function Digitando() {
+  const pulso = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const laco = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulso, { toValue: 1, duration: 450, useNativeDriver: true }),
+        Animated.timing(pulso, { toValue: 0, duration: 450, useNativeDriver: true }),
+      ]),
+    );
+    laco.start();
+    return () => laco.stop();
+  }, [pulso]);
+  return (
+    <XStack alignItems="center" gap={6} paddingVertical="$md" paddingHorizontal="$sm" accessibilityLabel="O personal está escrevendo">
+      {[0, 1, 2].map((i) => (
+        <Animated.View
+          key={i}
+          style={{
+            opacity: pulso.interpolate({ inputRange: [0, 0.5, 1], outputRange: i === 0 ? [0.3, 1, 0.3] : i === 1 ? [0.5, 0.3, 1] : [1, 0.5, 0.3] }),
+          }}
+        >
+          <YStack width={8} height={8} borderRadius={4} backgroundColor="$mutedForeground" />
+        </Animated.View>
+      ))}
+    </XStack>
   );
 }

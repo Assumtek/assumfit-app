@@ -12,7 +12,6 @@ import { ageFromBirthDate, calorieGoal } from '../domain/nutritionGoal';
 import { useHabitsStore } from '../store/habits.store';
 import { useWorkoutStore } from '../store/workout.store';
 import { Icon } from '../components/Icon';
-import { MovementWeek } from '../components/MovementWeek';
 import { PermissionGate, permissaoNegadaEm } from '../components/PermissionGate';
 import { SyncProgress } from '../components/SyncProgress';
 import { Body, Button, Data, Label, SectionTitle } from '../components/ui';
@@ -20,8 +19,7 @@ import { Card } from '../components/ui/Card';
 import { LineChart } from '../components/charts/LineChart';
 import { LiveDot } from '../components/charts/LiveChart';
 import { energyState } from '../domain/energy';
-import { buildMovementWeek, movementMinutes } from '../domain/movement';
-import { rateSleep, rateStress, shown, stateColor } from '../domain/ratings';
+import { rateSleep, rateStress, stateColor } from '../domain/ratings';
 import { faixaInicial, noPeriodo, rotulosDoPeriodo } from '../domain/series';
 import { isSportDay, modalityMeta } from '../domain/workout';
 import * as api from '../services/api.service';
@@ -82,20 +80,6 @@ export function HomeScreen() {
   const [plan, setPlan] = useState<api.TrainingPlan | null | 'loading'>('loading');
   const [mealsToday, setMealsToday] = useState<api.MealRecord[] | null>(null);
 
-  /**
-   * Minutos de movimento por dia (treino do plano concluído ou esporte
-   * registrado), para a agenda de movimento. `null` = ainda não carregou ou
-   * falhou — e aí o card não aparece: semana em branco por falta de rede
-   * viraria mentira ("você não treinou"), e o princípio é medido ou traço.
-   */
-  const [movimento, setMovimento] = useState<Map<string, number> | null>(null);
-  /*
-   `movimento === null` tinha dois significados — "ainda carregando" e "as duas
-   fontes falharam" — e os dois faziam o card sumir. Sumir é a resposta errada
-   para a segunda: a peça que convida a se mexer desaparecia justamente no dia
-   em que a rede estava ruim, e a home ficava só com instrumentos de medição.
-  */
-  const [movimentoFalhou, setMovimentoFalhou] = useState(false);
 
   const carregarCards = useCallback(async () => {
     await Promise.all([
@@ -111,25 +95,6 @@ export function HomeScreen() {
           setMealsToday(refeicoes.filter((r) => new Date(r.at) >= inicio));
         })
         .catch(() => setMealsToday(null)),
-      /*
-       As duas fontes de movimento juntas: execuções CONCLUÍDAS do plano (o
-       dashboard de volume não serve — corrida por blocos soma zero kg × reps
-       e o dia sumia) e sessões de esporte. 90 dias é a janela: sequência
-       maior aparece como 90 — limite documentado em `buildMovementWeek`.
-       Uma fonte fora do ar não derruba a outra; as DUAS fora derrubam o card.
-       */
-      Promise.all([
-        api.fetchExecutionHistory(90).catch(() => null),
-        api.fetchSportSessions(90).catch(() => null),
-      ]).then(([treinos, esportes]) => {
-        if (treinos === null && esportes === null) {
-          setMovimento(null);
-          setMovimentoFalhou(true);
-          return;
-        }
-        setMovimentoFalhou(false);
-        setMovimento(movementMinutes(treinos ?? [], esportes ?? []));
-      }),
     ]);
   }, []);
 
@@ -442,9 +407,6 @@ export function HomeScreen() {
             <Label>resumo de saúde</Label>
             <SectionTitle>{energy.title}</SectionTitle>
             <Body>{energy.description}</Body>
-            <Data marginTop="$xs">
-              {`Prontidão ${energy.score} · Stress ${shown(stressAtual)} · Sono ${shown(sleep?.score ?? null)}`}
-            </Data>
           </YStack>
         </Pressable>
       </YStack>
@@ -460,33 +422,6 @@ export function HomeScreen() {
         })}
         onAbrir={abrir}
       />
-
-      {/* A agenda de movimento entre o carrossel e os instrumentos de hoje:
-          o que foi CUMPRIDO, não o que foi planejado — o planejado mora na
-          tela do plano. Não depende de haver plano: esporte avulso também é
-          movimento. O toque abre o progresso, que é onde a história inteira
-          está. */}
-      {movimento ? (
-        <YStack marginTop="$xxl">
-          <MovementWeek
-            semana={buildMovementWeek(movimento, new Date())}
-            onPress={() => abrir('Progress')}
-          />
-        </YStack>
-      ) : movimentoFalhou ? (
-        // Sem o histórico, o convite continua de pé — o que não se pode fazer é
-        // desenhar barras vazias, que diriam "você não se moveu" sobre algo que
-        // o app não conseguiu ler.
-        <YStack marginTop="$xxl">
-          <Card onPress={() => abrir('Sport')} accessibilityLabel="Começar um treino">
-            <Label marginBottom="$sm">movimento</Label>
-            <Body>
-              Não deu para carregar sua sequência agora. O treino de hoje não depende disso, toque
-              para começar.
-            </Body>
-          </Card>
-        </YStack>
-      ) : null}
 
       {/* Os dois instrumentos de hoje, meio a meio: água (entrada) e bateria
           do corpo (reserva) — a mesma família visual, forma preenchida até a
