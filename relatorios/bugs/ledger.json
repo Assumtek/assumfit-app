@@ -1124,6 +1124,12 @@
       "nota": "A tela de Atividade ganhou 'Últimos 7 dias', com os passos de cada dia e a meta como referência.",
       "versao": "1.0.5 (4)",
       "em": "2026-08-22T18:53:49"
+    },
+    "AHX-8xq_rpE0P8jr7_d6hcI": {
+      "commit": "9022c0a",
+      "nota": "Ao tocar numa noite anterior, a tela mostra o mesmo detalhe do dia corrente (fases, horários, levantadas) para as noites que a pulseira entregou ao app; para noites mais antigas fica o score e a duração, e a tela explica.",
+      "versao": "1.0.5 (5)",
+      "em": "2026-08-22T21:06:18"
     }
   }
 }
