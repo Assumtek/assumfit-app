@@ -1160,6 +1160,12 @@
       "nota": "O ícone do pilates passou a ser a prancha horizontal.",
       "versao": "1.0.5 (6)",
       "em": "2026-08-22T23:08:06"
+    },
+    "slack:1787450942.490059": {
+      "commit": "47f9a0e",
+      "nota": "Ao adicionar, você escolhe o ângulo (frente, lado ou costas); pela galeria dá para mandar até três de uma vez, da mesma avaliação. O ângulo aparece sob a data e a comparação avisa quando as duas são de ângulos diferentes.",
+      "versao": "1.0.5 (6)",
+      "em": "2026-08-22T23:11:08"
     }
   }
 }
