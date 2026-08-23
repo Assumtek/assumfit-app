@@ -90,7 +90,7 @@ export function DetailScreen({ title, children, refreshControl, onBack }: Props)
           >
             {/* O sanduíche visível: as duas linhas hairline eram discretas
                 demais para a porta de toda a navegação (feedback de campo). */}
-            <Icon name="menu" size={24} strokeWidth={4} color={colors.text} />
+            <Icon name="menu" size={24} strokeWidth={2} color={colors.text} />
           </Pressable>
         </YStack>
 

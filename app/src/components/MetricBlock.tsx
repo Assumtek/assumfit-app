@@ -66,7 +66,7 @@ export function MetricBlock({ label, rating, pending, onPress }: Props) {
               fraction={rating.fraction}
               color={stateColor(rating.state, colors)}
               size={32}
-              strokeWidth={8}
+              strokeWidth={5}
             />
           )}
           <Data numberOfLines={1}>{medindo ? 'medindo agora' : rating.detail}</Data>

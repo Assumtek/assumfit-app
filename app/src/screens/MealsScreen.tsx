@@ -545,7 +545,7 @@ export function MealsScreen() {
                     hitSlop={8}
                     style={({ pressed }) => [{ padding: 8 }, pressed && { opacity: 0.5 }]}
                   >
-                    <Icon name="pencil" size={16} color={colors.textMuted} strokeWidth={4} />
+                    <Icon name="pencil" size={16} color={colors.textMuted} strokeWidth={1.5} />
                   </Pressable>
                   <Pressable
                     onPress={() => void removerAlimentoEm(i)}
@@ -555,7 +555,7 @@ export function MealsScreen() {
                     hitSlop={8}
                     style={({ pressed }) => [{ padding: 8 }, pressed && { opacity: 0.5 }]}
                   >
-                    <Icon name="trash" size={16} color={colors.textMuted} strokeWidth={4} />
+                    <Icon name="trash" size={16} color={colors.textMuted} strokeWidth={1.5} />
                   </Pressable>
                 </XStack>
               </Row>

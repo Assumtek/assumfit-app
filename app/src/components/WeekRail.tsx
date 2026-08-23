@@ -62,7 +62,7 @@ export function WeekRail({ semana, selecionado, onSelect, streak }: Props) {
           {resumo ? <Data>{resumo}</Data> : null}
           {typeof streak === 'number' && streak > 0 ? (
             <XStack alignItems="center" gap={4}>
-              <Icon name="flame" size={16} color={colors.accent} strokeWidth={4} />
+              <Icon name="flame" size={16} color={colors.accent} strokeWidth={1.5} />
               <Data fontWeight="700" color="$primary" fontVariant={['tabular-nums']}>
                 {streak}
               </Data>

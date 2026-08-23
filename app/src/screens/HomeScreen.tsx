@@ -421,7 +421,7 @@ export function HomeScreen() {
             style={({ pressed }) => pressed && { opacity: 0.6 }}
           >
             <XStack alignItems="center" gap="$sm">
-              <Icon name="watch" size={20} color={colors.textMuted} strokeWidth={4} />
+              <Icon name="watch" size={20} color={colors.textMuted} strokeWidth={1.5} />
               <Data>{batteryPct != null ? `${batteryPct}%` : '–'}</Data>
             </XStack>
           </Pressable>
@@ -567,7 +567,7 @@ function Cabecalho({
         accessibilityLabel="Abrir menu"
         style={({ pressed }) => pressed && { opacity: 0.6 }}
       >
-        <Icon name="menu" size={24} strokeWidth={4} color={colors.text} />
+        <Icon name="menu" size={24} strokeWidth={2} color={colors.text} />
       </Pressable>
 
       <XStack alignItems="center" gap="$lg">

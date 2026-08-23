@@ -288,7 +288,7 @@ export function GeneratingScreen() {
     <DetailScreen title="Seu treino">
       <YStack gap="$xl" paddingTop="$xl">
         <YStack alignItems="flex-start">
-          <ProgressRing size={132} strokeWidth={4} fraction={fraction} color={colors.accent}>
+          <ProgressRing size={132} strokeWidth={2} fraction={fraction} color={colors.accent}>
             <Title
               fontWeight="300"
               color="$foreground"

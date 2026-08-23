@@ -269,7 +269,7 @@ type Props = {
   strokeWidth?: number;
 };
 
-export function Icon({ name, size = 20, color, strokeWidth = 4 }: Props) {
+export function Icon({ name, size = 20, color, strokeWidth = 2 }: Props) {
   const { colors } = useTheme();
   const Glyph = GLYPH[name];
 

@@ -138,7 +138,7 @@ export function ChecklistScreen() {
                       />
                       {/* A seta diz que a linha é alvo — sem ela, o toque é uma
                           descoberta por tentativa. */}
-                      <Icon name="arrowRight" size={16} color={colors.textMuted} strokeWidth={4} />
+                      <Icon name="arrowRight" size={16} color={colors.textMuted} strokeWidth={1.5} />
                     </XStack>
                   </Card>
                 );

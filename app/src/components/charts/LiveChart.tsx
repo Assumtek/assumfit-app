@@ -107,7 +107,7 @@ export function LiveChart({ data, width, height = 88, color, label, id = 'live' 
           </Defs>
           <GridPaper width={width} height={height} cell={10} id={id} />
           <Path d={area} fill={`url(#${id}-fill)`} />
-          <Path d={line} stroke={color} strokeWidth={4} strokeLinejoin="round" strokeLinecap="round" fill="none" />
+          <Path d={line} stroke={color} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" fill="none" />
           <AnimatedCircle
             cx={lastX}
             cy={lastY}

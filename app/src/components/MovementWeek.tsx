@@ -71,7 +71,7 @@ export function MovementWeek({
               name="flame"
               size={16}
               color={streak > 0 ? colors.accent : colors.textMuted}
-              strokeWidth={4}
+              strokeWidth={1.5}
             />
             <Body
               fontWeight="700"

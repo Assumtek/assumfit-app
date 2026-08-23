@@ -484,8 +484,9 @@ lá. As seis que mais se quebra por descuido:
    ponto médio (·) continua sendo o separador de dado. Decisão da fundadora
    (22/08/2026). Marcador de "sem dado" é o traço curto (U+2013).
 8. **Todo número de layout é múltiplo de dois.** Fonte, padding, gap, largura,
-   altura, raio, ícone: 13 vira 14, 15 vira 16. Exceções: hairline de 1 px e
-   o 999 do pill. Regra da proporcionalidade (22/08/2026).
+   altura, raio, ícone: 13 vira 14, 15 vira 16. Exceções: hairline de 1 px, o
+   999 do pill e a ESPESSURA DE TRAÇO (`strokeWidth`), que é desenho, não
+   grade: arredondá-la engrossou os gráficos (testador, 22/08/2026). Regra da proporcionalidade (22/08/2026).
 
 **Regra de ouro:** o destaque é a avaliação em linguagem humana; o número
 técnico é sub-label. Nenhuma tela formata número cru.

@@ -216,7 +216,7 @@ function TracadoDoPercurso({
       points={pts}
       fill="none"
       stroke={cor}
-      strokeWidth={4}
+      strokeWidth={2}
       strokeLinejoin="round"
       strokeLinecap="round"
     />

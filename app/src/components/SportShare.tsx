@@ -450,9 +450,9 @@ function Tracado({ points, width, height }: { points: GeoPoint[]; width: number;
   return (
     <Svg width={width} height={height}>
       {/* Halo escuro por baixo: o traçado precisa ler sobre QUALQUER foto. */}
-      <SvgPolyline points={coords.join(' ')} fill="none" stroke="rgba(0,0,0,0.45)" strokeWidth={8} strokeLinejoin="round" strokeLinecap="round" />
+      <SvgPolyline points={coords.join(' ')} fill="none" stroke="rgba(0,0,0,0.45)" strokeWidth={7} strokeLinejoin="round" strokeLinecap="round" />
       <SvgPolyline points={coords.join(' ')} fill="none" stroke="#FFFFFF" strokeWidth={3.5} strokeLinejoin="round" strokeLinecap="round" />
-      <Circle cx={x0} cy={y0} r={5} fill="#877BF0" stroke="#FFFFFF" strokeWidth={4} />
+      <Circle cx={x0} cy={y0} r={5} fill="#877BF0" stroke="#FFFFFF" strokeWidth={1.5} />
       <Circle cx={xf} cy={yf} r={5} fill="#FFFFFF" />
     </Svg>
   );

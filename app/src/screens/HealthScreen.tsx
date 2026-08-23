@@ -222,7 +222,7 @@ export function HealthScreen() {
           accessibilityLabel="Compartilhar minha saúde"
           style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
         >
-          <Icon name="share" size={20} color={colors.textMuted} strokeWidth={4} />
+          <Icon name="share" size={20} color={colors.textMuted} strokeWidth={1.5} />
         </Pressable>
       </XStack>
       <YStack alignSelf="flex-start" marginBottom="$xl">

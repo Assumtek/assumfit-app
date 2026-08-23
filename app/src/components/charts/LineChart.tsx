@@ -197,7 +197,7 @@ export function LineChart({
         <Path
           d={geom.line}
           stroke={color}
-          strokeWidth={4}
+          strokeWidth={1.5}
           strokeLinejoin="round"
           strokeLinecap="round"
           fill="none"
@@ -238,7 +238,7 @@ export function LineChart({
       {i != null ? (
         <>
           <Line x1={geom.x(i)} y1={0} x2={geom.x(i)} y2={plotH} stroke={colors.text} strokeWidth={1} opacity={0.5} />
-          <Circle cx={geom.x(i)} cy={geom.y(data[i])} r={4} fill={color} stroke={colors.ink} strokeWidth={4} />
+          <Circle cx={geom.x(i)} cy={geom.y(data[i])} r={4} fill={color} stroke={colors.ink} strokeWidth={1.5} />
           <SvgText
             x={Math.min(Math.max(geom.x(i), 28), width - 28)}
             y={Math.max(12, geom.y(data[i]) - 12)}
