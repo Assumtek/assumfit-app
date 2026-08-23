@@ -1202,6 +1202,18 @@
       "nota": "Faixa mais estreita: margem de porção de 25 para 15 por cento e o total combina as incertezas em vez de somar extremos (precisa do deploy do servidor); na tela, o número central fica em destaque e a faixa vira sub-rótulo.",
       "versao": "1.0.5 (7)",
       "em": "2026-08-23T10:34:47"
+    },
+    "AKTB-Os3Ny-cMp2NqY-oh6k": {
+      "commit": "92802fa",
+      "nota": "Os últimos 7 dias passam a ir do mais antigo (esquerda) para hoje (direita).",
+      "versao": "1.0.5 (7)",
+      "em": "2026-08-23T11:23:00"
+    },
+    "ACzqzpYvZPPgHialndncOi0": {
+      "commit": "92802fa",
+      "nota": "Ao voltar ao app com a noite da tela vencida, ele agora busca a noite nova na hora (antes só reconectava a pulseira). Se ainda assim não vier, o 'Buscar noite' na tela de Sono força a leitura; se a pulseira não tiver fechado a noite, nem ele traz, e aí o que ajuda é saber se o app do fabricante já mostra a noite.",
+      "versao": "1.0.5 (7)",
+      "em": "2026-08-23T11:23:00"
     }
   }
 }
