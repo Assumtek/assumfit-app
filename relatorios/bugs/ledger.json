@@ -1334,6 +1334,12 @@
       "nota": "Não reproduzido desde o build 4, e a Apple não guardou a mensagem do erro. A tela de recuperação passou a mostrar o texto do erro com botão de compartilhar, que é o que dará o diagnóstico se acontecer de novo. Fica em observação, com o registro em relatorios/bugs/rodada-2026-08-22.md.",
       "versao": "1.0.5 (8)",
       "em": "2026-08-23T16:46:06"
+    },
+    "AJtQ5AAKMM3m4VAIDtOGjVE": {
+      "commit": "50a053d",
+      "nota": "Os três anéis (sono, estresse e recuperação) voltaram, agora como bloco da home: Aparência, Personalizar a home, ligue Três anéis e mova para onde quiser. Eles tinham saído do padrão por decisão de produto, e a home configurável existe para não termos que escolher entre duas preferências. O atalho para personalizar também passou a aparecer na própria home, no fim da lista.",
+      "versao": "1.0.5 (8)",
+      "em": "2026-08-23T20:22:27"
     }
   }
 }
