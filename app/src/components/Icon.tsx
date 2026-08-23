@@ -14,7 +14,7 @@ import {
   Mountain,
   MountainSnow,
   Bike,
-  Accessibility,
+  StretchHorizontal,
   CircleDot,
   Hand,
   MoveVertical,
@@ -250,7 +250,9 @@ const GLYPH = {
   target: Target,
   circleDot: CircleDot,
   hand: Hand,
-  body: Accessibility,
+  // Pilates: a prancha horizontal, não o glifo de acessibilidade (que é uma
+  // cadeira de rodas; um testador apontou, 22/08).
+  body: StretchHorizontal,
   stretch: MoveVertical,
   phone: Phone,
   message: MessageSquare,
