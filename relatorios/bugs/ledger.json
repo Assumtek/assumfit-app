@@ -1280,6 +1280,60 @@
       "nota": "Esclarecimento do Bruno: era o card de compartilhar, não a home.",
       "versao": "1.0.5 (8)",
       "em": "2026-08-23T16:12:45"
+    },
+    "slack:1787497419.574059": {
+      "commit": "2dc79cf",
+      "nota": "Aprovado e implementado: home configurável, semana em anéis, tendências, todos os dados por procedência, movimento por hora, período e conquistas. Respondido na thread.",
+      "versao": "1.0.5 (8)",
+      "em": "2026-08-23T16:45:54"
+    },
+    "slack:1787497089.885659": {
+      "commit": "f818894",
+      "nota": "Era o vídeo do Fitness e do Saúde da Apple; virou a análise completa e a implementação.",
+      "versao": "1.0.5 (8)",
+      "em": "2026-08-23T16:45:54"
+    },
+    "slack:1787480021.088859": {
+      "commit": "fc52818",
+      "nota": "Feito: o bom dia passou a ser agendado na hora em que a pessoa costuma acordar, lida das últimas noites, em vez das 7h30 fixas.",
+      "versao": "1.0.5 (8)",
+      "em": "2026-08-23T16:45:54"
+    },
+    "slack:1787451629.565829": {
+      "commit": "220c658",
+      "nota": "Revisado: os títulos e números que a migração de escala tinha mudado recuperaram o peso original.",
+      "versao": "1.0.5 (8)",
+      "em": "2026-08-23T16:45:54"
+    },
+    "slack:1787450646.197029": {
+      "commit": "89787e0",
+      "nota": "Corrigido: a seção Avisos no pulso passou a existir mesmo quando a pulseira não responde ao filtro por app, que era o motivo de a opção não aparecer.",
+      "versao": "1.0.5 (8)",
+      "em": "2026-08-23T16:45:54"
+    },
+    "slack:1787446055.400029": {
+      "commit": "e7712f4",
+      "nota": "Elogio, sem código. O bom dia que ele comentou saiu na 1.0.5 (5).",
+      "versao": "1.0.5 (8)",
+      "em": "2026-08-23T16:46:06"
+    },
+    "slack:1787436192.610309": {
+      "commit": "e7712f4",
+      "nota": "Elogio, sem código.",
+      "versao": "1.0.5 (8)",
+      "em": "2026-08-23T16:46:06"
+    },
+    "slack:1787436115.704139": {
+      "commit": "fc52818",
+      "nota": "Instrução cumprida: a versão foi gerada, enviada e anunciada.",
+      "versao": "1.0.5 (8)",
+      "em": "2026-08-23T16:46:06"
+    },
+    "AFrv2YThCc4nvv6fyh-PSvM": {
+      "commit": "744f55f",
+      "nota": "Não reproduzido desde o build 4, e a Apple não guardou a mensagem do erro. A tela de recuperação passou a mostrar o texto do erro com botão de compartilhar, que é o que dará o diagnóstico se acontecer de novo. Fica em observação, com o registro em relatorios/bugs/rodada-2026-08-22.md.",
+      "versao": "1.0.5 (8)",
+      "em": "2026-08-23T16:46:06"
     }
   }
 }
