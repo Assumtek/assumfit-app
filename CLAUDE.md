@@ -422,6 +422,10 @@ Não são limitação, são escolha, e reverter é fácil se aparecer necessidad
   `Gesture.Pan()/Pinch()/Rotation()/…` precisa de `.runOnJS(true)`** (ver
   `components/ShareCanvas.tsx`). O diagnóstico saiu do dSYM do archive:
   `touchesBegan → sendEventForReanimated → WorkletRuntime::runSync`.
+  **A lixeira do canvas mora FORA do `YStack` que o `captureRef` fotografa**:
+  dentro dele, entraria no PNG se a captura acontecesse durante um arrasto. A
+  geometria dela (`domain/shareCanvas.ts`) fica no domínio porque o componente
+  importa o gesture-handler, que o jest não transforma.
 - **`@shopify/react-native-skia`**, os gráficos são `react-native-svg`
   (`components/HrvChart.tsx`). Para uma polyline de ~90 pontos dá no mesmo.
   Skia passa a valer se surgir desenho por frame.

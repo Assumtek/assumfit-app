@@ -3,6 +3,10 @@ import React, { useRef } from 'react';
 import { Animated } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
+import { Icon } from './Icon';
+import { Micro } from './ui';
+import { useTheme } from '../theme/ThemeProvider';
+
 /**
  * O canvas editável do card de compartilhar — a peça central do desenho do
  * MUVX, portada sem o Reanimated.
@@ -40,6 +44,8 @@ export function BlocoEditavel({
   selecionado,
   onSelecionar,
   onGuia,
+  onArrastar,
+  onSoltar,
   children,
 }: {
   x: number;
@@ -49,6 +55,17 @@ export function BlocoEditavel({
   onSelecionar: () => void;
   /** Guias de centro acesas enquanto o bloco está encaixado (vertical, horizontal). */
   onGuia?: (g: { v: boolean; h: boolean }) => void;
+  /**
+   * O dedo, em coordenadas de TELA, enquanto arrasta. `null` ao terminar.
+   *
+   * É o que permite ao pai acender a lixeira quando o bloco passa por cima
+   * dela (pedido do Bruno, 23/08/2026, "estilo Instagram"). Vai em coordenada
+   * de tela porque a lixeira mora fora do canvas, e converter entre os dois
+   * sistemas no filho exigiria que ele conhecesse a tela inteira.
+   */
+  onArrastar?: (ponto: { x: number; y: number } | null) => void;
+  /** Devolve `true` quando o pai consumiu o solte (jogou o bloco fora). */
+  onSoltar?: (ponto: { x: number; y: number }) => boolean;
   children: React.ReactNode;
 }) {
   const tamanho = useRef({ w: 0, h: 0 });
@@ -94,12 +111,30 @@ export function BlocoEditavel({
       tx.setValue(p.x);
       ty.setValue(p.y);
       onGuia?.({ v: p.v, h: p.h });
+      onArrastar?.({ x: e.absoluteX, y: e.absoluteY });
     })
     .onEnd((e) => {
+      onGuia?.({ v: false, h: false });
+      onArrastar?.(null);
+      /*
+       Soltar sobre a lixeira devolve o bloco ao lugar de origem, além de
+       escondê-lo: sem isso, reativá-lo pelo chip o traria de volta em cima da
+       lixeira, no rodapé, onde ninguém o pôs de propósito.
+      */
+      if (onSoltar?.({ x: e.absoluteX, y: e.absoluteY })) {
+        baseX.current = x;
+        baseY.current = y;
+        baseEscala.current = 1;
+        baseGiro.current = 0;
+        tx.setValue(x);
+        ty.setValue(y);
+        escala.setValue(1);
+        giro.setValue(0);
+        return;
+      }
       const p = encaixe(baseX.current + e.translationX, baseY.current + e.translationY);
       baseX.current = p.x;
       baseY.current = p.y;
-      onGuia?.({ v: false, h: false });
     });
 
   const beliscar = Gesture.Pinch()
@@ -230,5 +265,66 @@ export function GuiasDeCentro({ v, h }: { v: boolean; h: boolean }) {
       {v ? <YStack position="absolute" left={CANVAS_WIDTH / 2 - 0.5} top={0} width={1} height={CANVAS_HEIGHT} backgroundColor="$primary" opacity={0.8} pointerEvents="none" /> : null}
       {h ? <YStack position="absolute" top={CANVAS_HEIGHT / 2 - 0.5} left={0} height={1} width={CANVAS_WIDTH} backgroundColor="$primary" opacity={0.8} pointerEvents="none" /> : null}
     </>
+  );
+}
+
+/**
+ * A lixeira do canvas, no rodapé, como no story do Instagram.
+ *
+ * Aparece só enquanto um bloco está sendo arrastado e cresce quando o dedo
+ * entra nela. É o segundo caminho para tirar um bloco do card, e não o único:
+ * os chips acima continuam ligando e desligando cada um, porque arrastar até
+ * o rodapé é gesto de quem já sabe que ele existe.
+ *
+ * Mora FORA do `YStack` que o `captureRef` fotografa: dentro, ela entraria no
+ * PNG se a captura acontecesse com um arrasto em curso.
+ */
+export function LixeiraDoCanvas({
+  visivel,
+  ativa,
+  onLayoutZona,
+}: {
+  visivel: boolean;
+  ativa: boolean;
+  onLayoutZona: (zona: { x: number; y: number; largura: number; altura: number }) => void;
+}) {
+  const { colors } = useTheme();
+  if (!visivel) return null;
+  return (
+    <YStack
+      position="absolute"
+      bottom={24}
+      left={0}
+      right={0}
+      alignItems="center"
+      pointerEvents="none"
+      onLayout={(e) => {
+        // `measureInWindow` porque a zona é comparada com a coordenada de TELA
+        // que o gesto reporta; o layout local não serve.
+        e.currentTarget.measureInWindow((x, y, largura, altura) =>
+          onLayoutZona({ x, y, largura, altura }),
+        );
+      }}
+    >
+      <YStack
+        width={ativa ? 72 : 56}
+        height={ativa ? 72 : 56}
+        borderRadius={999}
+        alignItems="center"
+        justifyContent="center"
+        borderWidth={1}
+        /* Cor calculada em tempo de execução vai em `style`: `backgroundColor`
+           de token só aceita nome de token. */
+        style={{
+          backgroundColor: ativa ? colors.alert : 'rgba(20,18,28,0.72)',
+          borderColor: ativa ? colors.alert : 'rgba(255,255,255,0.24)',
+        }}
+      >
+        <Icon name="trash" size={ativa ? 30 : 24} color="#FFFFFF" strokeWidth={1.5} />
+      </YStack>
+      <Micro marginTop="$sm" style={{ color: '#FFFFFF' }}>
+        {ativa ? 'solte para remover' : 'arraste aqui para remover'}
+      </Micro>
+    </YStack>
   );
 }

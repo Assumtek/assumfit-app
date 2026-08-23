@@ -12,7 +12,16 @@ import { captureRef } from 'react-native-view-shot';
 import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
 import { LogoType } from '../../components/Logo';
-import { BlocoEditavel, CANVAS_HEIGHT, CANVAS_WIDTH, EXPORT_WIDTH, FotoDeFundo, GuiasDeCentro } from '../../components/ShareCanvas';
+import {
+  BlocoEditavel,
+  CANVAS_HEIGHT,
+  CANVAS_WIDTH,
+  EXPORT_WIDTH,
+  FotoDeFundo,
+  GuiasDeCentro,
+  LixeiraDoCanvas,
+} from '../../components/ShareCanvas';
+import { sobreALixeira } from '../../domain/shareCanvas';
 import { Button, Data, Heading, Label, Micro, Subtitle } from '../../components/ui';
 import { formatDuration } from '../../domain/workout';
 
@@ -106,6 +115,10 @@ export function WorkoutShareScreen() {
     () => new Set<BlocoId>(['selo', 'nome', 'duracao', 'exercicios', 'data', 'marca']));
   const [selecionado, setSelecionado] = useState<BlocoId | null>(null);
   const [guia, setGuia] = useState({ v: false, h: false });
+  /* A lixeira do rodapé: aparece durante o arrasto e acende sob o dedo. */
+  const [arrastando, setArrastando] = useState(false);
+  const [sobreLixo, setSobreLixo] = useState(false);
+  const zonaDoLixo = useRef<{ x: number; y: number; largura: number; altura: number } | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
   const alternar = (id: BlocoId) =>
@@ -204,11 +217,29 @@ export function WorkoutShareScreen() {
   const ver = (id: BlocoId) => visiveis.has(id);
   const escolher = (id: BlocoId) => () => setSelecionado(id);
 
+  const aoArrastar = (ponto: { x: number; y: number } | null) => {
+    setArrastando(ponto != null);
+    setSobreLixo(sobreALixeira(ponto, zonaDoLixo.current));
+  };
+  /** Devolve `true` quando o bloco foi jogado fora, para ele voltar ao lugar. */
+  const aoSoltar = (id: BlocoId) => (ponto: { x: number; y: number }) => {
+    setArrastando(false);
+    setSobreLixo(false);
+    if (!sobreALixeira(ponto, zonaDoLixo.current)) return false;
+    setVisiveis((atual) => {
+      const proximo = new Set(atual);
+      proximo.delete(id);
+      return proximo;
+    });
+    setSelecionado(null);
+    return true;
+  };
+
   return (
     <DetailScreen title="Compartilhar">
       <Data marginBottom="$md">
-        Arraste os blocos para reposicionar. Dois dedos redimensionam ou giram. Toque fora para
-        tirar a seleção.
+        Arraste os blocos para reposicionar, ou até a lixeira que aparece embaixo para tirá-los.
+        Dois dedos redimensionam ou giram. Toque fora para tirar a seleção.
       </Data>
 
       {/* Os chips ligam e desligam blocos — publicar a carga é decisão, não padrão. */}
@@ -283,6 +314,8 @@ export function WorkoutShareScreen() {
               visivel={ver('selo')}
               selecionado={selecionado === 'selo'}
               onSelecionar={escolher('selo')}
+              onArrastar={aoArrastar}
+              onSoltar={aoSoltar('selo')}
             >
               <XStack
                 paddingVertical={4}
@@ -305,6 +338,8 @@ export function WorkoutShareScreen() {
               visivel={ver('nome')}
               selecionado={selecionado === 'nome'}
               onSelecionar={escolher('nome')}
+              onArrastar={aoArrastar}
+              onSoltar={aoSoltar('nome')}
             >
               <Heading
                 fontWeight="800"
@@ -338,6 +373,8 @@ export function WorkoutShareScreen() {
                 visivel={ver('duracao')}
                 selecionado={selecionado === 'duracao'}
                 onSelecionar={escolher('duracao')}
+              onArrastar={aoArrastar}
+              onSoltar={aoSoltar('duracao')}
               >
                 <Metrica valor={formatDuration(params.durationSec)} rotulo="duração" />
               </BlocoEditavel>
@@ -351,6 +388,8 @@ export function WorkoutShareScreen() {
                 visivel={ver('exercicios')}
                 selecionado={selecionado === 'exercicios'}
                 onSelecionar={escolher('exercicios')}
+              onArrastar={aoArrastar}
+              onSoltar={aoSoltar('exercicios')}
               >
                 <Metrica valor={String(params.exercises)} rotulo="exercícios" />
               </BlocoEditavel>
@@ -364,6 +403,8 @@ export function WorkoutShareScreen() {
                 visivel={ver('volume')}
                 selecionado={selecionado === 'volume'}
                 onSelecionar={escolher('volume')}
+              onArrastar={aoArrastar}
+              onSoltar={aoSoltar('volume')}
               >
                 <Metrica valor={`${Math.round(params.volumeKg)} kg`} rotulo="carga" />
               </BlocoEditavel>
@@ -376,6 +417,8 @@ export function WorkoutShareScreen() {
               visivel={ver('data')}
               selecionado={selecionado === 'data'}
               onSelecionar={escolher('data')}
+              onArrastar={aoArrastar}
+              onSoltar={aoSoltar('data')}
             >
               <Data color="rgba(236,231,244,0.75)">
                 {dataDeHoje}
@@ -389,11 +432,25 @@ export function WorkoutShareScreen() {
               visivel={ver('marca')}
               selecionado={selecionado === 'marca'}
               onSelecionar={escolher('marca')}
+              onArrastar={aoArrastar}
+              onSoltar={aoSoltar('marca')}
             >
               <LogoType height={16} color="#ECE7F4" />
             </BlocoEditavel>
           </YStack>
         </Pressable>
+
+        {/*
+          A lixeira fica FORA do YStack que o `captureRef` fotografa: dentro
+          dele, entraria no PNG se a captura acontecesse durante um arrasto.
+        */}
+        <LixeiraDoCanvas
+          visivel={arrastando}
+          ativa={sobreLixo}
+          onLayoutZona={(z) => {
+            zonaDoLixo.current = z;
+          }}
+        />
       </YStack>
 
       <Label marginTop="$xl" marginBottom="$md">
