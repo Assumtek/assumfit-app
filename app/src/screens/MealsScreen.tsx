@@ -782,7 +782,7 @@ export function MealsScreen() {
       <YStack marginBottom="$xl">
         <HeroCard eyebrow="Resumo de hoje">
           <XStack alignItems="baseline" gap="$sm">
-            <Display>{deHoje.length ? `${kcalMin}–${kcalMax}` : '–'}</Display>
+            <Display>{deHoje.length ? `${kcalMin}–${kcalMax}` : '0'}</Display>
             <Data>kcal</Data>
           </XStack>
           {meta ? (

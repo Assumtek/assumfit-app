@@ -19,6 +19,8 @@ import {
   type Rating,
 } from '../domain/ratings';
 import * as api from '../services/api.service';
+import { SleepNightDetail, diaSeguinte } from '../components/SleepNightDetail';
+import { useBiometricStore } from '../store/biometric.store';
 import { useHistoryStore } from '../store/history.store';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -58,6 +60,12 @@ export function MetricDayScreen() {
   const { colors } = useTheme();
   const { metric, dia } = (useRoute().params ?? {}) as { metric: MetricaDoDia; dia: string };
   const serie = useHistoryStore((s) => s.serie);
+  /*
+   A noite inteira, quando está neste aparelho: `dia` é a manhã, a noite é a
+   que começou na véspera. Sem ela, fica o resumo do servidor (score e
+   minutos), e a tela diz por quê.
+  */
+  const noite = useBiometricStore((s) => s.sleepNights).find((n) => diaSeguinte(n.date) === dia || n.date === dia) ?? null;
   const carregar = useHistoryStore((s) => s.load);
   const [resumo, setResumo] = useState<api.DailySummary | null | undefined>(undefined);
   const [largura, onLayoutLargura] = useChartWidth();
@@ -137,6 +145,8 @@ export function MetricDayScreen() {
       <Data marginTop="$md">{data}</Data>
       {resumo === undefined ? (
         <YStack marginTop="$xl"><Skeleton lines={3} /></YStack>
+      ) : metric === 'sleep' && noite ? (
+        <SleepNightDetail sleep={noite} />
       ) : !resumo ? (
         <Note title="Sem medição neste dia" body="Os dias com medição aparecem marcados na faixa do histórico." />
       ) : (
@@ -179,7 +189,9 @@ export function MetricDayScreen() {
                 ) : null}
               </YStack>
             </Section>
-          ) : metric !== 'sleep' && metric !== 'pressure' ? (
+          ) : metric === 'sleep' ? (
+            <Body marginTop="$md">Desta noite o servidor guarda só o score e a duração. As fases e os horários ficam no aparelho que sincronizou a noite; as últimas sete noites voltam da memória da pulseira na próxima sincronização.</Body>
+          ) : metric !== 'pressure' ? (
             <Body marginTop="$md">Poucas medições neste dia para desenhar a curva.</Body>
           ) : null}
 

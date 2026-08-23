@@ -1400,7 +1400,10 @@ export function SportScreen() {
         onClose={() => setFotoAberta(null)}
       />
 
-      {/* A ação principal da tela, flutuante: é o único acento aqui. */}
+      {/* A ação principal da tela, flutuante: é o único acento aqui. No estado
+          vazio ela não aparece: o convite "Começar a registrar" já é a mesma
+          ação, e os dois juntos se sobrepunham no rodapé. */}
+      {(historico ?? []).length === 0 && DEMO_MOSAICO ? null : (
       <XStack position="absolute" right={24} bottom={insets.bottom + 24}>
         <ShadowView shadow={fabShadow} radius={28} backgroundColor={colors.accent}>
           <Pressable
@@ -1430,6 +1433,7 @@ export function SportScreen() {
           </Pressable>
         </ShadowView>
       </XStack>
+      )}
 
       {/*
         A folha de início, em dois passos (decisão da fundadora, ago/2026):

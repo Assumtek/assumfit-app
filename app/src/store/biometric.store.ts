@@ -116,6 +116,7 @@ type Derivado = {
   /** Dia civil LOCAL em que foi gravado — passos e atividade são do dia, e não podem amanhecer com o valor de ontem. */
   dia?: string;
   sleep: SleepNight | null;
+  sleepNights?: SleepNight[];
   stressByHour: { hour: string; value: number }[];
   /**
    * Oxigenação ao longo do dia, com o instante de cada amostra.
@@ -191,6 +192,8 @@ async function lerDerivado(): Promise<Derivado | null> {
  */
 function persistirDerivado(e: {
   sleep: SleepNight | null;
+  /** As últimas noites que a pulseira entregou (até 14): o detalhe dos dias anteriores. */
+  sleepNights?: SleepNight[];
   stressByHour: { hour: string; value: number }[];
   spo2History: { at: number; value: number }[];
   stressHistory: { at: number; value: number }[];
@@ -203,6 +206,7 @@ function persistirDerivado(e: {
   gravarDerivado({
     dia: hojeLocal(),
     sleep: e.sleep,
+    sleepNights: e.sleepNights,
     stressByHour: e.stressByHour,
     spo2History: e.spo2History,
     stressHistory: e.stressHistory,
@@ -321,6 +325,7 @@ type BiometricState = {
   hrHistory: Sample[];
   /** `null` até haver uma noite medida. Não se inventa sono. */
   sleep: SleepNight | null;
+  sleepNights: SleepNight[];
   activity: Activity;
   /** Passos acumulados hora a hora, das 6h às 22h. */
   stepsByHour: number[];
@@ -469,6 +474,14 @@ async function varrerSonoRetroativo(): Promise<void> {
    enquanto o topo da tela (o store) seguia em 19/08. A noite mais recente da
    memória vale como a atual quando é mais nova do que a que está na tela.
   */
+  if (noites.length > 0) {
+    // Guarda as noites no aparelho: o servidor só recebe score e minutos, e o
+    // detalhe (fases, horários) de um dia anterior só existe aqui.
+    const porData = new Map(useBiometricStore.getState().sleepNights.map((n) => [n.date, n]));
+    for (const n of noites) porData.set(n.date, n);
+    const sleepNights = [...porData.values()].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 14);
+    useBiometricStore.setState({ sleepNights });
+  }
   const maisNova = [...noites].sort((a, b) => (a.date < b.date ? 1 : -1))[0];
   const atual = useBiometricStore.getState().sleep;
   if (maisNova && (!atual || maisNova.date > atual.date)) {
@@ -654,6 +667,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
   hrvHistory: [],
   hrHistory: [],
   sleep: null,
+  sleepNights: [],
   activity: {
     steps: 0,
     goal: 10000,
@@ -806,6 +820,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
       const mesmoDia = derivado.dia === hojeLocal();
       set({
         sleep: derivado.sleep ?? get().sleep,
+        sleepNights: derivado.sleepNights ?? get().sleepNights,
         stressByHour: mesmoDia ? (derivado.stressByHour ?? []) : [],
         spo2History: derivado.spo2History ?? [],
         stressHistory: derivado.stressHistory ?? [],
