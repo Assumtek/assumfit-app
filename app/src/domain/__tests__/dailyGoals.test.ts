@@ -1,4 +1,4 @@
-import { aneisDoCalendario, caloriasAtivas, diasFechados, metaEfetiva, repousoAteAgora } from '../dailyGoals';
+import { aneisDoCalendario, caloriasAtivas, diasFechados, fitaDaSemana, metaEfetiva, repousoAteAgora } from '../dailyGoals';
 
 describe('metaEfetiva', () => {
   it('só para hoje vale hoje; amanhã volta ao padrão', () => {
@@ -35,5 +35,41 @@ describe('aneisDoCalendario', () => {
     expect(aneis[0].fraction).toBe(0);
     expect(aneis.every((a) => !a.futuro)).toBe(true);
     expect(diasFechados(aneis)).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('fitaDaSemana', () => {
+  const meta = 400;
+  // 26/08/2026 é uma quarta-feira.
+  const quarta = new Date(2026, 7, 26, 15, 0, 0);
+
+  it('devolve domingo a sábado, com as letras na ordem', () => {
+    const fita = fitaDaSemana([], [], meta, quarta);
+    expect(fita).toHaveLength(7);
+    expect(fita.map((d) => d.letra)).toEqual(['D', 'S', 'T', 'Q', 'Q', 'S', 'S']);
+    expect(fita[0].day).toBe('2026-08-23');
+    expect(fita[6].day).toBe('2026-08-29');
+  });
+
+  it('marca o dia de hoje e trata o resto da semana como futuro', () => {
+    const fita = fitaDaSemana([], [], meta, quarta);
+    expect(fita.filter((d) => d.hoje).map((d) => d.day)).toEqual(['2026-08-26']);
+    expect(fita.map((d) => d.futuro)).toEqual([false, false, false, false, true, true, true]);
+  });
+
+  it('usa a mesma conta do calendário para o quanto se moveu', () => {
+    const dias = [{ day: '2026-08-24', steps: 12000 }];
+    const fita = fitaDaSemana(dias, [], meta, quarta);
+    const calendario = aneisDoCalendario(dias, [], meta, quarta, 28);
+    const segunda = fita.find((d) => d.day === '2026-08-24');
+    expect(segunda?.ativas).toBe(calendario.find((d) => d.day === '2026-08-24')?.ativas);
+    expect(segunda?.fraction).toBeGreaterThan(0);
+  });
+
+  it('no domingo, a semana inteira ainda está por vir', () => {
+    const domingo = new Date(2026, 7, 23, 9, 0, 0);
+    const fita = fitaDaSemana([], [], meta, domingo);
+    expect(fita[0].hoje).toBe(true);
+    expect(fita.slice(1).every((d) => d.futuro)).toBe(true);
   });
 });

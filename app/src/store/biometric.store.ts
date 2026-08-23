@@ -137,7 +137,13 @@ type Derivado = {
    */
   stressHistory: { at: number; value: number }[];
   pressureHistory: PressureReading[];
-  stepsByHour: number[];
+  /**
+   * O dia em 24 fatias, com passos e calorias DAQUELA hora.
+   *
+   * Substituiu `stepsByHour`, que misturava delta (da memória) com acumulado
+   * (do evento ao vivo) no mesmo array. Ver `domain/hourly.ts`.
+   */
+  horas: FatiaDoDia[];
   activity: Activity;
   /**
    * Coração e variabilidade também sobrevivem ao fechamento do app.
@@ -198,7 +204,7 @@ function persistirDerivado(e: {
   spo2History: { at: number; value: number }[];
   stressHistory: { at: number; value: number }[];
   pressureHistory: PressureReading[];
-  stepsByHour: number[];
+  horas: FatiaDoDia[];
   activity: Activity;
   hrvHistory: Sample[];
   hrHistory: Sample[];
@@ -211,7 +217,7 @@ function persistirDerivado(e: {
     spo2History: e.spo2History,
     stressHistory: e.stressHistory,
     pressureHistory: e.pressureHistory,
-    stepsByHour: e.stepsByHour,
+    horas: e.horas,
     activity: e.activity,
     hrvHistory: e.hrvHistory,
     hrHistory: e.hrHistory,
@@ -258,6 +264,15 @@ import {
   setupAndroidChannel,
   type MetricaDeAtencao,
 } from '../services/notifications.service';
+import {
+  comDeltaNaHora,
+  comFatiasDaMemoria,
+  deltaDoAcumulado,
+  fatiasVazias,
+  normalizar,
+  totalDoDia,
+  type FatiaDoDia,
+} from '../domain/hourly';
 import { spo2DaNoite } from '../domain/sleep';
 import { noiteSustentaODia } from '../domain/bodyBattery';
 import { avaliarInicioDeExercicio, ESTADO_INICIAL, type EstadoDeExercicio } from '../domain/exerciseOnset';
@@ -297,6 +312,15 @@ const lastSeen = new Map<string, number>();
 /** Quantas leituras manter em memória para o gráfico ao vivo. */
 const HISTORY_SIZE = 90;
 
+/**
+ * O último acumulado do dia visto NESTA sessão, para converter o evento ao
+ * vivo (que é acumulado) em delta da hora (que é o que a fatia guarda).
+ *
+ * Vive fora do estado de propósito: não é informação de tela, é a memória de
+ * uma conversão. Zera na virada de dia, junto com as fatias.
+ */
+const ultimoAcumulado: { steps: number | null; kcal: number | null } = { steps: null, kcal: null };
+
 type BiometricState = {
   connection: ConnectionState;
   /**
@@ -329,7 +353,7 @@ type BiometricState = {
   sleepNights: SleepNight[];
   activity: Activity;
   /** Passos acumulados hora a hora, das 6h às 22h. */
-  stepsByHour: number[];
+  horas: FatiaDoDia[];
   /** Stress por hora do dia, para o gráfico de barras. */
   stressByHour: { hour: string; value: number }[];
   /**
@@ -540,16 +564,16 @@ async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
         }))
         .slice(-14)
     : get().pressureHistory;
-  const passos = historico.steps.length
-    ? historico.steps.map((p) => p.steps).slice(-17)
-    : get().stepsByHour;
+  const fatias = historico.steps.length
+    ? comFatiasDaMemoria(get().horas, historico.steps)
+    : get().horas;
   /*
    O TOTAL de hoje também vem da memória: a soma das horas. Sem isto, um app
    aberto de manhã mostrava zero até a pulseira mandar o próximo evento de
    passos — e quem já tinha andado muito lia "zerado" (relato de 21/08).
    Só sobe: o evento ao vivo pode estar à frente da memória.
   */
-  const totalDaMemoria = historico.steps.reduce((s, p) => s + (p.steps > 0 ? p.steps : 0), 0);
+  const totalDaMemoria = totalDoDia(fatias).passos;
   const atividade = get().activity;
   const atividadeAtualizada =
     totalDaMemoria > atividade.steps ? { ...atividade, steps: totalDaMemoria } : atividade;
@@ -571,7 +595,7 @@ async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
     stressByHour: estresse,
     stressHistory: estresseCru,
     pressureHistory: pressao,
-    stepsByHour: passos,
+    horas: fatias,
     activity: atividadeAtualizada,
     hrHistory: fc,
     hrvHistory: variabilidade,
@@ -676,7 +700,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     activeKcal: 0,
     activeMin: 0,
   },
-  stepsByHour: [],
+  horas: fatiasVazias(),
   stressByHour: [],
   spo2History: [],
   stressHistory: [],
@@ -819,6 +843,10 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
        pulseira preenche o dia novo conforme anda.
       */
       const mesmoDia = derivado.dia === hojeLocal();
+      if (!mesmoDia) {
+        ultimoAcumulado.steps = null;
+        ultimoAcumulado.kcal = null;
+      }
       set({
         sleep: derivado.sleep ?? get().sleep,
         sleepNights: derivado.sleepNights ?? get().sleepNights,
@@ -826,7 +854,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
         spo2History: derivado.spo2History ?? [],
         stressHistory: derivado.stressHistory ?? [],
         pressureHistory: derivado.pressureHistory ?? [],
-        stepsByHour: mesmoDia ? (derivado.stepsByHour ?? []) : [],
+        horas: mesmoDia ? normalizar(derivado.horas) : fatiasVazias(),
         hrvHistory: derivado.hrvHistory ?? [],
         hrHistory: derivado.hrHistory ?? [],
         activity: mesmoDia
@@ -1169,7 +1197,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
       // do servidor, e o ingest é idempotente — reenvio não duplica.
       syncQueue.enqueue(reading);
       gravarUltimaLocal(reading);
-      const { hrvHistory, hrHistory, activity, stressByHour, pressureHistory, stepsByHour } = get();
+      const { hrvHistory, hrHistory, activity, stressByHour, pressureHistory, horas } = get();
 
       /*
        As séries se constroem a partir do que o aparelho manda.
@@ -1203,10 +1231,22 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
               },
             ].slice(-14);
 
-      const passos =
-        reading.steps == null
-          ? stepsByHour
-          : [...stepsByHour.filter((_, i) => i < stepsByHour.length), reading.steps].slice(-17);
+      /*
+       O evento ao vivo traz o ACUMULADO do dia; a fatia guarda o que aconteceu
+       na hora. A conversão passa por `deltaDoAcumulado`, e o primeiro evento
+       depois de abrir o app não vira barra: sem referência anterior, não há
+       como saber quanto daquele total é desta hora.
+      */
+      const deltaPassos = deltaDoAcumulado(ultimoAcumulado.steps, reading.steps ?? null);
+      const deltaKcal = deltaDoAcumulado(ultimoAcumulado.kcal, reading.activeKcal ?? null);
+      const fatias = comDeltaNaHora(
+        horas,
+        new Date(reading.recordedAt).getHours(),
+        deltaPassos,
+        deltaKcal,
+      );
+      if (reading.steps != null) ultimoAcumulado.steps = reading.steps;
+      if (reading.activeKcal != null) ultimoAcumulado.kcal = reading.activeKcal;
 
       const variabilidade = comAmostraDeHrv(hrvHistory, reading, HISTORY_SIZE);
       const coracao = [...hrHistory, { at: reading.recordedAt, value: reading.heartRate }].slice(
@@ -1220,7 +1260,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
         spo2History: get().spo2History,
         stressHistory: get().stressHistory,
         pressureHistory: pressao,
-        stepsByHour: passos,
+        horas: fatias,
         activity:
           reading.steps == null
             ? activity
@@ -1240,7 +1280,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
         latest: reading,
         stressByHour: stress,
         pressureHistory: pressao,
-        stepsByHour: passos,
+        horas: fatias,
         // Só o que foi medido entra na série. Um `null` virando ponto no
         // gráfico desenharia uma queda a zero que nunca aconteceu.
         hrvHistory: variabilidade,

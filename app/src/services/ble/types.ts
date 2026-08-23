@@ -92,7 +92,13 @@ export type DayHistory = {
   stress: Sample[];
   spo2: Sample[];
   pressure: { at: number; systolic: number; diastolic: number }[];
-  steps: { at: number; steps: number }[];
+  /**
+   * Fatias do dia, do firmware, com o que aconteceu EM CADA TRECHO (delta),
+   * nunca o acumulado. `kcal` vem da mesma fatia e por muito tempo foi
+   * descartada aqui, o que obrigava a tela a estimar caloria a partir de
+   * passo quando o aparelho já sabia a resposta.
+   */
+  steps: { at: number; steps: number; kcal: number }[];
 };
 
 /**

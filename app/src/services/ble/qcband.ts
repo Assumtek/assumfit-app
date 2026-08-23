@@ -739,7 +739,11 @@ export class QCBandService implements BleService {
       */
         pressure: pressao.filter((p) => p.at >= inicioDoDia && p.systolic > 0),
         steps: passos
-          .map((p) => ({ at: instanteDoFirmware(p.at), steps: p.steps }))
+          .map((p) => ({
+            at: instanteDoFirmware(p.at),
+            steps: p.steps,
+            kcal: Number.isFinite(p.calories) ? Math.max(0, p.calories) : 0,
+          }))
           .filter((p) => p.at > 0 && p.steps > 0),
       };
 

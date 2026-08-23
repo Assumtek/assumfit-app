@@ -12,6 +12,7 @@ import { Note } from '../components/List';
 import { SyncProgress } from '../components/SyncProgress';
 import { Button, Body, Card, Data, HeroCard, Label, Metric, MetricSm, RatingText, SectionTitle } from '../components/ui';
 import { calcBodyBattery } from '../domain/bodyBattery';
+import { acumuladoAteAgora } from '../domain/hourly';
 import { isoHoje } from '../domain/water';
 import {
   rateActivity,
@@ -62,7 +63,7 @@ export function HealthScreen() {
   const hrvHistory = useBiometricStore((s) => s.hrvHistory);
   const spo2History = useBiometricStore((s) => s.spo2History);
   const pressureHistory = useBiometricStore((s) => s.pressureHistory);
-  const stepsByHour = useBiometricStore((s) => s.stepsByHour);
+  const horas = useBiometricStore((s) => s.horas);
   const connection = useBiometricStore((s) => s.connection);
   const syncHistory = useBiometricStore((s) => s.syncHistory);
   const [syncing, setSyncing] = React.useState(false);
@@ -359,7 +360,7 @@ export function HealthScreen() {
             <Celula
               label="atividade"
               icone="steps"
-              serie={stepsByHour}
+              serie={acumuladoAteAgora(horas, new Date().getHours())}
               rating={rateActivity(activity)}
               onPress={() => (navigation as any).push('Activity' as never)}
             />

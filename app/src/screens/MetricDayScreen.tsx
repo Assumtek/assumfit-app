@@ -91,8 +91,15 @@ export function MetricDayScreen() {
   }, [serie, dia, metric]);
 
   const valores = pontos.map((p) => p.value);
-  const acumulado =
-    metric === 'steps' ? valores.reduce<number[]>((acc, v) => [...acc, (acc[acc.length - 1] ?? 0) + v], []) : valores;
+  /*
+   Passos NÃO se acumulam aqui.
+
+   O que o servidor devolve por hora é o MÁXIMO do contador naquela hora, e o
+   contador do aparelho já é acumulado desde a meia-noite. Somar de novo dava
+   uma rampa quadrática: um dia de 8.000 passos aparecia como dezenas de
+   milhares. A curva certa é a própria série, que já sobe sozinha.
+  */
+  const curva = valores;
   const media = valores.length ? Math.round(valores.reduce((s, v) => s + v, 0) / valores.length) : null;
   const minimo = valores.length ? Math.round(Math.min(...valores)) : null;
   const maximo = valores.length ? Math.round(Math.max(...valores)) : null;
@@ -173,12 +180,12 @@ export function MetricDayScreen() {
             ) : null}
           </YStack>
 
-          {acumulado.length >= 2 ? (
+          {curva.length >= 2 ? (
             <Section label={metric === 'steps' ? 'Acumulado ao longo do dia' : 'Ao longo do dia'}>
               <YStack onLayout={onLayoutLargura}>
                 {largura > 0 ? (
                   <LineChart
-                    data={acumulado}
+                    data={curva}
                     width={largura}
                     height={140}
                     thresholds={metric === 'spo2' ? [{ value: 95, label: 'limite', color: colors.alert }] : undefined}

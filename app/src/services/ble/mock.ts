@@ -121,7 +121,11 @@ export class MockBleService implements BleService {
       stress: serie(6, 35, 10, 60),
       spo2: serie(4, 97, 1, 90),
       pressure: [{ at: agora - 3 * 3_600_000, systolic: 118, diastolic: 76 }],
-      steps: Array.from({ length: 8 }, (_, i) => ({ at: agora - (8 - i) * 3_600_000, steps: 400 + i * 120 })),
+      steps: Array.from({ length: 8 }, (_, i) => ({
+        at: agora - (8 - i) * 3_600_000,
+        steps: 400 + i * 120,
+        kcal: Math.round((400 + i * 120) * 0.04),
+      })),
     };
   }
 

@@ -74,3 +74,58 @@ export function aneisDoCalendario(
 export function diasFechados(aneis: AnelDoDia[]): number {
   return aneis.filter((a) => a.fraction >= 1).length;
 }
+
+export type DiaDaFita = AnelDoDia & {
+  /** Inicial do dia da semana, para o rótulo acima do anel. */
+  letra: string;
+  hoje: boolean;
+};
+
+const LETRAS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
+/**
+ * A semana corrente, domingo a sábado, para a fita no topo.
+ *
+ * É a peça que mostra que ONTEM existiu: o anel de hoje sozinho não diz se a
+ * pessoa vem se movendo ou se hoje é exceção. Domingo a sábado, e não "os
+ * últimos sete dias", porque a semana é uma unidade que as pessoas já usam,
+ * e uma janela deslizante muda de posição todo dia.
+ *
+ * Os dias que ainda não chegaram vêm marcados como futuro: anel aberto de
+ * quarta-feira numa segunda não é falha, é dia que não aconteceu.
+ */
+export function fitaDaSemana(
+  diasDoServidor: { day: string; steps: number | null }[],
+  sessoes: { startedAt: string; kcal?: number }[],
+  meta: number,
+  hoje: Date,
+): DiaDaFita[] {
+  const domingo = new Date(hoje);
+  domingo.setHours(0, 0, 0, 0);
+  domingo.setDate(domingo.getDate() - domingo.getDay());
+  /*
+   Reaproveita o calendário: pede a janela que vai do domingo desta semana até
+   o sábado, e recorta. Uma segunda implementação de "quanto se moveu no dia"
+   seria a forma mais fácil de a fita e o calendário divergirem.
+  */
+  const fim = new Date(domingo);
+  fim.setDate(domingo.getDate() + 6);
+  const dias = Math.round((fim.getTime() - domingo.getTime()) / 86_400_000) + 1;
+  const aneis = aneisDoCalendario(diasDoServidor, sessoes, meta, fim, dias);
+  /*
+   `futuro` vem recalculado: o calendário o deduz do fim da janela, que aqui é
+   o sábado, e todo dia da semana ficaria no passado. A referência certa é o
+   dia de hoje.
+  */
+  const chaveHoje = chaveDoDia(hoje);
+  return aneis.map((a, i) => ({
+    ...a,
+    letra: LETRAS[i % 7],
+    hoje: a.day === chaveHoje,
+    futuro: a.day > chaveHoje,
+  }));
+}
+
+function chaveDoDia(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}

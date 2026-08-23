@@ -13,6 +13,7 @@ import { MeasuredAt } from '../components/MeasuredAt';
 import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
 import { rateActivity } from '../domain/ratings';
 import { caloriasDoDia, distanciaDoDia } from '../domain/activityEstimates';
+import { acumuladoAteAgora, barrasDoDia, horaMaisAtiva, totalDoDia } from '../domain/hourly';
 import { treinoConta } from '../domain/movement';
 import * as api from '../services/api.service';
 import { useBiometricStore } from '../store/biometric.store';
@@ -75,7 +76,16 @@ export function ActivityScreen() {
     };
   }, []);
   const latest = useBiometricStore((s) => s.latest);
-  const stepsByHour = useBiometricStore((s) => s.stepsByHour);
+  const horas = useBiometricStore((s) => s.horas);
+  const [larguraHoras, onLayoutLarguraHoras] = useChartWidth();
+  const agora = new Date().getHours();
+  /*
+   Barras de CALORIA, não de passo: passo já está na curva acima, e repetir a
+   mesma série em duas formas seria ruído. A caloria por fatia vem do próprio
+   firmware, que a calcula com o batimento junto.
+  */
+  const barrasPorHora = barrasDoDia(horas, agora, 'kcal');
+  const maisAtiva = horaMaisAtiva(horas);
   const [chartWidth, onLayoutChartWidth] = useChartWidth();
   const rating = rateActivity(activity);
   const remaining = Math.max(0, activity.goal - activity.steps);
@@ -150,7 +160,7 @@ export function ActivityScreen() {
       <Section label="Acúmulo do dia">
         <YStack onLayout={onLayoutChartWidth}>
           <LineChart
-            data={stepsByHour}
+            data={acumuladoAteAgora(horas, new Date().getHours())}
             width={chartWidth}
             height={152}
             domain={[0, activity.goal]}
@@ -160,10 +170,29 @@ export function ActivityScreen() {
           />
         </YStack>
         <Data marginTop="$md" lineHeight={18}>
-          Curva acumulada, não barras por hora: o que interessa é se você chega à meta antes do dia
+          A curva acumula o dia inteiro: o que interessa aqui é se você chega à meta antes de o dia
           acabar.
         </Data>
       </Section>
+
+      {barrasPorHora.length > 0 ? (
+        <Section label="Movimento por hora">
+          <YStack onLayout={onLayoutLarguraHoras}>
+            <BarChart
+              width={larguraHoras}
+              height={140}
+              bars={barrasPorHora}
+              labelEvery={3}
+              id="kcal-hora"
+            />
+          </YStack>
+          <Data marginTop="$md" lineHeight={18}>
+            {maisAtiva
+              ? `Calorias queimadas em cada hora, como o aparelho contou. Seu pico foi às ${String(maisAtiva.hora).padStart(2, '0')}h.`
+              : 'Calorias queimadas em cada hora, como o aparelho contou.'}
+          </Data>
+        </Section>
+      ) : null}
 
       {dias && dias.length > 0 ? (
         <Section label="Últimos 7 dias">
