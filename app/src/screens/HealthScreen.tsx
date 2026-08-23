@@ -535,7 +535,7 @@ function Celula({
         {serie && serie.length > 1 ? (
           <Medido>
             {(largura) => (
-              <LineChart data={serie.slice(-40)} width={largura} height={36} area={false} />
+              <LineChart data={serie.slice(-40)} width={largura} height={36} area={false} hideAxis />
             )}
           </Medido>
         ) : null}
