@@ -7,6 +7,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BandStatusLine } from '../components/BandStatus';
 import { HomeBanners } from '../components/HomeBanners';
 import { IndicatorList } from '../components/IndicatorList';
+import { BlocoConquistas } from '../components/home/BlocoConquistas';
+import { BlocoMetas } from '../components/home/BlocoMetas';
+import { BlocoSemana } from '../components/home/BlocoSemana';
+import { BlocoTendencias } from '../components/home/BlocoTendencias';
 import { indicadoresDaHome } from '../domain/homeIndicators';
 import { ageFromBirthDate, calorieGoal } from '../domain/nutritionGoal';
 import { useHabitsStore } from '../store/habits.store';
@@ -28,6 +32,7 @@ import { useAmbientStore } from '../store/ambient.store';
 import { useInsightStore } from '../store/insight.store';
 import { useBiometricStore } from '../store/biometric.store';
 import { useHoraLocal } from '../hooks/useHoraLocal';
+import { useHomeStore } from '../store/home.store';
 import { useUiStore } from '../store/ui.store';
 import { greeting, useUserStore } from '../store/user.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -49,6 +54,8 @@ export function HomeScreen() {
   const connect = useBiometricStore((s) => s.connect);
   const user = useUserStore((s) => s.user);
   const openSidebar = useUiStore((s) => s.openSidebar);
+  const blocosDaHome = useHomeStore((s) => s.blocos);
+  const carregarLayout = useHomeStore((s) => s.carregar);
   const batteryPct = useBiometricStore((s) => s.batteryPct);
   const ambient = useAmbientStore((s) => s.ambient);
   const city = useAmbientStore((s) => s.city);
@@ -105,6 +112,12 @@ export function HomeScreen() {
   useEffect(() => {
     void refreshAmbient();
   }, [refreshAmbient]);
+
+  // O layout escolhido decide o que a home monta, então é a primeira coisa a
+  // ler: sem ele, a tela pisca com a ordem de fábrica antes de se corrigir.
+  useEffect(() => {
+    void carregarLayout();
+  }, [carregarLayout]);
 
   // A hora entra na dependência: virou a hora, o insight é outro.
   useEffect(() => {
@@ -393,63 +406,88 @@ export function HomeScreen() {
         </YStack>
       </XStack>
 
-      {/* Os três anéis principais — Sono, Stress, Recuperação. O antigo bloco
-          de estado (manchete + régua + botão de ação) virou o card de saúde do
-          carrossel; o score continua aqui, dentro do anel de Recuperação. */}
-      <YStack paddingTop="$xxxl" paddingBottom="$xxl">
-        {/*
-          Resumo de saúde no lugar dos três anéis (fundadora, 22/08/2026): a
-          frase do dia (do modelo, ou do cálculo local sem rede) e uma linha
-          de dado. Toca e abre a tela de Saúde, onde mora o detalhe.
-        */}
-        <Pressable onPress={() => abrir('Health')} accessibilityRole="button" accessibilityLabel="Resumo de saúde">
-          <YStack gap="$sm" paddingVertical="$lg">
-            <Label>resumo de saúde</Label>
-            <SectionTitle>{energy.title}</SectionTitle>
-            <Body>{energy.description}</Body>
-          </YStack>
-        </Pressable>
-      </YStack>
+      {/*
+        O miolo da home é montado pela ORDEM que a pessoa escolheu, em
+        `store/home.store.ts`. Cada bloco carrega o próprio dado e só monta se
+        estiver ligado, então quem desliga tendências não paga a consulta de
+        112 dias que elas custam.
+      */}
+      <YStack paddingTop="$xxl" gap="$xxl">
+        {blocosDaHome.map((bloco) => {
+          if (!bloco.ligado) return null;
+          switch (bloco.chave) {
+            case 'resumo':
+              return (
+                <Pressable
+                  key={bloco.chave}
+                  onPress={() => abrir('Health')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Resumo de saúde"
+                >
+                  <YStack gap="$sm">
+                    <Label>resumo de saúde</Label>
+                    <SectionTitle>{energy.title}</SectionTitle>
+                    <Body>{energy.description}</Body>
+                  </YStack>
+                </Pressable>
+              );
 
-      <IndicatorList
-        itens={indicadoresDaHome({
-          hora: hour,
-          agua: { ml: aguaHoje, metaMl: aguaMeta },
-          passos: { hoje: activity.steps ?? null, meta: activity.goal },
-          refeicoes: { quantidade: mealsToday?.length ?? 0, kcalMin, kcalMax, metaKcal },
-          sono: sleep,
-          stress: stressAtual,
+            case 'indicadores':
+              return (
+                <IndicatorList
+                  key={bloco.chave}
+                  itens={indicadoresDaHome({
+                    hora: hour,
+                    agua: { ml: aguaHoje, metaMl: aguaMeta },
+                    passos: { hoje: activity.steps ?? null, meta: activity.goal },
+                    refeicoes: { quantidade: mealsToday?.length ?? 0, kcalMin, kcalMax, metaKcal },
+                    sono: sleep,
+                    stress: stressAtual,
+                  })}
+                  onAbrir={abrir}
+                />
+              );
+
+            case 'semana':
+              return <BlocoSemana key={bloco.chave} onAbrir={abrir} />;
+
+            case 'metas':
+              return <BlocoMetas key={bloco.chave} onAbrir={abrir} />;
+
+            case 'hrv':
+              return serieHrv.length >= 2 ? (
+                <Card
+                  key={bloco.chave}
+                  onPress={() => abrir('Hrv')}
+                  accessibilityLabel="Variabilidade cardíaca, abrir detalhe"
+                >
+                  <Label marginBottom="$md">variabilidade (hrv)</Label>
+                  <LineChart
+                    data={serieHrv.map((p) => p.value)}
+                    width={larguraGrafico}
+                    height={120}
+                    markLast
+                    band={{ from: mediaHrv * 0.85, to: mediaHrv * 1.15 }}
+                    thresholds={[{ value: mediaHrv, label: 'sua média' }]}
+                    xLabels={rotulosDoPeriodo(serieHrv)}
+                    id="hrv-home"
+                  />
+                </Card>
+              ) : null;
+
+            case 'tendencias':
+              return <BlocoTendencias key={bloco.chave} onAbrir={abrir} />;
+
+            case 'conquistas':
+              return <BlocoConquistas key={bloco.chave} />;
+
+            case 'atalhos':
+              return <HomeBanners key={bloco.chave} aoAbrir={abrir} />;
+
+            default:
+              return null;
+          }
         })}
-        onAbrir={abrir}
-      />
-
-      {/* Os dois instrumentos de hoje, meio a meio: água (entrada) e bateria
-          do corpo (reserva) — a mesma família visual, forma preenchida até a
-          fração. */}
-      {/* O gráfico de HRV, de volta (decisão da fundadora, ago/2026): a curva
-          da última hora contra a faixa da própria média — só quando há
-          medição, nunca decoração vazia. */}
-      {serieHrv.length >= 2 ? (
-        <YStack marginTop="$xxl">
-          <Card onPress={() => abrir('Hrv')} accessibilityLabel="Variabilidade cardíaca, abrir detalhe">
-            <Label marginBottom="$md">variabilidade (hrv)</Label>
-            <LineChart
-              data={serieHrv.map((p) => p.value)}
-              width={larguraGrafico}
-              height={120}
-              markLast
-              band={{ from: mediaHrv * 0.85, to: mediaHrv * 1.15 }}
-              thresholds={[{ value: mediaHrv, label: 'sua média' }]}
-              xLabels={rotulosDoPeriodo(serieHrv)}
-              id="hrv-home"
-            />
-          </Card>
-        </YStack>
-      ) : null}
-
-      {/* Os banners do rodapé, passando sozinhos. */}
-      <YStack marginTop="$xxl">
-        <HomeBanners aoAbrir={abrir} />
       </YStack>
 
     </ScrollView>

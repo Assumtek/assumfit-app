@@ -1,4 +1,11 @@
-import { JANELA_RECENTE, linhaDeTendencia, tendencia, type PontoDiario } from '../trend';
+import {
+  JANELA_RECENTE,
+  linhaDeTendencia,
+  linhasDeTendencia,
+  tendencia,
+  tendenciasProntas,
+  type PontoDiario,
+} from '../trend';
 
 const HOJE = '2026-08-23';
 const DIA = 86_400_000;
@@ -131,5 +138,43 @@ describe('linhaDeTendencia', () => {
     const l = linhaDeTendencia('agua', serie(0, 20, () => 2000), HOJE);
     expect(l.estado).toBe('acumulando');
     expect(l.frase).toMatch(/faltam \d+ dias com medição/);
+  });
+});
+
+describe('linhasDeTendencia', () => {
+  const dias = serie(0, 111, (i) => i).map((p) => ({
+    day: p.dia,
+    steps: p.valor < JANELA_RECENTE ? 9000 : 6000,
+    sleep_minutes: 420,
+    hrv_ms: null,
+    stress_score: 40,
+    heart_rate_min: 58,
+  }));
+
+  it('devolve uma linha por métrica, na ordem da tela', () => {
+    const linhas = linhasDeTendencia(dias, [], HOJE);
+    expect(linhas.map((l) => l.chave)).toEqual([
+      'passos',
+      'sono',
+      'hrv',
+      'repouso',
+      'stress',
+      'agua',
+    ]);
+  });
+
+  it('métrica sem nenhuma medição fica acumulando e sai do que está pronto', () => {
+    const linhas = linhasDeTendencia(dias, [], HOJE);
+    const hrv = linhas.find((l) => l.chave === 'hrv');
+    expect(hrv?.estado).toBe('acumulando');
+    expect(tendenciasProntas(linhas).some((l) => l.chave === 'hrv')).toBe(false);
+    expect(tendenciasProntas(linhas).some((l) => l.chave === 'passos')).toBe(true);
+  });
+
+  it('a água vem da série de hábitos, não do resumo biométrico', () => {
+    const habitos = serie(0, 111, () => 0).map((p) => ({ date: p.dia, waterMl: 2200 }));
+    const agua = linhasDeTendencia([], habitos, HOJE).find((l) => l.chave === 'agua');
+    expect(agua?.valor).toBe('2.200 ml');
+    expect(agua?.estado).toBe('estavel');
   });
 });

@@ -36,6 +36,7 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
+  Minus,
   ArrowLeftRight,
   ArrowRight,
   BarChart3,
@@ -164,6 +165,7 @@ export type IconName =
   | 'video'
   | 'smartphone'
   | 'arrowUp'
+  | 'minus'
   | 'arrowDown';
 
 /**
@@ -259,6 +261,7 @@ const GLYPH = {
   video: Video,
   smartphone: Smartphone,
   arrowUp: ArrowUp,
+  minus: Minus,
   arrowDown: ArrowDown,
 } as const;
 

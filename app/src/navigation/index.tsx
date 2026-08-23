@@ -12,6 +12,8 @@ import { GattScreen } from '../screens/GattScreen';
 import { HabitsScreen } from '../screens/HabitsScreen';
 import { WeeklyReportScreen } from '../screens/WeeklyReportScreen';
 import { DailyGoalsScreen } from '../screens/DailyGoalsScreen';
+import { HomeLayoutScreen } from '../screens/HomeLayoutScreen';
+import { TrendsScreen } from '../screens/TrendsScreen';
 import { MealsScreen } from '../screens/MealsScreen';
 import { SportScreen } from '../screens/SportScreen';
 import { WaterReminderScreen } from '../screens/WaterReminderScreen';
@@ -106,6 +108,8 @@ const linking = {
       Habits: 'habitos',
       WeeklyReport: 'resumo-semana',
       DailyGoals: 'metas',
+      Trends: 'tendencias',
+      HomeLayout: 'personalizar',
       WaterReminder: 'lembrete-agua',
       MealReminder: 'lembrete-refeicoes',
       MetricDay: 'historico-dia',
@@ -229,6 +233,8 @@ export function Navigation() {
         <Stack.Screen name="Habits" component={HabitsScreen} />
         <Stack.Screen name="WeeklyReport" component={WeeklyReportScreen} />
         <Stack.Screen name="DailyGoals" component={DailyGoalsScreen} />
+        <Stack.Screen name="Trends" component={TrendsScreen} />
+        <Stack.Screen name="HomeLayout" component={HomeLayoutScreen} />
         <Stack.Screen name="WaterReminder" component={WaterReminderScreen} />
         <Stack.Screen name="MealReminder" component={MealReminderScreen} />
         <Stack.Screen name="MetricDay" component={MetricDayScreen} />

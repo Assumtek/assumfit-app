@@ -239,6 +239,12 @@ export function Sidebar() {
             onPress={() => go('DailyGoals')}
           />
           <Entry
+            name="Tendências"
+            detail="o mês contra os três anteriores"
+            active={current === 'Trends'}
+            onPress={() => go('Trends')}
+          />
+          <Entry
             name="Resumo da semana"
             detail="todo domingo, com o que ajustar"
             active={current === 'WeeklyReport'}
@@ -261,6 +267,13 @@ export function Sidebar() {
 
           <SectionLabel>Aparência</SectionLabel>
           <ThemeSwitch />
+
+          <Entry
+            name="Personalizar a home"
+            detail="o que aparece e em que ordem"
+            active={current === 'HomeLayout'}
+            onPress={() => go('HomeLayout')}
+          />
 
           <Entry
             name="Configurações"

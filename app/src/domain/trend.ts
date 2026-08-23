@@ -244,3 +244,50 @@ export function linhaDeTendencia(
 
   return { chave, rotulo: regua.rotulo, valor, frase, estado: t.estado, bom: t.bom };
 }
+
+/**
+ * O resumo por dia que o servidor devolve, no mínimo que a tendência precisa.
+ * Tipo próprio de propósito: domínio não importa de `services`.
+ */
+export type DiaResumido = {
+  day: string;
+  steps?: number | null;
+  hrv_ms?: number | null;
+  stress_score?: number | null;
+  sleep_minutes?: number | null;
+  heart_rate_min?: number | null;
+};
+
+export type DiaDeHabito = { date: string; waterMl?: number | null };
+
+/**
+ * Todas as tendências que a série sustenta, na ordem em que a tela mostra.
+ *
+ * Batimento de repouso é o MÍNIMO do dia, não a média: a média sobe com o
+ * treino e desce com o sono, e o que se quer aqui é o piso, que é o número
+ * que a literatura associa a condicionamento.
+ */
+export function linhasDeTendencia(
+  dias: DiaResumido[],
+  habitos: DiaDeHabito[],
+  hoje: string,
+): LinhaDeTendencia[] {
+  const de = <T,>(fonte: T[], dia: (t: T) => string, valor: (t: T) => number | null | undefined) =>
+    fonte
+      .map((t) => ({ dia: dia(t), valor: valor(t) }))
+      .filter((p): p is PontoDiario => p.valor != null && Number.isFinite(p.valor));
+
+  return [
+    linhaDeTendencia('passos', de(dias, (d) => d.day, (d) => d.steps), hoje),
+    linhaDeTendencia('sono', de(dias, (d) => d.day, (d) => d.sleep_minutes), hoje),
+    linhaDeTendencia('hrv', de(dias, (d) => d.day, (d) => d.hrv_ms), hoje),
+    linhaDeTendencia('repouso', de(dias, (d) => d.day, (d) => d.heart_rate_min), hoje),
+    linhaDeTendencia('stress', de(dias, (d) => d.day, (d) => d.stress_score), hoje),
+    linhaDeTendencia('agua', de(habitos, (h) => h.date, (h) => h.waterMl), hoje),
+  ];
+}
+
+/** As que já têm o que dizer, para a home não mostrar seis "acumulando". */
+export function tendenciasProntas(linhas: LinhaDeTendencia[]): LinhaDeTendencia[] {
+  return linhas.filter((l) => l.estado !== 'acumulando');
+}
