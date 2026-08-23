@@ -1380,3 +1380,25 @@ function vigiarLeitura(reading: Reading) {
     break; // um aviso por leitura: três banners simultâneos é pânico, não cuidado
   }
 }
+
+/**
+ * A noite, ao voltar ao primeiro plano: se a que está na tela não sustenta o
+ * dia de hoje, busca agora, ignorando o portão de 30 minutos da
+ * sincronização. Um testador (Bruno, 23/08) abriu o app às 11h, depois de
+ * acordar e se mexer, e a noite continuava a de anteontem: a volta ao
+ * primeiro plano só reconectava a pulseira.
+ */
+export async function buscarNoiteSeVencida(): Promise<void> {
+  const st = useBiometricStore.getState();
+  if (st.connection !== 'connected' || !ble.fetchSleep) return;
+  const atual = st.sleep;
+  if (atual && noiteSustentaODia(atual, hojeLocal())) return;
+  ultimaBuscaDeSono = Date.now();
+  const nova = await comTeto(ble.fetchSleep(), TETO_SONO_MS, 'sono da pulseira').catch(() => null);
+  if (nova && (!atual || nova.date > atual.date)) {
+    useBiometricStore.setState({ sleep: comOxigenioDaNoite(nova, useBiometricStore.getState().spo2History) });
+    api.pushSleepNight(nova);
+    persistirDerivado(useBiometricStore.getState());
+  }
+  await varrerSonoRetroativo();
+}

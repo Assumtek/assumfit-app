@@ -41,7 +41,9 @@ export function ActivityScreen() {
     let vivo = true;
     api
       .fetchDailyHistory(7)
-      .then((rows) => vivo && setDias(rows))
+      // O servidor devolve do mais novo para o mais antigo; a barra lê da
+      // esquerda para a direita, do mais antigo para hoje (Bruno, 23/08).
+      .then((rows) => vivo && setDias([...rows].sort((x, y) => (x.day < y.day ? -1 : 1))))
       .catch(() => vivo && setDias([]));
     return () => {
       vivo = false;

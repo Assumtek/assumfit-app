@@ -21,7 +21,7 @@ import { useAmbientStore } from './src/store/ambient.store';
 import { useHabitsStore } from './src/store/habits.store';
 import { reagendarLembreteDeRefeicao } from './src/store/meal-reminder.store';
 import { usePersonalizacaoStore } from './src/store/personalizacao.store';
-import { useBiometricStore } from './src/store/biometric.store';
+import { buscarNoiteSeVencida, useBiometricStore } from './src/store/biometric.store';
 import { ThemeProvider, useTheme } from './src/theme/ThemeProvider';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { aoErroFatal, instalarRelatorDeErros } from './src/services/crash-report';
@@ -78,6 +78,8 @@ function Root() {
       ) {
         void connect(pairedDeviceId).catch(() => undefined);
       }
+      // Já conectada: a noite de ontem pode ter fechado enquanto o app dormia.
+      void buscarNoiteSeVencida().catch(() => undefined);
 
       /*
        O clima é o único dado do app preso à POSIÇÃO, e a sessão pode durar
