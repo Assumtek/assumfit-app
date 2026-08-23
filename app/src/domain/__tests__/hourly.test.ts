@@ -7,6 +7,7 @@ import {
   fatiasVazias,
   horaMaisAtiva,
   normalizar,
+  rotulosDoAcumulado,
   totalDoDia,
 } from '../hourly';
 
@@ -116,5 +117,16 @@ describe('horaMaisAtiva', () => {
 
   it('sem movimento, não existe hora mais ativa', () => {
     expect(horaMaisAtiva(fatiasVazias())).toBeNull();
+  });
+});
+
+describe('rotulosDoAcumulado', () => {
+  it('o último rótulo é a hora atual, não o fim do dia', () => {
+    expect(rotulosDoAcumulado(14)).toEqual(['00h', '05h', '09h', '14h']);
+    expect(rotulosDoAcumulado(23).at(-1)).toBe('23h');
+  });
+
+  it('à meia-noite existe um rótulo só', () => {
+    expect(rotulosDoAcumulado(0)).toEqual(['00h']);
   });
 });

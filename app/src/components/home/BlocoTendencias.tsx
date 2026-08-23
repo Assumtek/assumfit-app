@@ -2,7 +2,7 @@ import { YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
 import { Pressable } from 'react-native';
 
-import { Data, Skeleton } from '../ui';
+import { Data, Label, Skeleton } from '../ui';
 import { TrendList } from '../TrendList';
 import {
   JANELA_ANTERIOR,
@@ -40,6 +40,7 @@ export function BlocoTendencias({ onAbrir }: { onAbrir: (rota: string) => void }
     return (
       <Pressable onPress={() => onAbrir('Trends')} accessibilityRole="button" accessibilityLabel="Tendências">
         <YStack gap="$sm">
+          <Label>tendências</Label>
           <Data>
             As tendências aparecem quando houver medição suficiente para comparar um mês com os três
             anteriores.

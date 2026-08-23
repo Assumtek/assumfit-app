@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass, field
+from models.texto import sem_travessao_em
 
 MODEL = "claude-haiku-4-5"
 MAX_TOKENS = 900
@@ -112,9 +113,9 @@ def write_weekly(facts: WeeklyFacts) -> dict | None:
         )
         texto = "".join(b.text for b in response.content if getattr(b, "type", "") == "text")
         dados = json.loads(texto)
-        if "—" in json.dumps(dados, ensure_ascii=False):
-            return None
-        return dados
+        # Travessão se troca por vírgula, não custa o resumo inteiro: descartar
+        # aqui era jogar fora um texto bom por um sinal de pontuação.
+        return sem_travessao_em(dados)
     except Exception as err:  # noqa: BLE001
         print(f"[weekly] anthropic falhou: {type(err).__name__}: {err}", flush=True)
         return None

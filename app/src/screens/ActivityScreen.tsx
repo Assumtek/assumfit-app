@@ -13,7 +13,7 @@ import { MeasuredAt } from '../components/MeasuredAt';
 import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
 import { rateActivity } from '../domain/ratings';
 import { caloriasDoDia, distanciaDoDia } from '../domain/activityEstimates';
-import { acumuladoAteAgora, barrasDoDia, horaMaisAtiva } from '../domain/hourly';
+import { acumuladoAteAgora, barrasDoDia, horaMaisAtiva, rotulosDoAcumulado } from '../domain/hourly';
 import { nomeDoPeriodo, PeriodTabs, PERIODOS } from '../components/PeriodTabs';
 import { treinoConta } from '../domain/movement';
 import * as api from '../services/api.service';
@@ -167,7 +167,7 @@ export function ActivityScreen() {
             height={152}
             domain={[0, activity.goal]}
             thresholds={[{ value: activity.goal, label: 'meta' }]}
-            xLabels={['06h', '12h', '18h', '22h']}
+            xLabels={rotulosDoAcumulado(agora)}
             id="steps"
           />
         </YStack>

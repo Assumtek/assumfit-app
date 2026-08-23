@@ -36,6 +36,7 @@ import os
 from dataclasses import dataclass
 
 from models.insight import HomeInsight
+from models.texto import sem_travessao
 
 #: Modelo da OpenAI. A tarefa é redigir duas frases a partir de fatos prontos —
 #: a classe "mini" é a régua certa de custo e latência, e esta é a chamada mais
@@ -106,7 +107,9 @@ de adivinhação: "sua recuperação está 27 ms abaixo da sua média" vale; "vo
 parece cansado" não.
 6. Se a mensagem disser que nenhum sinal se destaca, NÃO invente um culpado. \
 Diga que o dia está equilibrado e siga para a orientação.
-7. Responda SOMENTE com o JSON pedido: chaves eyebrow, headline e detail."""
+7. Nunca use travessão nem meia-risca fazendo papel de travessão: separe com \
+vírgula, dois-pontos ou ponto. É regra de escrita do produto, não estilo.
+8. Responda SOMENTE com o JSON pedido: chaves eyebrow, headline e detail."""
 
 
 @dataclass(frozen=True)
@@ -224,9 +227,11 @@ def write(facts: Facts, fallback: HomeInsight) -> HomeInsight | None:
         return None
 
     return HomeInsight(
-        eyebrow=dados["eyebrow"],
-        headline=dados["headline"],
-        detail=dados["detail"],
+        # `sem_travessao` é higiene de pontuação, não reescrita: o prompt proíbe
+        # o travessão e o modelo o usa mesmo assim, de vez em quando.
+        eyebrow=sem_travessao(dados["eyebrow"]),
+        headline=sem_travessao(dados["headline"]),
+        detail=sem_travessao(dados["detail"]),
         # Ação e transição continuam do cálculo: a primeira navega para telas
         # do app, a segunda é resultado de varrer a curva.
         action=fallback.action,

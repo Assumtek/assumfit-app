@@ -144,3 +144,19 @@ export function horaMaisAtiva(fatias: FatiaDoDia[]): FatiaDoDia | null {
   if (base.length === 0) return null;
   return base.reduce((a, b) => (b.passos > a.passos ? b : a));
 }
+
+/**
+ * Os rótulos do eixo da curva acumulada.
+ *
+ * Eram fixos ("06h, 12h, 18h, 22h") enquanto a curva ia da meia-noite até
+ * AGORA: às duas da tarde, o gráfico terminava sob um rótulo que dizia 22h. O
+ * eixo tem que descrever os dados que existem, não o dia inteiro.
+ */
+export function rotulosDoAcumulado(horaAtual: number, quantos = 4): string[] {
+  const ate = Math.max(0, Math.min(HORAS_DO_DIA - 1, horaAtual));
+  if (ate === 0) return ['00h'];
+  const passo = ate / (quantos - 1);
+  return Array.from({ length: quantos }, (_, i) =>
+    `${String(Math.round(i * passo)).padStart(2, '0')}h`,
+  );
+}

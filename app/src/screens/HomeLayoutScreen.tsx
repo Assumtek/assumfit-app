@@ -5,7 +5,7 @@ import { Pressable, Switch } from 'react-native';
 import { DetailScreen } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
 import { Section } from '../components/List';
-import { Body, Button, Data, Label } from '../components/ui';
+import { Body, Button, Data } from '../components/ui';
 import { BLOCOS, blocosLigados, ehPadrao, type ChaveDeBloco } from '../domain/homeLayout';
 import { useHomeStore } from '../store/home.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -107,7 +107,7 @@ function LinhaDeBloco({
       borderBottomWidth={last ? 0 : 1}
       borderBottomColor="$border"
     >
-      <YStack>
+      <YStack justifyContent="center">
         <Seta
           direcao="up"
           desabilitada={primeiro}
@@ -123,7 +123,7 @@ function LinhaDeBloco({
       </YStack>
 
       <YStack flex={1} gap="$xs">
-        <Label color={ligado ? '$foreground' : '$mutedForeground'}>{titulo}</Label>
+        <Body color={ligado ? '$foreground' : '$mutedForeground'}>{titulo}</Body>
         <Data>{descricao}</Data>
       </YStack>
 

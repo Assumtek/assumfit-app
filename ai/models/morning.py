@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass
+from models.texto import sem_travessao
 
 MODEL = "claude-haiku-4-5"
 MAX_TOKENS = 400
@@ -193,4 +194,8 @@ def write_morning(facts: MorningFacts) -> dict | None:
         print("[morning] resposta recusada na validação", flush=True)
         return None
 
-    return {"title": dados["title"].strip(), "body": dados["body"].strip(), "source": "llm"}
+    return {
+        "title": sem_travessao(dados["title"].strip()),
+        "body": sem_travessao(dados["body"].strip()),
+        "source": "llm",
+    }

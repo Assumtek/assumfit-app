@@ -38,6 +38,8 @@ export function AllDataScreen() {
   const latest = useBiometricStore((s) => s.latest);
   const sleep = useBiometricStore((s) => s.sleep);
   const activity = useBiometricStore((s) => s.activity);
+  const spo2History = useBiometricStore((s) => s.spo2History);
+  const stressHistory = useBiometricStore((s) => s.stressHistory);
   const hoje = useHabitsStore((s) => s.today);
   const carregarHabitos = useHabitsStore((s) => s.hydrate);
   const { bio } = useBioAge();
@@ -74,8 +76,19 @@ export function AllDataScreen() {
       agora,
       batimento: { valor: latest?.heartRate ?? null, em: latest?.heartRateAt ?? latest?.recordedAt ?? null },
       hrv: { valor: latest?.hrvMs ?? null, em: latest?.hrvAt ?? latest?.recordedAt ?? null },
-      oxigenio: { valor: latest?.spo2Pct ?? null, em: latest?.recordedAt ?? null },
-      estresse: { valor: latest?.stressScore ?? null, em: latest?.recordedAt ?? null },
+      /*
+       Oxigenação e estresse vêm de medição AGENDADA, não contínua: usar o
+       carimbo da leitura faria uma amostra de três horas atrás aparecer como
+       "agora". Quem sabe a hora certa é a própria série.
+      */
+      oxigenio: {
+        valor: latest?.spo2Pct ?? null,
+        em: spo2History.at(-1)?.at ?? latest?.recordedAt ?? null,
+      },
+      estresse: {
+        valor: latest?.stressScore ?? null,
+        em: stressHistory.at(-1)?.at ?? latest?.recordedAt ?? null,
+      },
       passos: { valor: activity.steps ?? null, em: latest?.recordedAt ?? null },
       pressao: {
         sistolica: latest?.bpSystolic ?? null,
@@ -94,7 +107,7 @@ export function AllDataScreen() {
     });
     // `agora` muda a cada render e não deve reprocessar a lista sozinho.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [latest, sleep, activity, hoje.waterMl, refeicoes, bio, hora]);
+  }, [latest, sleep, activity, spo2History, stressHistory, hoje.waterMl, refeicoes, bio, hora]);
 
   const filtrados = filtrar(itens, busca);
   const grupos = porOrigem(filtrados);

@@ -593,6 +593,73 @@ O app mostra thumbnail e só baixa o vídeo ao toque (`components/ExerciseVideo.
 - Prisma não gerencia hypertables nem políticas de retenção, essas partes vão em migrations SQL escritas à mão.
 - Toda métrica exibida ao usuário passa por `app/src/domain/ratings.ts`, que devolve `{ label, color, detail, fraction }`. **Nenhuma tela formata número cru**, se uma tela está montando string de unidade, falta uma função de avaliação.
 
+## A home é da pessoa, não nossa
+
+O miolo da home é uma lista de blocos com liga-desliga e ordem
+(`domain/homeLayout.ts` + `store/home.store.ts`, chave `assumfit.home.v1`). O
+cabeçalho fica fora: saudação, estado da pulseira, ajuda e avisos são
+navegação, e sem eles a tela deixa de funcionar.
+
+Decisão da fundadora (23/08/2026), depois de a home mudar três vezes em agosto
+e cada versão agradar a uma pessoa diferente. **Bloco novo entra pelo FIM da
+lista, no estado padrão dele**, senão uma atualização desfaz a escolha de quem
+já personalizou.
+
+**Bloco desligado não monta nem consulta.** Cada bloco (`components/home/`)
+carrega o próprio dado; é o que permite ter tendências, que custam 112 dias de
+histórico, sem cobrar isso de quem não as quer.
+
+## Passo é delta ou acumulado? Uma resposta só
+
+`domain/hourly.ts` guarda **o dia em 24 fatias, e fatia é o que aconteceu
+NAQUELA hora**. Havia duas semânticas no mesmo array e nenhuma declarada: a
+memória da pulseira entrega deltas, o evento ao vivo entrega o acumulado do
+dia. Depois de cada sincronização o gráfico ganhava uma barra com o dia inteiro
+dentro dela, e a curva do "acúmulo" subia e descia.
+
+Quem recebe acumulado converte com `deltaDoAcumulado` antes de entrar. O
+primeiro evento depois de abrir o app **não vira barra**: sem referência
+anterior, não há como saber quanto daquele total é da hora corrente.
+
+O mesmo erro tinha uma terceira cara: a tela do dia acumulava de novo o que o
+servidor já entrega acumulado (`max(steps)` por hora sobre um contador do
+aparelho), o que produzia uma rampa quadrática.
+
+**A caloria por hora vem do firmware**, não de estimativa: ela sempre esteve em
+`getStepsHistory` e a ponte a descartava.
+
+## Tendência é janela contra janela
+
+`domain/trend.ts`: 28 dias contra os 84 anteriores, **sem sobreposição** (a
+Apple põe 90 dentro de 365, o que dilui o que mudou), média por **dia com
+medição** (pulseira fora do pulso não é dia de zero passo) e estado próprio
+para série insuficiente, que diz quantos dias faltam. Direção não é o mesmo que
+"bom": quem sabe disso é a métrica, por `melhor: 'maior' | 'menor'`.
+
+Métrica pontual (pressão, oxigênio) fica fora: a média de uma janela dessas diz
+mais sobre quando a pessoa mediu do que sobre o corpo dela.
+
+## Procedência é conteúdo
+
+`domain/dataCatalog.ts` e a tela `assumfit://dados` agrupam as medidas por
+ORIGEM: medido pela pulseira, vindo do iPhone, registrado por você, calculado
+pelo app. Não é arrumação: é a diferença entre um número que descreve a pessoa
+e um número que o app deduziu, e é o que a LGPD espera de quem guarda dado
+sensível. Por isso `SleepNight` carrega `source`, o sono é o único número que
+pode vir de dois aparelhos.
+
+Medida sem valor CONTINUA na lista, dizendo que ainda não mediu.
+
+## O travessão do modelo
+
+Os prompts proíbem, e o modelo escreve mesmo assim, de vez em quando. A defesa
+é `ai/models/texto.py::sem_travessao`, aplicada na borda de saída do insight, do
+bom dia e do resumo semanal. É higiene de PONTUAÇÃO, não reescrita: troca o
+sinal e preserva a frase, como a regra de capitalização. O resumo semanal
+descartava a resposta inteira quando encontrava um travessão, o que custava um
+texto bom por um sinal.
+
+
 ## Produção
 
 `docker-compose.prod.yml` é o de valer; o `docker-compose.yml` tem segredos de
