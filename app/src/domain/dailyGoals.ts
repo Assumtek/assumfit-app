@@ -49,6 +49,15 @@ export function aneisDoCalendario(
   meta: number,
   hoje: Date,
   dias = 28,
+  /**
+   * As calorias ativas de HOJE, medidas no aparelho.
+   *
+   * O servidor tem do dia corrente só o que já foi enviado, e o aparelho tem o
+   * número de agora: sem esta entrada, a mesma tela mostrava 774 kcal no anel
+   * grande e outro valor no dia de hoje do calendário. Dois números para a
+   * mesma pergunta, lado a lado, é o que destrói a confiança no resto.
+   */
+  ativasDeHoje?: number | null,
 ): AnelDoDia[] {
   const passosPorDia = new Map(diasDoServidor.map((d) => [d.day, d.steps]));
   const kcalPorDia = new Map<string, number>();
@@ -65,7 +74,11 @@ export function aneisDoCalendario(
     const d = new Date(inicio);
     d.setDate(inicio.getDate() + i);
     const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const ativas = caloriasAtivas(passosPorDia.get(day) ?? null, null, kcalPorDia.get(day) ?? 0);
+    const doServidor = caloriasAtivas(passosPorDia.get(day) ?? null, null, kcalPorDia.get(day) ?? 0);
+    const ativas =
+      day === chaveHoje && ativasDeHoje != null && Number.isFinite(ativasDeHoje)
+        ? ativasDeHoje
+        : doServidor;
     return { day, ativas, fraction: meta > 0 ? Math.min(1, ativas / meta) : 0, futuro: day > chaveHoje };
   });
 }
@@ -99,6 +112,8 @@ export function fitaDaSemana(
   sessoes: { startedAt: string; kcal?: number }[],
   meta: number,
   hoje: Date,
+  /** As calorias ativas de hoje, medidas no aparelho. Ver `aneisDoCalendario`. */
+  ativasDeHoje?: number | null,
 ): DiaDaFita[] {
   const domingo = new Date(hoje);
   domingo.setHours(0, 0, 0, 0);
@@ -111,7 +126,7 @@ export function fitaDaSemana(
   const fim = new Date(domingo);
   fim.setDate(domingo.getDate() + 6);
   const dias = Math.round((fim.getTime() - domingo.getTime()) / 86_400_000) + 1;
-  const aneis = aneisDoCalendario(diasDoServidor, sessoes, meta, fim, dias);
+  const aneis = aneisDoCalendario(diasDoServidor, sessoes, meta, fim, dias, ativasDeHoje);
   /*
    `futuro` vem recalculado: o calendário o deduz do fim da janela, que aqui é
    o sábado, e todo dia da semana ficaria no passado. A referência certa é o
@@ -128,4 +143,76 @@ export function fitaDaSemana(
 
 function chaveDoDia(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+export type DetalheDoDia = {
+  /** "sábado, 23 de agosto", para o título do bloco. */
+  titulo: string;
+  kcal: string;
+  passos: string;
+  situacao: string;
+  /** `true` quando não houve leitura nenhuma naquele dia. */
+  vazio: boolean;
+};
+
+const DIAS_DA_SEMANA = [
+  'domingo',
+  'segunda-feira',
+  'terça-feira',
+  'quarta-feira',
+  'quinta-feira',
+  'sexta-feira',
+  'sábado',
+];
+const MESES = [
+  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+];
+
+/**
+ * O que mostrar quando alguém toca num anel do calendário.
+ *
+ * Pedido de testador (Bruno, 23/08/2026): o calendário mostrava a forma do mês
+ * e nada do dia. Um anel pela metade não diz se foram 200 kcal ou 380.
+ *
+ * Dia sem nenhuma leitura tem texto próprio, e não "0 kcal": zero é uma
+ * afirmação sobre o corpo da pessoa, e o que houve foi ausência de medição.
+ */
+export function detalheDoDia(
+  anel: AnelDoDia,
+  passosDoDia: number | null,
+  meta: number,
+  hojeIso: string,
+): DetalheDoDia {
+  const [ano, mes, dia] = anel.day.split('-').map(Number);
+  const data = new Date(ano, mes - 1, dia);
+  const titulo =
+    anel.day === hojeIso
+      ? 'hoje'
+      : `${DIAS_DA_SEMANA[data.getDay()]}, ${dia} de ${MESES[mes - 1]}`;
+
+  const vazio = (passosDoDia == null || passosDoDia === 0) && anel.ativas === 0;
+  if (vazio) {
+    return {
+      titulo,
+      kcal: '–',
+      passos: '–',
+      situacao: anel.futuro ? 'Dia que ainda não chegou.' : 'Sem leitura da pulseira neste dia.',
+      vazio: true,
+    };
+  }
+
+  const falta = Math.max(0, meta - anel.ativas);
+  return {
+    titulo,
+    kcal: `${Math.round(anel.ativas)} kcal`,
+    passos: passosDoDia != null ? `${Math.round(passosDoDia).toLocaleString('pt-BR')} passos` : '–',
+    situacao:
+      anel.fraction >= 1
+        ? 'Meta fechada.'
+        : anel.day === hojeIso
+          ? `Faltam ${falta} kcal para fechar.`
+          : `Ficou a ${falta} kcal da meta.`,
+    vazio: false,
+  };
 }

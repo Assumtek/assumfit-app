@@ -3,8 +3,15 @@ import React, { useEffect, useState } from 'react';
 
 import { Data, Label, Skeleton } from '../ui';
 import { WeekStrip } from '../WeekStrip';
-import { diasFechados, fitaDaSemana, metaEfetiva, type DiaDaFita } from '../../domain/dailyGoals';
+import {
+  caloriasAtivas,
+  diasFechados,
+  fitaDaSemana,
+  metaEfetiva,
+  type DiaDaFita,
+} from '../../domain/dailyGoals';
 import * as api from '../../services/api.service';
+import { useBiometricStore } from '../../store/biometric.store';
 import { useGoalsStore } from '../../store/goals.store';
 
 /**
@@ -15,6 +22,7 @@ import { useGoalsStore } from '../../store/goals.store';
  * cada bloco novo custasse uma requisição a quem não o quer.
  */
 export function BlocoSemana({ onAbrir }: { onAbrir: (rota: string) => void }) {
+  const activity = useBiometricStore((s) => s.activity);
   const metaPadrao = useGoalsStore((s) => s.metaPadraoKcal);
   const metaDeHoje = useGoalsStore((s) => s.metaDeHoje);
   const carregarMetas = useGoalsStore((s) => s.carregar);
@@ -29,9 +37,18 @@ export function BlocoSemana({ onAbrir }: { onAbrir: (rota: string) => void }) {
     const iso = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
     const meta = metaEfetiva(metaPadrao, metaDeHoje, iso);
     Promise.all([api.fetchDailyHistory(14), api.fetchSportSessions(14)])
-      .then(([historico, sessoes]) => setDias(fitaDaSemana(historico, sessoes, meta, new Date())))
+      .then(([historico, sessoes]) => {
+        const inicioDeHoje = new Date();
+        inicioDeHoje.setHours(0, 0, 0, 0);
+        const kcalDeHoje = sessoes
+          .filter((s) => new Date(s.startedAt).getTime() >= inicioDeHoje.getTime())
+          .reduce((soma, s) => soma + (s.kcal ?? 0), 0);
+        // Hoje pelo aparelho, como no anel e no calendário de metas.
+        const ativasHoje = caloriasAtivas(activity.steps ?? null, activity.activeKcal, kcalDeHoje);
+        setDias(fitaDaSemana(historico, sessoes, meta, new Date(), ativasHoje));
+      })
       .catch(() => setDias([]));
-  }, [metaPadrao, metaDeHoje]);
+  }, [metaPadrao, metaDeHoje, activity]);
 
   if (dias == null) return <Skeleton lines={2} />;
   if (dias.length === 0) return null;

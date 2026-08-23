@@ -1,12 +1,12 @@
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Pressable } from 'react-native';
 
 import { DetailScreen } from '../components/DetailScreen';
 import { ActionRow, Row, Section } from '../components/List';
 import { ProgressRing } from '../components/ProgressRing';
-import { Body, Data, Label, Metric, RatingText, Skeleton } from '../components/ui';
-import { aneisDoCalendario, caloriasAtivas, diasFechados, metaEfetiva, repousoAteAgora } from '../domain/dailyGoals';
+import { Body, Data, Label, Metric, MetricSm, RatingText, Skeleton } from '../components/ui';
+import { aneisDoCalendario, caloriasAtivas, detalheDoDia, diasFechados, metaEfetiva, repousoAteAgora } from '../domain/dailyGoals';
 import { ageFromBirthDate, calorieGoal } from '../domain/nutritionGoal';
 import { isoHoje } from '../domain/water';
 import * as api from '../services/api.service';
@@ -32,6 +32,9 @@ export function DailyGoalsScreen() {
   const limparSoHoje = useGoalsStore((s) => s.limparSoHoje);
   const [bmr, setBmr] = useState<number | null>(null);
   const [dias, setDias] = useState<api.DailySummary[] | null>(null);
+  /* Começa em hoje: o bloco de detalhe nasce preenchido em vez de aparecer do
+     nada no primeiro toque. */
+  const [selecionado, setSelecionado] = useState<string>(isoHoje());
   const [sessoes, setSessoes] = useState<api.SportSession[]>([]);
   const [sessoesHoje, setSessoesHoje] = useState(0);
 
@@ -75,8 +78,19 @@ export function DailyGoalsScreen() {
   const agora = new Date();
   const repouso = repousoAteAgora(bmr, agora.getHours() + agora.getMinutes() / 60);
   const fracao = meta > 0 ? Math.min(1, ativas / meta) : 0;
-  const aneis = useMemo(() => aneisDoCalendario(dias ?? [], sessoes, meta, new Date()), [dias, sessoes, meta]);
+  /* `ativas` entra como o valor de HOJE: o servidor só tem o que já foi
+     enviado, e o anel grande logo acima mostra o número do aparelho. */
+  const aneis = useMemo(
+    () => aneisDoCalendario(dias ?? [], sessoes, meta, new Date(), 28, ativas),
+    [dias, sessoes, meta, ativas],
+  );
   const soHoje = metaDeHoje?.date === hoje;
+  const detalhe = useMemo(() => {
+    const anel = aneis.find((a) => a.day === selecionado);
+    if (!anel) return null;
+    const passos = (dias ?? []).find((d) => d.day === selecionado)?.steps ?? null;
+    return detalheDoDia(anel, passos, meta, hoje);
+  }, [aneis, dias, selecionado, meta, hoje]);
 
   const pedirMeta = (titulo: string, atual: number, onOk: (kcal: number) => void) =>
     Alert.prompt(titulo, 'Calorias ativas por dia', (t) => {
@@ -126,15 +140,56 @@ export function DailyGoalsScreen() {
             <YStack gap="$sm">
               {Array.from({ length: 4 }, (_, semana) => (
                 <XStack key={semana} justifyContent="space-between">
-                  {aneis.slice(semana * 7, semana * 7 + 7).map((a) => (
-                    <YStack key={a.day} alignItems="center" gap={4} accessibilityLabel={`${a.day}: ${a.ativas} kcal`}>
-                      <ProgressRing fraction={a.fraction} size={32} strokeWidth={4} color={a.fraction >= 1 ? colors.good : colors.accent} />
-                      <Label>{a.day.slice(8, 10)}</Label>
-                    </YStack>
-                  ))}
+                  {aneis.slice(semana * 7, semana * 7 + 7).map((a) => {
+                    const escolhido = a.day === selecionado;
+                    return (
+                      <Pressable
+                        key={a.day}
+                        onPress={() => setSelecionado(a.day)}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: escolhido }}
+                        accessibilityLabel={`${a.day}: ${a.ativas} kcal`}
+                        hitSlop={4}
+                        style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
+                      >
+                        <YStack alignItems="center" gap={4}>
+                          <ProgressRing
+                            fraction={a.fraction}
+                            size={32}
+                            strokeWidth={4}
+                            color={a.fraction >= 1 ? colors.good : colors.accent}
+                          />
+                          {/*
+                            O dia escolhido se marca pelo PESO e pela cor de
+                            frente, nunca por um fundo ou traço de acento: o
+                            acento aqui pertence ao anel, que é o dado.
+                          */}
+                          <Label color={escolhido ? '$foreground' : '$mutedForeground'}>
+                            {a.day.slice(8, 10)}
+                          </Label>
+                        </YStack>
+                      </Pressable>
+                    );
+                  })}
                 </XStack>
               ))}
             </YStack>
+
+            {detalhe ? (
+              <YStack gap="$xs" marginTop="$lg">
+                <Label>{detalhe.titulo}</Label>
+                {detalhe.vazio ? (
+                  <Body>{detalhe.situacao}</Body>
+                ) : (
+                  <>
+                    <MetricSm>
+                      {detalhe.kcal} <Body color="$mutedForeground">· {detalhe.passos}</Body>
+                    </MetricSm>
+                    <Data>{detalhe.situacao}</Data>
+                  </>
+                )}
+              </YStack>
+            ) : null}
             <Row last>
               <Data>Anel vazio é dia sem passos lidos e sem sessão: ou a pulseira ficou longe, ou o dia foi parado.</Data>
             </Row>

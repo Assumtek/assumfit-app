@@ -13,17 +13,18 @@ import { Pill } from './ui';
  * O mesmo controle em todas transforma cada tela em histórico e poupa a
  * pergunta "por que aqui só tem uma semana?".
  *
- * Os rótulos são de uma letra (S, M, A), como no app Saúde: a pill fica
- * pequena, cabem quatro sem apertar, e o rótulo de acessibilidade diz por
- * extenso, que é onde a palavra importa.
+ * Os rótulos são por EXTENSO. Começaram como uma letra (S, M, A), copiando o
+ * app Saúde, e um testador pediu a palavra no mesmo dia: fora do contexto de
+ * um gráfico já rotulado, "S" e "M" não dizem nada, e o custo de decifrar cai
+ * sobre quem só queria trocar a janela. "3M" e "Ano" cabem do mesmo jeito.
  */
-export type Periodo = { dias: number; letra: string; nome: string };
+export type Periodo = { dias: number; rotulo: string; nome: string };
 
 export const PERIODOS: Record<'semana' | 'mes' | 'trimestre' | 'ano', Periodo> = {
-  semana: { dias: 7, letra: 'S', nome: 'Últimos 7 dias' },
-  mes: { dias: 30, letra: 'M', nome: 'Últimos 30 dias' },
-  trimestre: { dias: 90, letra: '3M', nome: 'Últimos 3 meses' },
-  ano: { dias: 365, letra: 'A', nome: 'Último ano' },
+  semana: { dias: 7, rotulo: 'Semana', nome: 'Últimos 7 dias' },
+  mes: { dias: 30, rotulo: 'Mês', nome: 'Últimos 30 dias' },
+  trimestre: { dias: 90, rotulo: '3 meses', nome: 'Últimos 3 meses' },
+  ano: { dias: 365, rotulo: 'Ano', nome: 'Último ano' },
 };
 
 export function PeriodTabs({
@@ -48,7 +49,7 @@ export function PeriodTabs({
             accessibilityState={{ selected: ativo }}
           >
             <Pill variant="control" muted={!ativo}>
-              <Data color={ativo ? '$foreground' : '$mutedForeground'}>{p.letra}</Data>
+              <Data color={ativo ? '$foreground' : '$mutedForeground'}>{p.rotulo}</Data>
             </Pill>
           </Pressable>
         );

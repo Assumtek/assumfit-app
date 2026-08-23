@@ -355,8 +355,13 @@ type BiometricState = {
   sleep: SleepNight | null;
   sleepNights: SleepNight[];
   activity: Activity;
-  /** Passos acumulados hora a hora, das 6h às 22h. */
+  /** O dia em 24 fatias, com passos e calorias daquela hora. */
   horas: FatiaDoDia[];
+  /**
+   * O estado em disco veio de uma versão anterior, que guardava os passos por
+   * hora em outro formato, e o dia precisa ser relido da pulseira.
+   */
+  precisaResincronizar: boolean;
   /** Stress por hora do dia, para o gráfico de barras. */
   stressByHour: { hour: string; value: number }[];
   /**
@@ -612,6 +617,7 @@ async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
   const oxigenio = historico.spo2.length ? historico.spo2 : get().spo2History;
 
   set({
+    precisaResincronizar: false,
     stressByHour: estresse,
     stressHistory: estresseCru,
     pressureHistory: pressao,
@@ -721,6 +727,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     activeMin: 0,
   },
   horas: fatiasVazias(),
+  precisaResincronizar: false,
   stressByHour: [],
   spo2History: [],
   stressHistory: [],
@@ -875,6 +882,18 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
         stressHistory: derivado.stressHistory ?? [],
         pressureHistory: derivado.pressureHistory ?? [],
         horas: mesmoDia ? normalizar(derivado.horas) : fatiasVazias(),
+        /*
+         Estado gravado por uma versão anterior não tem `horas`, e o que havia
+         no lugar (`stepsByHour`) era uma lista de valores SEM a hora de cada
+         um: não dá para reconstruir a distribuição sem inventar. Quem tem a
+         resposta é a pulseira, que guarda o dia inteiro, então a migração
+         marca a falta e o `hydrate` manda ressincronizar.
+
+         Um testador atualizou para a 1.0.5 (7) e viu o histórico de atividade
+         do dia sumir; era isto.
+        */
+        precisaResincronizar:
+          mesmoDia && !Array.isArray((derivado as { horas?: unknown }).horas),
         hrvHistory: derivado.hrvHistory ?? [],
         hrHistory: derivado.hrHistory ?? [],
         activity: mesmoDia
@@ -1058,7 +1077,13 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
      em dez segundos não precisa de outra varredura, e quem volta meia hora
      depois precisa.
     */
-    if (!force && Date.now() - ultimaSincronia < INTERVALO_MINIMO_SYNC_MS) {
+    /*
+     Migração de formato passa na frente do intervalo mínimo: o dia na tela
+     está vazio porque o estado antigo não sabia guardá-lo, e esperar meia hora
+     por isso é o que o testador viu como "perdi o histórico de hoje".
+    */
+    const migrando = get().precisaResincronizar;
+    if (!force && !migrando && Date.now() - ultimaSincronia < INTERVALO_MINIMO_SYNC_MS) {
       return Promise.resolve();
     }
     /*

@@ -1,4 +1,12 @@
-import { aneisDoCalendario, caloriasAtivas, diasFechados, fitaDaSemana, metaEfetiva, repousoAteAgora } from '../dailyGoals';
+import {
+  aneisDoCalendario,
+  caloriasAtivas,
+  detalheDoDia,
+  diasFechados,
+  fitaDaSemana,
+  metaEfetiva,
+  repousoAteAgora,
+} from '../dailyGoals';
 
 describe('metaEfetiva', () => {
   it('só para hoje vale hoje; amanhã volta ao padrão', () => {
@@ -71,5 +79,68 @@ describe('fitaDaSemana', () => {
     const fita = fitaDaSemana([], [], meta, domingo);
     expect(fita[0].hoje).toBe(true);
     expect(fita.slice(1).every((d) => d.futuro)).toBe(true);
+  });
+});
+
+describe('detalheDoDia', () => {
+  const HOJE = '2026-08-23';
+  const anel = (day: string, ativas: number, fraction: number, futuro = false) => ({
+    day, ativas, fraction, futuro,
+  });
+
+  it('nomeia o dia por extenso, e hoje é "hoje"', () => {
+    expect(detalheDoDia(anel(HOJE, 420, 1.05), 9800, 400, HOJE).titulo).toBe('hoje');
+    // 21/08/2026 é uma sexta-feira.
+    expect(detalheDoDia(anel('2026-08-21', 300, 0.75), 7000, 400, HOJE).titulo).toBe(
+      'sexta-feira, 21 de agosto',
+    );
+  });
+
+  it('dia sem leitura não vira zero, que seria uma afirmação sobre o corpo', () => {
+    const d = detalheDoDia(anel('2026-08-19', 0, 0), null, 400, HOJE);
+    expect(d.vazio).toBe(true);
+    expect(d.kcal).toBe('–');
+    expect(d.situacao).toBe('Sem leitura da pulseira neste dia.');
+  });
+
+  it('dia futuro diz que ainda não chegou', () => {
+    const d = detalheDoDia(anel('2026-08-29', 0, 0, true), null, 400, HOJE);
+    expect(d.situacao).toBe('Dia que ainda não chegou.');
+  });
+
+  it('meta fechada e meta perdida têm frases diferentes, e hoje ainda dá tempo', () => {
+    expect(detalheDoDia(anel('2026-08-22', 500, 1.25), 12000, 400, HOJE).situacao).toBe('Meta fechada.');
+    expect(detalheDoDia(anel('2026-08-22', 300, 0.75), 7000, 400, HOJE).situacao).toBe(
+      'Ficou a 100 kcal da meta.',
+    );
+    expect(detalheDoDia(anel(HOJE, 300, 0.75), 7000, 400, HOJE).situacao).toBe(
+      'Faltam 100 kcal para fechar.',
+    );
+  });
+
+  it('formata passos com separador de milhar', () => {
+    expect(detalheDoDia(anel(HOJE, 420, 1.05), 9837, 400, HOJE).passos).toBe('9.837 passos');
+  });
+});
+
+describe('aneisDoCalendario com o valor de hoje medido no aparelho', () => {
+  const hoje = new Date(2026, 7, 23, 15, 0, 0);
+  const chaveHoje = '2026-08-23';
+
+  it('hoje usa o número do aparelho, não o parcial do servidor', () => {
+    const aneis = aneisDoCalendario([{ day: chaveHoje, steps: 37841 }], [], 400, hoje, 28, 774);
+    expect(aneis.find((a) => a.day === chaveHoje)?.ativas).toBe(774);
+  });
+
+  it('os dias anteriores continuam vindo do servidor', () => {
+    const aneis = aneisDoCalendario([{ day: '2026-08-22', steps: 10000 }], [], 400, hoje, 28, 774);
+    const ontem = aneis.find((a) => a.day === '2026-08-22');
+    expect(ontem?.ativas).toBeGreaterThan(0);
+    expect(ontem?.ativas).not.toBe(774);
+  });
+
+  it('sem o valor do aparelho, hoje volta a ser o do servidor', () => {
+    const aneis = aneisDoCalendario([{ day: chaveHoje, steps: 10000 }], [], 400, hoje, 28, null);
+    expect(aneis.find((a) => a.day === chaveHoje)?.ativas).toBeGreaterThan(0);
   });
 });
