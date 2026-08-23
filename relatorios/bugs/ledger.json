@@ -1220,6 +1220,12 @@
       "nota": "Um aviso só, duas horas depois de a pulseira desconectar, só de dia e no máximo um por dia; se reconectar antes, nem aparece.",
       "versao": "1.0.5 (7)",
       "em": "2026-08-23T11:34:01"
+    },
+    "slack:1787497081.008869": {
+      "commit": "0bb61bb",
+      "nota": "Entrou como tela própria, Metas do dia (no menu): anel de calorias ativas sobre a meta, gasto de repouso ao lado, meta editável como padrão ou só para hoje, e calendário de 28 dias com um anel por dia.",
+      "versao": "1.0.5 (7)",
+      "em": "2026-08-23T12:07:47"
     }
   }
 }
