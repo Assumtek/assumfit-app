@@ -33,7 +33,9 @@ import {
   Trash2,
   X,
   Activity,
+  ArrowDown,
   ArrowLeft,
+  ArrowUp,
   ArrowLeftRight,
   ArrowRight,
   BarChart3,
@@ -160,7 +162,9 @@ export type IconName =
   | 'phone'
   | 'message'
   | 'video'
-  | 'smartphone';
+  | 'smartphone'
+  | 'arrowUp'
+  | 'arrowDown';
 
 /**
  * Nome semântico → componente do Lucide.
@@ -252,6 +256,8 @@ const GLYPH = {
   message: MessageSquare,
   video: Video,
   smartphone: Smartphone,
+  arrowUp: ArrowUp,
+  arrowDown: ArrowDown,
 } as const;
 
 type Props = {

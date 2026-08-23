@@ -33,6 +33,9 @@ export type Palette = {
   accent: string;
   accentSoft: string;
   alert: string;
+  /** Verde de direção (seta para cima na Home). Só direção, nunca dado. */
+  good: string;
+  goodSoft: string;
   alertSoft: string;
   /** Cor sobre a qual o vidro se apoia quando o efeito nativo não existe. */
   glassFallback: string;
@@ -64,6 +67,8 @@ export const darkPalette: Palette = {
   accent: '#877BF0',
   accentSoft: 'rgba(135,123,240,0.16)',
   alert: '#D08A62',
+  good: '#5FBF8A',
+  goodSoft: 'rgba(95,191,138,0.16)',
   alertSoft: 'rgba(208,138,98,0.14)',
   glassFallback: 'rgba(18,13,40,0.94)',
   specularTop: 'rgba(236,231,244,0.15)',
@@ -89,6 +94,8 @@ export const lightPalette: Palette = {
   accentSoft: 'rgba(135,123,240,0.18)',
   // Terracota mais fechado: o tom do escuro desaparece sobre fundo claro.
   alert: '#A2482A',
+  good: '#2E8B57',
+  goodSoft: 'rgba(46,139,87,0.14)',
   alertSoft: 'rgba(162,72,42,0.12)',
   // No claro a superfície elevada precisa ser QUASE branca, não um véu sobre o
   // fundo: `#ece7f4` já é claro, e um branco a 55% em cima dele produz uma

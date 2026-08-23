@@ -6,7 +6,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BandStatusLine } from '../components/BandStatus';
 import { HomeBanners } from '../components/HomeBanners';
-import { HomeCarousel, type HomeCard } from '../components/HomeCarousel';
+import { IndicatorList } from '../components/IndicatorList';
+import { indicadoresDaHome } from '../domain/homeIndicators';
+import { ageFromBirthDate, calorieGoal } from '../domain/nutritionGoal';
+import { useHabitsStore } from '../store/habits.store';
+import { useWorkoutStore } from '../store/workout.store';
 import { HomeRings, type RingItem } from '../components/HomeRings';
 import { Icon } from '../components/Icon';
 import { MovementWeek } from '../components/MovementWeek';
@@ -41,6 +45,7 @@ export function HomeScreen() {
   const sincronizando = useBiometricStore((s) => s.syncing);
   const syncError = useBiometricStore((s) => s.syncError);
   const sleep = useBiometricStore((s) => s.sleep);
+  const activity = useBiometricStore((s) => s.activity);
   const connection = useBiometricStore((s) => s.connection);
   const pairedDeviceId = useBiometricStore((s) => s.pairedDeviceId);
   const connectionReason = useBiometricStore((s) => s.connectionReason);
@@ -287,6 +292,39 @@ export function HomeScreen() {
 
   const abrir = (route: string) => (navigation as any).push(route as never);
 
+  // A meta calórica, montada como em Refeições (anamnese + perfil + rotina).
+  const [metaKcal, setMetaKcal] = useState<number | null>(null);
+  useEffect(() => {
+    let vivo = true;
+    void (async () => {
+      try {
+        const [anamnese, perfil, rotina] = await Promise.all([
+          api.fetchAnamnesis().catch(() => null),
+          api.fetchProfile().catch(() => null),
+          api.fetchLifestyle().catch(() => null),
+        ]);
+        const resp = (anamnese?.answers ?? {}) as Record<string, unknown>;
+        const num = (v: unknown) => (typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v)) ? Number(v) : null);
+        const meta = calorieGoal({
+          weightKg: num(resp.weightKg),
+          heightCm: num(resp.heightCm),
+          ageYears: perfil ? ageFromBirthDate(perfil.birthDate, new Date()) : null,
+          sex: perfil?.sex ?? null,
+          goalAnswer: typeof resp.goal === 'string' ? resp.goal : (useWorkoutStore.getState().plan?.goal ?? rotina?.goal ?? null),
+          trainDaysPerWeek: rotina?.trainDays?.length ?? null,
+        });
+        if (vivo) setMetaKcal(meta?.goal ?? null);
+      } catch {
+        if (vivo) setMetaKcal(null);
+      }
+    })();
+    return () => {
+      vivo = false;
+    };
+  }, []);
+  const aguaHoje = useHabitsStore((st) => st.today.waterMl);
+  const aguaMeta = useHabitsStore((st) => st.goalMl);
+
   /*
    Os três indicadores do topo (decisão da fundadora, ago/2026): Sono, Stress
    e Recuperação. O anel só dá forma — cor e fração continuam decididas por
@@ -335,100 +373,12 @@ export function HomeScreen() {
   ];
 
   /*
-   O carrossel: um card por assunto — treino, nutrição, saúde. Cada card só
-   afirma o que existe: plano sem gerar, refeição sem registrar e insight sem
-   rede têm frase de estado, nunca número inventado.
+   Os cinco indicadores do dia (fundadora, 22/08/2026) no lugar do carrossel:
+   água, atividade, alimentação, sono e estresse, cada um com seta e frase.
+   As réguas são as de ratings.ts; a direção e a frase vêm do domínio.
    */
-  const treinoHoje =
-    plan !== 'loading' && plan ? plan.days.find((d) => d.dayOfWeek === plan.today) : undefined;
-  const conselhoTreino =
-    energy.level === 'high'
-      ? 'Prontidão alta, bom dia para intensidade.'
-      : energy.level === 'mid'
-        ? 'Prontidão média, mantenha a execução confortável.'
-        : 'Prontidão baixa, reduza o volume ou priorize técnica leve.';
-
-  const cardTreino: HomeCard =
-    plan === 'loading'
-      ? {
-          key: 'treino',
-          title: 'treino',
-          headline: 'Buscando seu plano',
-          body: 'Carregando o treino de hoje.',
-          onPress: () => abrir('Plan'),
-        }
-      : !plan
-        ? {
-            key: 'treino',
-            title: 'treino',
-            headline: 'Sem plano ativo',
-            body: 'Gere um plano com a IA para receber aqui o treino de cada dia.',
-            onPress: () => abrir('Plan'),
-          }
-        : !treinoHoje || treinoHoje.dayType === 'OFF' || !treinoHoje.workout
-          ? {
-              key: 'treino',
-              title: 'treino',
-              headline: 'Hoje é dia de descanso',
-              body: 'O plano reserva hoje para recuperar, movimento leve conta a favor.',
-              onPress: () => abrir('Plan'),
-            }
-          : {
-              key: 'treino',
-              title: 'treino',
-              headline: treinoHoje.workout.name,
-              body: conselhoTreino,
-              // Dia de esporte fala a língua do esporte: "corrida", não
-              // "3 exercícios".
-              fact: `${
-                isSportDay(treinoHoje.workout.modality)
-                  ? `sessão de ${modalityMeta(treinoHoje.workout.modality).label}`
-                  : `${treinoHoje.workout.exerciseCount} exercícios`
-              }${
-                treinoHoje.workout.estimatedDuration
-                  ? ` · ~${treinoHoje.workout.estimatedDuration} min`
-                  : ''
-              }`,
-              onPress: () => abrir('Plan'),
-            };
-
   const kcalMin = mealsToday?.reduce((soma, r) => soma + r.kcalMin, 0) ?? 0;
   const kcalMax = mealsToday?.reduce((soma, r) => soma + r.kcalMax, 0) ?? 0;
-  const cardNutricao: HomeCard =
-    mealsToday && mealsToday.length
-      ? {
-          key: 'nutricao',
-          title: 'nutrição',
-          // FAIXA, não número exato: a caloria da foto é estimativa da IA, e
-          // apresentá-la precisa seria mentir precisão (princípio 2).
-          headline: `${kcalMin}–${kcalMax} kcal hoje`,
-          body: 'Estimativa da IA pelas fotos, com as calorias da tabela TACO.',
-          fact: `${mealsToday.length} ${mealsToday.length === 1 ? 'refeição registrada' : 'refeições registradas'}`,
-          onPress: () => abrir('Meals'),
-        }
-      : {
-          key: 'nutricao',
-          title: 'nutrição',
-          headline: 'Nenhuma refeição hoje',
-          body: 'Fotografe o prato e a IA estima as calorias pela tabela TACO.',
-          onPress: () => abrir('Meals'),
-        };
-
-  const cardSaude: HomeCard = {
-    key: 'saude',
-    title: 'saúde',
-    headline: energy.title,
-    body: energy.description,
-    fact: insight
-      ? null
-      : insightStatus === 'loading'
-        ? 'gerando o insight do dia…'
-        : insightStatus === 'offline'
-          ? 'sem rede, texto do cálculo local'
-          : null,
-    onPress: () => abrir('Health'),
-  };
-
   const bordaParaMenu = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) => g.dx > 12 && Math.abs(g.dy) < Math.abs(g.dx),
@@ -515,7 +465,17 @@ export function HomeScreen() {
         <HomeRings items={rings} />
       </YStack>
 
-      <HomeCarousel cards={[cardTreino, cardNutricao, cardSaude]} />
+      <IndicatorList
+        itens={indicadoresDaHome({
+          hora: hour,
+          agua: { ml: aguaHoje, metaMl: aguaMeta },
+          passos: { hoje: activity.steps ?? null, meta: activity.goal },
+          refeicoes: { quantidade: mealsToday?.length ?? 0, kcalMin, kcalMax, metaKcal },
+          sono: sleep,
+          stress: stressAtual,
+        })}
+        onAbrir={abrir}
+      />
 
       {/* A agenda de movimento entre o carrossel e os instrumentos de hoje:
           o que foi CUMPRIDO, não o que foi planejado — o planejado mora na
