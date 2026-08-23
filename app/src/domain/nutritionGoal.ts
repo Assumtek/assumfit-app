@@ -19,6 +19,8 @@ export type CalorieGoal = {
   goal: number;
   /** 'deficit' | 'surplus' | 'maintain' — o que o objetivo fez com o número. */
   adjustment: 'deficit' | 'surplus' | 'maintain';
+  /** Gasto de repouso (Mifflin-St Jeor), kcal por dia: o que o corpo gasta parado. */
+  bmr: number;
 };
 
 /** Respostas de NUMBER da anamnese chegam como string ("82") ou número. */
@@ -87,5 +89,5 @@ export function calorieGoal(input: {
   if (adjustment === 'deficit') goal = Math.max(goal, bmr);
 
   const arredondar = (v: number) => Math.round(v / 50) * 50;
-  return { tdee: arredondar(tdee), goal: arredondar(goal), adjustment };
+  return { tdee: arredondar(tdee), goal: arredondar(goal), adjustment, bmr: Math.round(bmr) };
 }

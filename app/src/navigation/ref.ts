@@ -14,6 +14,7 @@ export type RootParamList = {
   BioAge: undefined;
   Device: undefined;
   WeeklyReport: undefined;
+  DailyGoals: undefined;
 };
 
 /**

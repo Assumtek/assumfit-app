@@ -233,6 +233,12 @@ export function Sidebar() {
             onPress={() => go('Habits')}
           />
           <Entry
+            name="Metas do dia"
+            detail="anel de calorias e calendário"
+            active={current === 'DailyGoals'}
+            onPress={() => go('DailyGoals')}
+          />
+          <Entry
             name="Resumo da semana"
             detail="todo domingo, com o que ajustar"
             active={current === 'WeeklyReport'}
