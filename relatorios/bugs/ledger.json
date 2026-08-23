@@ -1340,6 +1340,12 @@
       "nota": "Os três anéis (sono, estresse e recuperação) voltaram, agora como bloco da home: Aparência, Personalizar a home, ligue Três anéis e mova para onde quiser. Eles tinham saído do padrão por decisão de produto, e a home configurável existe para não termos que escolher entre duas preferências. O atalho para personalizar também passou a aparecer na própria home, no fim da lista.",
       "versao": "1.0.5 (8)",
       "em": "2026-08-23T20:22:27"
+    },
+    "slack:1787529155.593489": {
+      "commit": "16f4583",
+      "nota": "Feito: os três anéis voltam a ser o padrão da home, e quem não os quiser desliga em Personalizar a home. Sobe na 1.0.5 (8) junto com o resto.",
+      "versao": "1.0.5 (8)",
+      "em": "2026-08-23T20:53:57"
     }
   }
 }
