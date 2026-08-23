@@ -1136,6 +1136,24 @@
       "nota": "O bom dia das 7h30 já era escrito pela IA com o treino do dia; agora ele também existe sem localização (molde local que cita o treino de amanhã), não repete as frases dos últimos dias e cede dez minutos se um lembrete de água ou refeição cair no mesmo horário.",
       "versao": "1.0.5 (5)",
       "em": "2026-08-22T21:35:16"
+    },
+    "AG77eka9Rs_pf8dkMTe4cMU": {
+      "commit": "106a25f",
+      "nota": "Treino do plano feito em outro dia da semana deixa de aparecer como pendente e conta como cumprido.",
+      "versao": "1.0.5 (6)",
+      "em": "2026-08-22T23:04:21"
+    },
+    "ANefq-N6h6MmgCuGBykCuS8": {
+      "commit": "106a25f",
+      "nota": "Causa: em 'Quero acordar às' o alarme era marcado na hora de deitar, não na de acordar. Corrigido; o alarme toca pelo próprio app, mesmo fechado (ele não aparece no app Relógio).",
+      "versao": "1.0.5 (6)",
+      "em": "2026-08-22T23:04:21"
+    },
+    "AMaIc8Kpe6I9D5dUEJAokNA": {
+      "commit": "106a25f",
+      "nota": "Arrastar, redimensionar e girar os blocos já funcionavam (dois dedos giram); agora há guias de centro: perto do meio o bloco encaixa e a linha acende, e o ângulo encaixa em 0° e 90°.",
+      "versao": "1.0.5 (6)",
+      "em": "2026-08-22T23:04:21"
     }
   }
 }
