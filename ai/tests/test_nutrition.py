@@ -43,7 +43,8 @@ async def test_analise_soma_faixas_e_marca_casamento(monkeypatch):
     assert r.foods[0].matched is not None  # TACO decidiu a kcal do arroz
     assert r.foods[1].matched is None  # fora da tabela → faixa do modelo
     assert r.foods[1].kcal_min == 90 and r.foods[1].kcal_max == 150
-    assert r.kcal_total_min == r.foods[0].kcal_min + 90
+    # Total combina as incertezas em quadratura: fica entre a soma dos mínimos e a dos meios.
+    assert r.foods[0].kcal_min + 90 <= r.kcal_total_min <= (r.foods[0].kcal_min + r.foods[0].kcal_max) / 2 + 120
 
 
 @pytest.mark.anyio
@@ -84,8 +85,9 @@ def test_recompute_recalcula_pela_taco_e_preserva_sem_casamento():
     arroz, alien = r.foods
     assert arroz.matched is not None and arroz.kcal_min > 0
     assert alien.matched is None and (alien.kcal_min, alien.kcal_max) == (90, 150)
-    assert r.kcal_total_min == arroz.kcal_min + 90
-    assert r.kcal_total_max == arroz.kcal_max + 150
+    assert arroz.kcal_min + 90 <= r.kcal_total_min <= r.kcal_total_max <= arroz.kcal_max + 150
+    # Mais estreito do que somar os extremos: é o ponto do ajuste.
+    assert (r.kcal_total_max - r.kcal_total_min) < (arroz.kcal_max - arroz.kcal_min) + 60
 
 
 def test_recompute_item_novo_sem_taco_fica_com_zero_e_nao_inventa():

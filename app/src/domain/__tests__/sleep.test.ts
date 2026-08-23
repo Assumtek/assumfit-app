@@ -1,4 +1,4 @@
-import { deepSleepContinuity, nightFrom, sleepScore, spo2DaNoite, dataDaNoite } from '../sleep';
+import { horaHabitualDeAcordar, deepSleepContinuity, nightFrom, sleepScore, spo2DaNoite, dataDaNoite } from '../sleep';
 import type { SleepSegment } from '../types';
 
 /**
@@ -170,5 +170,14 @@ describe('dataDaNoite', () => {
 
   it('soneca da tarde não é madrugada', () => {
     expect(dataDaNoite(local(2026, 8, 20, 14, 0))).toBe('2026-08-20');
+  });
+});
+
+describe('horaHabitualDeAcordar', () => {
+  it('média dos despertares das últimas noites; sem noite, null', () => {
+    const as = (h: number, m: number) => ({ endAt: new Date(2026, 7, 20, h, m).getTime() });
+    expect(horaHabitualDeAcordar([as(6, 40), as(5, 40), as(6, 10)])).toBe(6 * 60 + 10);
+    expect(horaHabitualDeAcordar([{ endAt: null }])).toBeNull();
+    expect(horaHabitualDeAcordar([])).toBeNull();
   });
 });

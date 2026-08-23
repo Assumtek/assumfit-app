@@ -266,3 +266,20 @@ export function horaLocal(ms: number): string {
   const d = new Date(ms);
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
+
+/**
+ * A hora habitual de acordar, em minutos do dia: média dos despertares das
+ * últimas noites com janela. `null` sem noite medida.
+ */
+export function horaHabitualDeAcordar(noites: { endAt?: number | null }[]): number | null {
+  const minutos = noites
+    .map((n) => n.endAt)
+    .filter((t): t is number => typeof t === 'number' && Number.isFinite(t))
+    .slice(0, 7)
+    .map((t) => {
+      const d = new Date(t);
+      return d.getHours() * 60 + d.getMinutes();
+    });
+  if (minutos.length === 0) return null;
+  return Math.round(minutos.reduce((s, m) => s + m, 0) / minutos.length);
+}

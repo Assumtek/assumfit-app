@@ -490,10 +490,8 @@ export function MealsScreen() {
         <YStack marginTop="$lg" marginBottom="$md">
           <Label>{quando(detalhe.at)}</Label>
           <XStack alignItems="baseline" gap="$sm">
-            <Display>
-              {detalhe.kcalMin}–{detalhe.kcalMax}
-            </Display>
-            <Data>kcal</Data>
+            <Display>~{Math.round((detalhe.kcalMin + detalhe.kcalMax) / 2)}</Display>
+            <Data>kcal · faixa {detalhe.kcalMin}–{detalhe.kcalMax}</Data>
           </XStack>
           {m ? <MacroColunas m={m} /> : null}
         </YStack>
@@ -787,8 +785,10 @@ export function MealsScreen() {
       <YStack marginBottom="$xl">
         <HeroCard eyebrow="Resumo de hoje">
           <XStack alignItems="baseline" gap="$sm">
-            <Display>{deHoje.length ? `${kcalMin}–${kcalMax}` : '0'}</Display>
-            <Data>kcal</Data>
+            {/* O número central em destaque; a faixa vira sub-rótulo. "520–780"
+                como número principal lia como imprecisão (testador, 23/08). */}
+            <Display>{deHoje.length ? `~${Math.round((kcalMin + kcalMax) / 2)}` : '0'}</Display>
+            <Data>{deHoje.length ? `kcal · faixa ${kcalMin}–${kcalMax}` : 'kcal'}</Data>
           </XStack>
           {meta ? (
             <YStack gap="$xs">
@@ -871,7 +871,7 @@ export function MealsScreen() {
                     </Data>
                   </YStack>
                   <Data color="$foreground" flexShrink={0}>
-                    {meal.kcalMin}–{meal.kcalMax} kcal
+                    ~{Math.round((meal.kcalMin + meal.kcalMax) / 2)} kcal
                   </Data>
                 </Pressable>
               </Row>

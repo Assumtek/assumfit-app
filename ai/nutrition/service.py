@@ -126,10 +126,20 @@ def recompute_foods(inp: RecomputeInput) -> RecomputeResult:
                     matched=None,
                 )
             )
+    # O total NÃO soma os extremos: as porções são erros independentes, e a
+    # incerteza combinada é a raiz da soma dos quadrados. Um prato de três
+    # itens a ±15 % fica perto de ±9 % no total, em vez de ±15 % (era o que
+    # deixava a faixa "muito ampla", testador, 23/08/2026).
+    meios = [(f.kcal_min + f.kcal_max) / 2 for f in foods]
+    metades = [(f.kcal_max - f.kcal_min) / 2 for f in foods]
+    total_meio = sum(meios)
+    total_metade = (sum(m * m for m in metades)) ** 0.5
+    total_min = max(0, round(total_meio - total_metade))
+    total_max = round(total_meio + total_metade)
     return RecomputeResult(
         foods=foods,
-        kcal_total_min=sum(f.kcal_min for f in foods),
-        kcal_total_max=sum(f.kcal_max for f in foods),
+        kcal_total_min=total_min,
+        kcal_total_max=total_max,
     )
 
 

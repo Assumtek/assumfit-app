@@ -410,10 +410,13 @@ export async function armTrainingNudge(fromTomorrow = false) {
  * sabe fazer: entregar no horário certo. Rearmada a cada abertura do app, e
  * por isso a previsão nunca tem mais de um dia.
  */
-export async function scheduleMorningGreeting(texto: { title: string; body: string }) {
+export async function scheduleMorningGreeting(texto: { title: string; body: string }, horaMin = 7 * 60 + 30) {
   if (!(await ensurePermission())) return;
+  // Na hora em que a pessoa costuma acordar (média das últimas noites que a
+  // pulseira entregou), e não às 7h30 fixas: quem acorda às 5h40 lia o bom
+  // dia com duas horas de atraso (sugestão de testador, 23/08).
   const alvo = new Date(Date.now() + 86_400_000);
-  alvo.setHours(7, 30, 0, 0);
+  alvo.setHours(Math.floor(horaMin / 60), horaMin % 60, 0, 0);
 
   /*
    Conflito de minuto: lembrete de água ou de refeição marcado pela pessoa
@@ -425,11 +428,11 @@ export async function scheduleMorningGreeting(texto: { title: string; body: stri
     if (n.identifier === BOM_DIA) return false;
     const t = n.trigger as { type?: string; hour?: number; minute?: number; date?: number | Date | string; value?: number } | null;
     if (!t) return false;
-    if (t.hour === 7 && t.minute === 30) return true;
+    if (t.hour === alvo.getHours() && t.minute === alvo.getMinutes()) return true;
     const quando = t.date != null ? new Date(t.date) : t.value != null && t.value > 1e12 ? new Date(t.value) : null;
     return quando != null && Math.abs(quando.getTime() - alvo.getTime()) < 60_000;
   });
-  if (colide) alvo.setMinutes(40);
+  if (colide) alvo.setMinutes(alvo.getMinutes() + 10);
 
   await Notifications.cancelScheduledNotificationAsync(BOM_DIA).catch(() => undefined);
   await Notifications.scheduleNotificationAsync({

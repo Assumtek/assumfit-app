@@ -19,8 +19,10 @@ from pathlib import Path
 DATA = Path(__file__).resolve().parent / "data" / "taco.json"
 
 #: Margem da faixa de kcal sobre o valor determinístico: o erro que sobra é o
-#: da porção estimada pela visão, não o da tabela.
-PORTION_MARGIN = 0.25
+#: da porção estimada pela visão, não o da tabela. Era 0,25 e a faixa ficava
+#: larga demais para guiar alguém (testador, 23/08/2026); 0,15 ainda cobre o
+#: erro típico de porção de uma foto.
+PORTION_MARGIN = 0.15
 
 #: Pontuação mínima para aceitar um casamento. Abaixo disso, é outro alimento
 #: com palavras parecidas — e caloria do alimento errado é pior que a faixa
