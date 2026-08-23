@@ -2,8 +2,8 @@ import { YStack } from '@tamagui/stacks';
 import React from 'react';
 
 import { AppIcon } from './AppIcon';
-import { Section, SwitchRow } from './List';
-import { Body, Button, Data } from './ui';
+import { ActionRow, Section, SwitchRow } from './List';
+import { Body, Button, Data, Skeleton } from './ui';
 import {
   comAssumfit,
   comCategoria,
@@ -31,30 +31,78 @@ import { useTheme } from '../theme/ThemeProvider';
  */
 export function BandVibration() {
   const { colors } = useTheme();
-  const [filtro, setFiltro] = React.useState<CategoriaDeAviso[] | null>(null);
+  /** `undefined` carregando; `null` a pulseira não respondeu; `[]` sem categorias. */
+  const [filtro, setFiltro] = React.useState<CategoriaDeAviso[] | null | undefined>(undefined);
+  const [ancs, setAncs] = React.useState<'idle' | 'ok' | 'falhou'>('idle');
   const [salvando, setSalvando] = React.useState(false);
   const [erro, setErro] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    let vivo = true;
-    void ble
-      .getNotificationFilter?.()
-      .then((f) => vivo && setFiltro(f))
-      .catch(() => vivo && setFiltro([]));
-    return () => {
-      vivo = false;
-    };
+  const consultar = React.useCallback(() => {
+    setFiltro(undefined);
+    void (ble.getNotificationFilter?.() ?? Promise.resolve(null))
+      .then((f) => setFiltro(f))
+      .catch(() => setFiltro(null));
   }, []);
+  React.useEffect(() => {
+    consultar();
+  }, [consultar]);
+
+  /*
+   Ligar o ANCS sozinho: é ele que faz o iOS oferecer o emparelhamento e
+   entregar os avisos do app (fim do descanso, fim do alongamento) à
+   pulseira. Existe separado do filtro porque o filtro pode não responder e o
+   ANCS continuar funcionando.
+  */
+  const ligarAncs = async () => {
+    const ok = await ble.enableAncs?.().catch(() => false);
+    setAncs(ok ? 'ok' : 'falhou');
+  };
 
   /*
    Firmware que não responde ao filtro não ganha um interruptor que não faz
    nada. Vale também para o caso de lista vazia: sem categoria nenhuma para
    ligar, não há o que oferecer.
   */
-  if (filtro === null || filtro.length === 0) return null;
-
-  const linhas = linhasParaTela(filtro);
-  if (linhas.length === 0) return null;
+  /*
+   A seção existe SEMPRE. Antes, pulseira que não respondia ao filtro (ou
+   respondia vazio) escondia tudo, e o testador não encontrava a opção que o
+   anúncio citava. Sem filtro, fica o que importa: ligar os avisos do app.
+  */
+  if (filtro === undefined) {
+    return (
+      <Section label="Avisos no pulso">
+        <Skeleton lines={2} />
+      </Section>
+    );
+  }
+  const linhas = filtro ? linhasParaTela(filtro) : [];
+  if (!filtro || linhas.length === 0) {
+    return (
+      <YStack gap="$md">
+        <Section label="Avisos no pulso">
+          <ActionRow
+            icon="bell"
+            title="Ligar avisos do AssumFit no pulso"
+            subtitle={
+              ancs === 'ok'
+                ? 'Ligado. Se o iPhone pedir para emparelhar a pulseira, aceite.'
+                : ancs === 'falhou'
+                  ? 'A pulseira não aceitou. Aproxime o pulso e tente de novo.'
+                  : 'Fim do descanso e do alongamento vibram no pulso, mesmo com a tela apagada.'
+            }
+            onPress={() => void ligarAncs()}
+          />
+          <ActionRow
+            icon="refresh"
+            title={filtro === null ? 'A pulseira não respondeu ao filtro por app' : 'Esta pulseira não expõe filtro por app'}
+            subtitle="Tentar ler de novo"
+            onPress={consultar}
+            last
+          />
+        </Section>
+      </YStack>
+    );
+  }
   const tudo = todasLigadas(filtro);
   const outrosLigado = linhas.find((l) => l.outros)?.enabled ?? false;
 

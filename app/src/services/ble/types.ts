@@ -182,7 +182,8 @@ export interface BleService {
    */
   onMeasureFailure?(listener: (motivo: string) => void): () => void;
   /** O filtro de avisos por categoria. Ver `domain/bandNotifications.ts`. */
-  getNotificationFilter?(): Promise<{ type: number; enabled: boolean }[]>;
+  /** `null` quando a pulseira não respondeu (teto ou recusa); `[]` quando respondeu sem categorias. */
+  getNotificationFilter?(): Promise<{ type: number; enabled: boolean }[] | null>;
   setNotificationFilter?(entries: { type: number; enabled: boolean }[]): Promise<boolean>;
   /**
    * As séries que a PULSEIRA guardou hoje, não as que o app acumulou.

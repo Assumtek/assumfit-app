@@ -785,12 +785,15 @@ export class QCBandService implements BleService {
     return comTeto(QCBand.enableAncs(), TETO_CONSULTA_MS, 'ANCS').catch(() => false);
   }
 
-  async getNotificationFilter(): Promise<{ type: number; enabled: boolean }[]> {
-    if (!QCBand) return [];
+  async getNotificationFilter(): Promise<{ type: number; enabled: boolean }[] | null> {
+    if (!QCBand) return null;
+    // `null` quando a pulseira não responde: a tela precisa distinguir "não
+    // respondeu" de "respondeu vazio". Escondida, a seção inteira sumia e um
+    // testador (Bruno, 22/08) não achou a opção que o anúncio citava.
     const filtro = await comTeto(
       QCBand.getNotificationFilter(),
       TETO_CONSULTA_MS,
-      'filtro de avisos').catch(() => [] as { type: number; enabled: boolean }[]);
+      'filtro de avisos').catch(() => null);
     if (__DEV__) {
       // A SONDAGEM: o cabeçalho documenta um vocabulário fixo sem identificador
       // de app, e é aqui que se vê o que ESTE firmware devolve de fato.
