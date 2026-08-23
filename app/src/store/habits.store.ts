@@ -3,6 +3,9 @@ import { create } from 'zustand';
 import { api, isAuthenticated } from '../services/api.service';
 import { diaCorrente, isoHoje } from '../domain/water';
 import { waterGoalMl, waterGoalReason } from '../domain/waterGoal';
+import { treinoConta } from '../domain/movement';
+import { useUserStore } from './user.store';
+import * as apiFuncs from '../services/api.service';
 import type { Sex } from '../domain/types';
 import {
   DEFAULT_CONTAINERS,
@@ -279,6 +282,10 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
       .catch(() => undefined);
 
     if (!isAuthenticated()) return;
+    // A meta pelo peso e pelo treino de hoje, calculada AQUI e não só na tela
+    // de Água: a Home e o menu liam o padrão de 2,5 L até a pessoa abrir a
+    // tela e voltar (Leonardo, 23/08). Roda em paralelo e não trava o resto.
+    void atualizarMetaPeloCorpo(get);
     try {
       // `date` chega como ISO à meia-noite UTC; cortar os 10 primeiros
       // caracteres devolve exatamente o dia gravado, sem passar pelo fuso.
@@ -325,4 +332,34 @@ async function persist(today: Today): Promise<void> {
   await api
     .put('/habits', { date: today.date, waterMl: today.waterMl })
     .catch(() => undefined);
+}
+
+/**
+ * Peso da anamnese + minutos de treino e esporte de hoje → `refreshGoal`.
+ * A mesma conta da tela de Água; ela continua chamando `refreshGoal` ao abrir,
+ * e então já encontra o valor certo.
+ */
+async function atualizarMetaPeloCorpo(get: () => { refreshGoal: (i: { weightKg: number | null; sex: Sex; activeMinToday: number }) => void }): Promise<void> {
+  try {
+    const inicioDoDia = new Date();
+    inicioDoDia.setHours(0, 0, 0, 0);
+    const [anamnese, execucoes, sessoes] = await Promise.all([
+      apiFuncs.fetchAnamnesis().catch(() => null),
+      apiFuncs.fetchExecutionHistory(1).catch(() => []),
+      apiFuncs.fetchSportSessions(1).catch(() => []),
+    ]);
+    const respostas = anamnese?.answers as { weightKg?: number | string } | undefined;
+    const bruto = respostas?.weightKg;
+    const peso = typeof bruto === 'number' ? bruto : typeof bruto === 'string' && Number.isFinite(Number(bruto)) ? Number(bruto) : null;
+    const vinculadas = new Set(sessoes.map((se) => se.workoutExecutionId).filter((id): id is string => !!id));
+    const minutos =
+      execucoes
+        .filter((e) => treinoConta(e) && new Date(e.startedAt) >= inicioDoDia)
+        .filter((e) => !vinculadas.has(e.id))
+        .reduce((soma, e) => soma + (e.durationSec ?? 0) / 60, 0) +
+      sessoes.filter((se) => new Date(se.startedAt) >= inicioDoDia).reduce((soma, se) => soma + se.durationS / 60, 0);
+    get().refreshGoal({ weightKg: peso, sex: useUserStore.getState().user.sex, activeMinToday: Math.round(minutos) });
+  } catch {
+    // sem rede, fica a meta que já estava
+  }
 }
