@@ -186,7 +186,7 @@ export function HabitsScreen() {
 
       <Sheet open={editandoTotal} onClose={() => setEditandoTotal(false)}>
         <YStack gap="$xs">
-          <RatingText>Total de hoje</RatingText>
+          <RatingText fontWeight="700">Total de hoje</RatingText>
           <Data>Em mililitros. Os registros individuais de hoje são esquecidos, vale o total.</Data>
         </YStack>
         <TextInput
@@ -247,7 +247,7 @@ export function HabitsScreen() {
       <Section label="Hoje">
         <Row last>
           <Body flex={1}>Registros de água</Body>
-          <RatingText>{today.pours.length}</RatingText>
+          <RatingText fontWeight="300">{today.pours.length}</RatingText>
         </Row>
       </Section>
 
@@ -263,7 +263,7 @@ export function HabitsScreen() {
           entra, corrige o volume, sai. */}
       <Sheet open={ajustando} onClose={() => setAjustando(false)}>
         <YStack gap="$xs">
-          <RatingText>Volume dos recipientes</RatingText>
+          <RatingText fontWeight="700">Volume dos recipientes</RatingText>
           <Data>
             Use a medida dos SEUS recipientes, é o que faz o total do dia ser o seu, e não uma
             média de fabricante.

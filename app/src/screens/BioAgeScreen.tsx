@@ -81,11 +81,11 @@ export function BioAgeScreen() {
       <Section label="Aptidão cardiorrespiratória">
         <Row>
           <Body flex={1}>VO₂máx estimado</Body>
-          <RatingText>{bio.vo2max?.toFixed(1).replace('.', ',')}</RatingText>
+          <RatingText fontWeight="300">{bio.vo2max?.toFixed(1).replace('.', ',')}</RatingText>
         </Row>
         <Row last>
           <Body flex={1}>Movimento nos últimos 7 dias</Body>
-          <RatingText>
+          <RatingText fontWeight="300">
             {minutosAtivos == null ? '–' : `${minutosAtivos} min`}
           </RatingText>
         </Row>
@@ -126,7 +126,7 @@ export function BioAgeScreen() {
               <Body color="$foreground">{f.label}</Body>
               <Data>{f.reference}</Data>
             </YStack>
-            <BodyLarge>{f.value}</BodyLarge>
+            <BodyLarge fontWeight="300">{f.value}</BodyLarge>
           </Row>
         ))}
       </Section>

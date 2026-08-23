@@ -145,9 +145,9 @@ export function ConnectScreen() {
                         Dica, não filtro: firmware que não anuncia serviço
                         continua na lista, só sem o destaque. */}
                       {item.alreadyConnected ? (
-                        <Micro color="$primary">já conectado</Micro>
+                        <Micro color="$primary" textTransform="uppercase" letterSpacing={1.6}>já conectado</Micro>
                       ) : isWearable(item.serviceUUIDs) ? (
-                        <Micro color="$primary">wearable</Micro>
+                        <Micro color="$primary" textTransform="uppercase" letterSpacing={1.6}>wearable</Micro>
                       ) : null}
                     </XStack>
                     <Data>

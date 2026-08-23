@@ -134,7 +134,7 @@ export function ConfirmDialog({
               gap="$md"
               maxWidth={420}
             >
-              <RatingText textAlign="center">
+              <RatingText textAlign="center" fontWeight="700">
                 {title}
               </RatingText>
               <Body textAlign="center" marginBottom="$sm">

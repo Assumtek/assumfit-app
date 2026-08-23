@@ -45,7 +45,7 @@ export function SyncProgress() {
   if (syncError) {
     return (
       <YStack gap="$sm">
-        <BodyLarge>A leitura não terminou</BodyLarge>
+        <BodyLarge fontWeight="700">A leitura não terminou</BodyLarge>
         <Body>{syncError}</Body>
       </YStack>
     );
@@ -82,7 +82,7 @@ export function SyncProgress() {
   return (
     <YStack gap="$md">
       <YStack gap="$xs">
-        <BodyLarge>Lendo a memória da pulseira</BodyLarge>
+        <BodyLarge fontWeight="700">Lendo a memória da pulseira</BodyLarge>
         <Body>
           Ela mede sozinha o dia todo e guarda tudo por dentro. Agora estamos trazendo cada
           grandeza, uma por vez, leva cerca de um minuto. Pode manter a tela aberta.

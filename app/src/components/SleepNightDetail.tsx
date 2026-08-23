@@ -119,7 +119,7 @@ export function SleepNightDetail({ sleep }: { sleep: SleepNight }) {
             />
             <Body flex={1}>{p.label}</Body>
             <Data marginRight="$xl">{duration(sleep.phases[p.key])}</Data>
-            <RatingText minWidth={48} textAlign="right">
+            <RatingText minWidth={48} textAlign="right" fontWeight="300">
               {pct(sleep.phases[p.key])}%
             </RatingText>
           </Row>

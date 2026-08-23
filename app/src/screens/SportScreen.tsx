@@ -1450,7 +1450,7 @@ export function SportScreen() {
       >
         {!passoRegistro ? (
           <>
-            <RatingText>Iniciar treino</RatingText>
+            <RatingText fontWeight="700">Iniciar treino</RatingText>
             <OpcaoDeInicio
               icone="dumbbell"
               titulo="Treino guiado"
@@ -1522,7 +1522,7 @@ function EscolhaDeEsporte({
 
   return (
     <>
-      <RatingText>Qual esporte?</RatingText>
+      <RatingText fontWeight="700">Qual esporte?</RatingText>
 
       <XStack
         alignItems="center"
@@ -1579,7 +1579,7 @@ function EscolhaDeEsporte({
                       <Body color="$foreground" numberOfLines={1}>
                         {sport.label}
                       </Body>
-                      <Micro>{sport.gps ? 'com GPS' : 'sem GPS'}</Micro>
+                      <Micro fontWeight="400">{sport.gps ? 'com GPS' : 'sem GPS'}</Micro>
                     </YStack>
                   </Pressable>
                 ))}
@@ -1634,7 +1634,7 @@ function OpcaoDeInicio({
       >
         <Icon name={icone} size={20} color={colors.textMuted} />
         <YStack flex={1} gap={4}>
-          <BodyLarge>{titulo}</BodyLarge>
+          <BodyLarge fontWeight="700">{titulo}</BodyLarge>
           <Data>{detalhe}</Data>
         </YStack>
         <Icon name="arrowRight" size={16} color={colors.textMuted} />

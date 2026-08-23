@@ -66,7 +66,7 @@ export function ExecutionDetailScreen() {
         <Label>
           {quando.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
         </Label>
-        <MetricSm marginTop="$xs">
+        <MetricSm marginTop="$xs" fontWeight="700">
           {detalhe.workoutName}
         </MetricSm>
         {detalhe.muscleGroups.length ? (

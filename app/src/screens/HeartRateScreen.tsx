@@ -71,7 +71,7 @@ export function HeartRateScreen() {
       />
 
       <YStack marginBottom="$xl">
-        <BodyLarge marginBottom="$md">
+        <BodyLarge marginBottom="$md" fontWeight="700">
           {historico.ehHoje ? 'Medições de hoje' : 'Medições do dia'}
         </BodyLarge>
         <DayChart
@@ -97,15 +97,15 @@ export function HeartRateScreen() {
         ) : null}
         <Row>
           <Body flex={1}>Mínima</Body>
-          <RatingText>{min} bpm</RatingText>
+          <RatingText fontWeight="300">{min} bpm</RatingText>
         </Row>
         <Row>
           <Body flex={1}>Atual</Body>
-          <RatingText>{Math.round(latest.heartRate)} bpm</RatingText>
+          <RatingText fontWeight="300">{Math.round(latest.heartRate)} bpm</RatingText>
         </Row>
         <Row last>
           <Body flex={1}>Máxima</Body>
-          <RatingText>{max} bpm</RatingText>
+          <RatingText fontWeight="300">{max} bpm</RatingText>
         </Row>
       </Section>
 

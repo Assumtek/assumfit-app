@@ -40,7 +40,7 @@ export function Readout({
       accessibilityLabel={`${valor}${unidade ? ` ${unidade}` : ''}, ${rotulo}`}
     >
       <XStack alignItems="baseline" gap={4}>
-        <Title>{valor}</Title>
+        <Title fontWeight="300">{valor}</Title>
         {unidade ? <Data>{unidade}</Data> : null}
       </XStack>
       <Data numberOfLines={1}>

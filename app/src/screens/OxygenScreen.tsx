@@ -69,7 +69,7 @@ export function OxygenScreen() {
       />
 
       <YStack marginBottom="$xl">
-        <BodyLarge marginBottom="$md">
+        <BodyLarge marginBottom="$md" fontWeight="700">
           {historico.ehHoje ? 'Medições de hoje' : 'Medições do dia'}
         </BodyLarge>
         <DayChart

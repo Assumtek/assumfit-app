@@ -186,7 +186,7 @@ export function ActivityScreen() {
         {rows.map((row, i) => (
           <Row key={row.label} last={i === rows.length - 1}>
             <Body flex={1}>{row.label}</Body>
-            <RatingText>{row.value}</RatingText>
+            <RatingText fontWeight="300">{row.value}</RatingText>
           </Row>
         ))}
       </Section>

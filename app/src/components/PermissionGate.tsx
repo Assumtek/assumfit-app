@@ -77,7 +77,7 @@ export function PermissionGate({
     <Card>
       <XStack alignItems="center" gap="$md" marginBottom="$md">
         <Icon name={copy.icone as never} size={20} color={colors.textMuted} />
-        <BodyLarge flex={1}>
+        <BodyLarge flex={1} fontWeight="700">
           {copy.titulo}
         </BodyLarge>
       </XStack>

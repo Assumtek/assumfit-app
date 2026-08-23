@@ -62,7 +62,7 @@ export function RangeSheet({
   return (
     <Sheet open={open} onClose={onClose}>
       <YStack gap="$xs">
-        <RatingText>Período personalizado</RatingText>
+        <RatingText fontWeight="700">Período personalizado</RatingText>
         <Body>Os dois dias entram no período.</Body>
       </YStack>
       <XStack gap="$lg">
