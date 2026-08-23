@@ -5,7 +5,8 @@ import { publicarTreinoDeHoje, type TreinoDoWidget } from '../../modules/widgetb
 import { workoutMeta } from '../domain/workout';
 
 import { ble } from '../services/ble';
-import { armTrainingNudge, cancelRestEnd, scheduleRestEnd } from '../services/notifications.service';
+import { armTrainingNudge, cancelRestEnd, scheduleMorningGreeting, scheduleRestEnd } from '../services/notifications.service';
+import { diaDeAmanha, textoMatinalLocal } from '../domain/morningGreeting';
 
 import {
   cancelExecution as apiCancel,
@@ -213,6 +214,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
     try {
       const [plan, execution] = await Promise.all([fetchActivePlan(), fetchCurrentExecution()]);
       set({ plan, execution });
+      void armarBomDiaLocal();
 
       /*
        Publica o treino do dia para o widget.
@@ -428,4 +430,18 @@ function paraWidget(plan: Awaited<ReturnType<typeof fetchActivePlan>>): TreinoDo
     minutos: treino.estimatedDuration ?? null,
     descanso: false,
   };
+}
+
+/**
+ * O bom dia de amanhã pelo molde local, com o plano que está na store.
+ *
+ * Roda ao carregar o plano e quando a redação da IA falha. Se a IA já armou
+ * o de amanhã, o serviço ignora esta chamada; se a IA vier depois, ela
+ * substitui. Assim a manhã nunca fica em silêncio por falta de localização
+ * ou de rede, que era o buraco: o bom dia só existia com previsão do tempo.
+ */
+export async function armarBomDiaLocal(): Promise<void> {
+  const plan = useWorkoutStore.getState().plan;
+  const amanha = diaDeAmanha(plan && plan !== ('loading' as unknown) ? (plan as { today: string; days: { dayOfWeek: string; dayType: string; workout?: { name: string } | null }[] }) : null);
+  await scheduleMorningGreeting(textoMatinalLocal(amanha, new Date(Date.now() + 86_400_000)), 'local').catch(() => undefined);
 }

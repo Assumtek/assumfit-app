@@ -65,7 +65,10 @@ nunca "pro".
 6. Se a mensagem disser que há treino marcado, a frase pode convidar para ele. \
 Se disser que é dia de descanso, NÃO empurre treino.
 7. Nunca escreva valor biométrico no texto: a tela de bloqueio é vista por quem \
-passa perto. Temperatura do tempo pode; batimento, pressão e oxigenação, não."""
+passa perto. Temperatura do tempo pode; batimento, pressão e oxigenação, não.
+8. A mensagem será lida NA MANHÃ do dia em questão: escreva "hoje", nunca "amanhã".
+9. Se a mensagem listar frases recentes, não repita nenhuma delas, nem a estrutura.
+10. Nunca use travessão: separe com vírgula, dois-pontos ou ponto."""
 
 
 @dataclass(frozen=True)
@@ -73,8 +76,8 @@ class MorningFacts:
     """Os fatos da manhã que o modelo pode usar, e nada além deles."""
 
     #: Previsão para as 7h de amanhã, em graus Celsius, já arredondada.
-    temperature_c: int
-    humidity_pct: int
+    temperature_c: int | None
+    humidity_pct: int | None
     #: Há treino marcado no plano para amanhã.
     trains_tomorrow: bool
     #: Nome do treino de amanhã, quando houver ("Corrida — tiros curtos").
@@ -83,6 +86,8 @@ class MorningFacts:
     streak_days: int = 0
     #: Cidade, para a frase soar de quem está aqui e não de um servidor.
     city: str | None = None
+    #: Os últimos textos entregues: o modelo não pode repetir nenhum.
+    recent: tuple[str, ...] = ()
 
 
 def fallback_morning(f: MorningFacts) -> dict:
@@ -93,6 +98,12 @@ def fallback_morning(f: MorningFacts) -> dict:
     coerente, e um molde honesto vale mais que silêncio.
     """
     t = f.temperature_c
+    if t is None:
+        if f.trains_tomorrow:
+            corpo = f"Hoje tem {f.workout_name}. Comece pelo primeiro exercício e o resto vem." if f.workout_name else "Hoje é dia de treino no plano. Comece cedo e o dia agradece."
+        else:
+            corpo = "Dia de recuperar. Movimento leve e água contam a favor."
+        return {"title": "Bom dia", "body": corpo}
     if t < 15:
         corpo = (
             f"{t}° lá fora. O treino de hoje conta em dobro."
@@ -117,9 +128,13 @@ def fallback_morning(f: MorningFacts) -> dict:
 
 
 def _prompt(f: MorningFacts) -> str:
-    linhas = [
-        f"Previsão para as 7h de amanhã: {f.temperature_c}°C, umidade {f.humidity_pct}%.",
-    ]
+    linhas = (
+        [f"Previsão para as 7h de amanhã: {f.temperature_c}°C, umidade {f.humidity_pct}%."]
+        if f.temperature_c is not None and f.humidity_pct is not None
+        else ["Sem previsão do tempo para amanhã."]
+    )
+    if f.recent:
+        linhas.append("Frases recentes, que NÃO podem se repetir: " + " | ".join(f.recent))
     if f.city:
         linhas.append(f"Cidade: {f.city}.")
     if f.trains_tomorrow:

@@ -69,11 +69,14 @@ insightsRoutes.get(
 insightsRoutes.get(
   '/morning',
   asyncRoute<AuthedRequest>(async (req, res) => {
-    const { temperature, humidity, city } = z
+    // Previsão opcional: sem localização o bom dia continua existindo, só
+    // sem o tempo. `recent` são os últimos textos entregues, para não repetir.
+    const { temperature, humidity, city, recent } = z
       .object({
-        temperature: z.coerce.number().min(-30).max(60),
-        humidity: z.coerce.number().min(0).max(100),
+        temperature: z.coerce.number().min(-30).max(60).optional(),
+        humidity: z.coerce.number().min(0).max(100).optional(),
         city: z.string().max(80).optional(),
+        recent: z.string().max(2000).optional(),
       })
       .parse(req.query);
 
@@ -102,8 +105,9 @@ insightsRoutes.get(
       const { data } = await axios.post(
         `${env.AI_SERVICE_URL}/insights/morning`,
         {
-          temperature_c: Math.round(temperature),
-          humidity_pct: Math.round(humidity),
+          temperature_c: temperature == null ? null : Math.round(temperature),
+          humidity_pct: humidity == null ? null : Math.round(humidity),
+          recent: recent ? recent.split('\u001f').filter(Boolean).slice(0, 7) : [],
           trains_tomorrow: treina,
           workout_name: diaDoPlano?.workout?.name ?? null,
           streak_days: await sequenciaDeMovimento(req.userId, user.tzOffsetMin),

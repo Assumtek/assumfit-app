@@ -410,10 +410,32 @@ export async function armTrainingNudge(fromTomorrow = false) {
  * sabe fazer: entregar no horário certo. Rearmada a cada abertura do app, e
  * por isso a previsão nunca tem mais de um dia.
  */
-export async function scheduleMorningGreeting(texto: { title: string; body: string }) {
+/** Quem armou o bom dia de amanhã: a IA ganha do molde local, nunca o contrário. */
+let bomDiaDaIAPara: string | null = null;
+
+export async function scheduleMorningGreeting(texto: { title: string; body: string }, origem: 'ia' | 'local' = 'ia') {
   if (!(await ensurePermission())) return;
   const alvo = new Date(Date.now() + 86_400_000);
   alvo.setHours(7, 30, 0, 0);
+  const chave = alvo.toDateString();
+  if (origem === 'local' && bomDiaDaIAPara === chave) return;
+  if (origem === 'ia') bomDiaDaIAPara = chave;
+
+  /*
+   Conflito de minuto: lembrete de água ou de refeição marcado pela pessoa
+   às 7h30 chegaria junto com o bom dia, e o iOS empilha os dois. O bom dia
+   cede dez minutos; o lembrete é escolha dela, o horário do bom dia é nosso.
+  */
+  const agendadas = await Notifications.getAllScheduledNotificationsAsync().catch(() => []);
+  const colide = agendadas.some((n) => {
+    if (n.identifier === BOM_DIA) return false;
+    const t = n.trigger as { type?: string; hour?: number; minute?: number; date?: number | Date | string; value?: number } | null;
+    if (!t) return false;
+    if (t.hour === 7 && t.minute === 30) return true;
+    const quando = t.date != null ? new Date(t.date) : t.value != null && t.value > 1e12 ? new Date(t.value) : null;
+    return quando != null && Math.abs(quando.getTime() - alvo.getTime()) < 60_000;
+  });
+  if (colide) alvo.setMinutes(40);
 
   await Notifications.cancelScheduledNotificationAsync(BOM_DIA).catch(() => undefined);
   await Notifications.scheduleNotificationAsync({

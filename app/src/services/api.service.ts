@@ -1095,12 +1095,15 @@ export async function fetchMorningGreeting(input: {
   temperature: number;
   humidity: number;
   city: string | null;
+  /** Os últimos textos entregues, para o modelo não repetir. */
+  recent?: string[];
 }): Promise<MorningGreeting> {
   const { data } = await api.get<MorningGreeting>('/insights/morning', {
     params: {
       temperature: Math.round(input.temperature),
       humidity: Math.round(input.humidity),
       city: input.city ?? undefined,
+      recent: input.recent?.length ? input.recent.slice(0, 7).join('\u001f') : undefined,
     },
   });
   return data;

@@ -3,6 +3,8 @@ import { create } from 'zustand';
 
 import { api, fetchMorningForecast, fetchMorningGreeting, isAuthenticated } from '../services/api.service';
 import { scheduleMorningGreeting } from '../services/notifications.service';
+import { useAlertsStore } from './alerts.store';
+import { armarBomDiaLocal } from './workout.store';
 
 /**
  * Checa o lado NATIVO antes de tocar no pacote JS.
@@ -166,10 +168,19 @@ export const useAmbientStore = create<AmbientState>((set, get) => ({
             temperature: previsao.temperatureC,
             humidity: previsao.humidityPct,
             city: get().city,
+            // Os bons-dias já entregues: o modelo recebe para não repetir
+            // (pedido de testador, 22/08).
+            recent: useAlertsStore
+              .getState()
+              .feed.filter((n) => n.titulo === 'Bom dia')
+              .slice(0, 7)
+              .map((n) => n.corpo),
           });
-          await scheduleMorningGreeting(texto);
+          await scheduleMorningGreeting(texto, 'ia');
         } catch {
-          // sem previsão ou sem servidor, mantém o que já estava agendado
+          // Sem previsão ou sem servidor, o molde local garante a manhã: cita
+          // o treino de amanhã pelo plano que o aparelho já tem.
+          await armarBomDiaLocal();
         }
       })();
     } catch {

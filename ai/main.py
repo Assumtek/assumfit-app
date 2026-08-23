@@ -221,12 +221,13 @@ def energy_insight(data: EnergyInput) -> dict:
 class MorningInput(BaseModel):
     """Os fatos da manhã seguinte, apurados pelo backend e pelo app."""
 
-    temperature_c: int = Field(ge=-30, le=60)
-    humidity_pct: int = Field(ge=0, le=100)
+    temperature_c: int | None = Field(default=None, ge=-30, le=60)
+    humidity_pct: int | None = Field(default=None, ge=0, le=100)
     trains_tomorrow: bool = False
     workout_name: str | None = Field(default=None, max_length=120)
     streak_days: int = Field(default=0, ge=0, le=3650)
     city: str | None = Field(default=None, max_length=80)
+    recent: list[str] = Field(default_factory=list, max_length=7)
 
 
 @app.post("/insights/morning")
@@ -245,6 +246,7 @@ def morning(data: MorningInput) -> dict:
             workout_name=data.workout_name,
             streak_days=data.streak_days,
             city=data.city,
+            recent=tuple(data.recent),
         )
     )
 

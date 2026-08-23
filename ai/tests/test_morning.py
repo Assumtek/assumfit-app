@@ -70,3 +70,13 @@ class TestValidacao:
     def test_recusa_sequencia_inflada(self):
         f = fatos(streak_days=5)
         assert not _valido({"title": "Bom dia", "body": "50 dias seguidos."}, f)
+
+
+def test_molde_sem_previsao_cita_o_treino():
+    from models.morning import MorningFacts, fallback_morning
+
+    com = fallback_morning(MorningFacts(temperature_c=None, humidity_pct=None, trains_tomorrow=True, workout_name="Corpo Inteiro B"))
+    sem = fallback_morning(MorningFacts(temperature_c=None, humidity_pct=None, trains_tomorrow=False))
+    assert "Corpo Inteiro B" in com["body"]
+    assert "treino" not in sem["body"].lower() or "recuperar" in sem["body"]
+    assert "—" not in com["body"] + sem["body"]
