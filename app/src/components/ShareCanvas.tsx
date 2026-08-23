@@ -39,6 +39,7 @@ export function BlocoEditavel({
   visivel,
   selecionado,
   onSelecionar,
+  onGuia,
   children,
 }: {
   x: number;
@@ -46,8 +47,11 @@ export function BlocoEditavel({
   visivel: boolean;
   selecionado: boolean;
   onSelecionar: () => void;
+  /** Guias de centro acesas enquanto o bloco está encaixado (vertical, horizontal). */
+  onGuia?: (g: { v: boolean; h: boolean }) => void;
   children: React.ReactNode;
 }) {
+  const tamanho = useRef({ w: 0, h: 0 });
   const baseX = useRef(x);
   const baseY = useRef(y);
   const baseEscala = useRef(1);
@@ -68,16 +72,34 @@ export function BlocoEditavel({
    Foi o crash do "compartilhar minha saúde" e o do "incluir foto" (ago/2026),
    confirmado no dSYM: touchesBegan → sendEventForReanimated → WorkletRuntime.
   */
+  /*
+   Encaixe no centro, como o story do Instagram (pedido de testador, 22/08):
+   perto do meio do canvas, o bloco gruda e a guia acende; o ângulo gruda em
+   0° e 90°. O limiar é em pontos do canvas, não da tela.
+  */
+  const IMA = 10;
+  const encaixe = (px: number, py: number) => {
+    const { w, h } = tamanho.current;
+    const cx = px + w / 2;
+    const cy = py + h / 2;
+    const v = w > 0 && Math.abs(cx - CANVAS_WIDTH / 2) < IMA;
+    const hh = h > 0 && Math.abs(cy - CANVAS_HEIGHT / 2) < IMA;
+    return { x: v ? CANVAS_WIDTH / 2 - w / 2 : px, y: hh ? CANVAS_HEIGHT / 2 - h / 2 : py, v, h: hh };
+  };
   const arrastar = Gesture.Pan()
     .runOnJS(true)
     .onBegin(() => onSelecionar())
     .onUpdate((e) => {
-      tx.setValue(baseX.current + e.translationX);
-      ty.setValue(baseY.current + e.translationY);
+      const p = encaixe(baseX.current + e.translationX, baseY.current + e.translationY);
+      tx.setValue(p.x);
+      ty.setValue(p.y);
+      onGuia?.({ v: p.v, h: p.h });
     })
     .onEnd((e) => {
-      baseX.current += e.translationX;
-      baseY.current += e.translationY;
+      const p = encaixe(baseX.current + e.translationX, baseY.current + e.translationY);
+      baseX.current = p.x;
+      baseY.current = p.y;
+      onGuia?.({ v: false, h: false });
     });
 
   const beliscar = Gesture.Pinch()
@@ -91,11 +113,16 @@ export function BlocoEditavel({
       baseEscala.current = Math.min(3, Math.max(0.4, baseEscala.current * e.scale));
     });
 
+  const anguloEncaixado = (a: number) => {
+    const passo = Math.PI / 2;
+    const perto = Math.round(a / passo) * passo;
+    return Math.abs(a - perto) < 0.08 ? perto : a;
+  };
   const girar = Gesture.Rotation()
     .runOnJS(true)
-    .onUpdate((e) => giro.setValue(baseGiro.current + e.rotation))
+    .onUpdate((e) => giro.setValue(anguloEncaixado(baseGiro.current + e.rotation)))
     .onEnd((e) => {
-      baseGiro.current += e.rotation;
+      baseGiro.current = anguloEncaixado(baseGiro.current + e.rotation);
     });
 
   const gesto = Gesture.Simultaneous(arrastar, beliscar, girar);
@@ -105,6 +132,9 @@ export function BlocoEditavel({
   return (
     <GestureDetector gesture={gesto}>
       <Animated.View
+        onLayout={(e) => {
+          tamanho.current = { w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height };
+        }}
         style={{
           position: 'absolute',
           left: 0,
@@ -189,5 +219,16 @@ export function FotoDeFundo({ uri, ativa }: { uri: string; ativa: boolean }) {
         }}
       />
     </GestureDetector>
+  );
+}
+
+/** As duas linhas de centro do canvas, acesas só enquanto um bloco está encaixado. */
+export function GuiasDeCentro({ v, h }: { v: boolean; h: boolean }) {
+  if (!v && !h) return null;
+  return (
+    <>
+      {v ? <YStack position="absolute" left={CANVAS_WIDTH / 2 - 0.5} top={0} width={1} height={CANVAS_HEIGHT} backgroundColor="$primary" opacity={0.8} pointerEvents="none" /> : null}
+      {h ? <YStack position="absolute" top={CANVAS_HEIGHT / 2 - 0.5} left={0} height={1} width={CANVAS_WIDTH} backgroundColor="$primary" opacity={0.8} pointerEvents="none" /> : null}
+    </>
   );
 }

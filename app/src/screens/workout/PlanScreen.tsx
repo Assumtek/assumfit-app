@@ -9,7 +9,7 @@ import { TrainingPanel } from '../../components/TrainingPanel';
 import { WeekRail } from '../../components/WeekRail';
 import { Body, Button, Data, Headline, Skeleton } from '../../components/ui';
 import { QuickMenu } from './QuickMenu';
-import { movementMinutes } from '../../domain/movement';
+import { movementMinutes, treinoConta } from '../../domain/movement';
 import { treinoPendente, montarSemanaDeTreino, type DiaDeTreino } from '../../domain/trainingWeek';
 import {
   DAY_LABEL,
@@ -61,6 +61,7 @@ export function PlanScreen() {
    ainda desenha o previsto: o plano vem do store, que tem cache.
   */
   const [minutos, setMinutos] = useState<Map<string, number>>(() => new Map());
+  const [feitos, setFeitos] = useState<ReadonlySet<string>>(new Set());
 
   const carregar = useCallback(async () => {
     await refresh();
@@ -69,6 +70,12 @@ export function PlanScreen() {
       api.fetchSportSessions(30).catch(() => null),
     ]);
     if (execucoes || sessoes) setMinutos(movementMinutes(execucoes ?? [], sessoes ?? []));
+    // Treinos do plano já feitos nesta semana, por nome: é o que tira a
+    // pendência de um dia cujo treino foi feito em outro.
+    const segunda = new Date();
+    segunda.setHours(0, 0, 0, 0);
+    segunda.setDate(segunda.getDate() - ((segunda.getDay() + 6) % 7));
+    setFeitos(new Set((execucoes ?? []).filter((e) => treinoConta(e) && new Date(e.startedAt) >= segunda).map((e) => e.workoutName)));
   }, [refresh]);
 
   useEffect(() => {
@@ -78,8 +85,8 @@ export function PlanScreen() {
   const puxar = usePullRefresh(carregar);
 
   const semana = useMemo(
-    () => montarSemanaDeTreino(plan, minutos, new Date()),
-    [plan, minutos]);
+    () => montarSemanaDeTreino(plan, minutos, new Date(), feitos),
+    [plan, minutos, feitos]);
 
   /*
    O dia aberto na leitura. `null` significa "siga o hoje" — sem isso, a tela

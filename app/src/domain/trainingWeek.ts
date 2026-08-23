@@ -80,7 +80,13 @@ export type SemanaDeTreino = {
 export function montarSemanaDeTreino(
   plano: { days: DiaDoPlano[]; today: string } | null,
   minutosPorDia: Map<string, number>,
-  hoje: Date): SemanaDeTreino {
+  hoje: Date,
+  /**
+   * Nomes dos treinos do plano já executados NESTA semana, em qualquer dia.
+   * O treino de sexta feito no sábado não é pendência: um testador (22/08)
+   * viu "Fazer o de sexta que ficou" com o de sexta recém-concluído.
+   */
+  feitosNaSemana: ReadonlySet<string> = new Set()): SemanaDeTreino {
   const segunda = new Date(hoje);
   segunda.setHours(0, 0, 0, 0);
   segunda.setDate(segunda.getDate() - ((segunda.getDay() + 6) % 7));
@@ -113,13 +119,20 @@ export function montarSemanaDeTreino(
   // perto da meia-noite — por isso é marcado depois, olhando a posição de hoje.
   const posicaoDeHoje = dias.findIndex((d) => d.ehHoje);
   dias.forEach((d, i) => {
-    d.pendente = !!d.planejado && d.cumprido === 0 && !d.futuro && posicaoDeHoje >= 0 && i < posicaoDeHoje;
+    d.pendente =
+      !!d.planejado &&
+      d.cumprido === 0 &&
+      !feitosNaSemana.has(d.planejado.name) &&
+      !d.futuro &&
+      posicaoDeHoje >= 0 &&
+      i < posicaoDeHoje;
   });
 
   return {
     dias,
     previstos: dias.filter((d) => d.planejado).length,
-    cumpridos: dias.filter((d) => d.planejado && d.cumprido > 0).length,
+    // Feito no próprio dia, ou em outro dia da semana: cumprido dos dois jeitos.
+    cumpridos: dias.filter((d) => d.planejado && (d.cumprido > 0 || feitosNaSemana.has(d.planejado.name))).length,
     minutos: dias.reduce((soma, d) => soma + d.cumprido, 0),
   };
 }

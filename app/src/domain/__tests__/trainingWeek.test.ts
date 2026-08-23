@@ -197,3 +197,21 @@ describe('treinoPendente', () => {
     expect(semana.dias.find((d) => d.weekday === 'TUESDAY')?.pendente).toBe(false);
   });
 });
+
+describe('treino feito em outro dia da semana', () => {
+  it('o de sexta feito no sábado deixa de ser pendente', () => {
+    const sabado = new Date(2026, 7, 22, 22);
+    const plano = {
+      today: 'SATURDAY',
+      days: [
+        { id: 'f', dayOfWeek: 'FRIDAY', dayType: 'WORKOUT', workout: { id: 'w', name: 'Corpo Inteiro C', estimatedDuration: 45 } },
+        { id: 's', dayOfWeek: 'SATURDAY', dayType: 'OFF', workout: null },
+      ],
+    } as never;
+    const semPista = montarSemanaDeTreino(plano, new Map(), sabado);
+    expect(treinoPendente(semPista)?.weekday).toBe('FRIDAY');
+    const comFeito = montarSemanaDeTreino(plano, new Map(), sabado, new Set(['Corpo Inteiro C']));
+    expect(treinoPendente(comFeito)).toBeNull();
+    expect(comFeito.cumpridos).toBe(1);
+  });
+});

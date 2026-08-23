@@ -11,13 +11,7 @@ import type { GeoPoint, Sport } from '../domain/sport';
 import { paceMinPerKm, sportClock } from '../domain/sport';
 import { Icon } from './Icon';
 import { LogoType } from './Logo';
-import {
-  BlocoEditavel,
-  CANVAS_HEIGHT,
-  CANVAS_WIDTH,
-  EXPORT_WIDTH,
-  FotoDeFundo,
-} from './ShareCanvas';
+import { BlocoEditavel, CANVAS_HEIGHT, CANVAS_WIDTH, EXPORT_WIDTH, FotoDeFundo, GuiasDeCentro } from './ShareCanvas';
 import { Button, Data, Heading, Label, Micro, Subtitle } from './ui';
 
 /**
@@ -80,6 +74,7 @@ export function SportShare({
         'marca',
       ]));
   const [selecionado, setSelecionado] = useState<BlocoId | null>(null);
+  const [guia, setGuia] = useState({ v: false, h: false });
   const [ocupado, setOcupado] = useState(false);
 
   const pace = dist ? paceMinPerKm(dist, elapsed) : null;
@@ -238,6 +233,7 @@ export function SportShare({
             backgroundColor="#0E0A22"
           >
             {foto ? <FotoDeFundo uri={foto} ativa={selecionado === null} /> : null}
+            <GuiasDeCentro v={guia.v} h={guia.h} />
             {foto ? (
               <YStack
                 position="absolute"
@@ -251,6 +247,7 @@ export function SportShare({
             ) : null}
 
             <BlocoEditavel
+              onGuia={setGuia}
               x={18}
               y={64}
               visivel={ver('selo')}
@@ -272,6 +269,7 @@ export function SportShare({
             </BlocoEditavel>
 
             <BlocoEditavel
+              onGuia={setGuia}
               x={18}
               y={96}
               visivel={ver('modalidade')}
@@ -290,6 +288,7 @@ export function SportShare({
 
             {temTracado ? (
               <BlocoEditavel
+                onGuia={setGuia}
                 x={38}
                 y={128}
                 visivel={ver('tracado')}
@@ -301,6 +300,7 @@ export function SportShare({
             ) : null}
 
             <BlocoEditavel
+              onGuia={setGuia}
               x={18}
               y={330}
               visivel={ver('tempo')}
@@ -312,6 +312,7 @@ export function SportShare({
 
             {dist ? (
               <BlocoEditavel
+                onGuia={setGuia}
                 x={103}
                 y={330}
                 visivel={ver('distancia')}
@@ -324,6 +325,7 @@ export function SportShare({
 
             {pace ? (
               <BlocoEditavel
+                onGuia={setGuia}
                 x={188}
                 y={330}
                 visivel={ver('ritmo')}
@@ -335,6 +337,7 @@ export function SportShare({
             ) : null}
 
             <BlocoEditavel
+              onGuia={setGuia}
               x={18}
               y={372}
               visivel={ver('kcal')}
@@ -346,6 +349,7 @@ export function SportShare({
 
             {avgHr ? (
               <BlocoEditavel
+                onGuia={setGuia}
                 x={128}
                 y={372}
                 visivel={ver('bpm')}
@@ -357,6 +361,7 @@ export function SportShare({
             ) : null}
 
             <BlocoEditavel
+              onGuia={setGuia}
               x={18}
               y={410}
               visivel={ver('data')}
@@ -369,6 +374,7 @@ export function SportShare({
             </BlocoEditavel>
 
             <BlocoEditavel
+              onGuia={setGuia}
               x={18}
               y={436}
               visivel={ver('marca')}

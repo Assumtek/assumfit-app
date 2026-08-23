@@ -12,13 +12,7 @@ import { captureRef } from 'react-native-view-shot';
 import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
 import { LogoType } from '../../components/Logo';
-import {
-  BlocoEditavel,
-  CANVAS_HEIGHT,
-  CANVAS_WIDTH,
-  EXPORT_WIDTH,
-  FotoDeFundo,
-} from '../../components/ShareCanvas';
+import { BlocoEditavel, CANVAS_HEIGHT, CANVAS_WIDTH, EXPORT_WIDTH, FotoDeFundo, GuiasDeCentro } from '../../components/ShareCanvas';
 import { Button, Data, Heading, Label, Micro, Subtitle } from '../../components/ui';
 import { formatDuration } from '../../domain/workout';
 
@@ -111,6 +105,7 @@ export function WorkoutShareScreen() {
   const [visiveis, setVisiveis] = useState<Set<BlocoId>>(
     () => new Set<BlocoId>(['selo', 'nome', 'duracao', 'exercicios', 'data', 'marca']));
   const [selecionado, setSelecionado] = useState<BlocoId | null>(null);
+  const [guia, setGuia] = useState({ v: false, h: false });
   const [ocupado, setOcupado] = useState(false);
 
   const alternar = (id: BlocoId) =>
@@ -260,6 +255,7 @@ export function WorkoutShareScreen() {
             backgroundColor="#0E0A22"
           >
             {foto ? <FotoDeFundo uri={foto} ativa={selecionado === null} /> : null}
+            <GuiasDeCentro v={guia.v} h={guia.h} />
             {foto ? (
               /*
                O véu sobre a foto tem DOIS pesos: uniforme, para o título no
@@ -281,6 +277,7 @@ export function WorkoutShareScreen() {
             ) : null}
 
             <BlocoEditavel
+              onGuia={setGuia}
               x={18}
               y={64}
               visivel={ver('selo')}
@@ -302,6 +299,7 @@ export function WorkoutShareScreen() {
             </BlocoEditavel>
 
             <BlocoEditavel
+              onGuia={setGuia}
               x={18}
               y={96}
               visivel={ver('nome')}
@@ -320,6 +318,7 @@ export function WorkoutShareScreen() {
 
             {(params.metricas ?? []).slice(0, 3).map((m, i) => (
               <BlocoEditavel
+                onGuia={setGuia}
                 key={m.rotulo}
                 x={[18, 110, 190][i]}
                 y={330}
@@ -333,6 +332,7 @@ export function WorkoutShareScreen() {
 
             {params.durationSec && !params.metricas ? (
               <BlocoEditavel
+                onGuia={setGuia}
                 x={18}
                 y={330}
                 visivel={ver('duracao')}
@@ -345,6 +345,7 @@ export function WorkoutShareScreen() {
 
             {params.exercises && !params.metricas ? (
               <BlocoEditavel
+                onGuia={setGuia}
                 x={110}
                 y={330}
                 visivel={ver('exercicios')}
@@ -357,6 +358,7 @@ export function WorkoutShareScreen() {
 
             {params.volumeKg && !params.metricas ? (
               <BlocoEditavel
+                onGuia={setGuia}
                 x={190}
                 y={330}
                 visivel={ver('volume')}
@@ -368,6 +370,7 @@ export function WorkoutShareScreen() {
             ) : null}
 
             <BlocoEditavel
+              onGuia={setGuia}
               x={18}
               y={402}
               visivel={ver('data')}
@@ -380,6 +383,7 @@ export function WorkoutShareScreen() {
             </BlocoEditavel>
 
             <BlocoEditavel
+              onGuia={setGuia}
               x={18}
               y={430}
               visivel={ver('marca')}

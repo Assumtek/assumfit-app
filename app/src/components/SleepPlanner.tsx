@@ -152,7 +152,7 @@ export function SleepPlanner({ horaDeDormirHabitual }: { horaDeDormirHabitual?: 
         title="Definir despertador"
         variant="secondary"
         icon={<Icon name="clock" size={16} color={colors.text} />}
-        onPress={() => void definirAlarme(opcaoEscolhida, modo)}
+        onPress={() => void definirAlarme(opcaoEscolhida, modo, acordarMin)}
       />
 
       <Data>
@@ -280,10 +280,18 @@ function Passo({
  * expõe nada equivalente: o máximo honesto é abrir o app Relógio com o horário
  * dito em voz alta pela mensagem, para a pessoa criar em dois toques.
  */
-async function definirAlarme(opcao: SleepOption, modo: Modo) {
-  const hora = Math.floor(opcao.minutes / 60);
-  const minuto = opcao.minutes % 60;
-  const titulo = modo === 'acordar-as' ? 'Hora de deitar' : 'AssumFit';
+async function definirAlarme(opcao: SleepOption, modo: Modo, acordarMin: number) {
+  /*
+   O despertador é a hora de ACORDAR nos dois modos. Em "Quero acordar às" a
+   opção escolhida é a hora de deitar, e o alarme ia para ela: um testador
+   (Bruno, 22/08) marcou 23:45 querendo acordar às 9h. A hora de deitar é
+   orientação na tela; o alarme toca de manhã.
+  */
+  const alvoMin = modo === 'acordar-as' ? acordarMin : opcao.minutes;
+  const hora = Math.floor(alvoMin / 60);
+  const minuto = alvoMin % 60;
+  const rotulo = formatMinutes(alvoMin);
+  const titulo = 'Hora de acordar';
 
   if (Platform.OS === 'android') {
     try {
@@ -297,7 +305,7 @@ async function definirAlarme(opcao: SleepOption, modo: Modo) {
       ]);
       return;
     } catch {
-      Alert.alert('Não foi possível abrir o despertador', `Marque ${opcao.label} no seu relógio.`);
+      Alert.alert('Não foi possível abrir o despertador', `Marque ${rotulo} no seu relógio.`);
       return;
     }
   }
@@ -314,13 +322,13 @@ async function definirAlarme(opcao: SleepOption, modo: Modo) {
     if (resultado === 'scheduled') {
       Alert.alert(
         'Despertador marcado',
-        `${opcao.label}, pelo próprio iPhone. Dá para ver e ajustar no app Relógio.`);
+        `${rotulo}, pelo próprio iPhone: toca mesmo com o app fechado.`);
       return;
     }
     if (resultado === 'denied') {
       Alert.alert(
         'Sem permissão para alarmes',
-        `Libere em Ajustes → AssumFit → Alarmes, ou marque ${opcao.label} no app Relógio.`);
+        `Libere em Ajustes → AssumFit → Alarmes, ou marque ${rotulo} no app Relógio.`);
       return;
     }
     // 'error' e 'unsupported' caem no caminho de abaixo.
@@ -330,7 +338,7 @@ async function definirAlarme(opcao: SleepOption, modo: Modo) {
   // abrir, DIZ — antes a falha era silenciosa, e silêncio aqui lê como botão
   // quebrado.
   Alert.alert(
-    `Despertador para ${opcao.label}`,
+    `Despertador para ${rotulo}`,
     'Nesta versão do iOS o app não cria alarmes. Vou abrir o Relógio para você tocar em “+” e marcar esse horário.',
     [
       { text: 'Agora não', style: 'cancel' },
@@ -338,7 +346,7 @@ async function definirAlarme(opcao: SleepOption, modo: Modo) {
         text: 'Abrir Relógio',
         onPress: () => {
           void Linking.openURL('clock-alarm://').catch(() => {
-            Alert.alert('Não consegui abrir o Relógio', `Abra o app Relógio e marque ${opcao.label}.`);
+            Alert.alert('Não consegui abrir o Relógio', `Abra o app Relógio e marque ${rotulo}.`);
           });
         },
       },
