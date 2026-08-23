@@ -1250,6 +1250,24 @@
       "nota": "Análise completa entregue no artifact e em relatorios/produto/capacidades-apple-health.md.",
       "versao": "1.0.5 (7)",
       "em": "2026-08-23T14:19:05"
+    },
+    "ADcxkXRYXLXdV5FXgqcB9xE": {
+      "commit": "ff8c5c0",
+      "nota": "Trocado: o seletor agora diz Semana, Mês, 3 meses e Ano. As letras vieram do app Saúde da Apple e, fora de um gráfico já rotulado, não diziam nada.",
+      "versao": "1.0.5 (8)",
+      "em": "2026-08-23T15:54:32"
+    },
+    "ACTsVB75MHgeT48vQDOStrE": {
+      "commit": "ff8c5c0",
+      "nota": "Feito: cada dia do calendário é tocável e mostra as calorias, os passos e a situação da meta daquele dia. Dia sem leitura diz isso, em vez de mostrar zero.",
+      "versao": "1.0.5 (8)",
+      "em": "2026-08-23T15:54:35"
+    },
+    "AF89pIQ8hbX91r4MusOqtsw": {
+      "commit": "ff8c5c0",
+      "nota": "Era regressão nossa, e foi corrigida: o formato do histórico por hora mudou na 1.0.5 (7) e o estado antigo não migrava. Agora a atualização detecta isso e relê o dia da pulseira na primeira sincronização, sem esperar o intervalo normal.",
+      "versao": "1.0.5 (8)",
+      "em": "2026-08-23T15:54:38"
     }
   }
 }
