@@ -1268,6 +1268,18 @@
       "nota": "Era regressão nossa, e foi corrigida: o formato do histórico por hora mudou na 1.0.5 (7) e o estado antigo não migrava. Agora a atualização detecta isso e relê o dia da pulseira na primeira sincronização, sem esperar o intervalo normal.",
       "versao": "1.0.5 (8)",
       "em": "2026-08-23T15:54:38"
+    },
+    "AEdPM5UuuCJiZE1pYnoVuKA": {
+      "commit": "0b43274",
+      "nota": "Feito no card de compartilhar o treino, como você esclareceu: arraste um bloco e uma lixeira aparece no rodapé; ela cresce quando o dedo entra nela e o bloco sai do card ao soltar. Os chips de cima continuam funcionando, e o bloco removido volta à posição original se você reativá-lo por lá.",
+      "versao": "1.0.5 (8)",
+      "em": "2026-08-23T16:12:42"
+    },
+    "slack:1787512041.344509": {
+      "commit": "0b43274",
+      "nota": "Esclarecimento do Bruno: era o card de compartilhar, não a home.",
+      "versao": "1.0.5 (8)",
+      "em": "2026-08-23T16:12:45"
     }
   }
 }
