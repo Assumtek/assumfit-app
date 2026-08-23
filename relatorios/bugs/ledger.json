@@ -1190,6 +1190,12 @@
       "nota": "Todo domingo às 8h chega a notificação do Resumo da semana: números do aparelho (atividades, tempo, nota média das conclusões, sono, passos, água) e a leitura do modelo com até três ações. A parte do modelo depende do próximo deploy do servidor.",
       "versao": "1.0.5 (6)",
       "em": "2026-08-22T23:36:14"
+    },
+    "AN5fzZf2id7bAVCjjQe2Z8s": {
+      "commit": "4ef7b10",
+      "nota": "A meta pelo peso só era calculada ao abrir a tela de Água; agora é calculada na abertura do app, e a Home, o menu e o widget já mostram a sua (3,2 L) sem precisar entrar na tela.",
+      "versao": "1.0.5 (6)",
+      "em": "2026-08-23T06:45:48"
     }
   }
 }
