@@ -13,7 +13,8 @@ import { MeasuredAt } from '../components/MeasuredAt';
 import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
 import { rateActivity } from '../domain/ratings';
 import { caloriasDoDia, distanciaDoDia } from '../domain/activityEstimates';
-import { acumuladoAteAgora, barrasDoDia, horaMaisAtiva, totalDoDia } from '../domain/hourly';
+import { acumuladoAteAgora, barrasDoDia, horaMaisAtiva } from '../domain/hourly';
+import { nomeDoPeriodo, PeriodTabs, PERIODOS } from '../components/PeriodTabs';
 import { treinoConta } from '../domain/movement';
 import * as api from '../services/api.service';
 import { useBiometricStore } from '../store/biometric.store';
@@ -37,11 +38,12 @@ export function ActivityScreen() {
    dia" (Leonardo, 22/08).
   */
   const [dias, setDias] = useState<api.DailySummary[] | null>(null);
+  const [periodo, setPeriodo] = useState(PERIODOS.semana.dias);
   const [larguraDias, onLayoutLarguraDias] = useChartWidth();
   useEffect(() => {
     let vivo = true;
     api
-      .fetchDailyHistory(7)
+      .fetchDailyHistory(periodo)
       // O servidor devolve do mais novo para o mais antigo; a barra lê da
       // esquerda para a direita, do mais antigo para hoje (Bruno, 23/08).
       .then((rows) => vivo && setDias([...rows].sort((x, y) => (x.day < y.day ? -1 : 1))))
@@ -49,7 +51,7 @@ export function ActivityScreen() {
     return () => {
       vivo = false;
     };
-  }, []);
+  }, [periodo]);
   useEffect(() => {
     let vivo = true;
     const inicioDoDia = new Date();
@@ -195,7 +197,12 @@ export function ActivityScreen() {
       ) : null}
 
       {dias && dias.length > 0 ? (
-        <Section label="Últimos 7 dias">
+        <Section label={nomeDoPeriodo(periodo)}>
+          <PeriodTabs
+            opcoes={[PERIODOS.semana, PERIODOS.mes, PERIODOS.trimestre, PERIODOS.ano]}
+            valor={periodo}
+            onChange={setPeriodo}
+          />
           <YStack onLayout={onLayoutLarguraDias}>
             <BarChart
               width={larguraDias}
@@ -203,7 +210,7 @@ export function ActivityScreen() {
               max={Math.max(activity.goal * 1.15, ...dias.map((d) => d.steps ?? 0))}
               reference={{ value: activity.goal, label: 'meta' }}
               bars={dias.map((d) => ({ label: d.day.slice(8, 10), value: d.steps ?? 0 }))}
-              labelEvery={1}
+              labelEvery={periodo <= 7 ? 1 : periodo <= 30 ? 5 : Math.ceil(periodo / 12)}
               id="steps-week"
             />
           </YStack>

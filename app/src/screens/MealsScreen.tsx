@@ -12,6 +12,7 @@ import { Icon } from '../components/Icon';
 import { VoiceInput } from '../components/VoiceInput';
 
 import { Note, Row, Section } from '../components/List';
+import { PeriodTabs, PERIODOS } from '../components/PeriodTabs';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
 import { Body, Button, Data, Display, HeroCard, Label, Pill } from '../components/ui';
 import { ageFromBirthDate, calorieGoal, toMeasure, type CalorieGoal } from '../domain/nutritionGoal';
@@ -881,15 +882,11 @@ export function MealsScreen() {
       ) : null}
       {meals && meals.length > 0 ? (
         <Section label="Por período">
-          <XStack gap="$sm" marginBottom="$md">
-            {([7, 30] as const).map((d) => (
-              <Pressable key={d} onPress={() => setPeriodo(d)} accessibilityRole="button" accessibilityState={{ selected: periodo === d }}>
-                <Pill variant="control" muted={periodo !== d}>
-                  <Data color={periodo === d ? '$foreground' : '$mutedForeground'}>{d === 7 ? 'Últimos 7 dias' : 'Últimos 30 dias'}</Data>
-                </Pill>
-              </Pressable>
-            ))}
-          </XStack>
+          <PeriodTabs
+            opcoes={[PERIODOS.semana, PERIODOS.mes]}
+            valor={periodo}
+            onChange={(d: number) => setPeriodo(d as 7 | 30)}
+          />
           <YStack onLayout={onLayoutPeriodo}>
             {larguraPeriodo > 0 ? (
               <BarChart

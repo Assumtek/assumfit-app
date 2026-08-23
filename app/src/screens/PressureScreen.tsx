@@ -1,6 +1,6 @@
 import { XStack, YStack } from '@tamagui/stacks';
 import { useChartWidth } from '../components/charts/useChartWidth';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { EmptyMetric } from '../components/BandStatus';
 import { Row, Section } from '../components/List';
@@ -9,7 +9,9 @@ import { MeasuredAt } from '../components/MeasuredAt';
 import { MeasureButton } from '../components/MeasureButton';
 import { ScatterPlot } from '../components/charts/ScatterPlot';
 import { Body, Data, Display, Headline, Metric, RatingText } from '../components/ui';
+import { nomeDoPeriodo, PeriodTabs, PERIODOS } from '../components/PeriodTabs';
 import { pressureZones, ratePressure } from '../domain/ratings';
+import * as api from '../services/api.service';
 import { useBiometricStore } from '../store/biometric.store';
 
 export function PressureScreen() {
@@ -18,6 +20,30 @@ export function PressureScreen() {
   // Hook antes de qualquer return condicional — do contrário a ordem muda
   // quando `latest` alterna entre nulo e presente.
   const [chartWidth, onLayoutChartWidth] = useChartWidth();
+  const [periodo, setPeriodo] = useState(PERIODOS.semana.dias);
+  /*
+   As aferições do PERÍODO vêm do servidor; o histórico local guarda só as
+   últimas do aparelho, e era ele que o rótulo "7 dias" descrevia sem ser
+   verdade. Sem rede, o local continua desenhando o que tem.
+  */
+  const [doServidor, setDoServidor] = useState<{ x: number; y: number }[] | null>(null);
+  useEffect(() => {
+    let vivo = true;
+    api
+      .fetchDailyHistory(periodo)
+      .then((dias) => {
+        if (!vivo) return;
+        setDoServidor(
+          dias
+            .filter((d) => d.bp_systolic != null && d.bp_diastolic != null)
+            .map((d) => ({ x: d.bp_systolic as number, y: d.bp_diastolic as number })),
+        );
+      })
+      .catch(() => vivo && setDoServidor(null));
+    return () => {
+      vivo = false;
+    };
+  }, [periodo]);
 
   if (!latest)
     return (
@@ -64,7 +90,12 @@ export function PressureScreen() {
         </RatingText>
       </YStack>
 
-      <Section label="Sistólica × diastólica · 7 dias">
+      <Section label={`Sistólica × diastólica · ${nomeDoPeriodo(periodo).toLowerCase()}`}>
+        <PeriodTabs
+          opcoes={[PERIODOS.semana, PERIODOS.mes, PERIODOS.trimestre, PERIODOS.ano]}
+          valor={periodo}
+          onChange={setPeriodo}
+        />
         <YStack onLayout={onLayoutChartWidth}>
           <ScatterPlot
             width={chartWidth}
@@ -73,7 +104,11 @@ export function PressureScreen() {
             yDomain={[60, 100]}
             xLabel="sistólica →"
             yLabel="↑ diastólica"
-            points={history.map((h) => ({ x: h.systolic, y: h.diastolic }))}
+            points={
+              doServidor && doServidor.length > 0
+                ? doServidor
+                : history.map((h) => ({ x: h.systolic, y: h.diastolic }))
+            }
             current={
               latest.bpSystolic == null || latest.bpDiastolic == null
                 ? undefined

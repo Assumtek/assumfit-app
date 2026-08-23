@@ -239,6 +239,12 @@ export function Sidebar() {
             onPress={() => go('DailyGoals')}
           />
           <Entry
+            name="Todos os dados"
+            detail="o que o app mede, e de onde vem"
+            active={current === 'AllData'}
+            onPress={() => go('AllData')}
+          />
+          <Entry
             name="Tendências"
             detail="o mês contra os três anteriores"
             active={current === 'Trends'}

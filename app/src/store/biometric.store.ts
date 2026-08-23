@@ -880,7 +880,7 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
       TETO_SONO_MS,
       'sono da pulseira').catch(() => null);
     const noite =
-      daPulseira ??
+      (daPulseira ? { ...daPulseira, source: 'band' as const } : null) ??
       (isHealthAvailable()
         ? await comTeto(fetchLastNight(), TETO_CONSULTA_MS, 'sono do app Saúde').catch(() => null)
         : null);

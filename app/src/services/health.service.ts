@@ -186,7 +186,10 @@ export async function fetchLastNight(now = new Date()): Promise<SleepNight | nul
     // reconhece aquela como a noite do dia 28.
     // Local, pela tarde em que começou — `toISOString` é UTC e empurrava 23h
     // de Brasília para o dia seguinte.
-    const noite = nightFrom(dataDaNoite(new Date(ultima[0].startDate).getTime()), segments);
+    const noite: SleepNight = {
+      ...nightFrom(dataDaNoite(new Date(ultima[0].startDate).getTime()), segments),
+      source: 'healthkit',
+    };
     console.log(
       `[health] noites encontradas: ${noites.length}, usando ${noite.date}, ${noite.totalMin} min`);
     return noite;

@@ -12,6 +12,7 @@ import { GattScreen } from '../screens/GattScreen';
 import { HabitsScreen } from '../screens/HabitsScreen';
 import { WeeklyReportScreen } from '../screens/WeeklyReportScreen';
 import { DailyGoalsScreen } from '../screens/DailyGoalsScreen';
+import { AllDataScreen } from '../screens/AllDataScreen';
 import { HomeLayoutScreen } from '../screens/HomeLayoutScreen';
 import { TrendsScreen } from '../screens/TrendsScreen';
 import { MealsScreen } from '../screens/MealsScreen';
@@ -109,6 +110,7 @@ const linking = {
       WeeklyReport: 'resumo-semana',
       DailyGoals: 'metas',
       Trends: 'tendencias',
+      AllData: 'dados',
       HomeLayout: 'personalizar',
       WaterReminder: 'lembrete-agua',
       MealReminder: 'lembrete-refeicoes',
@@ -234,6 +236,7 @@ export function Navigation() {
         <Stack.Screen name="WeeklyReport" component={WeeklyReportScreen} />
         <Stack.Screen name="DailyGoals" component={DailyGoalsScreen} />
         <Stack.Screen name="Trends" component={TrendsScreen} />
+        <Stack.Screen name="AllData" component={AllDataScreen} />
         <Stack.Screen name="HomeLayout" component={HomeLayoutScreen} />
         <Stack.Screen name="WaterReminder" component={WaterReminderScreen} />
         <Stack.Screen name="MealReminder" component={MealReminderScreen} />

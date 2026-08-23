@@ -88,6 +88,15 @@ export type SleepNight = {
    */
   startAt?: number;
   endAt?: number;
+  /**
+   * Quem mediu esta noite.
+   *
+   * A pulseira é a fonte preferida; o app Saúde entra quando ela não tem a
+   * noite. Sem este campo, a tela de dados não conseguia dizer a procedência
+   * do único número que pode vir de dois aparelhos diferentes, e procedência
+   * de dado sensível não é detalhe.
+   */
+  source?: 'band' | 'healthkit';
 };
 
 /** Par sistólica/diastólica de uma aferição. */
