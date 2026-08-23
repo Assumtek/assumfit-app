@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView } from 'react-native';
 
 import { formatDateBR } from '../domain/birthDate';
-import { useProgressPhotosStore, type FotoDeEvolucao } from '../store/progress-photos.store';
+import { ANGULOS, useProgressPhotosStore, type AnguloDaFoto, type FotoDeEvolucao } from '../store/progress-photos.store';
 import { useTheme } from '../theme/ThemeProvider';
 import { Body, Button, Data, Label } from './ui';
 
@@ -27,7 +27,13 @@ export function ProgressPhotos() {
     void carregar();
   }, [carregar]);
 
-  const pegar = async (origem: 'camera' | 'galeria') => {
+  /*
+   Ângulo antes da foto, e várias da galeria de uma vez: uma avaliação tem
+   frente, lado e costas, e comparar frente de hoje com costas de ontem não
+   diz nada (Bruno, 22/08). A câmera tira uma por vez; a galeria aceita até
+   três, todas com o ângulo escolhido.
+  */
+  const pegar = async (origem: 'camera' | 'galeria', angulo: AnguloDaFoto) => {
     const perm =
       origem === 'camera'
         ? await ImagePicker.requestCameraPermissionsAsync()
@@ -37,14 +43,20 @@ export function ProgressPhotos() {
     const r =
       origem === 'camera'
         ? await ImagePicker.launchCameraAsync(opcoes)
-        : await ImagePicker.launchImageLibraryAsync({ ...opcoes, mediaTypes: ['images'] });
-    if (!r.canceled && r.assets[0]) await adicionar(r.assets[0].uri, r.assets[0].width);
+        : await ImagePicker.launchImageLibraryAsync({ ...opcoes, mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: 3 });
+    if (r.canceled) return;
+    for (const a of r.assets) await adicionar(a.uri, a.width, angulo);
   };
 
+  const escolherAngulo = (origem: 'camera' | 'galeria') =>
+    Alert.alert('Qual ângulo?', 'Frente, lado ou costas. Dá para comparar depois pelo mesmo ângulo.', [
+      ...ANGULOS.map((a) => ({ text: a.label, onPress: () => void pegar(origem, a.key) })),
+      { text: 'Cancelar', style: 'cancel' as const },
+    ]);
   const nova = () =>
     Alert.alert('Foto de evolução', 'De onde vem a foto?', [
-      { text: 'Câmera', onPress: () => void pegar('camera') },
-      { text: 'Galeria', onPress: () => void pegar('galeria') },
+      { text: 'Câmera', onPress: () => escolherAngulo('camera') },
+      { text: 'Galeria (até 3)', onPress: () => escolherAngulo('galeria') },
       { text: 'Cancelar', style: 'cancel' },
     ]);
 
@@ -72,7 +84,7 @@ export function ProgressPhotos() {
           {par.map((f) => (
             <YStack key={f.nome} flex={1} gap="$xs">
               <Image source={{ uri: f.uri }} style={{ width: '100%', aspectRatio: 3 / 4, borderRadius: 12 }} />
-              <Data>{formatDateBR(f.em.slice(0, 10))}</Data>
+              <Data>{formatDateBR(f.em.slice(0, 10))}{f.angulo ? ` · ${rotuloDoAngulo(f.angulo)}` : ''}</Data>
             </YStack>
           ))}
         </XStack>
@@ -88,7 +100,7 @@ export function ProgressPhotos() {
                 onPress={() => alternar(f)}
                 onLongPress={() => confirmarRemocao(f)}
                 accessibilityRole="imagebutton"
-                accessibilityLabel={`Foto de ${formatDateBR(f.em.slice(0, 10))}${marcada ? ', escolhida' : ''}`}
+                accessibilityLabel={`Foto de ${formatDateBR(f.em.slice(0, 10))}${f.angulo ? `, ${rotuloDoAngulo(f.angulo)}` : ''}${marcada ? ', escolhida' : ''}`}
               >
                 <YStack gap={4} alignItems="center">
                   <Image
@@ -102,6 +114,7 @@ export function ProgressPhotos() {
                     }}
                   />
                   <Data>{formatDateBR(f.em.slice(0, 10)).slice(0, 5)}</Data>
+                  {f.angulo ? <Data>{rotuloDoAngulo(f.angulo)}</Data> : null}
                 </YStack>
               </Pressable>
             );
@@ -109,14 +122,21 @@ export function ProgressPhotos() {
         </ScrollView>
       ) : (
         <Body>
-          Tire uma foto de tempos em tempos, na mesma luz e posição. Toque em duas para ver lado a lado.
+          Tire fotos de tempos em tempos, na mesma luz e posição: frente, lado e costas. Toque em duas do mesmo ângulo para ver lado a lado.
         </Body>
       )}
 
       <YStack alignSelf="flex-start">
         <Button title="Adicionar foto" variant="secondary" onPress={nova} />
       </YStack>
-      {fotos.length > 0 && par.length < 2 ? <Data>Toque em duas fotos para comparar. Segure para remover.</Data> : null}
+      {fotos.length > 0 && par.length < 2 ? <Data>Toque em duas fotos do mesmo ângulo para comparar. Segure para remover.</Data> : null}
+      {par.length === 2 && par[0].angulo && par[1].angulo && par[0].angulo !== par[1].angulo ? (
+        <Data>Ângulos diferentes: a comparação vale mais entre duas fotos de {rotuloDoAngulo(par[0].angulo).toLowerCase()}.</Data>
+      ) : null}
     </YStack>
   );
+}
+
+function rotuloDoAngulo(a: AnguloDaFoto): string {
+  return ANGULOS.find((x) => x.key === a)?.label ?? a;
 }
