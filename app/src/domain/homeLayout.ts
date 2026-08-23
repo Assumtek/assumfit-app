@@ -38,10 +38,10 @@ export type DescricaoDeBloco = {
 };
 
 /**
- * A ordem desta lista é a Home de fábrica. Os três desligados são os que
- * dependem de série acumulada ou de treino recente: ligados por padrão,
- * apareceriam vazios para quem acabou de instalar, que é a pior primeira
- * impressão possível.
+ * A ordem desta lista é a Home de fábrica. Os desligados são os que dependem
+ * de série acumulada, de treino recente ou de meta configurada: ligados por
+ * padrão, apareceriam vazios para quem acabou de instalar, que é a pior
+ * primeira impressão possível.
  */
 export const BLOCOS: DescricaoDeBloco[] = [
   {
@@ -55,13 +55,12 @@ export const BLOCOS: DescricaoDeBloco[] = [
     titulo: 'Três anéis',
     descricao: 'Sono, estresse e recuperação, em anel, no alto da tela.',
     /*
-     Desligado de fábrica. Os anéis saíram do padrão por decisão da fundadora
-     (22/08/2026), e um testador os pediu de volta no dia seguinte à home
-     configurável (Leonardo, 23/08): "a tela inicial tem que chamar atenção".
-     A home configurável existe justamente para os dois terem razão, e quem
-     decide o PADRÃO continua sendo o produto.
+     Ligado de fábrica. Os anéis tinham saído do padrão em 22/08/2026; um
+     testador os pediu de volta no dia seguinte à home configurável (Leonardo,
+     23/08: "a tela inicial tem que chamar atenção") e a fundadora decidiu que
+     voltam a ser o padrão. Quem não os quiser desliga em Personalizar a home.
     */
-    padrao: false,
+    padrao: true,
   },
   {
     chave: 'indicadores',

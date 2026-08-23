@@ -13,6 +13,8 @@ describe('layoutPadrao', () => {
     const ligados = blocosLigados(layoutPadrao());
     expect(ligados).toContain('resumo');
     expect(ligados).toContain('indicadores');
+    // Os três anéis voltaram ao padrão por decisão da fundadora (23/08/2026).
+    expect(ligados).toContain('aneis');
     // Tendência precisa de semanas de série; conquista, de treino feito.
     expect(ligados).not.toContain('tendencias');
     expect(ligados).not.toContain('conquistas');
