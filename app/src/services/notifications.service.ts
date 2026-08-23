@@ -531,3 +531,36 @@ function registrarNoFeed(id: string, titulo: string, corpo: string, rota: string
   useAlertsStore.getState().registrar({ id, titulo, corpo, rota });
 }
 
+
+const PULSEIRA_LONGE = 'pulseira-longe';
+let lembreteDePulseiraEm: string | null = null;
+
+/**
+ * Lembrar de usar a pulseira, sem ser chato (sugestão de testador, 23/08):
+ * um aviso só, duas horas depois de desconectar, só de dia (8h às 21h) e no
+ * máximo um por dia. Reconectou antes, o aviso é cancelado.
+ */
+export async function armarLembreteDePulseira() {
+  const hoje = new Date().toDateString();
+  if (lembreteDePulseiraEm === hoje) return;
+  const quando = new Date(Date.now() + 2 * 3_600_000);
+  const h = quando.getHours();
+  if (h < 8 || h >= 21) return;
+  if (!(await ensurePermission())) return;
+  await Notifications.cancelScheduledNotificationAsync(PULSEIRA_LONGE).catch(() => undefined);
+  await Notifications.scheduleNotificationAsync({
+    identifier: PULSEIRA_LONGE,
+    content: {
+      title: 'A pulseira está longe',
+      body: 'Faz duas horas que o app não lê a pulseira. Sem ela, o dia de hoje não entra.',
+      sound: false,
+      data: { route: 'Device' },
+    },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 2 * 3600 },
+  });
+  lembreteDePulseiraEm = hoje;
+}
+
+export async function cancelarLembreteDePulseira() {
+  await Notifications.cancelScheduledNotificationAsync(PULSEIRA_LONGE).catch(() => undefined);
+}

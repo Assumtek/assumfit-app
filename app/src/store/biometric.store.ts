@@ -248,6 +248,7 @@ function gravarUltimaLocal(reading: Reading) {
 
 import type { Activity, PressureReading, Reading, SleepNight, SleepSegment } from '../domain/types';
 import { ble } from '../services/ble';
+import { armarLembreteDePulseira, cancelarLembreteDePulseira } from '../services/notifications.service';
 import * as api from '../services/api.service';
 import { fetchLastNight, isHealthAvailable, requestSleepAccess } from '../services/health.service';
 import {
@@ -1137,6 +1138,10 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
       */
       set({ connection, connectionReason: reason ?? null, syncError: null });
       pararCiclo();
+      // Lembrar de usar a pulseira, sem ser chato: arma ao desconectar com
+      // pulseira pareada, cancela ao reconectar (sugestão de testador, 23/08).
+      if (connection === 'connected') void cancelarLembreteDePulseira().catch(() => undefined);
+      else if (connection === 'disconnected' && typeof get().pairedDeviceId === 'string') void armarLembreteDePulseira().catch(() => undefined);
       if (connection === 'connected') {
         leituraInicial = setTimeout(() => void puxarDoAparelho(), 10_000);
         cicloSync = setInterval(() => void puxarDoAparelho(), 4 * 60_000);
