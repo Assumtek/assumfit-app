@@ -20,6 +20,7 @@ import { useBiometricStore } from '../store/biometric.store';
 import { useUserStore } from '../store/user.store';
 import { useLocalReminderStore } from '../services/local-reminder';
 import { usePersonalizacaoStore } from '../store/personalizacao.store';
+import { formatMinutes, parseMinutes } from '../domain/sleepCycles';
 import { useTheme } from '../theme/ThemeProvider';
 
 const APP_VERSION = '1.0.0';
@@ -34,7 +35,7 @@ const APP_VERSION = '1.0.0';
  * desfazer.
  */
 export function SettingsScreen() {
-  const { colors } = useTheme();
+  const { colors, mode, autoHoras, setAutoHoras } = useTheme();
   const personalizadas = usePersonalizacaoStore((s) => s.ligado);
   const aprendido = usePersonalizacaoStore((s) => s.aprendido);
   const ligarPersonalizadas = usePersonalizacaoStore((s) => s.ligar);
@@ -91,8 +92,27 @@ export function SettingsScreen() {
     <DetailScreen title="Configurações">
       <Section label="Aparência" divider={false}>
         <ThemeSwitch />
+        {mode === 'auto' ? (
+          <YStack marginTop="$md">
+            <ActionRow
+              title="Claro a partir das"
+              subtitle={formatMinutes(autoHoras.claroDesde)}
+              right="none"
+              onPress={() => pedirHora('Claro a partir das', autoHoras.claroDesde, (m) => setAutoHoras({ ...autoHoras, claroDesde: m }))}
+            />
+            <ActionRow
+              title="Escuro a partir das"
+              subtitle={formatMinutes(autoHoras.escuroDesde)}
+              right="none"
+              onPress={() => pedirHora('Escuro a partir das', autoHoras.escuroDesde, (m) => setAutoHoras({ ...autoHoras, escuroDesde: m }))}
+              last
+            />
+          </YStack>
+        ) : null}
         <Data marginTop="$md">
-          Em “Sistema”, o app acompanha o modo do aparelho, inclusive o agendamento noturno.
+          {mode === 'auto'
+            ? 'Claro de dia e escuro à noite, nos horários acima, independente do aparelho.'
+            : 'Em “Sistema”, o app acompanha o modo do aparelho, inclusive o agendamento noturno.'}
         </Data>
       </Section>
 
@@ -270,4 +290,12 @@ function LinkRow({
       last={last}
     />
   );
+}
+
+/** Pede uma hora (HH:MM) num diálogo; inválida é ignorada, sem alerta extra. */
+function pedirHora(titulo: string, atual: number, onOk: (minutos: number) => void) {
+  Alert.prompt(titulo, 'Hora no formato 07:00', (texto) => {
+    const m = parseMinutes(texto ?? '');
+    if (m != null) onOk(m);
+  }, 'plain-text', formatMinutes(atual));
 }

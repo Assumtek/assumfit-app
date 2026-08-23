@@ -1140,3 +1140,14 @@ export async function fetchSportSessions(days = 30, janela?: JanelaDeDatas): Pro
   const { data } = await api.get<SportSession[]>('/sport/sessions', { params: { days, ...janela } });
   return data;
 }
+
+/** O resumo semanal redigido pelo modelo. Sem modelo, o servidor responde 503 e não há texto. */
+export type WeeklyReport = {
+  headline: string;
+  resumo: string;
+  acoes: { titulo: string; porque: string }[];
+};
+export async function fetchWeeklyReport(): Promise<WeeklyReport> {
+  const { data } = await api.get<WeeklyReport>('/insights/weekly', { timeout: 20_000 });
+  return data;
+}

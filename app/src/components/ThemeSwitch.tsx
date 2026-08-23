@@ -9,6 +9,7 @@ const OPTIONS: { mode: ThemeMode; label: string }[] = [
   { mode: 'system', label: 'Sistema' },
   { mode: 'light', label: 'Claro' },
   { mode: 'dark', label: 'Escuro' },
+  { mode: 'auto', label: 'Auto' },
 ];
 
 /**

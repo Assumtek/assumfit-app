@@ -3,6 +3,8 @@ import { XStack, YStack } from '@tamagui/stacks';
 import { File, Paths } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
+import { useChartWidth } from '../components/charts/useChartWidth';
+import { BarChart } from '../components/charts/BarChart';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Platform, Pressable, TextInput } from 'react-native';
 
@@ -11,7 +13,7 @@ import { VoiceInput } from '../components/VoiceInput';
 
 import { Note, Row, Section } from '../components/List';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
-import { Body, Button, Data, Display, HeroCard, Label } from '../components/ui';
+import { Body, Button, Data, Display, HeroCard, Label, Pill } from '../components/ui';
 import { ageFromBirthDate, calorieGoal, toMeasure, type CalorieGoal } from '../domain/nutritionGoal';
 import { mensagemDaFalha } from '../domain/apiErrors';
 import * as api from '../services/api.service';
@@ -39,6 +41,9 @@ export function MealsScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation<any>();
   const [meals, setMeals] = useState<api.MealRecord[] | null>(null);
+  /** Relatório por período (Leonardo, 22/08): 7 ou 30 dias de kcal por dia, com a meta. */
+  const [periodo, setPeriodo] = useState<7 | 30>(7);
+  const [larguraPeriodo, onLayoutPeriodo] = useChartWidth();
   const [analisando, setAnalisando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   /** Registro aberto — a sub-tela de detalhe com a foto grande. */
@@ -76,7 +81,7 @@ export function MealsScreen() {
 
   const carregar = useCallback(async () => {
     try {
-      setMeals(await api.fetchMeals(7));
+      setMeals(await api.fetchMeals(30));
     } catch {
       setMeals([]);
     }
@@ -874,6 +879,34 @@ export function MealsScreen() {
           })}
         </Section>
       ) : null}
+      {meals && meals.length > 0 ? (
+        <Section label="Por período">
+          <XStack gap="$sm" marginBottom="$md">
+            {([7, 30] as const).map((d) => (
+              <Pressable key={d} onPress={() => setPeriodo(d)} accessibilityRole="button" accessibilityState={{ selected: periodo === d }}>
+                <Pill variant="control" muted={periodo !== d}>
+                  <Data color={periodo === d ? '$foreground' : '$mutedForeground'}>{d === 7 ? 'Últimos 7 dias' : 'Últimos 30 dias'}</Data>
+                </Pill>
+              </Pressable>
+            ))}
+          </XStack>
+          <YStack onLayout={onLayoutPeriodo}>
+            {larguraPeriodo > 0 ? (
+              <BarChart
+                width={larguraPeriodo}
+                height={140}
+                max={Math.max((meta?.goal ?? 2000) * 1.15, ...kcalPorDia(meals, periodo).map((d) => d.value))}
+                reference={meta ? { value: meta.goal, label: 'meta' } : undefined}
+                bars={kcalPorDia(meals, periodo)}
+                labelEvery={periodo === 7 ? 1 : 5}
+                id="kcal-periodo"
+              />
+            ) : null}
+          </YStack>
+          <Data marginTop="$sm">{resumoDoPeriodo(meals, periodo, meta)}</Data>
+        </Section>
+      ) : null}
+
       <MealReminder />
 
     </DetailScreen>
@@ -1041,7 +1074,12 @@ function metaLinha(meta: CalorieGoal, consumidoMedio: number): string {
       : resto >= 0
         ? ` · restam ~${resto}`
         : ` · ~${-resto} acima`;
-  return `meta ~${meta.goal} kcal ${objetivo}${situacao}`;
+  // O gasto estimado e o ajuste aparecem por extenso: um testador (Leonardo,
+  // 22/08) pediu o cálculo que já existia, porque a tela só mostrava a meta.
+  const delta = Math.abs(meta.goal - meta.tdee);
+  const ajuste =
+    meta.adjustment === 'deficit' ? ` (déficit de ${delta})` : meta.adjustment === 'surplus' ? ` (superávit de ${delta})` : '';
+  return `gasto estimado ~${meta.tdee} kcal · meta ~${meta.goal} ${objetivo}${ajuste}${situacao}`;
 }
 
 /** "hoje 12:40", "ter 19:15" — o suficiente para achar a refeição na lista. */
@@ -1050,4 +1088,33 @@ function quando(iso: string): string {
   const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   if (d.toDateString() === new Date().toDateString()) return `hoje ${hora}`;
   return `${d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')} ${hora}`;
+}
+
+/** kcal (média da faixa) por dia, do mais antigo ao de hoje; dia sem registro vale zero. */
+function kcalPorDia(meals: api.MealRecord[], dias: number): { label: string; value: number }[] {
+  const porDia = new Map<string, number>();
+  for (const m of meals) {
+    const d = new Date(m.at);
+    const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    porDia.set(chave, (porDia.get(chave) ?? 0) + (m.kcalMin + m.kcalMax) / 2);
+  }
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  return Array.from({ length: dias }, (_, i) => {
+    const d = new Date(hoje);
+    d.setDate(hoje.getDate() - (dias - 1 - i));
+    const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return { label: String(d.getDate()).padStart(2, '0'), value: Math.round(porDia.get(chave) ?? 0) };
+  });
+}
+
+function resumoDoPeriodo(meals: api.MealRecord[], dias: number, meta: CalorieGoal | null): string {
+  const serie = kcalPorDia(meals, dias);
+  const comRegistro = serie.filter((d) => d.value > 0);
+  if (comRegistro.length === 0) return `Nenhuma refeição registrada nos últimos ${dias} dias.`;
+  const media = Math.round(comRegistro.reduce((s, d) => s + d.value, 0) / comRegistro.length);
+  const base = `${comRegistro.length} de ${dias} dias com registro · média de ~${media} kcal nos dias registrados`;
+  if (!meta) return base;
+  const dif = media - meta.goal;
+  return `${base} · ${dif >= 0 ? `~${dif} acima` : `~${-dif} abaixo`} da meta`;
 }

@@ -232,6 +232,12 @@ export function Sidebar() {
             active={current === 'Habits'}
             onPress={() => go('Habits')}
           />
+          <Entry
+            name="Resumo da semana"
+            detail="todo domingo, com o que ajustar"
+            active={current === 'WeeklyReport'}
+            onPress={() => go('WeeklyReport')}
+          />
 
           <SectionLabel>Dispositivo</SectionLabel>
           <Entry

@@ -21,6 +21,7 @@ from models.insight import DayContext, build as build_insight, day_notes
 from models.insight_llm import Facts, write as write_insight
 from models.lifestyle import Lifestyle, chronotype_from, circadian_shift
 from models.morning import MorningFacts, write_morning
+from models.weekly import WeeklyFacts, write_weekly
 
 app = FastAPI(title="AssumFit AI", version="1.0.0")
 
@@ -482,3 +483,46 @@ def nutrition_foods(q: str = "") -> JSONResponse:
     from nutrition.taco import search_foods
 
     return JSONResponse({"foods": search_foods(q)})
+
+
+class WeeklyInput(BaseModel):
+    atividades: int = Field(ge=0, le=200)
+    minutos: int = Field(ge=0, le=100000)
+    esportes: int = Field(ge=0, le=200)
+    kcal: int = Field(ge=0, le=100000)
+    nota_media: float | None = None
+    notas: list[int] = Field(default_factory=list, max_length=60)
+    treinos: list[str] = Field(default_factory=list, max_length=30)
+    sono_medio: int | None = None
+    sono_minutos_medio: int | None = None
+    passos_medio: int | None = None
+    agua_media_ml: int | None = None
+    dias_com_agua: int = 0
+    refeicoes: int = 0
+    plano_dias: int | None = None
+
+
+@app.post("/insights/weekly")
+def weekly(data: WeeklyInput) -> dict:
+    """O resumo da semana. Sem modelo, 503: não há texto de reserva."""
+    texto = write_weekly(
+        WeeklyFacts(
+            atividades=data.atividades,
+            minutos=data.minutos,
+            esportes=data.esportes,
+            kcal=data.kcal,
+            nota_media=data.nota_media,
+            notas=tuple(data.notas),
+            treinos=tuple(t[:60] for t in data.treinos),
+            sono_medio=data.sono_medio,
+            sono_minutos_medio=data.sono_minutos_medio,
+            passos_medio=data.passos_medio,
+            agua_media_ml=data.agua_media_ml,
+            dias_com_agua=data.dias_com_agua,
+            refeicoes=data.refeicoes,
+            plano_dias=data.plano_dias,
+        )
+    )
+    if texto is None:
+        raise HTTPException(status_code=503, detail="modelo indisponível")
+    return texto

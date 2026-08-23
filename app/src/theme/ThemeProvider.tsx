@@ -11,7 +11,10 @@ import { darkPalette, lightPalette, type Palette } from './palette';
  * próprio produto — ele existe para cuidar do sono da pessoa. `light` e `dark`
  * são a saída para quem quer fixar, não o caminho principal.
  */
-export type ThemeMode = 'system' | 'light' | 'dark';
+export type ThemeMode = 'system' | 'light' | 'dark' | 'auto';
+/** Janela do claro no modo automático, em minutos do dia (Leonardo, 22/08). */
+export type AutoHoras = { claroDesde: number; escuroDesde: number };
+export const AUTO_PADRAO: AutoHoras = { claroDesde: 7 * 60, escuroDesde: 19 * 60 };
 export type Scheme = 'light' | 'dark';
 
 export type Theme = {
@@ -28,6 +31,8 @@ export type Theme = {
   systemScheme: Scheme;
   colors: Palette;
   setMode: (mode: ThemeMode) => void;
+  autoHoras: AutoHoras;
+  setAutoHoras: (h: AutoHoras) => void;
 };
 
 const PREF_KEY = 'assumfit.theme';
@@ -57,7 +62,7 @@ const store: Store | null = (() => {
 })();
 
 const isMode = (value: unknown): value is ThemeMode =>
-  value === 'system' || value === 'light' || value === 'dark';
+  value === 'system' || value === 'light' || value === 'dark' || value === 'auto';
 
 /**
  * O sistema tem TRÊS respostas: 'light', 'dark' e 'unspecified' — esta última
@@ -67,13 +72,51 @@ const isMode = (value: unknown): value is ThemeMode =>
 const normalize = (system: string | null | undefined): Scheme =>
   system === 'light' ? 'light' : 'dark';
 
-const resolve = (mode: ThemeMode, system: Scheme): Scheme => (mode === 'system' ? system : mode);
+const resolve = (mode: ThemeMode, system: Scheme, minutoDoDia: number, auto: AutoHoras): Scheme => {
+  if (mode === 'system') return system;
+  if (mode !== 'auto') return mode;
+  // Claro dentro da janela [claroDesde, escuroDesde); fora dela, escuro.
+  const { claroDesde, escuroDesde } = auto;
+  const claro =
+    claroDesde <= escuroDesde
+      ? minutoDoDia >= claroDesde && minutoDoDia < escuroDesde
+      : minutoDoDia >= claroDesde || minutoDoDia < escuroDesde;
+  return claro ? 'light' : 'dark';
+};
 
 const ThemeContext = createContext<Theme | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>('system');
   const [system, setSystem] = useState<Scheme>(() => normalize(Appearance.getColorScheme()));
+  const [autoHoras, setAutoHorasState] = useState<AutoHoras>(AUTO_PADRAO);
+  const [minutoDoDia, setMinutoDoDia] = useState(() => new Date().getHours() * 60 + new Date().getMinutes());
+  useEffect(() => {
+    const id = setInterval(() => {
+      const d = new Date();
+      const m = d.getHours() * 60 + d.getMinutes();
+      setMinutoDoDia((atual) => (atual === m ? atual : m));
+    }, 30_000);
+    return () => clearInterval(id);
+  }, []);
+  useEffect(() => {
+    let alive = true;
+    store
+      ?.getItemAsync(`${PREF_KEY}-auto`)
+      .then((saved) => {
+        if (!alive || !saved) return;
+        const h = JSON.parse(saved) as Partial<AutoHoras>;
+        if (typeof h.claroDesde === 'number' && typeof h.escuroDesde === 'number') setAutoHorasState({ claroDesde: h.claroDesde, escuroDesde: h.escuroDesde });
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const setAutoHoras = useCallback((h: AutoHoras) => {
+    setAutoHorasState(h);
+    store?.setItemAsync(`${PREF_KEY}-auto`, JSON.stringify(h)).catch(() => undefined);
+  }, []);
 
   // Só faz sentido escutar o sistema; quando o modo é fixo o valor é ignorado
   // no `resolve`, e desinscrever/reinscrever a cada troca não economiza nada.
@@ -103,11 +146,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     store?.setItemAsync(PREF_KEY, next).catch(() => undefined);
   }, []);
 
-  const scheme = resolve(mode, system);
+  const scheme = resolve(mode, system, minutoDoDia, autoHoras);
 
   const value = useMemo<Theme>(() => {
     const colors = scheme === 'light' ? lightPalette : darkPalette;
-    return { mode, scheme, systemScheme: system, colors, setMode };
+    return { mode, scheme, systemScheme: system, colors, setMode, autoHoras, setAutoHoras };
   }, [mode, scheme, system, setMode]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

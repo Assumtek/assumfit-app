@@ -10,6 +10,7 @@ import { ConnectScreen } from '../screens/ConnectScreen';
 import { DeviceScreen } from '../screens/DeviceScreen';
 import { GattScreen } from '../screens/GattScreen';
 import { HabitsScreen } from '../screens/HabitsScreen';
+import { WeeklyReportScreen } from '../screens/WeeklyReportScreen';
 import { MealsScreen } from '../screens/MealsScreen';
 import { SportScreen } from '../screens/SportScreen';
 import { WaterReminderScreen } from '../screens/WaterReminderScreen';
@@ -102,6 +103,7 @@ const linking = {
       Stress: 'estresse',
       Activity: 'passos',
       Habits: 'habitos',
+      WeeklyReport: 'resumo-semana',
       WaterReminder: 'lembrete-agua',
       MealReminder: 'lembrete-refeicoes',
       MetricDay: 'historico-dia',
@@ -223,6 +225,7 @@ export function Navigation() {
         <Stack.Screen name="Stress" component={StressScreen} />
         <Stack.Screen name="Activity" component={ActivityScreen} />
         <Stack.Screen name="Habits" component={HabitsScreen} />
+        <Stack.Screen name="WeeklyReport" component={WeeklyReportScreen} />
         <Stack.Screen name="WaterReminder" component={WaterReminderScreen} />
         <Stack.Screen name="MealReminder" component={MealReminderScreen} />
         <Stack.Screen name="MetricDay" component={MetricDayScreen} />

@@ -15,6 +15,7 @@ import * as api from './src/services/api.service';
 import { Navigation } from './src/navigation';
 import { navigate } from './src/navigation/ref';
 import { IntroScreen } from './src/screens/IntroScreen';
+import { scheduleWeeklyAt } from './src/services/notifications.service';
 import { useAlertsStore } from './src/store/alerts.store';
 import { useAmbientStore } from './src/store/ambient.store';
 import { useHabitsStore } from './src/store/habits.store';
@@ -149,6 +150,13 @@ function Root() {
     const aoReceber = Notifications.addNotificationReceivedListener(registrar);
     // E o que foi entregue com o app FECHADO ainda está na central do sistema.
     void useAlertsStore.getState().sincronizarEntregues();
+    // Domingo às 8h: o resumo da semana (Leonardo, 22/08). Rearmado a cada
+    // abertura, com o mesmo identificador, para nunca duplicar.
+    void scheduleWeeklyAt('resumo-semana', 0, '08:00', {
+      title: 'Sua semana, resumida',
+      body: 'O que aconteceu de segunda a domingo e o que ajustar na próxima.',
+      route: 'WeeklyReport',
+    }).catch(() => undefined);
 
     return () => {
       aoTocar.remove();

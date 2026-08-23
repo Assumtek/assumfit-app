@@ -7,6 +7,7 @@ import { asyncRoute } from '../middleware/error';
 import { prisma } from '../lib/prisma';
 import { hrvBaseline } from '../services/biometric.service';
 import { energyNow } from '../services/scoring.service';
+import { dailySummary } from '../services/biometric.service';
 import { localDayOfWeek } from '../services/workout/execution';
 import { env } from '../lib/env';
 
@@ -175,3 +176,74 @@ async function sequenciaDeMovimento(userId: string, tzOffsetMin: number): Promis
   }
   return sequencia;
 }
+
+/**
+ * O resumo da semana (Leonardo, 22/08/2026): os sete dias consolidados, com as
+ * notas dadas ao concluir, para o modelo redigir a leitura e as ações. Sem
+ * modelo, 503: o app mostra os números do aparelho e diz que não houve texto.
+ */
+insightsRoutes.get(
+  '/weekly',
+  asyncRoute<AuthedRequest>(async (req, res) => {
+    const user = await prisma.user.findUniqueOrThrow({ where: { id: req.userId }, select: { tzOffsetMin: true } });
+    const desde = new Date(Date.now() - 7 * 86_400_000);
+
+    const [execucoes, sessoes, dias, habitos, refeicoes, plano] = await Promise.all([
+      prisma.workoutExecution.findMany({
+        where: { userId: req.userId, startedAt: { gte: desde } },
+        select: { status: true, durationSec: true, completionPct: true, rating: true, workout: { select: { name: true } } },
+      }),
+      prisma.sportSession.findMany({
+        where: { userId: req.userId, startedAt: { gte: desde } },
+        select: { durationS: true, kcal: true, rating: true, workoutExecutionId: true },
+      }),
+      dailySummary(req.userId, 7, user.tzOffsetMin),
+      prisma.dailyHabit.findMany({ where: { userId: req.userId, date: { gte: desde } }, select: { waterMl: true } }),
+      prisma.mealRecord.count({ where: { userId: req.userId, at: { gte: desde } } }).catch(() => 0),
+      prisma.trainingPlan.findFirst({
+        where: { userId: req.userId, status: 'ACTIVE' },
+        orderBy: { createdAt: 'desc' },
+        select: { days: { where: { dayType: 'WORKOUT' }, select: { id: true } } },
+      }),
+    ]);
+
+    // Treino conta se concluído, ou aberto com série feita (o app caiu antes do
+    // concluir); cancelado não. Sessão vinculada a execução é o mesmo ato.
+    const vinculadas = new Set(sessoes.map((s) => s.workoutExecutionId).filter(Boolean));
+    const treinosFeitos = execucoes.filter((e) => e.status === 'FINISHED' || (e.status !== 'CANCELLED' && (e.completionPct ?? 0) > 0));
+    const minutosTreino = treinosFeitos.reduce((soma, e) => soma + Math.max(1, Math.round((e.durationSec ?? 0) / 60)), 0);
+    const minutosEsporte = sessoes.reduce((soma, s) => soma + Math.max(1, Math.round(s.durationS / 60)), 0);
+    const notas = [...treinosFeitos.map((e) => e.rating), ...sessoes.map((s) => s.rating)].filter((n): n is number => typeof n === 'number');
+    const media = (v: (number | null)[]) => {
+      const n = v.filter((x): x is number => typeof x === 'number');
+      return n.length ? Math.round(n.reduce((a, b) => a + b, 0) / n.length) : null;
+    };
+    const agua = habitos.map((h) => h.waterMl).filter((ml) => ml > 0);
+
+    try {
+      const { data } = await axios.post(
+        `${env.AI_SERVICE_URL}/insights/weekly`,
+        {
+          atividades: treinosFeitos.length + sessoes.length - [...vinculadas].length,
+          minutos: minutosTreino + minutosEsporte,
+          esportes: sessoes.length,
+          kcal: sessoes.reduce((soma, s) => soma + (s.kcal ?? 0), 0),
+          nota_media: notas.length ? Math.round((notas.reduce((a, b) => a + b, 0) / notas.length) * 10) / 10 : null,
+          notas,
+          treinos: treinosFeitos.map((e) => e.workout.name),
+          sono_medio: media(dias.map((d) => d.sleep_score)),
+          sono_minutos_medio: media(dias.map((d) => d.sleep_minutes)),
+          passos_medio: media(dias.map((d) => d.steps)),
+          agua_media_ml: agua.length ? Math.round(agua.reduce((a, b) => a + b, 0) / agua.length) : null,
+          dias_com_agua: agua.length,
+          refeicoes,
+          plano_dias: plano?.days.length ?? null,
+        },
+        { timeout: 20_000 },
+      );
+      return res.json(data);
+    } catch {
+      return res.status(503).json({ error: 'Serviço de modelo indisponível' });
+    }
+  }),
+);
