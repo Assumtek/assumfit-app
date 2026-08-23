@@ -1166,6 +1166,12 @@
       "nota": "Ao adicionar, você escolhe o ângulo (frente, lado ou costas); pela galeria dá para mandar até três de uma vez, da mesma avaliação. O ângulo aparece sob a data e a comparação avisa quando as duas são de ângulos diferentes.",
       "versao": "1.0.5 (6)",
       "em": "2026-08-22T23:11:08"
+    },
+    "AH593RZPvzdmfNoqRItS-O0": {
+      "commit": "de4366e",
+      "nota": "Tinha razão: uma passagem de ajuste de grade engrossou as linhas dos gráficos e dos anéis. Voltaram à espessura original.",
+      "versao": "1.0.5 (6)",
+      "em": "2026-08-22T23:18:48"
     }
   }
 }
