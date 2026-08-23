@@ -1214,6 +1214,12 @@
       "nota": "Ao voltar ao app com a noite da tela vencida, ele agora busca a noite nova na hora (antes só reconectava a pulseira). Se ainda assim não vier, o 'Buscar noite' na tela de Sono força a leitura; se a pulseira não tiver fechado a noite, nem ele traz, e aí o que ajuda é saber se o app do fabricante já mostra a noite.",
       "versao": "1.0.5 (7)",
       "em": "2026-08-23T11:23:00"
+    },
+    "slack:1787495583.302989": {
+      "commit": "8a2e5a5",
+      "nota": "Um aviso só, duas horas depois de a pulseira desconectar, só de dia e no máximo um por dia; se reconectar antes, nem aparece.",
+      "versao": "1.0.5 (7)",
+      "em": "2026-08-23T11:34:01"
     }
   }
 }
