@@ -1232,6 +1232,24 @@
       "nota": "Já ajustado hoje cedo pelo mesmo relato do Leonardo: margem por porção de 25 para 15 por cento e o total combina as incertezas em vez de somar extremos (entra com o deploy do servidor); na tela, o número central fica em destaque e a faixa vira sub-rótulo.",
       "versao": "1.0.5 (7)",
       "em": "2026-08-23T12:53:20"
+    },
+    "slack:1787496311.967919": {
+      "commit": "2dc79cf",
+      "nota": "Implementado, com as suas três decisões respeitadas.\n\nEntrou: a semana em sete anéis; o gasto por hora (a caloria vinha do firmware e a ponte descartava, o app estimava por passo enquanto o aparelho já sabia); as tendências, 28 dias contra os 84 anteriores, sem sobreposição e contando só dias com medição; a home configurável, com liga-desliga e ordem por bloco; a lista de todos os dados agrupada por procedência (pulseira, iPhone, você, calculado); o período D/S/M/A onde havia janela fixa; e as conquistas fora da tela de fim de treino.\n\nFicou de fora, como você decidiu: passos do iPhone. O app continua dependendo da pulseira.\n\nPara a tendência acumular, mexi em duas coisas no banco: o agregado por hora não tinha retenção nenhuma (o dado bruto morre aos 24 meses e a média do batimento de cada pessoa ficava para sempre) e a janela de reprocessamento era menor que a de recuperação, o que fazia duas telas discordarem sobre o mesmo dia. Precisa de deploy.\n\nAchei e corrigi um defeito no caminho: passos por hora misturavam o que a memória manda (o que aconteceu na hora) com o que o evento ao vivo manda (o total do dia), então depois de cada sincronização aparecia uma barra com o dia inteiro dentro dela.\n\n655 testes no app, 110 no servidor, 2.090 no modelo. Conferido no simulador.",
+      "versao": "1.0.5 (7)",
+      "em": "2026-08-23T14:18:46"
+    },
+    "slack:1787496700.528899": {
+      "commit": "2dc79cf",
+      "nota": "Vídeo analisado (Fitness e Saúde da Apple); virou a análise e a implementação.",
+      "versao": "1.0.5 (7)",
+      "em": "2026-08-23T14:19:05"
+    },
+    "slack:1787497078.084009": {
+      "commit": "f818894",
+      "nota": "Análise completa entregue no artifact e em relatorios/produto/capacidades-apple-health.md.",
+      "versao": "1.0.5 (7)",
+      "em": "2026-08-23T14:19:05"
     }
   }
 }
