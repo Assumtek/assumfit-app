@@ -4,7 +4,6 @@ import { create } from 'zustand';
 import { api, fetchMorningForecast, fetchMorningGreeting, isAuthenticated } from '../services/api.service';
 import { scheduleMorningGreeting } from '../services/notifications.service';
 import { useAlertsStore } from './alerts.store';
-import { armarBomDiaLocal } from './workout.store';
 
 /**
  * Checa o lado NATIVO antes de tocar no pacote JS.
@@ -176,11 +175,11 @@ export const useAmbientStore = create<AmbientState>((set, get) => ({
               .slice(0, 7)
               .map((n) => n.corpo),
           });
-          await scheduleMorningGreeting(texto, 'ia');
+          // Só texto redigido pelo modelo. Molde pronto não entra (decisão da
+          // fundadora, 22/08/2026): sem resposta, a manhã fica em silêncio.
+          if (texto.source === 'llm') await scheduleMorningGreeting(texto);
         } catch {
-          // Sem previsão ou sem servidor, o molde local garante a manhã: cita
-          // o treino de amanhã pelo plano que o aparelho já tem.
-          await armarBomDiaLocal();
+          // sem previsão ou sem servidor, nada é agendado
         }
       })();
     } catch {

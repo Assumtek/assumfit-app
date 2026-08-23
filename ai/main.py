@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from fastapi import Body, FastAPI
+from fastapi import Body, FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
@@ -238,7 +238,7 @@ def morning(data: MorningInput) -> dict:
     agendada, "veio do molde" e "veio do modelo" são indistinguíveis na tela, e
     sem esse campo não há como perceber que o LLM parou de responder.
     """
-    return write_morning(
+    texto = write_morning(
         MorningFacts(
             temperature_c=data.temperature_c,
             humidity_pct=data.humidity_pct,
@@ -249,6 +249,9 @@ def morning(data: MorningInput) -> dict:
             recent=tuple(data.recent),
         )
     )
+    if texto is None:
+        raise HTTPException(status_code=503, detail="modelo indisponível")
+    return texto
 
 
 class BioAgeInput(BaseModel):

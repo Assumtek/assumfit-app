@@ -410,16 +410,10 @@ export async function armTrainingNudge(fromTomorrow = false) {
  * sabe fazer: entregar no horário certo. Rearmada a cada abertura do app, e
  * por isso a previsão nunca tem mais de um dia.
  */
-/** Quem armou o bom dia de amanhã: a IA ganha do molde local, nunca o contrário. */
-let bomDiaDaIAPara: string | null = null;
-
-export async function scheduleMorningGreeting(texto: { title: string; body: string }, origem: 'ia' | 'local' = 'ia') {
+export async function scheduleMorningGreeting(texto: { title: string; body: string }) {
   if (!(await ensurePermission())) return;
   const alvo = new Date(Date.now() + 86_400_000);
   alvo.setHours(7, 30, 0, 0);
-  const chave = alvo.toDateString();
-  if (origem === 'local' && bomDiaDaIAPara === chave) return;
-  if (origem === 'ia') bomDiaDaIAPara = chave;
 
   /*
    Conflito de minuto: lembrete de água ou de refeição marcado pela pessoa

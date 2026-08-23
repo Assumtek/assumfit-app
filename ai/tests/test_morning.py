@@ -1,6 +1,6 @@
 """A saudação da manhã: o molde e o filtro que protege a tela de bloqueio."""
 
-from models.morning import MorningFacts, _valido, fallback_morning
+from models.morning import MorningFacts, _valido
 
 
 def fatos(**kw) -> MorningFacts:
@@ -12,35 +12,6 @@ def fatos(**kw) -> MorningFacts:
 class TestMolde:
     """O molde é a resposta quando a rede falha — e notificação agendada não
     tem segunda chance, então ele precisa ser correto sozinho."""
-
-    def test_frio_com_treino_convida(self):
-        corpo = fallback_morning(fatos(temperature_c=10))["body"]
-        assert "10°" in corpo
-        assert "treino" in corpo.lower()
-
-    def test_frio_em_dia_de_descanso_nao_empurra_treino(self):
-        corpo = fallback_morning(fatos(temperature_c=10, trains_tomorrow=False))["body"]
-        assert "treino" not in corpo.lower()
-
-    def test_calor_pede_agua(self):
-        corpo = fallback_morning(fatos(temperature_c=31))["body"]
-        assert "31°" in corpo
-        assert "água" in corpo.lower() or "hidrate" in corpo.lower()
-
-    def test_ar_abafado_acrescenta_a_agua(self):
-        corpo = fallback_morning(fatos(humidity_pct=88))["body"]
-        assert "abafado" in corpo.lower()
-
-    def test_umidade_normal_nao_fala_de_ar(self):
-        assert "abafado" not in fallback_morning(fatos(humidity_pct=55))["body"].lower()
-
-    def test_nunca_usa_exclamacao_nem_emoji(self):
-        for t in (5, 20, 35):
-            for treina in (True, False):
-                corpo = fallback_morning(fatos(temperature_c=t, trains_tomorrow=treina))["body"]
-                assert "!" not in corpo
-                assert corpo.isascii() or "°" in corpo
-
 
 class TestValidacao:
     """O filtro existe porque número inventado numa notificação de saúde é
@@ -72,11 +43,3 @@ class TestValidacao:
         assert not _valido({"title": "Bom dia", "body": "50 dias seguidos."}, f)
 
 
-def test_molde_sem_previsao_cita_o_treino():
-    from models.morning import MorningFacts, fallback_morning
-
-    com = fallback_morning(MorningFacts(temperature_c=None, humidity_pct=None, trains_tomorrow=True, workout_name="Corpo Inteiro B"))
-    sem = fallback_morning(MorningFacts(temperature_c=None, humidity_pct=None, trains_tomorrow=False))
-    assert "Corpo Inteiro B" in com["body"]
-    assert "treino" not in sem["body"].lower() or "recuperar" in sem["body"]
-    assert "—" not in com["body"] + sem["body"]

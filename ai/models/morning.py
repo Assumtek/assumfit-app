@@ -3,8 +3,8 @@
 O texto era um molde de seis frases escolhidas por faixa de temperatura, e
 chegava igual todo dia: quem usa o app por uma semana já viu todas. Aqui ele
 passa pelo mesmo caminho da frase da home, o modelo REDIGE sobre fatos que já
-foram apurados, e o molde continua existindo como reserva para quando a rede,
-a chave ou o classificador falharem.
+foram apurados. Não há texto de reserva: sem modelo, a rota responde 503 e a
+manhã fica sem notificação (decisão da fundadora, 22/08/2026).
 
 Duas regras herdadas do insight da home, e pelas mesmas razões:
 
@@ -90,43 +90,6 @@ class MorningFacts:
     recent: tuple[str, ...] = ()
 
 
-def fallback_morning(f: MorningFacts) -> dict:
-    """O molde determinístico. É a resposta quando o modelo não responde.
-
-    Continua existindo porque notificação agendada não tem segunda chance: se
-    a rede falhar às 23h, quem acorda às 7h30 precisa receber ALGUMA coisa
-    coerente, e um molde honesto vale mais que silêncio.
-    """
-    t = f.temperature_c
-    if t is None:
-        if f.trains_tomorrow:
-            corpo = f"Hoje tem {f.workout_name}. Comece pelo primeiro exercício e o resto vem." if f.workout_name else "Hoje é dia de treino no plano. Comece cedo e o dia agradece."
-        else:
-            corpo = "Dia de recuperar. Movimento leve e água contam a favor."
-        return {"title": "Bom dia", "body": corpo}
-    if t < 15:
-        corpo = (
-            f"{t}° lá fora. O treino de hoje conta em dobro."
-            if f.trains_tomorrow
-            else f"{t}° lá fora. Dia de recuperar com calma."
-        )
-    elif t >= 27:
-        corpo = (
-            f"{t}° hoje. Treine antes de o calor apertar e leve água."
-            if f.trains_tomorrow
-            else f"{t}° hoje. Hidrate bem mesmo no descanso."
-        )
-    else:
-        corpo = (
-            f"{t}° e tempo firme. Boa manhã para treinar."
-            if f.trains_tomorrow
-            else f"{t}° e tempo firme. Aproveite para recuperar."
-        )
-    if f.humidity_pct >= 80:
-        corpo += " Ar abafado: capriche na água."
-    return {"title": "Bom dia", "body": corpo}
-
-
 def _prompt(f: MorningFacts) -> str:
     linhas = (
         [f"Previsão para as 7h de amanhã: {f.temperature_c}°C, umidade {f.humidity_pct}%."]
@@ -192,16 +155,16 @@ def _numeros(texto: str) -> set[str]:
     return achados
 
 
-def write_morning(facts: MorningFacts) -> dict:
-    """Redige a saudação. Cai no molde em qualquer falha, sempre com resposta."""
-    molde = fallback_morning(facts)
+def write_morning(facts: MorningFacts) -> dict | None:
+    """Redige a saudação. Sem modelo, devolve None: texto pronto de reserva não
+    entra (decisão da fundadora, 22/08/2026); a manhã fica em silêncio."""
     if not os.environ.get("ANTHROPIC_API_KEY"):
-        return {**molde, "source": "template"}
+        return None
 
     try:
         import anthropic
     except ImportError:
-        return {**molde, "source": "template"}
+        return None
 
     try:
         client = anthropic.Anthropic(timeout=TIMEOUT_S, max_retries=1)
@@ -216,18 +179,18 @@ def write_morning(facts: MorningFacts) -> dict:
             messages=[{"role": "user", "content": _prompt(facts)}],
         )
         if response.stop_reason == "refusal":
-            return {**molde, "source": "template"}
+            return None
 
         texto = next((b.text for b in response.content if b.type == "text"), None)
         if not texto:
-            return {**molde, "source": "template"}
+            return None
         dados = json.loads(texto)
     except Exception as err:
         print(f"[morning] falhou: {type(err).__name__}: {err}", flush=True)
-        return {**molde, "source": "template"}
+        return None
 
     if not _valido(dados, facts):
         print("[morning] resposta recusada na validação", flush=True)
-        return {**molde, "source": "template"}
+        return None
 
     return {"title": dados["title"].strip(), "body": dados["body"].strip(), "source": "llm"}
