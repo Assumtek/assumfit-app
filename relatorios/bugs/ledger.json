@@ -1196,6 +1196,12 @@
       "nota": "A meta pelo peso só era calculada ao abrir a tela de Água; agora é calculada na abertura do app, e a Home, o menu e o widget já mostram a sua (3,2 L) sem precisar entrar na tela.",
       "versao": "1.0.5 (6)",
       "em": "2026-08-23T06:45:48"
+    },
+    "AD8dMQagE6uRup4h68gq1P8": {
+      "commit": "fc52818",
+      "nota": "Faixa mais estreita: margem de porção de 25 para 15 por cento e o total combina as incertezas em vez de somar extremos (precisa do deploy do servidor); na tela, o número central fica em destaque e a faixa vira sub-rótulo.",
+      "versao": "1.0.5 (7)",
+      "em": "2026-08-23T10:34:47"
     }
   }
 }
