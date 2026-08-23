@@ -1,12 +1,11 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable } from 'react-native';
 
 import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
-import { Body, Button, Card, HeroCard, Pill, PillText, SectionTitle } from '../../components/ui';
+import { Body, Button, Card, Data, Heading, HeroCard, MetricSm, Pill, PillText, SectionTitle, Subtitle } from '../../components/ui';
 import { sportForModality } from '../../domain/sport';
 import { DAY_LABEL, workoutMeta } from '../../domain/workout';
 import { fetchWorkout, type PlanDay } from '../../services/api.service';
@@ -129,18 +128,18 @@ export function CheckinScreen() {
       <DetailScreen title="Check-in">
         <YStack gap="$xl" paddingTop="$lg">
           <YStack gap="$xs">
-            <Text fontSize={24} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
+            <Heading fontWeight="800" color="$foreground" letterSpacing={-0.5}>
               Você tem um treino em andamento
-            </Text>
+            </Heading>
             <Body color="$mutedForeground">
               Continue de onde parou, ou encerre para começar outro.
             </Body>
           </YStack>
 
           <HeroCard eyebrow="em andamento" selected>
-            <Text fontSize={22} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
+            <MetricSm fontWeight="800" color="$foreground" letterSpacing={-0.5}>
               {execution.workoutName}
-            </Text>
+            </MetricSm>
           </HeroCard>
 
           <YStack gap="$md">
@@ -175,9 +174,9 @@ export function CheckinScreen() {
       <DetailScreen title="Check-in">
         <YStack gap="$xl" paddingTop="$lg">
           <YStack gap="$xs">
-            <Text fontSize={24} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
+            <Heading fontWeight="800" color="$foreground" letterSpacing={-0.5}>
               Você ainda não tem um plano
-            </Text>
+            </Heading>
             <Body color="$mutedForeground">
               Responda algumas perguntas sobre saúde e rotina, e o treino é montado a partir delas.
             </Body>
@@ -196,9 +195,9 @@ export function CheckinScreen() {
     <DetailScreen title="Check-in">
       <YStack gap="$xl" paddingTop="$lg">
         <YStack gap="$xs">
-          <Text fontSize={24} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
+          <Heading fontWeight="800" color="$foreground" letterSpacing={-0.5}>
             Bora treinar?
-          </Text>
+          </Heading>
           <Body color="$mutedForeground">
             {DAY_LABEL[plan.today] ?? ''}
           </Body>
@@ -206,9 +205,9 @@ export function CheckinScreen() {
 
         {isRestDay ? (
           <HeroCard eyebrow={DAY_LABEL[plan.today]}>
-            <Text fontSize={20} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
+            <Subtitle fontWeight="800" color="$foreground" letterSpacing={-0.5}>
               Hoje é seu dia de descanso
-            </Text>
+            </Subtitle>
             <Body color="$mutedForeground">
               Recuperação é parte do treino. Quer treinar mesmo assim? Escolha um abaixo.
             </Body>
@@ -239,15 +238,14 @@ export function CheckinScreen() {
           <YStack gap="$md">
             <XStack alignItems="center" justifyContent="space-between" gap="$md">
               <YStack gap={4} flex={1}>
-                <Text
-                  fontSize={12}
+                <Data
                   fontWeight="700"
                   letterSpacing={1}
                   color="$mutedForeground"
                   textTransform="uppercase"
                 >
                   selecionado
-                </Text>
+                </Data>
                 <SectionTitle color="$foreground" numberOfLines={1}>
                   {selected.workout.name}
                 </SectionTitle>
@@ -398,6 +396,8 @@ function WorkoutOption({
   const workout = day.workout!;
   const Wrapper = hero ? HeroCard : Card;
 
+  // O título do hero é maior; a escala escolhe o componente, não o número.
+  const Nome = hero ? MetricSm : SectionTitle;
   return (
     <Wrapper
       eyebrow={hero ? 'treino de hoje' : undefined}
@@ -407,15 +407,14 @@ function WorkoutOption({
     >
       <XStack alignItems="flex-start" gap="$md">
         <YStack flex={1} gap={8} minWidth={0}>
-          <Text
-            fontSize={hero ? 22 : 16}
+          <Nome
             fontWeight={hero ? '800' : '700'}
             color="$foreground"
             letterSpacing={hero ? -0.5 : 0}
             numberOfLines={2}
           >
             {workout.name}
-          </Text>
+          </Nome>
           <Body color="$mutedForeground" numberOfLines={1}>
             {workoutMeta(workout.muscleGroups, workout.exerciseCount)}
           </Body>
@@ -454,9 +453,9 @@ function WorkoutOption({
           borderTopWidth={1}
           borderTopColor="$border"
         >
-          <Text fontSize={12} color="$mutedForeground" fontWeight="500">
+          <Data color="$mutedForeground" fontWeight="500">
             {expanded ? 'Ocultar exercícios' : 'Ver exercícios'}
-          </Text>
+          </Data>
           <Icon name={expanded ? 'up' : 'down'} size={12} color={colors.textMuted} />
         </XStack>
       </Pressable>

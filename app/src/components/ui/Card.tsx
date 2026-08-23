@@ -1,5 +1,5 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
+import { Data } from './Type';
 import React from 'react';
 import { Pressable } from 'react-native';
 
@@ -92,15 +92,14 @@ export function HeroCard({
       >
         <YStack gap="$md" zIndex={1}>
           {eyebrow ? (
-            <Text
-              fontSize={12}
+            <Data
               fontWeight="700"
               letterSpacing={1.5}
               color="$primary"
               textTransform="uppercase"
             >
               {eyebrow}
-            </Text>
+            </Data>
           ) : null}
           {children}
         </YStack>

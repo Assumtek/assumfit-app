@@ -1,6 +1,5 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
-import { Body } from './ui';
+import { Body, Subtitle } from './ui';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Image,
@@ -140,15 +139,14 @@ export function HomeBanners({ aoAbrir }: { aoAbrir: (rota: string) => void }) {
                 <Veu largura={larguraPagina} altura={ALTURA} />
 
                 <YStack flex={1} justifyContent="flex-end" padding="$lg" gap={4}>
-                  <Text
-                    fontSize={20}
+                  <Subtitle
                     fontWeight="800"
                     letterSpacing={-0.4}
                     numberOfLines={1}
                     style={{ color: TINTA }}
                   >
                     {banner.titulo}
-                  </Text>
+                  </Subtitle>
                   <XStack alignItems="center" gap="$sm">
                     <Body color="$foreground" flex={1} numberOfLines={2} style={{ color: TINTA_FRACA }}>
                       {banner.corpo}

@@ -3,7 +3,7 @@ import { YStack } from '@tamagui/stacks';
 import { useChartWidth } from '../components/charts/useChartWidth';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Note, Section } from '../components/Card';
+import { Note, Section } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
 import { LineChart } from '../components/charts/LineChart';
 import { Body, Data, Display, RatingText, Readout, ReadoutCluster, Skeleton } from '../components/ui';

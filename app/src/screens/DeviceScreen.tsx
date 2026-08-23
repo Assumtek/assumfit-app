@@ -25,7 +25,7 @@ import { YStack } from '@tamagui/stacks';
 
 import { BandStatusLine } from '../components/BandStatus';
 import { BandVibration } from '../components/BandVibration';
-import { Note, Row, Section, ActionRow } from '../components/Card';
+import { Note, Row, Section, ActionRow } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
 import { SedentaryReminder } from '../components/SedentaryReminder';
@@ -253,9 +253,9 @@ export function DeviceScreen() {
                 <Body color={e.lastAt != null || e.resumo || viva ? '$foreground' : '$mutedForeground'}>{e.label}</Body>
                 {e.resumo ? <Data>{e.resumo}</Data> : null}
               </YStack>
-              <Data fontSize={14} color={e.lastAt != null ? '$foreground' : '$mutedForeground'} fontVariant={['tabular-nums']}>
+              <Body color={e.lastAt != null ? '$foreground' : '$mutedForeground'} fontVariant={['tabular-nums']}>
                 {viva ? 'lendo…' : e.lastAt != null ? horaLocal(e.lastAt) : e.resumo ? 'hoje' : 'sem medição'}
-              </Data>
+              </Body>
             </Row>
           );
         })}
@@ -305,19 +305,19 @@ export function DeviceScreen() {
       <Section label="Pulseira">
         <Row>
           <Body flex={1}>Modelo</Body>
-          <Data fontSize={14} color="$foreground">AssumFit Watch</Data>
+          <Body color="$foreground">AssumFit Watch</Body>
         </Row>
         <Row>
           <Body flex={1}>Identificador</Body>
-          <Data fontSize={14} color="$foreground">{pairedDeviceId ?? '–'}</Data>
+          <Body color="$foreground">{pairedDeviceId ?? '–'}</Body>
         </Row>
         <Row>
           <Body flex={1}>Estado</Body>
-          <Data fontSize={14} color="$foreground">{conectada ? 'Conectada' : conectando ? 'Reconectando…' : 'Desconectada'}</Data>
+          <Body color="$foreground">{conectada ? 'Conectada' : conectando ? 'Reconectando…' : 'Desconectada'}</Body>
         </Row>
         <Row last>
           <Body flex={1}>Origem dos dados</Body>
-          <Data fontSize={14} color="$foreground">{latest?.source === 'mock' ? 'Simulado' : 'Sensor'}</Data>
+          <Body color="$foreground">{latest?.source === 'mock' ? 'Simulado' : 'Sensor'}</Body>
         </Row>
       </Section>
 

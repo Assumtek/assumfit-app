@@ -1,4 +1,3 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React from 'react';
 import { Pressable, TextInput, TextInputProps } from 'react-native';
@@ -98,9 +97,9 @@ export function Checkbox({
           <Body color="$foreground">
             {title}
             {required ? (
-              <Text fontSize={12} color="$faint">
+              <Data color="$faint">
                 {' · obrigatório'}
-              </Text>
+              </Data>
             ) : null}
           </Body>
           <Body>{body}</Body>

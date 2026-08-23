@@ -1,5 +1,4 @@
 import { useNavigation } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView } from 'react-native';
@@ -8,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Field } from '../components/Field';
 import { Icon } from '../components/Icon';
 import { LogoType } from '../components/Logo';
-import { Body, SectionTitle } from '../components/ui';
+import { Body, Headline, SectionTitle } from '../components/ui';
 import { useAuthStore } from '../store/auth.store';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -45,8 +44,7 @@ export function SignInScreen() {
         showsVerticalScrollIndicator={false}
       >
         <LogoType height={20} />
-        <Text
-          fontSize={34}
+        <Headline
           fontWeight="700"
           letterSpacing={-1.2}
           color="$foreground"
@@ -54,7 +52,7 @@ export function SignInScreen() {
           marginBottom="$xxl"
         >
           Entrar
-        </Text>
+        </Headline>
 
         <YStack marginTop="$md">
           <Field

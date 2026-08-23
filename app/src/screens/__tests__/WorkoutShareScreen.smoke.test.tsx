@@ -79,10 +79,10 @@ jest.mock('../../components/ui', () => {
   const T = (props: any) => React.createElement(RNText, props, props.children);
   const V = (props: any) => React.createElement(View, props, props.children);
   return {
-    Body: T, Data: T, Display: T, Headline: T, Label: T, Metric: T, MetricSm: T, RatingText: T, SectionTitle: T, Title: T,
+    Body: T, BodyLarge: T, Data: T, Display: T, Heading: T, Headline: T, Label: T, Metric: T, MetricSm: T, Micro: T, RatingText: T, SectionTitle: T, Subtitle: T, Title: T,
     Button: (props: any) => React.createElement(Pressable, { onPress: props.onPress }, React.createElement(RNText, null, props.title)),
     Card: V, HeroCard: V, Pill: V, PillText: T, Readout: V, ReadoutCluster: V,
-    RadialHalo: V, CORNER_HALO: [], ShadowView: V,
+    ShadowView: V, Skeleton: V, PillButton: V, IconButton: V,
     useCardShadow: () => ({}), useCtaShadow: () => ({}), useFabShadow: () => ({}), useHighlightShadow: () => ({}), useSurfaceColor: () => '#000',
   };
 });

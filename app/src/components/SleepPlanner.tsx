@@ -1,11 +1,10 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useMemo, useState } from 'react';
 import { Alert, Linking, Platform, Pressable } from 'react-native';
 
 import { Icon } from './Icon';
 import { alarmeNativoDisponivel, marcarAlarme } from '../../modules/alarmkit';
-import { Body, Button, Data, Label, SectionTitle } from './ui';
+import { Body, Button, Data, Label, Metric, SectionTitle, Title } from './ui';
 import { Card } from './ui/Card';
 import {
   CICLO_MIN,
@@ -94,15 +93,14 @@ export function SleepPlanner({ horaDeDormirHabitual }: { horaDeDormirHabitual?: 
               icone="down"
               onPress={() => setAcordarMin((m) => (m - PASSO_MIN + 1440) % 1440)}
             />
-            <Text
-              fontSize={40}
+            <Metric
               fontWeight="200"
               letterSpacing={-1.5}
               color="$foreground"
               fontVariant={['tabular-nums']}
             >
               {formatMinutes(acordarMin)}
-            </Text>
+            </Metric>
             <Passo
               rotulo="Quinze minutos depois"
               icone="up"
@@ -194,8 +192,7 @@ function OpcaoDeCiclo({
           </Data>
         </YStack>
         <YStack alignItems="flex-end">
-          <Text
-            fontSize={26}
+          <Title
             fontWeight="300"
             letterSpacing={-0.8}
             fontVariant={['tabular-nums']}
@@ -203,7 +200,7 @@ function OpcaoDeCiclo({
             color={destaque ? undefined : '$foreground'}
           >
             {opcao.label}
-          </Text>
+          </Title>
           <Data>{modo === 'acordar-as' ? 'deitar' : 'acordar'}</Data>
         </YStack>
       </XStack>

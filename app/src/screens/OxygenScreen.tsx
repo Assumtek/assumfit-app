@@ -2,14 +2,14 @@ import { YStack } from '@tamagui/stacks';
 import React from 'react';
 
 import { EmptyMetric } from '../components/BandStatus';
-import { HistoryRow, Section } from '../components/Card';
+import { HistoryRow, Section } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
 import { MeasureButton } from '../components/MeasureButton';
 import { Scale } from '../components/Scale';
 import { DayChart } from '../components/charts/DayChart';
 import { MeasuredAt } from '../components/MeasuredAt';
 import { DayPickerRow, useHistoricoDoDia } from '../components/DayPicker';
-import { Data, Display, RatingText, SectionTitle } from '../components/ui';
+import { BodyLarge, Data, Display, RatingText, SectionTitle } from '../components/ui';
 import { rateSpo2, shown, stateColor } from '../domain/ratings';
 import { useBiometricStore } from '../store/biometric.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -69,9 +69,9 @@ export function OxygenScreen() {
       />
 
       <YStack marginBottom="$xl">
-        <SectionTitle fontSize={16} marginBottom="$md">
+        <BodyLarge marginBottom="$md">
           {historico.ehHoje ? 'Medições de hoje' : 'Medições do dia'}
-        </SectionTitle>
+        </BodyLarge>
         <DayChart
           serie={historico.pontos}
           dia={historico.dia}

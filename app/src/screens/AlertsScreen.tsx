@@ -3,7 +3,7 @@ import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
 import { Pressable } from 'react-native';
 
-import { Note, Row, Section } from '../components/Card';
+import { Note, Row, Section } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
 import { Icon, type IconName } from '../components/Icon';
 import { PermissionGate } from '../components/PermissionGate';

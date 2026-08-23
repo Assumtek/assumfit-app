@@ -144,7 +144,7 @@ export function HistoryRow({
 
 /** Rótulo e valor de uma linha de propriedades (Perfil, Configurações, Pulseira). */
 export const RowLabel = styled(Body, { flex: 1 });
-export const RowValue = styled(Data, { fontSize: 14, color: '$foreground' });
+export const RowValue = styled(Body, { color: '$foreground' });
 
 /**
  * Linha de AÇÃO: ícone opcional, título, subtítulo e algo à direita, que por

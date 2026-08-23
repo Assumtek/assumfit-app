@@ -1,12 +1,11 @@
 import { useNavigation } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '../components/Icon';
-import { Body, Button, Data, Label } from '../components/ui';
+import { Body, Button, Data, Label, MetricSm, Subtitle } from '../components/ui';
 import { useBiometricStore } from '../store/biometric.store';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -106,15 +105,15 @@ export function BreathingScreen() {
         </Pressable>
         <YStack flex={1}>
           <Label>pausa</Label>
-          <Text fontSize={20} fontWeight="700" color="$foreground" letterSpacing={-0.4}>
+          <Subtitle fontWeight="700" color="$foreground" letterSpacing={-0.4}>
             Respiração guiada
-          </Text>
+          </Subtitle>
         </YStack>
         {latest ? (
           <YStack alignItems="flex-end">
-            <Text fontSize={22} fontWeight="300" color="$foreground" fontVariant={['tabular-nums']}>
+            <MetricSm fontWeight="300" color="$foreground" fontVariant={['tabular-nums']}>
               {Math.round(latest.heartRate)}
-            </Text>
+            </MetricSm>
             <Data>bpm agora</Data>
           </YStack>
         ) : null}
@@ -134,9 +133,9 @@ export function BreathingScreen() {
             }}
           />
           <YStack position="absolute" alignItems="center" gap="$xs">
-            <Text fontSize={22} fontWeight="600" color="$foreground">
+            <MetricSm fontWeight="600" color="$foreground">
               {terminado ? 'Pronto' : rodando ? (fase === 'inspira' ? 'Inspire' : 'Solte devagar') : 'Quando quiser'}
-            </Text>
+            </MetricSm>
             {rodando ? (
               <Data>
                 {minutos}:{String(segundos).padStart(2, '0')}

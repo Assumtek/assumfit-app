@@ -4,7 +4,7 @@ import { useChartWidth } from '../../components/charts/useChartWidth';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable } from 'react-native';
 
-import { Note } from '../../components/Card';
+import { Note } from '../../components/List';
 import { ProgressPhotos } from '../../components/ProgressPhotos';
 import { RangeSheet } from '../../components/RangeSheet';
 import { BarChart } from '../../components/charts/BarChart';

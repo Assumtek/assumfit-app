@@ -1,15 +1,15 @@
 import { useNavigation } from '@react-navigation/native';
-import { styled, Text } from '@tamagui/core';
+import { styled } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import { Image, Pressable } from 'react-native';
 
-import { Row, Section, RowLabel, RowValue } from '../components/Card';
+import { ActionRow, Row, RowLabel, RowValue, Section } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
 import { Field } from '../components/Field';
 import { Icon } from '../components/Icon';
-import { Body, Button, Data, Title } from '../components/ui';
+import { Body, BodyLarge, Button, Data, MetricSm, Title } from '../components/ui';
 import { formatDateBR, maskBirthDate, toIsoBirthDate } from '../domain/birthDate';
 import { useUserStore } from '../store/user.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -130,9 +130,9 @@ export function ProfileScreen() {
               alignItems="center"
               justifyContent="center"
             >
-              <Text fontSize={22} color="$mutedForeground">
+              <MetricSm color="$mutedForeground">
                 {user.name.trim().charAt(0).toUpperCase()}
-              </Text>
+              </MetricSm>
             </YStack>
           )}
         </Pressable>
@@ -163,7 +163,7 @@ export function ProfileScreen() {
               onPress={() => setEditing(false)}
               accessibilityRole="button"
             >
-              <Text fontSize={16} color="$foreground">Cancelar</Text>
+              <BodyLarge color="$foreground">Cancelar</BodyLarge>
             </Pressable>
           </XStack>
         </Section>
@@ -175,16 +175,7 @@ export function ProfileScreen() {
               <RowValue>{row.value}</RowValue>
             </Row>
           ))}
-          <Pressable
-            style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
-            onPress={beginEdit}
-            accessibilityRole="button"
-          >
-            <XStack alignItems="center" justifyContent="space-between" paddingTop="$lg">
-              <Text fontSize={16} color="$foreground">Editar cadastro</Text>
-              <Icon name="arrowRight" size={16} color={colors.textMuted} />
-            </XStack>
-          </Pressable>
+          <ActionRow title="Editar cadastro" onPress={beginEdit} />
         </Section>
       )}
 
@@ -218,23 +209,7 @@ export function ProfileScreen() {
         )}
       </Section>
 
-      <Pressable
-        style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}
-        onPress={() => (navigation as any).push('Settings' as never)}
-        accessibilityRole="button"
-      >
-        <XStack
-          alignItems="center"
-          justifyContent="space-between"
-          marginTop="$xxl"
-          paddingVertical="$lg"
-          borderTopWidth={1}
-          borderTopColor="$border"
-        >
-          <Text fontSize={16} color="$foreground">Configurações do app</Text>
-          <Icon name="arrowRight" size={16} color={colors.textMuted} />
-        </XStack>
-      </Pressable>
+      <ActionRow title="Configurações do app" onPress={() => (navigation as any).push('Settings' as never)} />
     </DetailScreen>
   );
 }

@@ -5,12 +5,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable } from 'react-native';
 
 import { EmptyMetric } from '../components/BandStatus';
-import { Note, Row, Section } from '../components/Card';
+import { Note, Row, Section } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
 import { MeasureButton } from '../components/MeasureButton';
 import { DivergingBar } from '../components/charts/DivergingBar';
-import { Button, Body, Data, Display, MetricSm, RatingText } from '../components/ui';
+import { Body, BodyLarge, Button, Data, Display, MetricSm, RatingText } from '../components/ui';
 import { explicacaoDaIdade, formatYears } from '../domain/bioAge';
 import { useBioAge } from '../hooks/useBioAge';
 import * as api from '../services/api.service';
@@ -81,13 +81,13 @@ export function BioAgeScreen() {
       <Section label="Aptidão cardiorrespiratória">
         <Row>
           <Body flex={1}>VO₂máx estimado</Body>
-          <MetricSm fontSize={18}>{bio.vo2max?.toFixed(1).replace('.', ',')}</MetricSm>
+          <RatingText>{bio.vo2max?.toFixed(1).replace('.', ',')}</RatingText>
         </Row>
         <Row last>
           <Body flex={1}>Movimento nos últimos 7 dias</Body>
-          <MetricSm fontSize={18}>
+          <RatingText>
             {minutosAtivos == null ? '–' : `${minutosAtivos} min`}
-          </MetricSm>
+          </RatingText>
         </Row>
       </Section>
 
@@ -126,7 +126,7 @@ export function BioAgeScreen() {
               <Body color="$foreground">{f.label}</Body>
               <Data>{f.reference}</Data>
             </YStack>
-            <MetricSm fontSize={16}>{f.value}</MetricSm>
+            <BodyLarge>{f.value}</BodyLarge>
           </Row>
         ))}
       </Section>

@@ -1,5 +1,4 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
 import { LinearGradient } from '@tamagui/linear-gradient';
 import { XStack, YStack } from '@tamagui/stacks';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
@@ -20,7 +19,7 @@ import {
   EXPORT_WIDTH,
   FotoDeFundo,
 } from '../../components/ShareCanvas';
-import { Button, Data, Label } from '../../components/ui';
+import { Button, Data, Heading, Label, Micro, Subtitle } from '../../components/ui';
 import { formatDuration } from '../../domain/workout';
 
 /**
@@ -296,9 +295,9 @@ export function WorkoutShareScreen() {
                 borderWidth={1}
                 borderColor="rgba(135,123,240,0.55)"
               >
-                <Text fontSize={10} fontWeight="800" letterSpacing={1.2} color="#ECE7F4">
+                <Micro fontWeight="800" letterSpacing={1.2} color="#ECE7F4">
                   {params.selo ?? (params.titulo ? 'ASSUMFIT' : 'TREINO CONCLUÍDO')}
-                </Text>
+                </Micro>
               </XStack>
             </BlocoEditavel>
 
@@ -309,15 +308,14 @@ export function WorkoutShareScreen() {
               selecionado={selecionado === 'nome'}
               onSelecionar={escolher('nome')}
             >
-              <Text
-                fontSize={24}
+              <Heading
                 fontWeight="800"
                 color="#ECE7F4"
                 letterSpacing={-0.6}
                 maxWidth={CANVAS_WIDTH - 48}
               >
                 {params.titulo ?? params.workoutName ?? 'Treino concluído'}
-              </Text>
+              </Heading>
             </BlocoEditavel>
 
             {(params.metricas ?? []).slice(0, 3).map((m, i) => (
@@ -434,12 +432,12 @@ export function WorkoutShareScreen() {
 function Metrica({ valor, rotulo }: { valor: string; rotulo: string }) {
   return (
     <YStack>
-      <Text fontSize={20} fontWeight="300" color="#ECE7F4" fontVariant={['tabular-nums']}>
+      <Subtitle fontWeight="300" color="#ECE7F4" fontVariant={['tabular-nums']}>
         {valor}
-      </Text>
-      <Text fontSize={10} letterSpacing={1} color="rgba(236,231,244,0.7)" textTransform="uppercase">
+      </Subtitle>
+      <Micro letterSpacing={1} color="rgba(236,231,244,0.7)" textTransform="uppercase">
         {rotulo}
-      </Text>
+      </Micro>
     </YStack>
   );
 }

@@ -1,5 +1,4 @@
 import { useNavigation } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView } from 'react-native';
@@ -7,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Checkbox, Field } from '../components/Field';
 import { Icon } from '../components/Icon';
-import { Body, Data, Label, SectionTitle } from '../components/ui';
+import { Body, BodyLarge, Data, Headline, Label, SectionTitle } from '../components/ui';
 import { isValidBirthDate, maskBirthDate, toIsoBirthDate } from '../domain/birthDate';
 import { useAuthStore } from '../store/auth.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -79,15 +78,14 @@ export function SignUpScreen() {
           <Icon name="back" size={20} color={colors.textMuted} />
         </Pressable>
 
-        <Text
-          fontSize={30}
+        <Headline
           fontWeight="700"
           letterSpacing={-1}
           color="$foreground"
           marginBottom="$xxl"
         >
           Criar conta
-        </Text>
+        </Headline>
 
         <Field
           label="Nome"
@@ -141,9 +139,9 @@ export function SignUpScreen() {
               ] as const
             ).map(([value, label]) => (
               <Pressable key={value} onPress={() => setSex(value)} hitSlop={8} accessibilityRole="radio">
-                <Text fontSize={16} color={sex === value ? '$foreground' : '$faint'}>
+                <BodyLarge color={sex === value ? '$foreground' : '$faint'}>
                   {label}
-                </Text>
+                </BodyLarge>
               </Pressable>
             ))}
           </XStack>

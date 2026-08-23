@@ -1,5 +1,5 @@
-import { Text } from '@tamagui/core';
 import { YStack } from '@tamagui/stacks';
+import { Subtitle } from './ui';
 import React, { useRef } from 'react';
 import { NativeScrollEvent, NativeSyntheticEvent, ScrollView } from 'react-native';
 
@@ -60,13 +60,12 @@ export function TimeWheel({
       >
         {items.map((item) => (
           <YStack key={item} height={ALTURA_ITEM} alignItems="center" justifyContent="center">
-            <Text
-              fontSize={20}
+            <Subtitle
               fontWeight={item === value ? '600' : '300'}
               color={item === value ? '$foreground' : '$mutedForeground'}
             >
               {item}
-            </Text>
+            </Subtitle>
           </YStack>
         ))}
       </ScrollView>

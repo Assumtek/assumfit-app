@@ -98,7 +98,6 @@ export function Meter({ value, min = 0, max = 100, zones, color }: Props) {
           return (
             <Data
               key={zone.label}
-              fontSize={12}
               fontWeight={active ? '700' : '400'}
               color={active ? '$foreground' : '$faint'}
             >

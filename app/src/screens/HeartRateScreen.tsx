@@ -2,14 +2,14 @@ import { YStack } from '@tamagui/stacks';
 import React from 'react';
 
 import { EmptyMetric } from '../components/BandStatus';
-import { Row, Section } from '../components/Card';
+import { Row, Section } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
 import { MeasureButton } from '../components/MeasureButton';
 import { batimentoMedidoEm } from '../domain/series';
 import { MeasuredAt } from '../components/MeasuredAt';
 import { DayPickerRow, useHistoricoDoDia } from '../components/DayPicker';
 import { DayChart } from '../components/charts/DayChart';
-import { Body, Data, Display, MetricSm, RatingText, SectionTitle } from '../components/ui';
+import { Body, BodyLarge, Data, Display, MetricSm, RatingText, SectionTitle } from '../components/ui';
 import { rateHeartRate } from '../domain/ratings';
 import { useBiometricStore } from '../store/biometric.store';
 
@@ -71,9 +71,9 @@ export function HeartRateScreen() {
       />
 
       <YStack marginBottom="$xl">
-        <SectionTitle fontSize={16} marginBottom="$md">
+        <BodyLarge marginBottom="$md">
           {historico.ehHoje ? 'Medições de hoje' : 'Medições do dia'}
-        </SectionTitle>
+        </BodyLarge>
         <DayChart
           serie={historico.pontos}
           dia={historico.dia}
@@ -97,15 +97,15 @@ export function HeartRateScreen() {
         ) : null}
         <Row>
           <Body flex={1}>Mínima</Body>
-          <MetricSm fontSize={18}>{min} bpm</MetricSm>
+          <RatingText>{min} bpm</RatingText>
         </Row>
         <Row>
           <Body flex={1}>Atual</Body>
-          <MetricSm fontSize={18}>{Math.round(latest.heartRate)} bpm</MetricSm>
+          <RatingText>{Math.round(latest.heartRate)} bpm</RatingText>
         </Row>
         <Row last>
           <Body flex={1}>Máxima</Body>
-          <MetricSm fontSize={18}>{max} bpm</MetricSm>
+          <RatingText>{max} bpm</RatingText>
         </Row>
       </Section>
 

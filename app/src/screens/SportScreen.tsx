@@ -13,7 +13,7 @@ import {
 import MapView, { Polyline } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Note, Row, Section } from '../components/Card';
+import { Note, Row, Section } from '../components/List';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
 import { Icon, type IconName } from '../components/Icon';
 import { HexMosaic, type HexItem } from '../components/HexMosaic';
@@ -21,7 +21,7 @@ import { PhotoViewer } from '../components/PhotoViewer';
 import { TrainingPanel } from '../components/TrainingPanel';
 import { WeekRail } from '../components/WeekRail';
 import { BarChart } from '../components/charts/BarChart';
-import { Body, Button, Data, Display, Headline, Label, Readout, ReadoutCluster, SectionTitle } from '../components/ui';
+import { Body, BodyLarge, Button, Data, Display, Headline, Label, Micro, RatingText, Readout, ReadoutCluster, SectionTitle } from '../components/ui';
 import { Card } from '../components/ui/Card';
 import { ScalePicker } from '../components/ScalePicker';
 import { ConfirmDialog, Sheet } from '../components/ui/Dialog';
@@ -1446,7 +1446,7 @@ export function SportScreen() {
       >
         {!passoRegistro ? (
           <>
-            <SectionTitle fontSize={18}>Iniciar treino</SectionTitle>
+            <RatingText>Iniciar treino</RatingText>
             <OpcaoDeInicio
               icone="dumbbell"
               titulo="Treino guiado"
@@ -1518,7 +1518,7 @@ function EscolhaDeEsporte({
 
   return (
     <>
-      <SectionTitle fontSize={18}>Qual esporte?</SectionTitle>
+      <RatingText>Qual esporte?</RatingText>
 
       <XStack
         alignItems="center"
@@ -1572,10 +1572,10 @@ function EscolhaDeEsporte({
                       gap="$sm"
                     >
                       <Icon name={sport.icon} size={24} color={colors.textMuted} />
-                      <Body fontSize={14} color="$foreground" numberOfLines={1}>
+                      <Body color="$foreground" numberOfLines={1}>
                         {sport.label}
                       </Body>
-                      <Data fontSize={10}>{sport.gps ? 'com GPS' : 'sem GPS'}</Data>
+                      <Micro>{sport.gps ? 'com GPS' : 'sem GPS'}</Micro>
                     </YStack>
                   </Pressable>
                 ))}
@@ -1630,8 +1630,8 @@ function OpcaoDeInicio({
       >
         <Icon name={icone} size={20} color={colors.textMuted} />
         <YStack flex={1} gap={4}>
-          <SectionTitle fontSize={16}>{titulo}</SectionTitle>
-          <Data fontSize={12}>{detalhe}</Data>
+          <BodyLarge>{titulo}</BodyLarge>
+          <Data>{detalhe}</Data>
         </YStack>
         <Icon name="arrowRight" size={16} color={colors.textMuted} />
       </XStack>

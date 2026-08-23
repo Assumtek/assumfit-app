@@ -4,7 +4,7 @@ import { ActivityIndicator } from 'react-native';
 
 import { Icon } from './Icon';
 import { SYNC_LABEL, SYNC_ORDER } from './BandStatus';
-import { Body, Data, SectionTitle } from './ui';
+import { Body, BodyLarge, Data, SectionTitle } from './ui';
 import { useBiometricStore } from '../store/biometric.store';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -45,7 +45,7 @@ export function SyncProgress() {
   if (syncError) {
     return (
       <YStack gap="$sm">
-        <SectionTitle fontSize={16}>A leitura não terminou</SectionTitle>
+        <BodyLarge>A leitura não terminou</BodyLarge>
         <Body>{syncError}</Body>
       </YStack>
     );
@@ -82,7 +82,7 @@ export function SyncProgress() {
   return (
     <YStack gap="$md">
       <YStack gap="$xs">
-        <SectionTitle fontSize={16}>Lendo a memória da pulseira</SectionTitle>
+        <BodyLarge>Lendo a memória da pulseira</BodyLarge>
         <Body>
           Ela mede sozinha o dia todo e guarda tudo por dentro. Agora estamos trazendo cada
           grandeza, uma por vez, leva cerca de um minuto. Pode manter a tela aberta.

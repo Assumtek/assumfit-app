@@ -1,4 +1,5 @@
 import { XStack, YStack } from '@tamagui/stacks';
+import { RatingText } from './Type';
 import React from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable } from 'react-native';
 
@@ -133,9 +134,9 @@ export function ConfirmDialog({
               gap="$md"
               maxWidth={420}
             >
-              <SectionTitle fontSize={18} textAlign="center">
+              <RatingText textAlign="center">
                 {title}
-              </SectionTitle>
+              </RatingText>
               <Body textAlign="center" marginBottom="$sm">
                 {body}
               </Body>

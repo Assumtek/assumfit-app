@@ -1,6 +1,5 @@
-import { Text } from '@tamagui/core';
 import { YStack } from '@tamagui/stacks';
-import { Data } from '../../components/ui';
+import { Data, RatingText } from '../../components/ui';
 import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, Vibration } from 'react-native';
 
@@ -95,14 +94,13 @@ export function SetTimer({
           gap="$xs"
         >
           {!rodando && preparo === null ? <Icon name="play" size={16} color={colors.accent} /> : null}
-          <Text
-            fontSize={18}
+          <RatingText
             fontWeight="600"
             fontVariant={['tabular-nums']}
             style={{ color: preparo !== null ? colors.textMuted : colors.text }}
           >
             {texto}
-          </Text>
+          </RatingText>
         </YStack>
       </Pressable>
     </YStack>

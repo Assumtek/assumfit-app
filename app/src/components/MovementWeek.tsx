@@ -1,4 +1,3 @@
-import { Text } from '@tamagui/core';
 import { XStack } from '@tamagui/stacks';
 import React from 'react';
 import { Pressable, useWindowDimensions } from 'react-native';
@@ -8,7 +7,7 @@ import { DAY_SHORT } from '../domain/workout';
 import { useTheme } from '../theme/ThemeProvider';
 import { BarChart } from './charts/BarChart';
 import { Icon } from './Icon';
-import { Data, Label } from './ui';
+import { Body, Data, Label } from './ui';
 import { Card } from './ui/Card';
 
 /**
@@ -74,13 +73,12 @@ export function MovementWeek({
               color={streak > 0 ? colors.accent : colors.textMuted}
               strokeWidth={4}
             />
-            <Text
-              fontSize={14}
+            <Body
               fontWeight="700"
               color={streak > 0 ? '$primary' : '$mutedForeground'}
             >
               {streak} {streak === 1 ? 'dia' : 'dias'}
-            </Text>
+            </Body>
           </XStack>
         </XStack>
 

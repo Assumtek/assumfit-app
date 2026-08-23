@@ -3,7 +3,7 @@ import { useChartWidth } from '../components/charts/useChartWidth';
 import React, { useState } from 'react';
 
 import { EmptyMetric } from '../components/BandStatus';
-import { Section } from '../components/Card';
+import { Section } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
 import { MeasuredAt } from '../components/MeasuredAt';
 import { DayPickerRow, useHistoricoDoDia } from '../components/DayPicker';

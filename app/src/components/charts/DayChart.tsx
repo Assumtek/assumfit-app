@@ -3,7 +3,7 @@ import { useChartWidth } from './useChartWidth';
 import React, { useState } from 'react';
 
 import { LineChart } from './LineChart';
-import { Note } from '../Card';
+import { Note } from '../List';
 import { Data } from '../ui';
 import { noPeriodo, rotulosDoPeriodo, type Ponto } from '../../domain/series';
 import { isoHoje } from '../../domain/water';

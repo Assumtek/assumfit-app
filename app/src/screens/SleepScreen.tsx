@@ -4,7 +4,7 @@ import { useChartWidth } from '../components/charts/useChartWidth';
 import React, { useEffect, useState } from 'react';
 import { Pressable } from 'react-native';
 
-import { HistoryRow, Note, Row, Section } from '../components/Card';
+import { HistoryRow, Note, Row, Section } from '../components/List';
 import { SyncSleepButton } from '../components/MeasureButton';
 import { SleepPlanner } from '../components/SleepPlanner';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
@@ -161,9 +161,9 @@ export function SleepScreen() {
             />
             <Body flex={1}>{p.label}</Body>
             <Data marginRight="$xl">{duration(sleep.phases[p.key])}</Data>
-            <MetricSm fontSize={18} minWidth={48} textAlign="right">
+            <RatingText minWidth={48} textAlign="right">
               {pct(sleep.phases[p.key])}%
-            </MetricSm>
+            </RatingText>
           </Row>
         ))}
       </Section>

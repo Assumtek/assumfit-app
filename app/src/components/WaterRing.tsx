@@ -1,10 +1,9 @@
-import { Text } from '@tamagui/core';
 import { YStack } from '@tamagui/stacks';
 import React from 'react';
 import Svg, { Circle } from 'react-native-svg';
 
 import { useTheme } from '../theme/ThemeProvider';
-import { Data } from './ui';
+import { Data, Metric, RatingText } from './ui';
 
 /**
  * O anel da água — o dia inteiro num círculo, como o do ciclo.
@@ -43,12 +42,12 @@ export function WaterRing({ ml, metaMl }: { ml: number; metaMl: number }) {
         />
       </Svg>
       <YStack alignItems="center" gap={4}>
-        <Text fontSize={44} fontWeight="200" letterSpacing={-1.5} color="$foreground" fontVariant={['tabular-nums']}>
+        <Metric fontWeight="200" letterSpacing={-1.5} color="$foreground" fontVariant={['tabular-nums']}>
           {ml.toLocaleString('pt-BR')}
-          <Text fontSize={18} fontWeight="300" color="$mutedForeground">
+          <RatingText fontWeight="300" color="$mutedForeground">
             {' '}ml
-          </Text>
-        </Text>
+          </RatingText>
+        </Metric>
         <Data>de {metaMl.toLocaleString('pt-BR')} ml</Data>
       </YStack>
     </YStack>

@@ -1,5 +1,5 @@
-import { Text } from '@tamagui/core';
 import { XStack } from '@tamagui/stacks';
+import { Micro } from './Type';
 import React from 'react';
 
 /**
@@ -54,8 +54,8 @@ export function Pill({
 
 export function PillText({ children }: { children: React.ReactNode }) {
   return (
-    <Text fontSize={10} fontWeight="700" color="$primary" letterSpacing={0.5}>
+    <Micro fontWeight="700" color="$primary" letterSpacing={0.5}>
       {children}
-    </Text>
+    </Micro>
   );
 }

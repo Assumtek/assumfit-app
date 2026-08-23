@@ -101,7 +101,7 @@ export function ProgressPhotos() {
                       borderColor: marcada ? colors.accent : colors.hairlineStrong,
                     }}
                   />
-                  <Data fontSize={12}>{formatDateBR(f.em.slice(0, 10)).slice(0, 5)}</Data>
+                  <Data>{formatDateBR(f.em.slice(0, 10)).slice(0, 5)}</Data>
                 </YStack>
               </Pressable>
             );

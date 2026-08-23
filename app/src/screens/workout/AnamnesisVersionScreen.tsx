@@ -2,9 +2,9 @@ import { useRoute } from '@react-navigation/native';
 import { YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
 
-import { Note, Row, Section } from '../../components/Card';
+import { Note, Row, Section } from '../../components/List';
 import { DetailScreen } from '../../components/DetailScreen';
-import { Body, Data, Label, SectionTitle, Skeleton } from '../../components/ui';
+import { Body, Data, Label, SectionTitle, Skeleton, Subtitle } from '../../components/ui';
 import { mensagemDaFalha } from '../../domain/apiErrors';
 import { fetchAnamnesisVersion, type AnamnesisVersion } from '../../services/api.service';
 
@@ -54,13 +54,13 @@ export function AnamnesisVersionScreen() {
     <DetailScreen title="Anamnese">
       <YStack marginBottom="$xl">
         <Label>respondida em</Label>
-        <SectionTitle fontSize={20} marginTop="$xs">
+        <Subtitle marginTop="$xs">
           {new Date(versao.createdAt).toLocaleDateString('pt-BR', {
             day: 'numeric',
             month: 'long',
             year: 'numeric',
           })}
-        </SectionTitle>
+        </Subtitle>
       </YStack>
 
       {versao.flags.length > 0 ? (

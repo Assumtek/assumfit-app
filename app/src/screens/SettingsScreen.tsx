@@ -1,11 +1,11 @@
 import { useNavigation } from '@react-navigation/native';
-import { styled, Text } from '@tamagui/core';
+import { styled } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import { mensagemDaFalha } from '../domain/apiErrors';
 import React, { useEffect, useState } from 'react';
 import { Alert, Linking, Pressable, Switch } from 'react-native';
 
-import { Row, Section, RowLabel, RowValue, ActionRow } from '../components/Card';
+import { Row, Section, RowLabel, RowValue, ActionRow } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
 import { ThemeSwitch } from '../components/ThemeSwitch';

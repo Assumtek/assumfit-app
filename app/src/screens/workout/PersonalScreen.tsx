@@ -1,5 +1,4 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput } from 'react-native';
@@ -7,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '../../components/Icon';
 import { VoiceInput } from '../../components/VoiceInput';
-import { Body, Button, Data, Label } from '../../components/ui';
+import { Body, BodyLarge, Button, Data, Label, MetricSm } from '../../components/ui';
 import { applyAdjustment, chatWithAgent, type ChatTurn } from '../../services/api.service';
 import { darkPalette } from '../../theme/palette';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -142,9 +141,9 @@ export function PersonalScreen() {
           </Pressable>
           <YStack flex={1}>
             <Label>personal</Label>
-            <Text fontSize={22} fontWeight="700" color="$foreground" letterSpacing={-0.5}>
+            <MetricSm fontWeight="700" color="$foreground" letterSpacing={-0.5}>
               Fale sobre seu treino
-            </Text>
+            </MetricSm>
           </YStack>
         </XStack>
 
@@ -274,9 +273,9 @@ function Balao({ turno }: { turno: ChatTurn }) {
         borderWidth={meu ? 0 : 1}
         borderColor="$border"
       >
-        <Text fontSize={16} lineHeight={22} color={meu ? '$primaryForeground' : '$foreground'}>
+        <BodyLarge lineHeight={22} color={meu ? '$primaryForeground' : '$foreground'}>
           {turno.content}
-        </Text>
+        </BodyLarge>
       </YStack>
     </XStack>
   );

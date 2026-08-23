@@ -1,6 +1,5 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
-import { Body, Data, SectionTitle } from '../../components/ui';
+import { Body, BodyLarge, Data, SectionTitle } from '../../components/ui';
 import React from 'react';
 import { TextInput, TouchableOpacity } from 'react-native';
 
@@ -122,9 +121,9 @@ export function SeriesCard({
             {number}ª
           </SectionTitle>
           <YStack flex={1}>
-            <Text fontSize={16} fontWeight="500" color="$foreground">
+            <BodyLarge fontWeight="500" color="$foreground">
               {isCardio ? `Faça por ${prescribedReps}` : `Mantenha por ${prescribedReps}`}
-            </Text>
+            </BodyLarge>
             <Body color="$mutedForeground">
               {isCardio ? 'Mantenha o ritmo constante' : 'Respire calmamente e segure a posição'}
             </Body>
@@ -164,9 +163,9 @@ export function SeriesCard({
         <SectionTitle color="$foreground" width={28}>
           {number}ª
         </SectionTitle>
-        <Text fontSize={14} fontWeight="500" color="$primary" flex={1}>
+        <Body fontWeight="500" color="$primary" flex={1}>
           Série atual
-        </Text>
+        </Body>
         {onSkip ? (
           <TouchableOpacity onPress={onSkip} activeOpacity={0.7}>
             <XStack alignItems="center" gap="$xs">

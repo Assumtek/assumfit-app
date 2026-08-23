@@ -1,9 +1,8 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React from 'react';
 import Svg, { Circle, G, Line } from 'react-native-svg';
 
-import { Data, Label } from './ui';
+import { Data, Label, Metric, MetricSm } from './ui';
 import { PHASE_COPY, type CyclePhase } from '../domain/cycle';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -132,20 +131,14 @@ export function CycleRing({
           {diasParaProxima == null ? (
             <Data textAlign="center">sem previsão ainda</Data>
           ) : diasParaProxima === 0 ? (
-            <Text fontSize={22} fontWeight="700" color="$foreground" textAlign="center">
+            <MetricSm fontWeight="700" color="$foreground" textAlign="center">
               Prevista para hoje
-            </Text>
+            </MetricSm>
           ) : (
             <>
-              <Text
-                fontSize={52}
-                fontWeight="200"
-                letterSpacing={-2}
-                color="$foreground"
-                fontVariant={['tabular-nums']}
-              >
+              <Metric letterSpacing={-2} color="$foreground" fontVariant={['tabular-nums']}>
                 {diasParaProxima}
-              </Text>
+              </Metric>
               <Data textAlign="center">
                 {diasParaProxima === 1 ? 'dia até a próxima' : 'dias até a próxima'}
               </Data>

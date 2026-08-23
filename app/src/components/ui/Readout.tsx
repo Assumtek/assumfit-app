@@ -1,7 +1,7 @@
 import { XStack, YStack } from '@tamagui/stacks';
 import React from 'react';
 
-import { Data, MetricSm } from './Type';
+import { Data, MetricSm, Title } from './Type';
 
 /**
  * O MOSTRADOR — a leitura de um número medido, e o agrupamento deles.
@@ -40,10 +40,10 @@ export function Readout({
       accessibilityLabel={`${valor}${unidade ? ` ${unidade}` : ''}, ${rotulo}`}
     >
       <XStack alignItems="baseline" gap={4}>
-        <MetricSm fontSize={26}>{valor}</MetricSm>
+        <Title>{valor}</Title>
         {unidade ? <Data>{unidade}</Data> : null}
       </XStack>
-      <Data fontSize={12} numberOfLines={1}>
+      <Data numberOfLines={1}>
         {rotulo}
       </Data>
     </YStack>

@@ -1,4 +1,3 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React from 'react';
 import { Pressable } from 'react-native';
@@ -64,9 +63,9 @@ export function WeekRail({ semana, selecionado, onSelect, streak }: Props) {
           {typeof streak === 'number' && streak > 0 ? (
             <XStack alignItems="center" gap={4}>
               <Icon name="flame" size={16} color={colors.accent} strokeWidth={4} />
-              <Text fontSize={12} fontWeight="700" color="$primary" fontVariant={['tabular-nums']}>
+              <Data fontWeight="700" color="$primary" fontVariant={['tabular-nums']}>
                 {streak}
-              </Text>
+              </Data>
             </XStack>
           ) : null}
         </XStack>

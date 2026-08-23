@@ -1,13 +1,12 @@
 import { useNavigation } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useMemo, useState } from 'react';
 import { TextInput } from 'react-native';
 
-import { Note } from '../../components/Card';
+import { Note } from '../../components/List';
 import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
-import { Body, Button, Card, Data, HeroCard, SectionTitle } from '../../components/ui';
+import { Body, BodyLarge, Button, Card, Data, HeroCard, MetricSm, SectionTitle } from '../../components/ui';
 import {
   impliesReferral,
   nextQuestion,
@@ -84,9 +83,9 @@ export function AnamnesisScreen() {
   if (!loaded) {
     return (
       <DetailScreen title="Saúde">
-        <Text fontSize={16} color="$mutedForeground">
+        <BodyLarge color="$mutedForeground">
           Carregando…
-        </Text>
+        </BodyLarge>
       </DetailScreen>
     );
   }
@@ -115,9 +114,9 @@ export function AnamnesisScreen() {
       <DetailScreen title="Saúde">
         <YStack gap="$xl" paddingTop="$lg">
           <HeroCard eyebrow={referral ? 'atenção' : 'tudo pronto'}>
-            <Text fontSize={22} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
+            <MetricSm fontWeight="800" color="$foreground" letterSpacing={-0.5}>
               {referral ? 'Vamos com cuidado aqui' : 'Podemos montar seu treino'}
-            </Text>
+            </MetricSm>
             <Body color="$mutedForeground">
               {referral
                 ? 'Pelo que você respondeu, o caminho seguro passa por um profissional antes de treinar por conta. Podemos seguir, mas é possível que a resposta seja um encaminhamento em vez de um treino.'
@@ -164,21 +163,20 @@ export function AnamnesisScreen() {
         </Data>
 
         {question.clinical ? (
-          <Text
-            fontSize={12}
+          <Data
             fontWeight="700"
             letterSpacing={1.5}
             color="$primary"
             textTransform="uppercase"
           >
             segurança
-          </Text>
+          </Data>
         ) : null}
 
         <YStack gap="$sm">
-          <Text fontSize={22} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
+          <MetricSm fontWeight="800" color="$foreground" letterSpacing={-0.5}>
             {question.title}
-          </Text>
+          </MetricSm>
           {question.hint ? (
             <Body color="$mutedForeground">
               {question.hint}
@@ -342,9 +340,9 @@ function FreeInput({
             accessibilityLabel={question.title}
           />
           {question.unit ? (
-            <Text fontSize={16} color="$mutedForeground" marginBottom={12}>
+            <BodyLarge color="$mutedForeground" marginBottom={12}>
               {question.unit}
-            </Text>
+            </BodyLarge>
           ) : null}
         </XStack>
       </Card>

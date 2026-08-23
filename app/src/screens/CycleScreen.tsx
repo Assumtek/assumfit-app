@@ -3,7 +3,7 @@ import { File, Paths } from 'expo-file-system';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, Switch } from 'react-native';
 
-import { Note, Row, Section } from '../components/Card';
+import { Note, Row, Section } from '../components/List';
 import { CycleCalendar } from '../components/CycleCalendar';
 import { CycleRing, type DiaDoAnel } from '../components/CycleRing';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
@@ -425,13 +425,13 @@ export function CycleScreen() {
               <Row>
                 <YStack flex={1} gap={4}>
                   <Body color="$foreground" fontWeight="700">Janela fértil</Body>
-                  <Data fontSize={12}>para autoconhecimento; como método contraceptivo, não serve</Data>
+                  <Data>para autoconhecimento; como método contraceptivo, não serve</Data>
                 </YStack>
                 <YStack alignItems="flex-end" flexShrink={0} gap={4}>
                   <Data color="$foreground">
                     {porExtenso(mes.fertile.from)} – {porExtenso(mes.fertile.to)}
                   </Data>
-                  <Data fontSize={12}>
+                  <Data>
                     ovulação ~{porExtenso(mes.fertile.peak)}
                     {mes.estimating ? ' · faixa aproximada' : ''}
                   </Data>

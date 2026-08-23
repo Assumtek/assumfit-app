@@ -139,3 +139,39 @@ export const Label = styled(Text, {
   textTransform: 'uppercase',
   color: '$mutedForeground',
 });
+
+/** Corpo grande: a linha de uma lista de ação, o texto de um diálogo. */
+export const BodyLarge = styled(Text, {
+  ...base,
+  fontSize: 16,
+  fontWeight: '400',
+  lineHeight: 24,
+  color: '$foreground',
+});
+
+/** Subtítulo de peça: o título de um cartão, o nome de um exercício na lista. */
+export const Subtitle = styled(Text, {
+  ...base,
+  fontSize: 20,
+  fontWeight: '700',
+  letterSpacing: -0.3,
+  color: '$foreground',
+});
+
+/** Cabeçalho de tela secundária e de estado ("Bora treinar?"). */
+export const Heading = styled(Text, {
+  ...base,
+  fontSize: 24,
+  fontWeight: '800',
+  letterSpacing: -0.5,
+  color: '$foreground',
+});
+
+/** Menor que a etiqueta: selo, legenda de eixo, rótulo dentro de pílula. */
+export const Micro = styled(Text, {
+  ...base,
+  fontSize: 10,
+  fontWeight: '700',
+  letterSpacing: 0.5,
+  color: '$mutedForeground',
+});

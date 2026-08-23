@@ -4,7 +4,7 @@ import { useChartWidth } from '../components/charts/useChartWidth';
 import React, { useEffect, useState } from 'react';
 import { Pressable } from 'react-native';
 
-import { Note, Row, Section } from '../components/Card';
+import { Note, Row, Section } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
 import { BarChart } from '../components/charts/BarChart';
@@ -186,7 +186,7 @@ export function ActivityScreen() {
         {rows.map((row, i) => (
           <Row key={row.label} last={i === rows.length - 1}>
             <Body flex={1}>{row.label}</Body>
-            <MetricSm fontSize={18}>{row.value}</MetricSm>
+            <RatingText>{row.value}</RatingText>
           </Row>
         ))}
       </Section>

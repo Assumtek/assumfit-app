@@ -1,12 +1,11 @@
 import { useNavigation } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '../components/Icon';
-import { Body, Button, Data, Label, Skeleton, Title } from '../components/ui';
+import { Body, BodyLarge, Button, Data, Label, Skeleton, Title } from '../components/ui';
 import {
   nextQuestion,
   progressOf,
@@ -104,9 +103,9 @@ export function OnboardingScreen() {
 
           <YStack marginTop="$xxl" gap="$lg">
             {lines.map((line) => (
-              <Body key={line} fontSize={16} lineHeight={24} color="$foreground">
+              <BodyLarge key={line} lineHeight={24} color="$foreground">
                 {line}
-              </Body>
+              </BodyLarge>
             ))}
           </YStack>
 
@@ -166,7 +165,7 @@ export function OnboardingScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Title fontSize={26} lineHeight={32}>{question.title}</Title>
+        <Title lineHeight={32}>{question.title}</Title>
         {question.hint ? <Body marginTop="$md" maxWidth="94%">{question.hint}</Body> : null}
 
         {question.kind === 'text' ? (
@@ -318,9 +317,9 @@ function Choice({ option, onPress }: { option: Option; onPress: () => void }) {
         borderBottomColor="$border"
       >
         <YStack flex={1} gap="$xs">
-          <Text fontSize={16} letterSpacing={-0.2} color="$foreground">
+          <BodyLarge letterSpacing={-0.2} color="$foreground">
             {option.label}
-          </Text>
+          </BodyLarge>
           {option.detail ? <Data>{option.detail}</Data> : null}
         </YStack>
         <Icon name="arrowRight" size={16} color={colors.textFaint} />

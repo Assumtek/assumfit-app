@@ -1,5 +1,5 @@
-import { Text } from '@tamagui/core';
 import { XStack } from '@tamagui/stacks';
+import { Body, BodyLarge } from './Type';
 import React from 'react';
 import { ActivityIndicator, Pressable } from 'react-native';
 
@@ -55,6 +55,7 @@ export function Button({
 }: Props) {
   const shadow = useCtaShadow();
   const inactive = disabled || loading;
+  const Rotulo = size === 'lg' ? BodyLarge : Body;
 
   const content = (
     <XStack
@@ -74,13 +75,9 @@ export function Button({
       ) : (
         icon
       )}
-      <Text
-        fontSize={size === 'lg' ? 15 : 14}
-        fontWeight="700"
-        color={variant === 'primary' ? '$primaryForeground' : '$foreground'}
-      >
+      <Rotulo fontWeight="700" color={variant === 'primary' ? '$primaryForeground' : '$foreground'}>
         {title}
-      </Text>
+      </Rotulo>
     </XStack>
   );
 

@@ -8,7 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { QCBand } from '../../modules/qcband';
 import { useWaterReminderStore } from '../store/water-reminder.store';
 import { Icon } from './Icon';
-import { Row, Section } from './Card';
+import { Row, Section } from './List';
 import { Body, Data } from './ui';
 import { useTheme } from '../theme/ThemeProvider';
 

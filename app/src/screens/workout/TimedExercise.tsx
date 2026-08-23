@@ -1,10 +1,9 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, type AppStateStatus, Vibration } from 'react-native';
 
 import { Icon } from '../../components/Icon';
-import { Body, Button, Data, Label } from '../../components/ui';
+import { Body, Button, Data, Display, Label, Subtitle } from '../../components/ui';
 import { useTheme } from '../../theme/ThemeProvider';
 import { ble } from '../../services/ble';
 import { cancelTimedEnd, scheduleTimedEnd } from '../../services/notifications.service';
@@ -193,9 +192,9 @@ export function TimedExercise({
 
   return (
     <YStack alignItems="center" paddingTop="$xl" gap="$md">
-      <Text fontSize={20} fontWeight="500" color="$foreground" textAlign="center">
+      <Subtitle fontWeight="500" color="$foreground" textAlign="center">
         {name}
-      </Text>
+      </Subtitle>
 
       <Label>{lados === 2 ? `${formatarAlvo(seconds)} · cada lado` : formatarAlvo(seconds)}</Label>
 
@@ -212,8 +211,7 @@ export function TimedExercise({
         este bloco é alongamento e não treino. Cor calculada vai em `style` —
         `color` de token só aceita nome de token.
       */}
-      <Text
-        fontSize={64}
+      <Display
         fontWeight="200"
         letterSpacing={-2.5}
         marginTop="$xl"
@@ -221,7 +219,7 @@ export function TimedExercise({
         style={{ color: concluido ? colors.textMuted : cor }}
       >
         {preparo !== null ? String(preparo) : formatarRelogio(restante)}
-      </Text>
+      </Display>
       {preparo !== null ? (
         <Data>prepare-se</Data>
       ) : lados === 2 && !concluido ? (

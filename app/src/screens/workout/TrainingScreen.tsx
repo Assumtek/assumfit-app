@@ -1,5 +1,4 @@
 import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useMemo, useState , useRef} from 'react';
 import { Alert, AppState, KeyboardAvoidingView, Platform, Pressable, ScrollView } from 'react-native';
@@ -14,7 +13,7 @@ import {
 } from '../../../modules/widgetbridge';
 
 import { Icon } from '../../components/Icon';
-import { Body, Button } from '../../components/ui';
+import { Body, BodyLarge, Button, Subtitle, IconButton, PillButton } from '../../components/ui';
 import { ExerciseVideo } from '../../components/ExerciseVideo';
 import { acumularKcal, type PerfilParaEnergia } from '../../domain/workoutEnergy';
 import { fetchAnamnesis } from '../../services/api.service';
@@ -297,9 +296,9 @@ export function TrainingScreen() {
   if (!execution || !workout || !current) {
     return (
       <YStack flex={1} backgroundColor="$background" alignItems="center" justifyContent="center">
-        <Text fontSize={16} color="$mutedForeground">
+        <BodyLarge color="$mutedForeground">
           Carregando treino…
-        </Text>
+        </BodyLarge>
       </YStack>
     );
   }
@@ -448,24 +447,24 @@ export function TrainingScreen() {
         paddingTop={insets.top + 8}
         paddingBottom="$sm"
       >
-        <ControlButton label="Voltar" onPress={goBack}>
+        <IconButton label="Voltar" onPress={goBack}>
           <Icon name="back" size={20} color={colors.text} />
-        </ControlButton>
+        </IconButton>
 
         <XStack alignItems="center" gap="$md">
-          <ControlButton
+          <IconButton
             label="Checklist do treino"
             onPress={() => (navigation as any).push('Checklist')}
           >
             <Icon name="checklist" size={20} color={colors.text} />
-          </ControlButton>
+          </IconButton>
 
-          <ControlButton
+          <IconButton
             label={running ? 'Pausar cronômetro' : 'Retomar cronômetro'}
             onPress={toggleTimer}
           >
             <Icon name={running ? 'pause' : 'play'} size={20} color={colors.text} />
-          </ControlButton>
+          </IconButton>
 
           <XStack
             alignItems="center"
@@ -476,8 +475,7 @@ export function TrainingScreen() {
             paddingVertical="$md"
           >
             <Icon name="clock" size={16} color={colors.text} />
-            <Text
-              fontSize={16}
+            <BodyLarge
               fontWeight="500"
               color="$foreground"
               // Dígitos tabulares: sem eles a largura muda a cada segundo e o
@@ -485,7 +483,7 @@ export function TrainingScreen() {
               fontVariant={['tabular-nums']}
             >
               {formatSessionClock(elapsedSec)}
-            </Text>
+            </BodyLarge>
           </XStack>
           {bpmAoVivo != null ? (
             <XStack
@@ -498,9 +496,9 @@ export function TrainingScreen() {
               paddingVertical="$md"
             >
               <Icon name="heart" size={16} color={colors.text} />
-              <Text fontSize={16} fontWeight="500" color="$foreground" fontVariant={['tabular-nums']}>
+              <BodyLarge fontWeight="500" color="$foreground" fontVariant={['tabular-nums']}>
                 {Math.round(bpmAoVivo)}
-              </Text>
+              </BodyLarge>
               {pesoKg != null ? (
                 <Body color="$mutedForeground" fontVariant={['tabular-nums']}>
                   · {Math.round(kcal)} kcal
@@ -574,15 +572,14 @@ export function TrainingScreen() {
         <>
         {/* O exercício é centralizado — é a única coisa na tela, e centralizar
             é o que o marca como foco em vez de item de lista. */}
-        <Text
-          fontSize={20}
+        <Subtitle
           fontWeight="500"
           color="$foreground"
           textAlign="center"
           marginTop="$xl"
         >
           {exercise.name}
-        </Text>
+        </Subtitle>
 
         <Body color="$mutedForeground" textAlign="center" marginTop="$md">
           {infoLine(exercise, sets.length)}
@@ -602,12 +599,12 @@ export function TrainingScreen() {
 
         <YStack marginTop="$xxl">
           <XStack alignItems="center" justifyContent="space-between" marginBottom="$md">
-            <Text fontSize={16} fontWeight="500" color="$foreground">
+            <BodyLarge fontWeight="500" color="$foreground">
               Séries ({doneCount}/{sets.length})
-            </Text>
+            </BodyLarge>
             <XStack gap="$sm">
-              <AcaoDoExercicio icone="swap" rotulo="Trocar" onPress={() => setSwapOpen(true)} />
-              <AcaoDoExercicio
+              <PillButton icone="swap" rotulo="Trocar" onPress={() => setSwapOpen(true)} />
+              <PillButton
                 icone="flag"
                 rotulo="Sinalizar"
                 onPress={() => setProblemOpen(true)}
@@ -742,28 +739,6 @@ export function TrainingScreen() {
   );
 }
 
-function ControlButton({
-  children,
-  onPress,
-  label,
-}: {
-  children: React.ReactNode;
-  onPress: () => void;
-  label: string;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
-    >
-      <YStack backgroundColor="$control" borderRadius={999} padding="$md">
-        {children}
-      </YStack>
-    </Pressable>
-  );
-}
 
 /** "3 séries · 10-12 reps · 90s descanso", adaptado por fase. */
 function infoLine(exercise: WorkoutExercise, setCount: number): string {
@@ -788,39 +763,3 @@ function infoLine(exercise: WorkoutExercise, setCount: number): string {
   return parts.join(' · ');
 }
 
-/**
- * Ação sobre o exercício atual — trocar, sinalizar problema.
- *
- * Pílula contornada e acromática: são ações sobre o conteúdo, e o acento
- * pertence ao dado. Viraram componente quando passaram de uma para duas, que é
- * onde duas cópias começam a divergir em padding.
- */
-function AcaoDoExercicio({
-  icone,
-  rotulo,
-  onPress,
-}: {
-  icone: 'swap' | 'flag';
-  rotulo: string;
-  onPress: () => void;
-}) {
-  const { colors } = useTheme();
-  return (
-    <Pressable onPress={onPress} hitSlop={8} accessibilityRole="button" accessibilityLabel={rotulo}>
-      <XStack
-        alignItems="center"
-        gap="$sm"
-        paddingHorizontal="$md"
-        paddingVertical={12}
-        borderRadius={999}
-        borderWidth={1}
-        borderColor="$border"
-      >
-        <Icon name={icone} size={16} color={colors.textMuted} />
-        <Text fontSize={14} fontWeight="500" color="$mutedForeground">
-          {rotulo}
-        </Text>
-      </XStack>
-    </Pressable>
-  );
-}

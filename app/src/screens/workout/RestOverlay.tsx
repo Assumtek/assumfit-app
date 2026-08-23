@@ -1,5 +1,5 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
+import { Body, Micro, Title } from '../../components/ui';
 import React, { useEffect, useRef, useState } from 'react';
 import { AppState, type AppStateStatus, Pressable } from 'react-native';
 
@@ -127,8 +127,7 @@ export function RestOverlay({
           linhas. Quatro dígitos tabulares nesta fonte pedem ~70 px; 78 dá folga.
         */}
         <YStack width={80}>
-          <Text
-            fontSize={26}
+          <Title
             fontWeight="600"
             color="$foreground"
             letterSpacing={0.5}
@@ -139,22 +138,21 @@ export function RestOverlay({
             numberOfLines={1}
           >
             {formatRest(remaining)}
-          </Text>
+          </Title>
         </YStack>
 
         <YStack flex={1} minWidth={0} gap={4}>
-          <Text
-            fontSize={10}
+          <Micro
             fontWeight="800"
             letterSpacing={1.5}
             color="$primary"
             textTransform="uppercase"
           >
             Descanso
-          </Text>
-          <Text fontSize={14} fontWeight="600" color="$foreground" numberOfLines={1}>
+          </Micro>
+          <Body fontWeight="600" color="$foreground" numberOfLines={1}>
             {nextName ? `${nextLabel ?? 'A seguir'}: ${nextName}` : 'Próxima série em breve'}
-          </Text>
+          </Body>
         </YStack>
 
         <Pressable
@@ -172,9 +170,9 @@ export function RestOverlay({
             borderRadius={999}
             backgroundColor="$primary"
           >
-            <Text fontSize={14} fontWeight="800" color="$primaryForeground">
+            <Body fontWeight="800" color="$primaryForeground">
               Pular
-            </Text>
+            </Body>
           </YStack>
         </Pressable>
       </XStack>

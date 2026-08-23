@@ -1,16 +1,15 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, Switch } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Row, Section } from '../components/Card';
+import { Row, Section } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
 import { TimeWheel } from '../components/TimeWheel';
 import { HoraDigitada } from '../components/HoraDigitada';
 import { normalizarHorario } from '../domain/horario';
-import { Body, Button, Data } from '../components/ui';
+import { Body, Button, Data, MetricSm, Title } from '../components/ui';
 import { INTERVALOS_MIN } from '../domain/water';
 import {
   MAX_HORARIOS,
@@ -162,13 +161,13 @@ export function WaterReminderScreen() {
               <Pressable style={{ flex: 1 }} onPress={() => editarPonta('inicio')} accessibilityRole="button">
                 <Body color="$foreground">Começa às</Body>
               </Pressable>
-              <Text fontSize={22} fontWeight="300" color="$foreground">{janela.inicio}</Text>
+              <MetricSm fontWeight="300" color="$foreground">{janela.inicio}</MetricSm>
             </Row>
             <Row last>
               <Pressable style={{ flex: 1 }} onPress={() => editarPonta('fim')} accessibilityRole="button">
                 <Body color="$foreground">Termina às</Body>
               </Pressable>
-              <Text fontSize={22} fontWeight="300" color="$foreground">{janela.fim}</Text>
+              <MetricSm fontWeight="300" color="$foreground">{janela.fim}</MetricSm>
             </Row>
           </Section>
           <Data marginTop="$md">
@@ -188,9 +187,9 @@ export function WaterReminderScreen() {
                 {i < SLOTS_PULSEIRA && pulseiraOk ? (
                   <Icon name="drop" size={12} color={colors.accent} />
                 ) : null}
-                <Text fontSize={22} fontWeight="300" color={ligado ? '$foreground' : '$mutedForeground'}>
+                <MetricSm fontWeight="300" color={ligado ? '$foreground' : '$mutedForeground'}>
                   {h}
-                </Text>
+                </MetricSm>
               </XStack>
               <Pressable
                 onPress={() => remover(h)}
@@ -250,7 +249,7 @@ export function WaterReminderScreen() {
           </Body>
           <XStack justifyContent="center" alignItems="center" gap="$md">
             <TimeWheel items={HORAS} value={hora} onChange={setHora} />
-            <Text fontSize={26} fontWeight="300" color="$mutedForeground">:</Text>
+            <Title fontWeight="300" color="$mutedForeground">:</Title>
             <TimeWheel items={MINUTOS} value={minuto} onChange={setMinuto} />
           </XStack>
           {/* Ou digitar: a roda anda de 10 em 10; quem quer 07:55 digita.

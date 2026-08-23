@@ -1,16 +1,15 @@
 import { useNavigation } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import { useChartWidth } from '../components/charts/useChartWidth';
 import React, { useEffect, useState } from 'react';
 import { Pressable, TextInput } from 'react-native';
 
-import { Note, Row, Section } from '../components/Card';
+import { Note, Row, Section } from '../components/List';
 import { WaterReminder } from '../components/SedentaryReminder';
 import { DetailScreen } from '../components/DetailScreen';
 import { Icon } from '../components/Icon';
 import { BarChart } from '../components/charts/BarChart';
-import { Body, Button, Data, Display, Label, MetricSm, RatingText, SectionTitle } from '../components/ui';
+import { Body, BodyLarge, Button, Data, Display, Label, MetricSm, RatingText, SectionTitle } from '../components/ui';
 import { Card } from '../components/ui/Card';
 import { Sheet } from '../components/ui/Dialog';
 import { MAX_ML, MIN_ML, STEP_ML, type Container } from '../domain/containers';
@@ -139,9 +138,9 @@ export function HabitsScreen() {
                   reconhece; o volume é o dado técnico e vai de sub-label. Você
                   toca em "copo", não em "+200". */}
               <YStack alignItems="center" gap="$xs">
-                <Text fontSize={16} letterSpacing={-0.2} color="$foreground">
+                <BodyLarge letterSpacing={-0.2} color="$foreground">
                   {pour.label}
-                </Text>
+                </BodyLarge>
                 <Data>{pour.ml} ml</Data>
               </YStack>
             </Card>
@@ -187,7 +186,7 @@ export function HabitsScreen() {
 
       <Sheet open={editandoTotal} onClose={() => setEditandoTotal(false)}>
         <YStack gap="$xs">
-          <SectionTitle fontSize={18}>Total de hoje</SectionTitle>
+          <RatingText>Total de hoje</RatingText>
           <Data>Em mililitros. Os registros individuais de hoje são esquecidos, vale o total.</Data>
         </YStack>
         <TextInput
@@ -248,7 +247,7 @@ export function HabitsScreen() {
       <Section label="Hoje">
         <Row last>
           <Body flex={1}>Registros de água</Body>
-          <MetricSm fontSize={18}>{today.pours.length}</MetricSm>
+          <RatingText>{today.pours.length}</RatingText>
         </Row>
       </Section>
 
@@ -264,7 +263,7 @@ export function HabitsScreen() {
           entra, corrige o volume, sai. */}
       <Sheet open={ajustando} onClose={() => setAjustando(false)}>
         <YStack gap="$xs">
-          <SectionTitle fontSize={18}>Volume dos recipientes</SectionTitle>
+          <RatingText>Volume dos recipientes</RatingText>
           <Data>
             Use a medida dos SEUS recipientes, é o que faz o total do dia ser o seu, e não uma
             média de fabricante.

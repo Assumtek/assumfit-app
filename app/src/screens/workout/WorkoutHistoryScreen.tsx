@@ -2,10 +2,10 @@ import { useNavigation } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
 
-import { Note } from '../../components/Card';
+import { Note } from '../../components/List';
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
-import { Body, Card, Data, Label, SectionTitle, Skeleton } from '../../components/ui';
+import { Body, Card, Data, Label, SectionTitle, Skeleton, Title } from '../../components/ui';
 import { consolidateMovement } from '../../domain/movement';
 import { SPORTS, sportClock } from '../../domain/sport';
 import { formatDuration } from '../../domain/workout';
@@ -87,7 +87,7 @@ export function WorkoutHistoryScreen() {
       <YStack marginBottom="$xl">
         <Label>últimos {DIAS} dias</Label>
         <XStack alignItems="baseline" gap="$sm" marginTop="$xs">
-          <SectionTitle fontSize={28}>{concluidas}</SectionTitle>
+          <Title>{concluidas}</Title>
           <Data>{concluidas === 1 ? 'atividade concluída' : 'atividades concluídas'}</Data>
         </XStack>
       </YStack>

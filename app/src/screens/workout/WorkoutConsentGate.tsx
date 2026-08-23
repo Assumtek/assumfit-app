@@ -1,10 +1,9 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useState } from 'react';
 
-import { Note } from '../../components/Card';
+import { Note } from '../../components/List';
 import { Icon } from '../../components/Icon';
-import { Body, Button, Card } from '../../components/ui';
+import { Body, Button, Card, Heading } from '../../components/ui';
 import { setWorkoutConsent } from '../../services/api.service';
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -49,9 +48,9 @@ export function WorkoutConsentGate({
   return (
     <YStack gap="$xl" paddingTop="$lg">
       <YStack gap="$sm">
-        <Text fontSize={24} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
+        <Heading fontWeight="800" color="$foreground" letterSpacing={-0.5}>
           Antes de perguntar sobre você
-        </Text>
+        </Heading>
         <Body color="$mutedForeground">
           Para montar um treino seguro, precisamos saber do seu histórico de saúde, condições,
           medicamentos, lesões. Isso é dado sensível, e por isso pedimos permissão separada da

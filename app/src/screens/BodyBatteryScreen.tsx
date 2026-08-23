@@ -1,7 +1,7 @@
 import { XStack, YStack } from '@tamagui/stacks';
 import React from 'react';
 
-import { Note, Row, Section } from '../components/Card';
+import { Note, Row, Section } from '../components/List';
 import { LineChart } from '../components/charts/LineChart';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
 import { DayPickerRow, useHistoricoDoDia } from '../components/DayPicker';

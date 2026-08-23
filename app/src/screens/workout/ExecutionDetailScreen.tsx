@@ -2,10 +2,10 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
 
-import { Note, Row, Section } from '../../components/Card';
+import { Note, Row, Section } from '../../components/List';
 import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
-import { Body, Button, Card, Data, Display, Label, SectionTitle, Skeleton } from '../../components/ui';
+import { Body, Button, Card, Data, Display, Label, Metric, MetricSm, SectionTitle, Skeleton } from '../../components/ui';
 import { formatDuration } from '../../domain/workout';
 import { mensagemDaFalha } from '../../domain/apiErrors';
 import { fetchExecutionDetail, type ExecutionDetail } from '../../services/api.service';
@@ -66,9 +66,9 @@ export function ExecutionDetailScreen() {
         <Label>
           {quando.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
         </Label>
-        <SectionTitle fontSize={22} marginTop="$xs">
+        <MetricSm marginTop="$xs">
           {detalhe.workoutName}
-        </SectionTitle>
+        </MetricSm>
         {detalhe.muscleGroups.length ? (
           <Data marginTop="$xs">{detalhe.muscleGroups.join(' · ')}</Data>
         ) : null}
@@ -76,16 +76,16 @@ export function ExecutionDetailScreen() {
 
       <XStack gap="$xxl" marginBottom="$xl">
         <YStack>
-          <Display fontSize={40} lineHeight={44} letterSpacing={-1.8}>
+          <Metric lineHeight={44} letterSpacing={-1.8}>
             {detalhe.durationSec ? formatDuration(detalhe.durationSec) : '–'}
-          </Display>
+          </Metric>
           <Data>duração</Data>
         </YStack>
         {detalhe.completionPct != null ? (
           <YStack>
-            <Display fontSize={40} lineHeight={44} letterSpacing={-1.8}>
+            <Metric lineHeight={44} letterSpacing={-1.8}>
               {Math.round(detalhe.completionPct)}%
-            </Display>
+            </Metric>
             <Data>concluído</Data>
           </YStack>
         ) : null}

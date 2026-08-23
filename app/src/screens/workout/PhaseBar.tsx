@@ -1,6 +1,5 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
-import { Body, Data } from '../../components/ui';
+import { Body, BodyLarge, Data } from '../../components/ui';
 import React from 'react';
 
 /**
@@ -59,9 +58,9 @@ export function PhaseBar({
             semânticas que não participam do tema e não têm variante clara/escura
             — declará-las como token do Tamagui seria inflar a paleta com o que
             nunca muda. É como o MUVX também as aplica. */}
-        <Text fontSize={16} fontWeight="500" color="$foreground" flex={1}>
+        <BodyLarge fontWeight="500" color="$foreground" flex={1}>
           {PHASE_NAME[current]}
-        </Text>
+        </BodyLarge>
         <Body color="$foreground">
           {positionInPhase} de {phaseTotal} {phaseTotal === 1 ? 'exercício' : 'exercícios'}
         </Body>

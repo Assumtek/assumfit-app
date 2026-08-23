@@ -123,7 +123,7 @@ export function CycleCalendar({
 
       <XStack>
         {SEMANA.map((d, i) => (
-          <Data key={i} flex={1} textAlign="center" fontSize={12} marginBottom="$xs">
+          <Data key={i} flex={1} textAlign="center" marginBottom="$xs">
             {d}
           </Data>
         ))}

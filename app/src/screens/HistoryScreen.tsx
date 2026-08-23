@@ -3,7 +3,7 @@ import { XStack, YStack } from '@tamagui/stacks';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView } from 'react-native';
 
-import { Note, Row, Section } from '../components/Card';
+import { Note, Row, Section } from '../components/List';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
 import { Body, Data, Display, RatingText } from '../components/ui';
 import {

@@ -1,9 +1,8 @@
-import { Text } from '@tamagui/core';
 import { YStack } from '@tamagui/stacks';
 import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, Share } from 'react-native';
 
-import { Note, Section } from '../components/Card';
+import { Note, Section } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
 import { Body, Data, SectionTitle } from '../components/ui';
 import { ble, usingRealDevice, type GattNotification, type GattService } from '../services/ble';
@@ -243,8 +242,7 @@ function Mono({
   marginBottom?: string;
 }) {
   return (
-    <Text
-      fontSize={12}
+    <Data
       color={color as never}
       selectable={selectable}
       marginBottom={marginBottom as never}
@@ -254,7 +252,7 @@ function Mono({
       style={{ fontFamily: 'Menlo' }}
     >
       {children}
-    </Text>
+    </Data>
   );
 }
 

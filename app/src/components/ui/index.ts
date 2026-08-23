@@ -8,14 +8,18 @@
 export { Button } from './Button';
 export {
   Body,
+  BodyLarge,
   Data,
   Display,
+  Heading,
   Headline,
   Label,
   Metric,
   MetricSm,
+  Micro,
   RatingText,
   SectionTitle,
+  Subtitle,
   Title,
 } from './Type';
 export { Card, HeroCard, Pill, PillText } from './Card';
@@ -29,3 +33,5 @@ export {
   useSurfaceColor,
 } from './elevation';
 export { Skeleton } from './Skeleton';
+export { PillButton } from './PillButton';
+export { IconButton } from './IconButton';

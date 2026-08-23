@@ -14,7 +14,7 @@
  */
 
 import type { Palette } from '../theme/palette';
-import { formatDuration } from './workout';
+import { formatDuration } from './format';
 
 export type RatingState = 'normal' | 'alert';
 

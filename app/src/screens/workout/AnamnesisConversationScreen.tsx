@@ -1,5 +1,4 @@
 import { useNavigation } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import { mensagemDaFalha } from '../../domain/apiErrors';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -16,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
 import { VoiceInput } from '../../components/VoiceInput';
-import { Body, Button, Card, Data, Label, SectionTitle } from '../../components/ui';
+import { Body, BodyLarge, Button, Card, Data, Label, SectionTitle, Subtitle } from '../../components/ui';
 import {
   answerInterview,
   editInterviewAnswer,
@@ -272,9 +271,9 @@ export function AnamnesisConversationScreen() {
           </Pressable>
           <YStack flex={1}>
             <Label>anamnese</Label>
-            <Text fontSize={20} fontWeight="700" color="$foreground" letterSpacing={-0.4}>
+            <Subtitle fontWeight="700" color="$foreground" letterSpacing={-0.4}>
               Sobre você
-            </Text>
+            </Subtitle>
           </YStack>
           <Data>{Math.round(estado.progress * 100)}%</Data>
         </XStack>
@@ -479,13 +478,12 @@ function Balao({
         borderWidth={doAssistente ? 1 : 0}
         borderColor="$border"
       >
-        <Text
-          fontSize={16}
+        <BodyLarge
           lineHeight={22}
           color={doAssistente ? '$foreground' : '$primaryForeground'}
         >
           {doAssistente ? conteudo : turno.content}
-        </Text>
+        </BodyLarge>
       </YStack>
     </XStack>
   );
@@ -523,9 +521,9 @@ function Revisao({
         </Pressable>
         <YStack flex={1}>
           <Label>revisão</Label>
-          <Text fontSize={20} fontWeight="700" color="$foreground" letterSpacing={-0.4}>
+          <Subtitle fontWeight="700" color="$foreground" letterSpacing={-0.4}>
             Confira antes de enviar
-          </Text>
+          </Subtitle>
         </YStack>
       </XStack>
 

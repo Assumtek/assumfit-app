@@ -2,10 +2,10 @@ import { useNavigation } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
 
-import { Note } from '../../components/Card';
+import { Note } from '../../components/List';
 import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
-import { Body, Button, Card, Data, Label, SectionTitle, Skeleton } from '../../components/ui';
+import { Body, Button, Card, Data, Label, SectionTitle, Skeleton, Title } from '../../components/ui';
 import { fetchAnamnesisHistory, type AnamnesisVersion } from '../../services/api.service';
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -59,9 +59,9 @@ export function AnamnesisHistoryScreen() {
     <DetailScreen title="Anamnese">
       <YStack marginBottom="$xl">
         <Label>respostas guardadas</Label>
-        <SectionTitle fontSize={28} marginTop="$xs">
+        <Title marginTop="$xs">
           {versoes.length}
-        </SectionTitle>
+        </Title>
         <Data>{versoes.length === 1 ? 'versão' : 'versões'}</Data>
       </YStack>
 

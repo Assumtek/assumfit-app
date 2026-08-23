@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Pressable } from 'react-native';
 
 import { EmptyMetric } from '../components/BandStatus';
-import { Note } from '../components/Card';
+import { Note } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
 import { FetchFromBandButton, MeasureButton } from '../components/MeasureButton';
 import { MeasuredAt } from '../components/MeasuredAt';

@@ -8,7 +8,7 @@ import { DetailScreen } from '../components/DetailScreen';
 import { Hypnogram } from '../components/charts/Hypnogram';
 import { Icon, type IconName } from '../components/Icon';
 import { MeasureButton } from '../components/MeasureButton';
-import { Note } from '../components/Card';
+import { Note } from '../components/List';
 import { SyncProgress } from '../components/SyncProgress';
 import { Button, Body, Card, Data, HeroCard, Label, Metric, MetricSm, RatingText, SectionTitle } from '../components/ui';
 import { calcBodyBattery } from '../domain/bodyBattery';

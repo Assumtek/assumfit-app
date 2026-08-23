@@ -4,7 +4,7 @@ import { TextInput } from 'react-native';
 
 import { isValidBirthDate, maskBirthDate, toIsoBirthDate } from '../domain/birthDate';
 import { useTheme } from '../theme/ThemeProvider';
-import { Body, Button, Data, SectionTitle } from './ui';
+import { Body, Button, Data, RatingText, SectionTitle } from './ui';
 import { Sheet } from './ui/Dialog';
 
 /**
@@ -62,7 +62,7 @@ export function RangeSheet({
   return (
     <Sheet open={open} onClose={onClose}>
       <YStack gap="$xs">
-        <SectionTitle fontSize={18}>Período personalizado</SectionTitle>
+        <RatingText>Período personalizado</RatingText>
         <Body>Os dois dias entram no período.</Body>
       </YStack>
       <XStack gap="$lg">

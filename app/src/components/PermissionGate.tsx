@@ -3,7 +3,7 @@ import React from 'react';
 import { Linking, Platform } from 'react-native';
 
 import { Icon } from './Icon';
-import { Body, Button, SectionTitle } from './ui';
+import { Body, BodyLarge, Button, SectionTitle } from './ui';
 import { Card } from './ui/Card';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -77,9 +77,9 @@ export function PermissionGate({
     <Card>
       <XStack alignItems="center" gap="$md" marginBottom="$md">
         <Icon name={copy.icone as never} size={20} color={colors.textMuted} />
-        <SectionTitle fontSize={16} flex={1}>
+        <BodyLarge flex={1}>
           {copy.titulo}
-        </SectionTitle>
+        </BodyLarge>
       </XStack>
 
       <Body marginBottom="$lg" lineHeight={20}>

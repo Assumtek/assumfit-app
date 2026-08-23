@@ -1,15 +1,14 @@
 import { useNavigation } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import { File, Paths } from 'expo-file-system';
 import React, { useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
-import { Note } from '../../components/Card';
+import { Note } from '../../components/List';
 import { DetailScreen } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
 import { ProgressRing } from '../../components/ProgressRing';
-import { Body, Button } from '../../components/ui';
+import { Body, Button, Heading, Title } from '../../components/ui';
 import {
   fetchGenerationStatus,
   requestPlanGeneration,
@@ -231,9 +230,9 @@ export function GeneratingScreen() {
       <DetailScreen title="Seu treino">
         <YStack gap="$xl" paddingTop="$lg">
           <YStack gap="$sm">
-            <Text fontSize={24} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
+            <Heading fontWeight="800" color="$foreground" letterSpacing={-0.5}>
               {isReferral ? 'Melhor não gerar automático' : 'Não deu certo desta vez'}
-            </Text>
+            </Heading>
             <Body color="$mutedForeground">
               {status?.message ?? error}
             </Body>
@@ -290,21 +289,20 @@ export function GeneratingScreen() {
       <YStack gap="$xl" paddingTop="$xl">
         <YStack alignItems="flex-start">
           <ProgressRing size={132} strokeWidth={4} fraction={fraction} color={colors.accent}>
-            <Text
-              fontSize={28}
+            <Title
               fontWeight="300"
               color="$foreground"
               fontVariant={['tabular-nums']}
             >
               {Math.round(fraction * 100)}%
-            </Text>
+            </Title>
           </ProgressRing>
         </YStack>
 
         <YStack gap="$sm">
-          <Text fontSize={24} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
+          <Heading fontWeight="800" color="$foreground" letterSpacing={-0.5}>
             Montando seu treino
-          </Text>
+          </Heading>
           <Body color="$mutedForeground">
             {STEPS[step]}
           </Body>
@@ -319,9 +317,9 @@ export function GeneratingScreen() {
                 borderRadius={4}
                 backgroundColor={i <= step ? '$primary' : '$track'}
               />
-              <Text fontSize={14} color={i <= step ? '$foreground' : '$mutedForeground'}>
+              <Body color={i <= step ? '$foreground' : '$mutedForeground'}>
                 {label}
-              </Text>
+              </Body>
             </XStack>
           ))}
         </YStack>

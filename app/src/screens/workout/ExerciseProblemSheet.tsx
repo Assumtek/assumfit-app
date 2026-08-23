@@ -2,7 +2,7 @@ import { XStack, YStack } from '@tamagui/stacks';
 import React from 'react';
 import { Pressable } from 'react-native';
 
-import { ActionRow } from '../../components/Card';
+import { ActionRow } from '../../components/List';
 import { Icon, type IconName } from '../../components/Icon';
 import { Body, Data, Label, SectionTitle } from '../../components/ui';
 import { Sheet } from '../../components/ui/Dialog';

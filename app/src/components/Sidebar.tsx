@@ -1,4 +1,3 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useRef } from 'react';
 import {
@@ -17,7 +16,7 @@ import { LogoType } from './Logo';
 import { navigate } from '../navigation/ref';
 import { Glass } from './Surface';
 import { ThemeSwitch } from './ThemeSwitch';
-import { Body, Data, Label } from './ui';
+import { Body, BodyLarge, Data, Label } from './ui';
 import { useBiometricStore } from '../store/biometric.store';
 import { useHabitsStore } from '../store/habits.store';
 import { useUiStore } from '../store/ui.store';
@@ -164,9 +163,9 @@ export function Sidebar() {
               </YStack>
             )}
             <YStack flex={1} gap={4}>
-              <Text fontSize={16} letterSpacing={-0.2} color="$foreground" numberOfLines={1}>
+              <BodyLarge letterSpacing={-0.2} color="$foreground" numberOfLines={1}>
                 {user.name}
-              </Text>
+              </BodyLarge>
               <Data numberOfLines={1}>{profile?.email ?? 'perfil e assinatura'}</Data>
             </YStack>
           </XStack>
@@ -303,14 +302,13 @@ function Entry({
             cheio: o trilho colorido à esquerda é clichê, e fundo cheio
             brigaria com o vidro do painel. */}
         <YStack flex={1} gap="$xs">
-          <Text
-            fontSize={16}
+          <BodyLarge
             letterSpacing={-0.2}
             fontWeight={active ? '600' : '400'}
             color={active ? '$foreground' : '$mutedForeground'}
           >
             {name}
-          </Text>
+          </BodyLarge>
           <Data>{detail}</Data>
         </YStack>
       </XStack>

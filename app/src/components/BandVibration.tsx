@@ -2,7 +2,7 @@ import { YStack } from '@tamagui/stacks';
 import React from 'react';
 
 import { AppIcon } from './AppIcon';
-import { Section, SwitchRow } from './Card';
+import { Section, SwitchRow } from './List';
 import { Body, Button, Data } from './ui';
 import {
   comAssumfit,

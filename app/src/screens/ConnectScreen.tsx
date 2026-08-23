@@ -1,5 +1,4 @@
 import { useNavigation } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView } from 'react-native';
@@ -8,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../components/Icon';
 import { PermissionGate, permissaoNegadaEm } from '../components/PermissionGate';
 import { LogoType } from '../components/Logo';
-import { Body, Data, Label } from '../components/ui';
+import { Body, BodyLarge, Data, Headline, Label, Micro } from '../components/ui';
 import type { DiscoveredDevice } from '../services/ble';
 import { useBiometricStore } from '../store/biometric.store';
 import { useLifestyleStore } from '../store/lifestyle.store';
@@ -92,9 +91,9 @@ export function ConnectScreen() {
       <LogoType height={20} />
 
       <YStack flex={1} justifyContent="center">
-        <Text fontSize={34} fontWeight="700" letterSpacing={-1.2} lineHeight={40} color="$foreground">
+        <Headline fontWeight="700" letterSpacing={-1.2} lineHeight={40} color="$foreground">
           Aproxime a pulseira
-        </Text>
+        </Headline>
         <Body marginTop="$lg" maxWidth="82%">
           Encoste o celular na pulseira. Se ela já estiver conectada ao Bluetooth do iPhone, aparece
           assim mesmo.
@@ -139,16 +138,16 @@ export function ConnectScreen() {
                 >
                   <YStack flex={1} gap="$xs">
                     <XStack alignItems="center" gap="$sm">
-                      <Text fontSize={16} letterSpacing={-0.3} color="$foreground" numberOfLines={1}>
+                      <BodyLarge letterSpacing={-0.3} color="$foreground" numberOfLines={1}>
                         {item.name}
-                      </Text>
+                      </BodyLarge>
                     {/* Quem anuncia Heart Rate é quase certamente um wearable.
                         Dica, não filtro: firmware que não anuncia serviço
                         continua na lista, só sem o destaque. */}
                       {item.alreadyConnected ? (
-                        <Label fontSize={10} color="$primary">já conectado</Label>
+                        <Micro color="$primary">já conectado</Micro>
                       ) : isWearable(item.serviceUUIDs) ? (
-                        <Label fontSize={10} color="$primary">wearable</Label>
+                        <Micro color="$primary">wearable</Micro>
                       ) : null}
                     </XStack>
                     <Data>

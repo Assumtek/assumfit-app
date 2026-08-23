@@ -9,7 +9,7 @@ import { ActivityIndicator, Alert, Image, Platform, Pressable, TextInput } from 
 import { Icon } from '../components/Icon';
 import { VoiceInput } from '../components/VoiceInput';
 
-import { Note, Row, Section } from '../components/Card';
+import { Note, Row, Section } from '../components/List';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
 import { Body, Button, Data, Display, HeroCard, Label } from '../components/ui';
 import { ageFromBirthDate, calorieGoal, toMeasure, type CalorieGoal } from '../domain/nutritionGoal';

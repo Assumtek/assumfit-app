@@ -1,4 +1,3 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
@@ -19,7 +18,7 @@ import {
   EXPORT_WIDTH,
   FotoDeFundo,
 } from './ShareCanvas';
-import { Button, Data, Label } from './ui';
+import { Button, Data, Heading, Label, Micro, Subtitle } from './ui';
 
 /**
  * O story da sessão — o MESMO canvas editável do fim de treino da Musculação:
@@ -266,9 +265,9 @@ export function SportShare({
                 borderWidth={1}
                 borderColor="rgba(135,123,240,0.55)"
               >
-                <Text fontSize={10} fontWeight="800" letterSpacing={1.2} color="#ECE7F4">
+                <Micro fontWeight="800" letterSpacing={1.2} color="#ECE7F4">
                   SESSÃO CONCLUÍDA
-                </Text>
+                </Micro>
               </XStack>
             </BlocoEditavel>
 
@@ -279,15 +278,14 @@ export function SportShare({
               selecionado={selecionado === 'modalidade'}
               onSelecionar={escolher('modalidade')}
             >
-              <Text
-                fontSize={24}
+              <Heading
                 fontWeight="800"
                 color="#ECE7F4"
                 letterSpacing={-0.6}
                 maxWidth={CANVAS_WIDTH - 48}
               >
                 {sport.label}
-              </Text>
+              </Heading>
             </BlocoEditavel>
 
             {temTracado ? (
@@ -458,12 +456,12 @@ function Tracado({ points, width, height }: { points: GeoPoint[]; width: number;
 function Metrica({ valor, rotulo }: { valor: string; rotulo: string }) {
   return (
     <YStack>
-      <Text fontSize={20} fontWeight="300" color="#ECE7F4" fontVariant={['tabular-nums']}>
+      <Subtitle fontWeight="300" color="#ECE7F4" fontVariant={['tabular-nums']}>
         {valor}
-      </Text>
-      <Text fontSize={10} letterSpacing={1} color="rgba(236,231,244,0.7)" textTransform="uppercase">
+      </Subtitle>
+      <Micro letterSpacing={1} color="rgba(236,231,244,0.7)" textTransform="uppercase">
         {rotulo}
-      </Text>
+      </Micro>
     </YStack>
   );
 }

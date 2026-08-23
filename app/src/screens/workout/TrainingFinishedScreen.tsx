@@ -1,5 +1,4 @@
 import { useNavigation } from '@react-navigation/native';
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
 import { Pressable, TextInput } from 'react-native';
@@ -7,7 +6,7 @@ import { Pressable, TextInput } from 'react-native';
 import { DetailScreen } from '../../components/DetailScreen';
 import { ScalePicker } from '../../components/ScalePicker';
 import { Icon } from '../../components/Icon';
-import { Body, Button, Card, Data, HeroCard, SectionTitle } from '../../components/ui';
+import { Body, BodyLarge, Button, Card, Data, Heading, HeroCard, Metric, RatingText, SectionTitle, Subtitle } from '../../components/ui';
 import { achievementsFor, type Achievement } from '../../domain/achievements';
 import { formatDuration, rateCompletion, rateEffort } from '../../domain/workout';
 import { fetchExecutionHistory } from '../../services/api.service';
@@ -79,12 +78,12 @@ export function TrainingFinishedScreen() {
       <DetailScreen title="Treino concluído">
         <YStack gap="$xl" paddingTop="$lg">
           <HeroCard eyebrow={result.workoutName}>
-            <Text fontSize={44} fontWeight="300" color="$foreground" letterSpacing={-2}>
+            <Metric fontWeight="300" color="$foreground" letterSpacing={-2}>
               {formatDuration(result.durationSec ?? 0)}
-            </Text>
-            <Text fontSize={20} fontWeight="700" color="$foreground">
+            </Metric>
+            <Subtitle fontWeight="700" color="$foreground">
               {completion.label}
-            </Text>
+            </Subtitle>
             <Body color="$mutedForeground">
               {completion.detail}
             </Body>
@@ -100,18 +99,17 @@ export function TrainingFinishedScreen() {
 
           {effortRating.available ? (
             <Card>
-              <Text
-                fontSize={12}
+              <Data
                 fontWeight="700"
                 letterSpacing={1.2}
                 color="$mutedForeground"
                 textTransform="uppercase"
               >
                 esforço percebido
-              </Text>
-              <Text fontSize={18} fontWeight="700" color="$foreground" marginTop="$sm">
+              </Data>
+              <RatingText fontWeight="700" color="$foreground" marginTop="$sm">
                 {effortRating.label}
-              </Text>
+              </RatingText>
               <Body color="$mutedForeground">
                 {effortRating.detail}
               </Body>
@@ -183,27 +181,26 @@ export function TrainingFinishedScreen() {
     <DetailScreen title="Fim do treino">
       <YStack gap="$xl" paddingTop="$lg">
         <YStack gap="$xs">
-          <Text fontSize={24} fontWeight="800" color="$foreground" letterSpacing={-0.5}>
+          <Heading fontWeight="800" color="$foreground" letterSpacing={-0.5}>
             Como foi?
-          </Text>
+          </Heading>
           <Body color="$mutedForeground">
             {execution?.workoutName ?? 'Sua sessão'}, duas perguntas rápidas antes de fechar.
           </Body>
         </YStack>
 
         <Card>
-          <Text
-            fontSize={12}
+          <Data
             fontWeight="700"
             letterSpacing={1.2}
             color="$mutedForeground"
             textTransform="uppercase"
           >
             esforço percebido
-          </Text>
-          <Text fontSize={16} color="$foreground" marginTop="$sm" marginBottom="$md">
+          </Data>
+          <BodyLarge color="$foreground" marginTop="$sm" marginBottom="$md">
             Quanto este treino puxou?
-          </Text>
+          </BodyLarge>
           <ScalePicker values={[2, 4, 6, 8, 10]} value={effort} onPick={setEffort} label="Esforço" />
           <XStack justifyContent="space-between" marginTop="$sm">
             <Data color="$mutedForeground">
@@ -216,31 +213,29 @@ export function TrainingFinishedScreen() {
         </Card>
 
         <Card>
-          <Text
-            fontSize={12}
+          <Data
             fontWeight="700"
             letterSpacing={1.2}
             color="$mutedForeground"
             textTransform="uppercase"
           >
             nota da sessão
-          </Text>
-          <Text fontSize={16} color="$foreground" marginTop="$sm" marginBottom="$md">
+          </Data>
+          <BodyLarge color="$foreground" marginTop="$sm" marginBottom="$md">
             O treino de hoje serviu para você?
-          </Text>
+          </BodyLarge>
           <ScalePicker values={[1, 2, 3, 4, 5]} value={rating} onPick={setRating} label="Nota" />
         </Card>
 
         <Card>
-          <Text
-            fontSize={12}
+          <Data
             fontWeight="700"
             letterSpacing={1.2}
             color="$mutedForeground"
             textTransform="uppercase"
           >
             observação
-          </Text>
+          </Data>
           <TextInput
             style={{
               color: colors.text,

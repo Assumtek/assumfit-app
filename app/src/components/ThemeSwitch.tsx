@@ -1,5 +1,5 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
+import { Body } from './ui';
 import React from 'react';
 import { Pressable } from 'react-native';
 
@@ -49,14 +49,13 @@ export function ThemeSwitch() {
               alignItems="center"
               backgroundColor={selected ? '$control' : 'transparent'}
             >
-              <Text
-                fontSize={14}
+              <Body
                 letterSpacing={-0.2}
                 fontWeight={selected ? '600' : '400'}
                 color={selected ? '$foreground' : '$mutedForeground'}
               >
                 {option.label}
-              </Text>
+              </Body>
             </YStack>
           </Pressable>
         );

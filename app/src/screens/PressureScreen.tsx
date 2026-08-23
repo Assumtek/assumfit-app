@@ -1,15 +1,14 @@
-import { Text } from '@tamagui/core';
 import { XStack, YStack } from '@tamagui/stacks';
 import { useChartWidth } from '../components/charts/useChartWidth';
 import React, { useState } from 'react';
 
 import { EmptyMetric } from '../components/BandStatus';
-import { Row, Section } from '../components/Card';
+import { Row, Section } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
 import { MeasuredAt } from '../components/MeasuredAt';
 import { MeasureButton } from '../components/MeasureButton';
 import { ScatterPlot } from '../components/charts/ScatterPlot';
-import { Body, Data, Display, RatingText } from '../components/ui';
+import { Body, Data, Display, Headline, Metric, RatingText } from '../components/ui';
 import { pressureZones, ratePressure } from '../domain/ratings';
 import { useBiometricStore } from '../store/biometric.store';
 
@@ -43,18 +42,17 @@ export function PressureScreen() {
           <Display>{latest.bpSystolic}</Display>
           {/* A diastólica é menor de propósito: são um par, mas a sistólica é
               a que decide a faixa. */}
-          <Text fontSize={34} fontWeight="300" color="$faint">
+          <Headline fontWeight="300" color="$faint">
             /
-          </Text>
-          <Text
-            fontSize={40}
+          </Headline>
+          <Metric
             fontWeight="300"
             letterSpacing={-1.6}
             color="$mutedForeground"
             fontVariant={['tabular-nums']}
           >
             {latest.bpDiastolic}
-          </Text>
+          </Metric>
         </XStack>
         <Data marginTop="$sm">mmHg · sistólica / diastólica</Data>
         <MeasuredAt at={latest.recordedAt} />

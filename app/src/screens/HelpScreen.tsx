@@ -1,7 +1,7 @@
 import { YStack } from '@tamagui/stacks';
 import React from 'react';
 
-import { Note, Row, Section } from '../components/Card';
+import { Note, Row, Section } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
 import { Body, Data } from '../components/ui';
 

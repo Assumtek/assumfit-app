@@ -455,7 +455,9 @@ lá. As seis que mais se quebra por descuido:
 1. **Relevo é o padrão; a linha continua existindo.** Card com sombra e halo é
    para a peça de destaque de uma tela: `Card` e `HeroCard` de
    `components/ui/Card.tsx`. Lista de propriedades continua sendo `Section` e
-   `Row` de `components/Card.tsx`, separadas por hairline. Um card por linha de
+   `Row` de `components/List.tsx`, separadas por hairline. Linha com ação ou
+   interruptor é `ActionRow`/`SwitchRow` do mesmo arquivo; não se desenha
+   Pressable + ícone + seta à mão. Um card por linha de
    lista é ruído, não hierarquia.
 2. **Um acento, e ele é do dado.** `$primary` em anel, arco, sparkline, régua,
    trilho, e no botão da ação principal, que é a única exceção nova. Ícone de
@@ -468,7 +470,10 @@ lá. As seis que mais se quebra por descuido:
    avaliação são 700; corpo e dado são 400; **número grande é 200–300**, porque
    é o que o faz ler como instrumento e não como manchete. Não escolha o peso na
    tela: use os componentes de `components/ui/Type.tsx`, que são a escala inteira
-   (`Display`, `Metric`, `Title`, `RatingText`, `Body`, `Data`, `Label`).
+   (`Display`, `Metric`, `MetricSm`, `Headline`, `Title`, `Heading`, `Subtitle`,
+   `SectionTitle`, `RatingText`, `BodyLarge`, `Body`, `Data`, `Label`, `Micro`).
+   `fontSize` por prop e `Text` cru do Tamagui em tela são barrados por
+   `src/__tests__/designRules.test.ts`, que roda com o jest.
 5. **Alinhamento à esquerda em conteúdo de tela.** Centralizado só dentro de uma
    peça que é simétrica por natureza, anel, botão, célula de calendário.
 6. **Ícone é outline monolinear** de 1,5px. `components/Icon.tsx` só desenha

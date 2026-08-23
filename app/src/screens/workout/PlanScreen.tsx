@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { YStack } from '@tamagui/stacks';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Note } from '../../components/Card';
+import { Note } from '../../components/List';
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon } from '../../components/Icon';
 import { TrainingPanel } from '../../components/TrainingPanel';

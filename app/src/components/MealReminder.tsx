@@ -4,7 +4,7 @@ import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect } from 'react';
 import { Pressable, Switch } from 'react-native';
 
-import { Row, Section } from './Card';
+import { Row, Section } from './List';
 import { Icon } from './Icon';
 import { Body, Data } from './ui';
 import { useMealReminderStore } from '../store/meal-reminder.store';

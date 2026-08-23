@@ -2,7 +2,7 @@ import { XStack, YStack } from '@tamagui/stacks';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable } from 'react-native';
 
-import { Note, Row, Section, ActionRow } from '../../components/Card';
+import { Note, Row, Section, ActionRow } from '../../components/List';
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon, type IconName } from '../../components/Icon';
 import { Body, Button, Data, Headline, HeroCard, SectionTitle, Skeleton } from '../../components/ui';
