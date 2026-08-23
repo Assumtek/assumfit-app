@@ -11,7 +11,6 @@ import { indicadoresDaHome } from '../domain/homeIndicators';
 import { ageFromBirthDate, calorieGoal } from '../domain/nutritionGoal';
 import { useHabitsStore } from '../store/habits.store';
 import { useWorkoutStore } from '../store/workout.store';
-import { HomeRings, type RingItem } from '../components/HomeRings';
 import { Icon } from '../components/Icon';
 import { MovementWeek } from '../components/MovementWeek';
 import { PermissionGate, permissaoNegadaEm } from '../components/PermissionGate';
@@ -342,35 +341,6 @@ export function HomeScreen() {
   const stressAtual =
     latest.stressScore ?? (stressHistory.length ? stressHistory[stressHistory.length - 1].value : null);
   const stress = rateStress(stressAtual);
-  const rings: RingItem[] = [
-    {
-      key: 'sono',
-      label: 'Sono',
-      value: shown(sleep?.score ?? null),
-      fraction: sono.fraction,
-      color: stateColor(sono.state, colors),
-      accessibilityLabel: `Sono: ${sono.label}, ${sono.detail}`,
-      onPress: () => abrir('Sleep'),
-    },
-    {
-      key: 'stress',
-      label: 'Stress',
-      value: shown(stressAtual),
-      fraction: stress.fraction,
-      color: stateColor(stress.state, colors),
-      accessibilityLabel: `Stress: ${stress.label}, ${stress.detail}`,
-      onPress: () => abrir('Stress'),
-    },
-    {
-      key: 'recuperacao',
-      label: 'Recuperação',
-      value: String(energy.score),
-      fraction: energy.score / 100,
-      color: colors.accent,
-      accessibilityLabel: `Recuperação: prontidão ${energy.score} de 100`,
-      onPress: () => abrir('Hrv'),
-    },
-  ];
 
   /*
    Os cinco indicadores do dia (fundadora, 22/08/2026) no lugar do carrossel:
@@ -462,7 +432,21 @@ export function HomeScreen() {
           de estado (manchete + régua + botão de ação) virou o card de saúde do
           carrossel; o score continua aqui, dentro do anel de Recuperação. */}
       <YStack paddingTop="$xxxl" paddingBottom="$xxl">
-        <HomeRings items={rings} />
+        {/*
+          Resumo de saúde no lugar dos três anéis (fundadora, 22/08/2026): a
+          frase do dia (do modelo, ou do cálculo local sem rede) e uma linha
+          de dado. Toca e abre a tela de Saúde, onde mora o detalhe.
+        */}
+        <Pressable onPress={() => abrir('Health')} accessibilityRole="button" accessibilityLabel="Resumo de saúde">
+          <YStack gap="$sm" paddingVertical="$lg">
+            <Label>resumo de saúde</Label>
+            <SectionTitle>{energy.title}</SectionTitle>
+            <Body>{energy.description}</Body>
+            <Data marginTop="$xs">
+              {`Prontidão ${energy.score} · Stress ${shown(stressAtual)} · Sono ${shown(sleep?.score ?? null)}`}
+            </Data>
+          </YStack>
+        </Pressable>
       </YStack>
 
       <IndicatorList

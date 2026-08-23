@@ -22,8 +22,8 @@ export function IndicatorList({ itens, onAbrir }: { itens: Indicador[]; onAbrir:
       {itens.map((it, i) => (
         <Pressable key={it.key} onPress={() => onAbrir(it.rota)} accessibilityRole="button" accessibilityLabel={`${it.rotulo}: ${it.frase}`} style={({ pressed }) => (pressed ? { opacity: 0.5 } : undefined)}>
           <Row last={i === itens.length - 1}>
-            <XStack width={28} height={28} borderRadius={14} alignItems="center" justifyContent="center" style={{ backgroundColor: it.direcao === 'up' ? colors.goodSoft : colors.alertSoft }}>
-              <Icon name={it.direcao === 'up' ? 'arrowUp' : 'arrowDown'} size={16} color={it.direcao === 'up' ? colors.good : colors.alert} />
+            <XStack width={24} alignItems="center" justifyContent="center">
+              <Icon name={it.direcao === 'up' ? 'arrowUp' : 'arrowDown'} size={20} color={it.direcao === 'up' ? colors.good : colors.alert} strokeWidth={2.4} />
             </XStack>
             <YStack flex={1} gap={4}>
               <Body color="$foreground">{it.rotulo}</Body>
