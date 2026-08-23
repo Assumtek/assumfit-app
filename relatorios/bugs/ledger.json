@@ -1154,6 +1154,12 @@
       "nota": "Arrastar, redimensionar e girar os blocos já funcionavam (dois dedos giram); agora há guias de centro: perto do meio o bloco encaixa e a linha acende, e o ângulo encaixa em 0° e 90°.",
       "versao": "1.0.5 (6)",
       "em": "2026-08-22T23:04:21"
+    },
+    "ANmG2eZ5WGT6A0a-wyfUzeQ": {
+      "commit": "1901dd1",
+      "nota": "O ícone do pilates passou a ser a prancha horizontal.",
+      "versao": "1.0.5 (6)",
+      "em": "2026-08-22T23:08:06"
     }
   }
 }
