@@ -1226,6 +1226,12 @@
       "nota": "Entrou como tela própria, Metas do dia (no menu): anel de calorias ativas sobre a meta, gasto de repouso ao lado, meta editável como padrão ou só para hoje, e calendário de 28 dias com um anel por dia.",
       "versao": "1.0.5 (7)",
       "em": "2026-08-23T12:07:47"
+    },
+    "AA-pog0LpH7K1ikpZ7f_42o": {
+      "commit": "fc52818",
+      "nota": "Já ajustado hoje cedo pelo mesmo relato do Leonardo: margem por porção de 25 para 15 por cento e o total combina as incertezas em vez de somar extremos (entra com o deploy do servidor); na tela, o número central fica em destaque e a faixa vira sub-rótulo.",
+      "versao": "1.0.5 (7)",
+      "em": "2026-08-23T12:53:20"
     }
   }
 }
