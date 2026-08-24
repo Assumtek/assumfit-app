@@ -236,7 +236,16 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
         reading.heartRate,
         reading.spo2Pct,
         sleep,
-        water,
+        /*
+         A água entra GROSSA no hash, em baldes de 250 ml.
+         
+         Ela passou a vir do aparelho (para o resumo não contradizer a tela), e
+         isso a fez mudar a cada copo registrado: cada gole invalidava o cache e
+         comprava um texto novo do modelo. Um balde de 250 ml é menor que o
+         menor copo do app, então a frase ainda acompanha quem bebe, sem pagar
+         por cada 50 ml de diferença.
+        */
+        water == null ? null : Math.round(water / 250),
         hour,
         baseline,
         lifestyle?.updatedAt ?? null,

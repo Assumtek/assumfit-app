@@ -256,9 +256,21 @@ def _catalog_text(inp: WorkoutAdjustInput) -> str:
 
 
 def build_adjust_system(inp: WorkoutAdjustInput) -> list[dict]:
+    """O catálogo NÃO leva `cache_control`, e isso é economia, não descuido.
+
+    Escrever cache custa 1,25 vez o preço da entrada e ler custa 0,1; só
+    compensa quando o mesmo bloco é lido de novo dentro da janela de cinco
+    minutos. No chat isso quase nunca acontece, porque as mensagens são
+    espaçadas por minutos: o relatório de agosto mostra US$ 1,02 gastos
+    escrevendo cache de Haiku contra US$ 0,06 lendo. Pagávamos o ágio da
+    escrita e jogávamos fora.
+
+    No pipeline de geração o cache CONTINUA, e ali ele se paga: gerar e
+    avaliar acontecem em segundos, sobre o mesmo catálogo.
+    """
     return [
         {"type": "text", "text": _load_adjust_template()},
-        {"type": "text", "text": _catalog_text(inp), "cache_control": _CACHE_CONTROL},
+        {"type": "text", "text": _catalog_text(inp)},
     ]
 
 
