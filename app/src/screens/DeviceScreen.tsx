@@ -32,6 +32,7 @@ import { SedentaryReminder } from '../components/SedentaryReminder';
 import { SyncProgress } from '../components/SyncProgress';
 import { Body, Button, Data } from '../components/ui';
 import { Readout, ReadoutCluster } from '../components/ui/Readout';
+import { desligadas, linhasDoAgendamento, resumoDoAgendamento } from '../domain/agendamento';
 import { chegaramHoje, entregasDaPulseira, faltamHoje, ORDEM_DO_RAZAO } from '../domain/bandLedger';
 import { horaLocal } from '../domain/sleep';
 import { ble } from '../services/ble';
@@ -132,6 +133,27 @@ export function DeviceScreen() {
       setCalibracao('A calibração não concluiu. Vista a pulseira firme, fique parado e tente de novo.');
     } finally {
       setCalibrando(false);
+    }
+  };
+
+  /*
+   O que a pulseira está REGISTRANDO sozinha.
+
+   Vem do serviço, não do store: quem conversa com o firmware é ele, e o estado
+   é do aparelho, não do app. Sem conferência ainda feita, `null`, e a seção diz
+   isso em vez de afirmar que está tudo bem.
+  */
+  const [agendamento, setAgendamento] = React.useState<Record<string, boolean> | null>(
+    ble.agendamentoAtual?.() ?? null);
+  const [conferindo, setConferindo] = React.useState(false);
+  const conferir = async () => {
+    setConferindo(true);
+    try {
+      setAgendamento((await ble.conferirAgendamento?.()) ?? null);
+    } catch {
+      // Sem resposta é o mesmo que sem conferência: a frase não muda de tom.
+    } finally {
+      setConferindo(false);
     }
   };
 
@@ -268,6 +290,52 @@ export function DeviceScreen() {
           <Body marginTop="$lg">{explicacaoDoQueFalta(faltam)}</Body>
         ) : null}
       </Section>
+
+      {/*
+        O que a pulseira registra sozinha, e o que fazer quando parou.
+
+        Esta seção nasceu de um relato que voltou três vezes (Bruno, ago/2026):
+        a pulseira dele tinha parado de registrar batimento, oxigênio, estresse
+        e sono, e continuava contando passos. Nada na tela dizia isso, então o
+        relato era sempre sobre o app, e a correção era sempre no lugar errado.
+      */}
+      {conectada ? (
+        <Section label="O que a pulseira registra sozinha">
+          {linhasDoAgendamento(agendamento).map((l, i, todas) => (
+            <Row key={l.chave} last={i === todas.length - 1}>
+              <YStack
+                width={8}
+                height={8}
+                borderRadius={4}
+                marginRight="$md"
+                backgroundColor={l.ligado ? '$primary' : undefined}
+                borderWidth={l.ligado ? 0 : 1}
+                borderColor="$border"
+              />
+              <YStack flex={1} gap={4}>
+                <Body color={l.ligado ? '$foreground' : '$mutedForeground'}>{l.rotulo}</Body>
+                {l.ligado ? null : <Data>{l.consequencia}</Data>}
+              </YStack>
+              <Body color={l.ligado ? '$foreground' : '$mutedForeground'}>
+                {l.ligado ? 'registrando' : 'parada'}
+              </Body>
+            </Row>
+          ))}
+          <Body marginTop={agendamento ? '$lg' : undefined}>{resumoDoAgendamento(agendamento)}</Body>
+          <ActionRow
+            icon="refresh"
+            title={agendamento && desligadas(agendamento).length > 0 ? 'Religar as que pararam' : 'Conferir agora'}
+            subtitle={
+              conferindo
+                ? 'Perguntando à pulseira…'
+                : 'Pergunta ao aparelho o que ele está registrando e religa o que estiver parado.'
+            }
+            busy={conferindo}
+            onPress={() => void conferir()}
+            last
+          />
+        </Section>
+      ) : null}
 
       {conectada ? (
         <Section label="Ferramentas">

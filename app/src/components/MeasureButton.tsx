@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable } from 'react-native';
 
 import type { MeasurableKind } from '../services/ble';
+import { noiteSustentaODia } from '../domain/bodyBattery';
+import { isoHoje } from '../domain/water';
 import { buscarNoiteAgora, useBiometricStore } from '../store/biometric.store';
 import { Body, Pill } from './ui';
 import { useTheme } from '../theme/ThemeProvider';
@@ -160,7 +162,19 @@ export function SyncSleepButton() {
       if (conectado) {
         const r = await buscarNoiteAgora();
         if (r.estado === 'nova') {
-          setResposta('Noite atualizada.');
+          /*
+           "Nova" quer dizer mais recente do que a que estava na tela, e isso
+           NÃO é o mesmo que ser a noite de hoje. A captura do testador
+           mostrava, na mesma dobra da tela, "Noite atualizada." e o aviso
+           "esta não é a noite de hoje", com uma noite de três dias atrás
+           (Bruno, 24/08/2026). O app se contradizendo é pior do que o app
+           dizendo que não achou: a segunda coisa a pessoa consegue agir sobre.
+          */
+          setResposta(
+            noiteSustentaODia(r.noite, isoHoje())
+              ? 'Noite atualizada.'
+              : `Veio a noite de ${noiteEmTexto(r.noite)}. A pulseira ainda não tem nenhuma depois dessa.`,
+          );
           return;
         }
         if (r.estado === 'nao-respondeu') {
@@ -256,4 +270,13 @@ export function FetchFromBandButton({ label = 'Buscar na pulseira' }: { label?: 
       </Pressable>
     </YStack>
   );
+}
+
+/** "21/08 para 22/08", como a pessoa fala de uma noite. */
+function noiteEmTexto(noite: { date: string }): string {
+  const [ano, mes, dia] = noite.date.split('-').map(Number);
+  const deitou = new Date(ano, mes - 1, dia);
+  const levantou = new Date(ano, mes - 1, dia + 1);
+  const curto = (d: Date) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+  return `${curto(deitou)} para ${curto(levantou)}`;
 }

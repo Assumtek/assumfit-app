@@ -40,6 +40,8 @@ import {
 export class QCBandService implements BleService {
   /** Duas horas entre sequências automáticas. Ver `ultimaSequencia`. */
   private static readonly INTERVALO_SEQUENCIA_MS = 2 * 60 * 60 * 1000;
+  /** Um dia entre conferências do agendamento. Ver `garantirAgendamento`. */
+  private static readonly INTERVALO_CONFERENCIA_MS = 24 * 60 * 60 * 1000;
 
   private state: ConnectionState = 'idle';
   /** Motivo do último `error`, para novos assinantes o receberem junto. */
@@ -80,6 +82,10 @@ export class QCBandService implements BleService {
    * parear, não a fonte principal.
    */
   private ultimaSequencia = 0;
+  /** Quando o agendamento do firmware foi conferido pela última vez. */
+  private ultimaConferencia = 0;
+  /** O último estado do agendamento lido do aparelho. */
+  private agendamento: Record<string, boolean> | null = null;
   private battery: number | null = null;
   private lastHrv: number | null = null;
   /** Instante da amostra de HRV — quase nunca é o da leitura. */
@@ -205,6 +211,106 @@ export class QCBandService implements BleService {
   }
 
   /**
+   * Confere o agendamento do firmware e religa o que estiver desligado.
+   *
+   * Estresse, HRV, pressão, oxigênio e frequência cardíaca têm um interruptor
+   * no aparelho, separado da capacidade: `getFeatures` diz que a pulseira SABE
+   * medir, este estado diz se ela ESTÁ medindo. Desligado, a medição sob
+   * demanda conclui com sucesso e devolve vazio, o histórico nunca enche, e o
+   * sono some junto, porque o estadiamento depende do sensor óptico.
+   *
+   * **Por que isto não pode viver só no ritual de conexão.** Vivia, e foi como
+   * um testador passou dois dias sem sono, sem batimento, sem oxigênio e sem
+   * estresse, com o app achando que estava tudo bem (Bruno, 22 a 24/08/2026:
+   * só o contador de passos, que é acelerômetro e não depende de agendamento,
+   * continuou enchendo). O iOS segura o BLE por dias, e quem mantém o app vivo
+   * com a pulseira ao alcance simplesmente não reconecta: o evento que
+   * disparava a conferência nunca acontecia de novo.
+   *
+   * Agora ela também roda no ciclo de sincronização, uma vez por dia. O estado
+   * lido fica guardado para a tela do aparelho poder MOSTRAR o que a pulseira
+   * está registrando: enquanto isso só existia no log, uma pulseira que parou
+   * de medir era indistinguível, na tela, de um app quebrado.
+   */
+  private async garantirAgendamento(features: Record<string, boolean | number>) {
+    if (!QCBand) return;
+    const estado = await QCBand.getMonitoring().catch(() => null);
+    this.agendamento = estado;
+    this.ultimaConferencia = Date.now();
+    if (!estado) return;
+
+    console.log(
+      `[qcband] agendado: estresse=${estado.stress} hrv=${estado.hrv} ` +
+        `pressão=${estado.bloodPressure} spo2=${estado.spo2} fc=${estado.heartRate}`);
+
+    /*
+     Os CINCO, não dois.
+
+     Estresse e HRV eram os únicos ligados, e era por isso que só eles tinham
+     histórico: a pulseira não registra o que não está agendado. Pressão,
+     oxigênio e frequência cardíaca chegam desligados de fábrica, e o app do
+     fabricante os liga na primeira conexão, foi ele que produziu as curvas
+     de 24 h que existem hoje no aparelho.
+
+     Em série, e só o que estiver desligado: cada escrita é um comando no
+     canal serial, e reescrever o que já está certo gasta rádio à toa.
+    */
+    const agendar: [keyof typeof estado, string][] = [
+      ['stress', 'feature.stress'],
+      ['hrv', 'feature.hrv'],
+      ['bloodPressure', 'feature.bloodPressure'],
+      ['spo2', 'feature.bloodOxygen'],
+      ['heartRate', 'feature.heartRate'],
+    ];
+    let religou = false;
+    for (const [chave, recurso] of agendar) {
+      // Frequência cardíaca não costuma vir declarada em `getFeatures`, ela
+      // é o básico do aparelho. Ausente vale como presente só para ela.
+      const suportado =
+        chave === 'heartRate' ? features[recurso] !== false : features[recurso] === true;
+      if (suportado && !estado[chave]) {
+        await QCBand.setMonitoring(chave, true).catch(() => undefined);
+        religou = true;
+        console.log(`[qcband] agendamento ligado: ${chave}`);
+      }
+    }
+    // Reler depois de escrever: o que a tela mostra tem que ser o que o
+    // aparelho respondeu, não o que pedimos a ele.
+    if (religou) {
+      this.agendamento = await QCBand.getMonitoring().catch(() => this.agendamento);
+    }
+  }
+
+  /**
+   * A conferência do agendamento pendurada no ciclo de sincronização.
+   *
+   * Uma vez por dia: é ajuste que fica gravado no aparelho, e reescrever a cada
+   * sincronização gastaria o canal serial sem necessidade. Nunca bloqueia a
+   * sincronização, que é o que a pessoa está esperando na tela.
+   */
+  private async conferirAgendamentoSeVencido() {
+    if (!QCBand) return;
+    if (Date.now() - this.ultimaConferencia < QCBandService.INTERVALO_CONFERENCIA_MS) return;
+    const features = await QCBand.getFeatures().catch(() => null);
+    if (!features) return;
+    await this.garantirAgendamento(features).catch(() => undefined);
+  }
+
+  /** O que a pulseira respondeu na última conferência, para a tela mostrar. */
+  agendamentoAtual(): Record<string, boolean> | null {
+    return this.agendamento;
+  }
+
+  /** A conferência sob demanda, do botão da tela do aparelho. */
+  async conferirAgendamento(): Promise<Record<string, boolean> | null> {
+    if (!QCBand) return null;
+    const features = await QCBand.getFeatures().catch(
+      () => ({}) as Record<string, boolean | number>);
+    await this.garantirAgendamento(features);
+    return this.agendamento;
+  }
+
+  /**
    * Pede as grandezas que só existem sob demanda.
    *
    * Era a resposta para "por que a tela só mostra batimento": a pulseira
@@ -236,42 +342,7 @@ export class QCBandService implements BleService {
 
      Ligar uma vez basta: o ajuste fica no aparelho.
      */
-    const estado = await QCBand.getMonitoring().catch(() => null);
-    if (estado) {
-      console.log(
-        `[qcband] agendado: estresse=${estado.stress} hrv=${estado.hrv} ` +
-          `pressão=${estado.bloodPressure} spo2=${estado.spo2} fc=${estado.heartRate}`);
-
-      /*
-       Os CINCO, não dois.
-
-       Estresse e HRV eram os únicos ligados, e era por isso que só eles tinham
-       histórico: a pulseira não registra o que não está agendado. Pressão,
-       oxigênio e frequência cardíaca chegam desligados de fábrica, e o app do
-       fabricante os liga na primeira conexão — foi ele que produziu as curvas
-       de 24 h que existem hoje no aparelho.
-
-       Em série, e só o que estiver desligado: cada escrita é um comando no
-       canal serial, e reescrever o que já está certo gasta rádio à toa.
-      */
-      const agendar: [keyof typeof estado, string][] = [
-        ['stress', 'feature.stress'],
-        ['hrv', 'feature.hrv'],
-        ['bloodPressure', 'feature.bloodPressure'],
-        ['spo2', 'feature.bloodOxygen'],
-        ['heartRate', 'feature.heartRate'],
-      ];
-      for (const [chave, recurso] of agendar) {
-        // Frequência cardíaca não costuma vir declarada em `getFeatures` — ela
-        // é o básico do aparelho. Ausente vale como presente só para ela.
-        const suportado =
-          chave === 'heartRate' ? features[recurso] !== false : features[recurso] === true;
-        if (suportado && !estado[chave]) {
-          await QCBand.setMonitoring(chave, true).catch(() => undefined);
-          if (__DEV__) console.log(`[qcband] agendamento ligado: ${chave}`);
-        }
-      }
-    }
+    await this.garantirAgendamento(features);
 
     const pedidos: string[] = [];
 
@@ -619,6 +690,13 @@ export class QCBandService implements BleService {
     };
     if (!QCBand) return vazio;
 
+    /*
+     A conferência do agendamento entra AQUI, e não só na conexão: sincronizar
+     é o momento em que a pulseira está por perto e respondendo, e é o único
+     que se repete todo dia num app que quase nunca reconecta.
+    */
+    void this.conferirAgendamentoSeVencido();
+
     let passo = 0;
     const anunciar = (step: SyncStep) => {
       passo += 1;
@@ -892,6 +970,7 @@ export class QCBandService implements BleService {
     // Recolhe os sete dias e monta as noites de uma vez: noite que cruza a
     // fronteira de "dia" do firmware (levantada na madrugada) sai inteira.
     const bruto: SegmentoBruto[] = [];
+    const porDia: number[] = [];
     let falhas = 0;
     for (let dia = 0; dia <= 6; dia++) {
       this.setActivity({ kind: 'sync', step: 'memory', done: dia + 1, total: 7 });
@@ -899,13 +978,27 @@ export class QCBandService implements BleService {
         falhas += 1;
         return [] as SegmentoBruto[];
       });
+      porDia[dia] = doDia.length;
       bruto.push(...doDia);
     }
     // Sete consultas mudas é aparelho fora de alcance, não sete noites em
     // claro: quem chamou precisa saber a diferença.
     if (falhas === 7) throw new Error('A pulseira não respondeu à memória de sono');
-    // A memória inteira pela porta nova, quando a antiga veio vazia.
-    if (bruto.length === 0 && QCBand.getSleepV2) {
+    /*
+     A porta nova entra quando os dias RECENTES vieram vazios, não quando a
+     memória inteira veio.
+
+     A condição era `bruto.length === 0`, e ela nunca foi verdadeira no caso
+     que a fez existir: o testador tinha as noites até 21/08 na memória e as
+     duas últimas faltando (Bruno, 24/08/2026). Com noite antiga presente, a
+     soma dos sete dias nunca zera, e a peça que existe para recuperar noite
+     perdida ficava cega ao protocolo novo justamente quando ele importava.
+
+     O sintoma real de troca de protocolo nunca é memória vazia: é o COMEÇO da
+     série presente e o FIM faltando.
+    */
+    const recentesVazios = (porDia[0] ?? 0) === 0 && (porDia[1] ?? 0) === 0;
+    if (recentesVazios && QCBand.getSleepV2) {
       const v2 = await comTeto(QCBand.getSleepV2(6), TETO_CONSULTA_MS, 'sono v2').catch(
         () => [] as SegmentoBruto[],
       );

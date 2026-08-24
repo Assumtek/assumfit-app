@@ -335,6 +335,29 @@ SDK porque ele descreve a família inteira de aparelhos do fabricante.
 `getSchedualHRV` dizem se ela ESTÁ medindo. Chegam desligados, e desligados, a
 medição sob demanda conclui com sucesso e devolve vazio.
 
+**O agendamento do firmware precisa ser conferido no CICLO, não na conexão.**
+Estava dentro do ritual de `connect`, e o iOS segura o BLE por dias: quem mantém
+o app vivo com a pulseira ao alcance simplesmente não reconecta, então a
+conferência nunca acontecia de novo. Um testador passou dois dias sem sono, sem
+batimento, sem oxigênio e sem estresse, com só o contador de passos enchendo
+(acelerômetro, que não depende de agendamento), e reportou o APP três vezes.
+Agora `garantirAgendamento` também roda na sincronização, uma vez por dia, e o
+estado lido chega à TELA do aparelho (`domain/agendamento.ts`): enquanto foi só
+`console.log`, pulseira que parou de registrar era indistinguível de app
+quebrado.
+
+**Sono: a porta nova (V2) se consulta quando faltam os dias RECENTES**, não
+quando a memória inteira volta vazia. O sintoma de troca de protocolo é o começo
+da série presente e o fim faltando; com uma noite antiga na memória, a soma dos
+sete dias nunca zera e o recurso que existe para recuperar noite perdida fica
+cego justamente no caso que o fez existir.
+
+**"Nova" não é "de hoje".** `buscarNoiteAgora` devolve `nova` para qualquer
+noite mais recente que a da tela, e o botão dizia "Noite atualizada." sobre uma
+noite de três dias atrás, ao lado do próprio aviso de que aquela não era a noite
+de hoje. Quando a noite não sustenta o dia (`noiteSustentaODia`), a frase diz de
+que noite se trata.
+
 **Toda chamada ao SDK passa por `services/ble/timeout.ts`.** O bloco de
 conclusão do fabricante pode simplesmente não ser chamado, pulseira que saiu de
 alcance, sensor que não converge, pacote que não volta pelo canal serial, e a

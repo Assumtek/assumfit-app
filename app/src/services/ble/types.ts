@@ -179,6 +179,21 @@ export interface BleService {
   /** Liga o ANCS, sem o qual notificação nenhuma chega ao pulso com o app fechado. */
   enableAncs?(): Promise<boolean>;
   /**
+   * O que a pulseira está REGISTRANDO sozinha, grandeza por grandeza.
+   *
+   * Não é a mesma coisa que o que ela sabe medir. Cada grandeza tem um
+   * interruptor no firmware, e desligada ela não grava nada na memória, ainda
+   * que a medição sob demanda conclua com sucesso e devolva vazio.
+   *
+   * Isto existe na interface porque precisa chegar à TELA. Enquanto foi só
+   * log, uma pulseira que parou de registrar era indistinguível de um app
+   * quebrado, e um testador passou dois dias reportando o app (ago/2026).
+   * `null` quando ainda não foi conferido.
+   */
+  agendamentoAtual?(): Record<string, boolean> | null;
+  /** Confere o agendamento no aparelho AGORA e religa o que estiver desligado. */
+  conferirAgendamento?(): Promise<Record<string, boolean> | null>;
+  /**
    * O motivo da última medição AUTOMÁTICA que falhou, como o firmware o disse.
    *
    * As medições da conexão rodam sozinhas e falhavam em silêncio: a pulseira
