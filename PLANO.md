@@ -371,12 +371,20 @@ Assinatura com aparelho enviado pelo correio cai no CDC: direito de arrependimen
 
 Qualquer visão agregada entre usuários, dashboard para terceiros, SSO corporativo ou relatório institucional. O produto expõe os dados de uma pessoa para essa pessoa e mais ninguém.
 
-## Pendência de marca (ago/2026)
+## Pedidos de testador esperando decisão (ago/2026)
 
-- **Imagens do banner da visão geral**, pedido de testador (Leo): imagens
-- **Modos de operação (saúde / condicionamento / atleta)**, pedido do Leo (22/08/2026): cada modo mudaria metas e regras (ex.: água 50 ml/kg para alta performance, faixas de batimento, volume). Decisão de produto; exige estudo por modo antes de código.
-- **Esporte + musculação no mesmo dia como dois cards**, pedido do Leo (22/08/2026): o plano tem um treino por dia; dois cards exigem dois treinos por dia no modelo (plano, check-in, semana).
-- **Vídeos de exercício do MUVX no AssumFit** (pedido do Leo, 22/08/2026): é decisão de marca e licença, o material é do MUVX e o AssumFit é produto independente. Se liberado, a ligação por exercício é direta (o catálogo já tem id por exercício).
-  alinhadas à identidade visual. A fundadora decidiu: "deixar anotado pra
-  trocarmos as imagens depois". Escolha de marca, não de código, quando os
-  assets existirem, entram em `app/assets/brand/` e o banner os consome.
+- **Imagens do banner da visão geral**, pedido do Leo: as fotos de hoje são do
+  Unsplash e não são alinhadas à identidade visual. A fundadora decidiu "deixar
+  anotado pra trocarmos as imagens depois". Escolha de marca, não de código:
+  quando os assets existirem, entram em `app/assets/brand/` e o banner os
+  consome.
+- **Modos de operação (saúde / condicionamento / atleta)**, pedido do Leo
+  (22/08/2026): cada modo mudaria metas e regras (ex.: água 50 ml/kg para alta
+  performance, faixas de batimento, volume). Decisão de produto; exige estudo
+  por modo antes de código, porque multiplica as réguas de `ratings.ts`.
+- **Esporte + musculação no mesmo dia como dois cards**, pedido do Leo
+  (22/08/2026): o plano tem um treino por dia; dois cards exigem dois treinos
+  por dia no modelo, e isso atravessa plano, check-in e a semana.
+
+Saiu desta lista em 22/08/2026: **vídeos de exercício do MUVX**, liberados pela
+fundadora e já no produto (ver CLAUDE.md, § Vídeos dos exercícios vêm do MUVX).
