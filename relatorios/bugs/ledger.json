@@ -1400,6 +1400,18 @@
       "nota": "Você tinha razão em insistir: meu diagnóstico anterior estava incompleto. A frase que você viu ('a pulseira não tem noite mais recente') podia estar mentindo, porque a ponte tratava consulta que FALHOU como consulta que respondeu vazio. Isso já está separado: se não conseguirmos perguntar, a tela diz isso, e não que a noite não existe. E achei a causa provável: sua pulseira usa o protocolo NOVO de sono do fabricante, e nós consultávamos só a porta antiga, que devolve vazio do mesmo jeito que não ter dado. Agora, quando a antiga vem vazia, perguntamos pela nova. Isso é código nativo, então precisa de build: sobe na 1.0.5 (10). Quando instalar, toque em Buscar noite e me diga a frase de novo, que ela vai distinguir os dois casos.",
       "versao": "1.0.5 (10)",
       "em": "2026-08-24T11:24:44"
+    },
+    "AKls5G0R2xv53q2QI-C9vq0": {
+      "commit": "e238bdb",
+      "nota": "Alarme falso, e a regra estava errada mesmo. O batimento sempre exigiu cinco minutos sustentados antes de avisar, mas pressão e oxigênio avisavam na primeira leitura fora da faixa. Como a pressão daqui é estimada por sensor óptico, e a própria tela diz que ela serve para tendência, alarmar por uma medição isolada contradizia o que o app afirma duas telas adiante. Agora a pressão pede três medições seguidas em duas horas e o oxigênio duas em vinte minutos, e uma leitura normal no meio zera a contagem. Sobe na 1.0.5 (10).",
+      "versao": "1.0.5 (10)",
+      "em": "2026-08-24T13:12:43"
+    },
+    "AL9TxXyJxarQhubaIhQ9cfo": {
+      "commit": "e238bdb",
+      "nota": "Sobre os passos: o número que a tela mostra é o contador da própria pulseira, o mesmo que o app do fabricante mostra, então não há diferença de cálculo do nosso lado. Acelerômetro conta trepidação de carro como passo, e isso é limitação do sensor; se quiser, dá para comparar com o app do fabricante numa viagem para confirmar que os dois mostram igual. Mas a sua captura tinha outra coisa, que era defeito nosso e você não reportou: o gráfico de movimento por hora estava com escala de 30.838, trinta mil calorias numa hora. Ao trazer a caloria por hora do firmware, faltou o saneamento de unidade que o resto do app já fazia (o mesmo campo já chegou em kcal e em cal). Corrigido na 1.0.5 (10).",
+      "versao": "1.0.5 (10)",
+      "em": "2026-08-24T13:12:47"
     }
   }
 }
