@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable } from 'react-native';
 
 import type { MeasurableKind } from '../services/ble';
-import { useBiometricStore } from '../store/biometric.store';
+import { buscarNoiteAgora, useBiometricStore } from '../store/biometric.store';
 import { Body, Pill } from './ui';
 import { useTheme } from '../theme/ThemeProvider';
 import { Icon } from './Icon';
@@ -139,18 +139,48 @@ export function MeasureButton({ kind, label }: { kind: MeasurableKind; label?: s
 export function SyncSleepButton() {
   const { colors } = useTheme();
   const [buscando, setBuscando] = React.useState(false);
+  const [resposta, setResposta] = React.useState<string | null>(null);
   const connectHealth = useBiometricStore((s) => s.connectHealth);
   const connection = useBiometricStore((s) => s.connection);
 
   const conectado = connection === 'connected';
 
+  /**
+   * Pulseira primeiro, app Saúde depois.
+   *
+   * O botão chamava só o app Saúde, e na pulseira do produto isso não busca
+   * nada: quem estava com o sono parado tocava, esperava e recebia a mesma
+   * noite de três dias atrás (Bruno, 24/08/2026). E ele DIZ o que encontrou,
+   * porque a pergunta de quem toca é "a pulseira tem a minha noite ou não?".
+   */
+  const buscar = async () => {
+    setBuscando(true);
+    setResposta(null);
+    try {
+      if (conectado) {
+        const r = await buscarNoiteAgora();
+        if (r.estado === 'nova') {
+          setResposta('Noite atualizada.');
+          return;
+        }
+        if (r.estado === 'sem-novidade') {
+          setResposta(
+            'A pulseira não tem noite mais recente do que a que está aqui. Se você dormiu com ela, o registro pode levar algumas horas para fechar no aparelho.',
+          );
+          return;
+        }
+      }
+      await connectHealth();
+      setResposta(conectado ? null : 'Buscamos no app Saúde.');
+    } finally {
+      setBuscando(false);
+    }
+  };
+
   return (
     <YStack marginTop="$lg">
       <Pressable
-        onPress={() => {
-          setBuscando(true);
-          void connectHealth().finally(() => setBuscando(false));
-        }}
+        onPress={() => void buscar()}
         disabled={buscando}
         accessibilityRole="button"
         accessibilityState={{ disabled: buscando, busy: buscando }}
@@ -162,15 +192,14 @@ export function SyncSleepButton() {
           ) : (
             <Icon name="moon" size={16} color={colors.text} />
           )}
-          <Body color="$foreground">
-            {buscando ? 'Buscando…' : 'Buscar noite'}
-          </Body>
+          <Body color="$foreground">{buscando ? 'Buscando…' : 'Buscar noite'}</Body>
         </Pill>
       </Pressable>
       <Body marginTop="$sm">
-        {conectado
-          ? 'Busca o sono na pulseira e, se não houver, no app Saúde.'
-          : 'Sem a pulseira conectada, busca apenas no app Saúde.'}
+        {resposta ??
+          (conectado
+            ? 'Busca o sono na pulseira e, se não houver, no app Saúde.'
+            : 'Sem a pulseira conectada, busca apenas no app Saúde.')}
       </Body>
     </YStack>
   );

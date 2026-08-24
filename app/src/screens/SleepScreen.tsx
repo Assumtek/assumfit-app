@@ -10,6 +10,8 @@ import { SleepNightDetail, diaSeguinte } from '../components/SleepNightDetail';
 import { SleepPlanner } from '../components/SleepPlanner';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
 import { formatDateBR } from '../domain/birthDate';
+import { noiteSustentaODia } from '../domain/bodyBattery';
+import { isoHoje } from '../domain/water';
 import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
 import { useBiometricStore } from '../store/biometric.store';
 import * as api from '../services/api.service';
@@ -65,8 +67,26 @@ export function SleepScreen() {
     );
   }
 
+  /*
+   Noite velha na tela é o caso que não tinha saída: o botão de buscar só
+   existia no estado VAZIO, então quem tinha uma noite de três dias atrás via o
+   detalhe dela e nenhum caminho para pedir outra (Bruno, 24/08/2026). Agora a
+   tela diz que a noite não é de hoje e oferece a busca.
+  */
+  const desatualizada = !noiteSustentaODia(sleep, isoHoje());
+
   return (
     <DetailScreen title="Sono" refreshControl={puxar}>
+      {desatualizada ? (
+        <>
+          <Note
+            title="Esta não é a noite de hoje"
+            body="É a última que a pulseira entregou. Se você dormiu com ela desde então, busque de novo: o aparelho leva algumas horas para fechar o registro de uma noite."
+          />
+          <SyncSleepButton />
+        </>
+      ) : null}
+
       <SleepNightDetail sleep={sleep} />
 
       <UltimasNoites />

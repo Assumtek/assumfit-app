@@ -496,6 +496,9 @@ function hojeLocal(): string {
  */
 async function varrerSonoRetroativo(): Promise<void> {
   if (sonoRetroativoDoDia === hojeLocal() || !ble.fetchSleepHistory) return;
+  // As datas que já tínhamos ANTES de perguntar: é o que separa "a memória
+  // respondeu" de "a memória trouxe algo que faltava".
+  const porDataAntes = useBiometricStore.getState().sleepNights.map((n) => n.date);
   const noites = await comTeto(
     ble.fetchSleepHistory(),
     TETO_MEMORIA_SONO_MS,
@@ -521,10 +524,22 @@ async function varrerSonoRetroativo(): Promise<void> {
     useBiometricStore.setState({ sleep: comOxigenioDaNoite(maisNova, useBiometricStore.getState().spo2History) });
     persistirDerivado(useBiometricStore.getState());
   }
-  // O portão só fecha com noite na mão: zero tanto pode ser memória vazia
-  // quanto o SDK mudo naquele instante — visto em produção — e neste caso
-  // a tentativa seguinte merece nova chance.
-  if (noites.length > 0) sonoRetroativoDoDia = hojeLocal();
+  /*
+   O portão só fecha quando a varredura trouxe NOITE NOVA.
+
+   Fechava com qualquer noite na mão, e isso bastava para o dia inteiro: a
+   memória quase sempre tem as noites velhas, então a primeira varredura do dia
+   achava três noites antigas, dava por cumprida e não tentava mais. A noite que
+   o firmware ainda não tinha consolidado quando o app perguntou ficava para o
+   dia seguinte, e no seguinte a mesma coisa (Bruno, 24/08/2026: sono parado
+   desde a noite de 21 para 22).
+
+   Zero também não fecha, pelo motivo antigo: pode ser memória vazia ou o SDK
+   mudo naquele instante, e a tentativa seguinte merece nova chance.
+  */
+  const jaTinhamos = new Set(porDataAntes);
+  const trouxeNova = noites.some((n) => !jaTinhamos.has(n.date));
+  if (trouxeNova) sonoRetroativoDoDia = hojeLocal();
 }
 
 async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
@@ -1495,4 +1510,44 @@ export async function buscarNoiteSeVencida(): Promise<void> {
     persistirDerivado(useBiometricStore.getState());
   }
   await varrerSonoRetroativo();
+}
+
+/**
+ * Buscar a noite AGORA, a pedido de quem está olhando a tela.
+ *
+ * Existe porque todo o resto é automático e silencioso: os portões (30 minutos
+ * entre tentativas, um dia entre varreduras) protegem o canal serial, mas
+ * quando o sono está parado há dias eles viram uma parede sem maçaneta. Aqui
+ * eles são ignorados de propósito, e a função DIZ o que encontrou, porque a
+ * pergunta de quem toca o botão é "a pulseira tem a minha noite ou não?".
+ */
+export type ResultadoDaBuscaDeNoite =
+  | { estado: 'sem-pulseira' }
+  | { estado: 'nova'; noite: SleepNight }
+  | { estado: 'sem-novidade'; noiteNaMemoria: SleepNight | null };
+
+export async function buscarNoiteAgora(): Promise<ResultadoDaBuscaDeNoite> {
+  const st = useBiometricStore.getState();
+  if (st.connection !== 'connected' || !ble.fetchSleep) return { estado: 'sem-pulseira' };
+
+  ultimaBuscaDeSono = Date.now();
+  sonoRetroativoDoDia = null; // o botão fura o portão do dia, é para isso que ele existe
+  const antes = st.sleep;
+
+  const nova = await comTeto(ble.fetchSleep(), TETO_SONO_MS, 'sono da pulseira').catch(() => null);
+  if (nova && (!antes || nova.date > antes.date)) {
+    useBiometricStore.setState({
+      sleep: comOxigenioDaNoite({ ...nova, source: 'band' }, useBiometricStore.getState().spo2History),
+    });
+    api.pushSleepNight(nova);
+    persistirDerivado(useBiometricStore.getState());
+    await varrerSonoRetroativo();
+    return { estado: 'nova', noite: nova };
+  }
+
+  // A consulta rápida não trouxe nada: a memória inteira pode ter.
+  await varrerSonoRetroativo();
+  const depois = useBiometricStore.getState().sleep;
+  if (depois && (!antes || depois.date > antes.date)) return { estado: 'nova', noite: depois };
+  return { estado: 'sem-novidade', noiteNaMemoria: nova ?? depois ?? null };
 }
