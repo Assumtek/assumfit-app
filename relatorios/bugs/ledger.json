@@ -1418,6 +1418,12 @@
       "nota": "Você tinha razão, o horário era inventado. O app tirava a mediana dos seus registros, e como havia um esporte às 09h44 e treinos às 15h35 e 20h30, a conta deu 15h30, uma hora em que você nunca treinou. Agora ele só afirma um horário quando as ocorrências se concentram de verdade na mesma faixa e isso é a maioria das vezes; se não há hábito, ele não inventa um e cancela o lembrete que já estava agendado.",
       "versao": "1.0.6 (1)",
       "em": "2026-08-24T15:13:32"
+    },
+    "tf:ALgYZtFCDR1B6L_REWhCjzs": {
+      "commit": "99a21b0",
+      "nota": "A pulseira parou de REGISTRAR, e o app não tinha como te contar. Comparando as grandezas no servidor: batimento, oxigênio e estresse zeraram todos juntos na sua conta em 22/08 à noite, e só os passos continuaram chegando (passos vêm do acelerômetro, o resto depende de um agendamento no firmware que estava desligado). Sem batimento gravado não há noite para fechar, e era esse o buraco. Agora o app confere esse agendamento todo dia na sincronização, e não só quando reconecta, mostra na tela do aparelho o que a pulseira está registrando e o que parou, e tem um botão para religar. O botão de buscar noite também parou de dizer 'Noite atualizada' quando o que veio é de dias atrás. Uma pergunta que ajuda a fechar: o app do fabricante (QRing) mostra as noites de 22 para 23 e de 23 para 24?",
+      "versao": "1.0.6 (1)",
+      "em": "2026-08-24T15:35:34"
     }
   }
 }

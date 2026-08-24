@@ -6,7 +6,14 @@ import { Note, Row, Section, ActionRow } from '../../components/List';
 import { DetailScreen, usePullRefresh } from '../../components/DetailScreen';
 import { Icon, type IconName } from '../../components/Icon';
 import { Body, Button, Data, Headline, HeroCard, SectionTitle, Skeleton } from '../../components/ui';
-import { fatosDoProjeto, semanaDoProjeto, type FatoDoProjeto, type TreinoDoProjeto } from '../../domain/planProject';
+import {
+  alvoDoProjeto,
+  fatosDoProjeto,
+  horizonteDoProjeto,
+  semanaDoProjeto,
+  type FatoDoProjeto,
+  type TreinoDoProjeto,
+} from '../../domain/planProject';
 import { DAY_LABEL } from '../../domain/workout';
 import * as api from '../../services/api.service';
 import { useWorkoutStore } from '../../store/workout.store';
@@ -111,6 +118,8 @@ export function ProjectScreen() {
   const fatos = treinos ? fatosDoProjeto(treinos, anamnese) : [];
   const contido = plan.revisionNotes ?? [];
   const semana = semanaDoProjeto(plan.days);
+  const horizonte = horizonteDoProjeto(plan);
+  const alvo = alvoDoProjeto({ objetivo: plan.goal, treinos: treinos ?? [], horizonte });
 
   return (
     <DetailScreen title="Meu projeto" refreshControl={puxar}>
@@ -126,6 +135,51 @@ export function ProjectScreen() {
           </Body>
         </HeroCard>
       </YStack>
+
+      {/*
+        ONDE ISTO VAI DAR, e até quando.
+
+        Pedido de testador (Leonardo, 24/08/2026): "no projeto falta a duração e
+        os objetivos que pretendemos alcançar, pessoas são movidas pelo
+        resultado". Ele está certo sobre a falta, e a forma de atender sem
+        prometer o que este produto não pode prometer é falar do que o app MEDE:
+        prazo, objetivo declarado, e marcos de processo que se conferem na tela
+        de progresso. Corpo de ninguém é previsto aqui.
+      */}
+      {horizonte ? (
+        <Section label="o prazo">
+          <Row>
+            <Data flexShrink={0} width={112}>
+              {horizonte.vencido ? 'Encerrado' : `Semana ${horizonte.semanaAtual} de ${horizonte.semanas}`}
+            </Data>
+            <YStack flex={1} height={4} borderRadius={2} backgroundColor="$muted" overflow="hidden">
+              <YStack width={`${Math.round(horizonte.fracao * 100)}%`} height={4} backgroundColor="$primary" />
+            </YStack>
+          </Row>
+          <Row last>
+            <Body flex={1}>
+              {horizonte.vencido
+                ? 'O plano chegou ao fim. Gerar o próximo é o que leva a progressão adiante.'
+                : `${horizonte.diasRestantes} ${horizonte.diasRestantes === 1 ? 'dia' : 'dias'} até a revisão, em ${dataCurta(horizonte.fim)}. É quando o plano é refeito com o que você treinou até lá.`}
+            </Body>
+          </Row>
+        </Section>
+      ) : null}
+
+      {alvo ? (
+        <Section label="onde isto vai dar">
+          <Escolha icone="target" titulo={alvo.objetivo} corpo={alvo.comoOPlanoPersegue} last={alvo.marcos.length === 0} />
+          {alvo.marcos.map((marco, i) => (
+            <Escolha
+              key={marco.titulo}
+              icone="check"
+              titulo={marco.titulo}
+              corpo={marco.detalhe}
+              last={i === alvo.marcos.length - 1}
+            />
+          ))}
+        </Section>
+      ) : null}
 
       {/*
         A ESPINHA: o que a avaliação de segurança conteve.
@@ -187,6 +241,11 @@ export function ProjectScreen() {
       */}
     </DetailScreen>
   );
+}
+
+/** "28/09" — a data como ela aparece ao lado de um prazo. */
+function dataCurta(d: Date): string {
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
 /** Uma escolha do projeto: linha de ação sem ação, só leitura. */

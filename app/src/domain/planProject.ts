@@ -187,3 +187,175 @@ export function semanaDoProjeto(days: DiaDoPlano[]): { dayOfWeek: string; nome: 
     return { dayOfWeek: dow, nome: dia?.workout?.name ?? null };
   });
 }
+
+/* ------------------------------------------------------------------------- *
+ * Duração e alvo
+ *
+ * Pedido de testador (Leonardo, 24/08/2026), nas palavras dele: "no projeto
+ * falta a duração e os objetivos que pretendemos alcançar com o projeto,
+ * pessoas são movidas pelo resultado, o hábito acaba sendo o obstáculo
+ * necessário para atingi-lo".
+ *
+ * Ele tem razão sobre a falta, e a forma de atender sem quebrar o escopo do
+ * produto é uma só: o AssumFit não é dispositivo médico e não promete resultado
+ * corporal, então o que se afirma aqui é o que o app MEDE. Prazo do plano, em
+ * que semana a pessoa está, o objetivo que ela mesma declarou, e marcos de
+ * PROCESSO que ela pode conferir: sessões fechadas, constância, volume. Nada
+ * de "você vai perder N quilos", que ninguém pode garantir e que este produto
+ * não está autorizado a dizer.
+ * ------------------------------------------------------------------------- */
+
+export type HorizonteDoProjeto = {
+  /** Semanas entre o começo e o fim do plano. */
+  semanas: number;
+  /** Em qual delas a pessoa está, começando em 1 e nunca passando do total. */
+  semanaAtual: number;
+  /** Dias que faltam para o fim, zero quando o plano já venceu. */
+  diasRestantes: number;
+  /** 0..1, para régua e frase. */
+  fracao: number;
+  inicio: Date;
+  fim: Date;
+  /** O plano passou da data de fim e pede revisão. */
+  vencido: boolean;
+};
+
+const DIA_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Meia-noite LOCAL, para a conta ser de dias e não de horas corridas.
+ *
+ * `YYYY-MM-DD` é tratado à mão de propósito. O `new Date('2026-09-28')` do
+ * JavaScript lê a forma curta como UTC, e no fuso do Brasil isso vira 27/09 às
+ * 21h: o plano exibiria o dia anterior ao que o servidor gravou, e a contagem
+ * de semanas nasceria um dia curta. Data com hora, essa sim, é instante e pode
+ * ser convertida direto.
+ */
+function meiaNoite(valor: string | Date): Date | null {
+  if (typeof valor === 'string') {
+    const so = /^(\d{4})-(\d{2})-(\d{2})/.exec(valor);
+    if (so) return new Date(Number(so[1]), Number(so[2]) - 1, Number(so[3]));
+  }
+  const d = valor instanceof Date ? new Date(valor) : new Date(valor);
+  if (Number.isNaN(d.getTime())) return null;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+export function horizonteDoProjeto(
+  plano: { startDate: string; endDate: string },
+  agora: Date = new Date()): HorizonteDoProjeto | null {
+  const inicio = meiaNoite(plano.startDate);
+  const fim = meiaNoite(plano.endDate);
+  const hoje = meiaNoite(agora);
+  if (!inicio || !fim || !hoje || fim <= inicio) return null;
+
+  const totalDias = Math.round((fim.getTime() - inicio.getTime()) / DIA_MS);
+  const semanas = Math.max(1, Math.round(totalDias / 7));
+  const corridos = Math.round((hoje.getTime() - inicio.getTime()) / DIA_MS);
+  const semanaAtual = Math.min(semanas, Math.max(1, Math.floor(corridos / 7) + 1));
+  const diasRestantes = Math.max(0, Math.round((fim.getTime() - hoje.getTime()) / DIA_MS));
+  const fracao = Math.max(0, Math.min(1, corridos / totalDias));
+
+  return { semanas, semanaAtual, diasRestantes, fracao, inicio, fim, vencido: hoje > fim };
+}
+
+export type MarcoDoProjeto = {
+  titulo: string;
+  detalhe: string;
+};
+
+export type AlvoDoProjeto = {
+  /** O objetivo declarado, em linguagem de gente. */
+  objetivo: string;
+  /** O que a ESTRUTURA do plano faz para perseguir esse objetivo. */
+  comoOPlanoPersegue: string;
+  /** O que dá para conferir até o fim do plano. Processo, nunca corpo. */
+  marcos: MarcoDoProjeto[];
+};
+
+/**
+ * O objetivo declarado, lido dos três vocabulários que o sistema usa: a
+ * resposta da anamnese ("Ganhar massa"), o objetivo do plano (`hipertrofia`) e
+ * o do perfil. É a mesma leitura de `nutritionGoal.ts`, e ela mora nos dois
+ * porque cada um decide uma coisa diferente com a resposta.
+ */
+function lerObjetivo(bruto: string | null | undefined): 'emagrecer' | 'massa' | 'condicionamento' | null {
+  const t = (bruto ?? '').toLowerCase();
+  if (!t) return null;
+  if (t.includes('perder') || t.includes('emagrec') || t.includes('gordura')) return 'emagrecer';
+  if (t.includes('massa') || t.includes('ganhar') || t.includes('hipertrof') || t.includes('força') || t.includes('forca')) {
+    return 'massa';
+  }
+  return 'condicionamento';
+}
+
+const COMO: Record<'emagrecer' | 'massa' | 'condicionamento', string> = {
+  emagrecer:
+    'Os treinos usam grupos grandes e descanso curto, que é o que mantém o gasto alto dentro do tempo que você tem.',
+  massa:
+    'Cada grupo volta mais de uma vez por semana e a carga sobe quando a execução se estabiliza, que é o estímulo repetido de que a hipertrofia depende.',
+  condicionamento:
+    'A semana mistura força e movimento contínuo, para o preparo geral subir sem depender de uma modalidade só.',
+};
+
+const OBJETIVO_EM_PALAVRAS: Record<'emagrecer' | 'massa' | 'condicionamento', string> = {
+  emagrecer: 'Perder gordura',
+  massa: 'Ganhar massa e força',
+  condicionamento: 'Melhorar o condicionamento',
+};
+
+/**
+ * O alvo do projeto: objetivo declarado, o que o plano faz por ele, e os marcos.
+ *
+ * Os marcos são de PROCESSO porque é o que o app consegue conferir e o que a
+ * pessoa controla. "Fechar 24 sessões até 19/10" é verificável na tela de
+ * progresso no dia seguinte; "você vai secar" não é verificável nunca, e num
+ * produto que não é dispositivo médico também não é dizível.
+ */
+export function alvoDoProjeto({
+  objetivo,
+  treinos,
+  horizonte,
+}: {
+  objetivo: string | null | undefined;
+  treinos: TreinoDoProjeto[];
+  horizonte: HorizonteDoProjeto | null;
+}): AlvoDoProjeto | null {
+  const chave = lerObjetivo(objetivo);
+  if (!chave) return null;
+
+  const marcos: MarcoDoProjeto[] = [];
+  if (horizonte && treinos.length > 0) {
+    const sessoes = treinos.length * horizonte.semanas;
+    const data = `${String(horizonte.fim.getDate()).padStart(2, '0')}/${String(horizonte.fim.getMonth() + 1).padStart(2, '0')}`;
+    marcos.push({
+      titulo: `${sessoes} sessões até ${data}`,
+      detalhe: `${treinos.length} por semana durante ${horizonte.semanas} semanas. É a conta do plano, e a tela de progresso mostra quantas já fecharam.`,
+    });
+    marcos.push({
+      titulo: 'Três de cada quatro semanas completas',
+      detalhe:
+        'A constância é o que sustenta qualquer objetivo, e é a única coisa aqui que depende só de você. Semana perdida não se recupera dobrando a seguinte.',
+    });
+  }
+  if (chave === 'massa') {
+    marcos.push({
+      titulo: 'Carga maior no fim do que no começo',
+      detalhe: 'Cada exercício guarda a carga da última vez. Subir com a execução estável é o sinal de que o estímulo está funcionando.',
+    });
+  }
+  if (chave === 'emagrecer') {
+    marcos.push({
+      titulo: 'Alimentação registrada na maioria dos dias',
+      detalhe: 'O treino gasta, o prato decide. Registrar é o que transforma a meta de calorias em algo que dá para acompanhar.',
+    });
+  }
+  if (chave === 'condicionamento') {
+    marcos.push({
+      titulo: 'Recuperação estável ou melhor ao longo do plano',
+      detalhe: 'A variabilidade cardíaca é o número que responde ao preparo geral. A tela de tendências compara o mês com os anteriores.',
+    });
+  }
+
+  return { objetivo: OBJETIVO_EM_PALAVRAS[chave], comoOPlanoPersegue: COMO[chave], marcos };
+}

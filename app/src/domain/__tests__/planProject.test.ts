@@ -1,10 +1,4 @@
-import {
-  alternaEmpurrarEPuxar,
-  fatosDoProjeto,
-  frequenciaPorGrupo,
-  semanaDoProjeto,
-  type TreinoDoProjeto,
-} from '../planProject';
+import { alternaEmpurrarEPuxar, alvoDoProjeto, fatosDoProjeto, frequenciaPorGrupo, horizonteDoProjeto, semanaDoProjeto, type TreinoDoProjeto } from '../planProject';
 
 /**
  * O projeto por trás do plano.
@@ -149,5 +143,75 @@ describe('fatosDoProjeto com anamnese', () => {
   });
   it('sem anamnese, nada muda', () => {
     expect(fatosDoProjeto([treino('A', 4), treino('B', 4)]).some((f) => f.chave === 'nivel' || f.chave === 'tempo')).toBe(false);
+  });
+});
+
+describe('duração do projeto', () => {
+  const plano = (startDate: string, endDate: string) => ({ startDate, endDate });
+
+  it('conta as semanas e diz em qual a pessoa está', () => {
+    const h = horizonteDoProjeto(plano('2026-08-03', '2026-09-28'), new Date(2026, 7, 24))!;
+    expect(h.semanas).toBe(8);
+    expect(h.semanaAtual).toBe(4);
+    expect(h.diasRestantes).toBe(35);
+  });
+
+  it('a semana atual não passa do total nem cai abaixo de um', () => {
+    const p = plano('2026-08-03', '2026-08-31');
+    expect(horizonteDoProjeto(p, new Date(2026, 6, 1))!.semanaAtual).toBe(1);
+    expect(horizonteDoProjeto(p, new Date(2026, 11, 1))!.semanaAtual).toBe(4);
+  });
+
+  it('plano vencido se declara vencido, com zero dias restantes', () => {
+    const h = horizonteDoProjeto(plano('2026-06-01', '2026-07-01'), new Date(2026, 7, 24))!;
+    expect(h.vencido).toBe(true);
+    expect(h.diasRestantes).toBe(0);
+  });
+
+  it('data inválida ou fim antes do começo não vira horizonte inventado', () => {
+    expect(horizonteDoProjeto(plano('não é data', '2026-09-01'))).toBeNull();
+    expect(horizonteDoProjeto(plano('2026-09-01', '2026-08-01'))).toBeNull();
+  });
+});
+
+describe('alvo do projeto', () => {
+  const treinos = [
+    { name: 'A', principais: [], temPreparo: true },
+    { name: 'B', principais: [], temPreparo: true },
+    { name: 'C', principais: [], temPreparo: true },
+  ];
+  const horizonte = horizonteDoProjeto(
+    { startDate: '2026-08-03', endDate: '2026-09-28' },
+    new Date(2026, 7, 24));
+
+  it('lê o objetivo nos três vocabulários que o sistema usa', () => {
+    expect(alvoDoProjeto({ objetivo: 'hipertrofia', treinos, horizonte })!.objetivo).toBe('Ganhar massa e força');
+    expect(alvoDoProjeto({ objetivo: 'Perder peso', treinos, horizonte })!.objetivo).toBe('Perder gordura');
+    expect(alvoDoProjeto({ objetivo: 'emagrecimento', treinos, horizonte })!.objetivo).toBe('Perder gordura');
+  });
+
+  it('sem objetivo declarado, não inventa um', () => {
+    expect(alvoDoProjeto({ objetivo: null, treinos, horizonte })).toBeNull();
+  });
+
+  it('o marco de sessões é a conta do plano, com a data do fim', () => {
+    const alvo = alvoDoProjeto({ objetivo: 'hipertrofia', treinos, horizonte })!;
+    expect(alvo.marcos[0].titulo).toBe('24 sessões até 28/09');
+  });
+
+  it('nenhum marco promete resultado do corpo', () => {
+    // A regra do produto: não é dispositivo médico e não promete resultado.
+    // Os marcos são de processo, que é o que o app mede e a pessoa controla.
+    for (const objetivo of ['hipertrofia', 'emagrecimento', 'condicionamento']) {
+      const alvo = alvoDoProjeto({ objetivo, treinos, horizonte })!;
+      const texto = alvo.marcos.map((m) => `${m.titulo} ${m.detalhe}`).join(' ').toLowerCase();
+      expect(texto).not.toMatch(/você vai|garant|em \d+ quilos|perder \d|kg a menos/);
+    }
+  });
+
+  it('sem horizonte, sobram só os marcos que não dependem de prazo', () => {
+    const alvo = alvoDoProjeto({ objetivo: 'hipertrofia', treinos, horizonte: null })!;
+    expect(alvo.marcos.every((m) => !m.titulo.includes('sessões'))).toBe(true);
+    expect(alvo.marcos.length).toBeGreaterThan(0);
   });
 });
