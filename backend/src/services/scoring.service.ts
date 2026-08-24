@@ -155,7 +155,37 @@ async function todayContext(userId: string, tzOffsetMin: number, steps: number |
   };
 }
 
-export type EnergyOptions = { hour?: number; persist?: boolean; force?: boolean };
+export type EnergyOptions = {
+  hour?: number;
+  persist?: boolean;
+  force?: boolean;
+  /**
+   * A água que o APARELHO já registrou hoje, quando ele informa.
+   *
+   * O banco só tem o que subiu, e a tela mostra o que a pessoa acabou de
+   * beber: o resumo dizia "0,2 L de 2,5 L" enquanto o indicador logo abaixo
+   * dizia "13% da meta", com a mesma tela contando duas histórias (Leonardo,
+   * 24/08/2026). Vence o MAIOR dos dois: água não diminui ao longo do dia, e
+   * um app com estado velho não pode apagar o que o servidor já sabe.
+   */
+  waterMl?: number;
+};
+
+/**
+ * A água do dia: a do banco contra a que o aparelho informa.
+ *
+ * Vence a MAIOR. Água não diminui ao longo do dia, então um app com estado
+ * velho não pode apagar o que o servidor já sabe, e o servidor não pode
+ * ignorar o copo que a pessoa acabou de registrar e que ainda não subiu, que
+ * era o que fazia o resumo de saúde citar um volume contradito pelo indicador
+ * da mesma tela (Leonardo, 24/08/2026).
+ *
+ * `null` é "não sei", e continua sendo quando nenhum dos dois lados sabe.
+ */
+export function aguaEfetiva(doBanco: number | null, doAparelho?: number): number | null {
+  if (doAparelho == null || !Number.isFinite(doAparelho)) return doBanco;
+  return Math.max(doBanco ?? 0, Math.round(doAparelho));
+}
 
 /**
  * Calcula a energia da pessoa agora.
@@ -180,7 +210,8 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
   const waterGoal = waterGoalMl(pesoKg, (user?.sex as 'f' | 'm') ?? 'f');
 
   if (!reading?.hrvMs || !reading.heartRate) return null;
-  const { waterMl: water, sleepScore: sleep } = habits;
+  const { sleepScore: sleep } = habits;
+  const water = aguaEfetiva(habits.waterMl, options.waterMl);
   const today = await todayContext(userId, tz, reading.steps ?? null);
 
   // A hora do app tem precedência: ele sabe o relógio do aparelho AGORA, o que

@@ -207,3 +207,37 @@ export function mesclarSeries(memoria: Ponto[], vivo: Ponto[], teto = 90): Ponto
   const novos = vivo.filter((p) => p.at > ultimoDaMemoria);
   return [...memoria, ...novos].slice(-teto);
 }
+
+export type BarraDeHora = { hour: string; value: number };
+
+/**
+ * Uma amostra por hora, em ordem CRONOLÓGICA.
+ *
+ * A versão anterior montava um mapa e devolvia na ordem de INSERÇÃO das
+ * amostras. A memória do firmware não promete ordem nenhuma, e o efeito
+ * apareceu na tela de estresse de um testador: o eixo dizia "14h, 6h, 20h, 7h"
+ * (Leonardo, 24/08/2026). Um gráfico com o tempo fora de ordem não é um
+ * gráfico com um detalhe errado, é um gráfico que não quer dizer nada.
+ *
+ * A hora é agrupada COM O DIA, senão as 8h de ontem e as 8h de hoje viram a
+ * mesma barra, e quem cruza a meia-noite vê a série se dobrar sobre si mesma.
+ * O rótulo continua sendo só a hora, que é o que cabe embaixo da barra.
+ */
+export function porHoraCronologico(amostras: Ponto[], limite = 12): BarraDeHora[] {
+  const porChave = new Map<string, { at: number; value: number; hora: number }>();
+  for (const a of amostras) {
+    if (!Number.isFinite(a.at) || a.at <= 0 || !Number.isFinite(a.value)) continue;
+    const d = new Date(a.at);
+    const chave = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}`;
+    const anterior = porChave.get(chave);
+    // A ÚLTIMA de cada hora, como antes: a mais recente descreve melhor a hora
+    // que acabou de fechar.
+    if (!anterior || a.at >= anterior.at) {
+      porChave.set(chave, { at: a.at, value: a.value, hora: d.getHours() });
+    }
+  }
+  return [...porChave.values()]
+    .sort((x, y) => x.at - y.at)
+    .slice(-limite)
+    .map((p) => ({ hour: `${p.hora}h`, value: p.value }));
+}

@@ -54,6 +54,25 @@ BANDS = {"mid": 38, "high": 65}
 #: cadastro tiver peso corporal.
 DEFAULT_WATER_GOAL_ML = 2500
 
+#: A janela em que se espera que a pessoa beba, em horas locais.
+#:
+#: A hidratação era julgada pela fração do DIA INTEIRO a qualquer hora, e o
+#: efeito era estrutural: às nove da manhã ninguém bebeu dois litros, então
+#: todo mundo tinha hidratação ruim de manhã, o score levava o desconto e a
+#: frase da home falava de água todo dia antes do almoço. Pior, a mesma tela se
+#: contradizia: o resumo dizia "0,2 L de 2,5 L, bem abaixo do necessário" e o
+#: indicador logo abaixo dizia "no ritmo, 13% da meta", porque o indicador do
+#: app sempre julgou pelo ritmo da hora (Leonardo, 24/08/2026).
+#:
+#: Agora as duas réguas são a mesma: 7h às 22h, como em `homeIndicators.ts`.
+BEBE_DAS = 7
+BEBE_ATE = 22
+
+
+def _ritmo_do_dia(hour: int) -> float:
+    """Quanto do dia de beber já passou, 0 a 1."""
+    return _clamp01((hour - BEBE_DAS) / (BEBE_ATE - BEBE_DAS))
+
 
 def _clamp01(value: float) -> float:
     return max(0.0, min(1.0, value))
@@ -154,6 +173,8 @@ def _components(
     hrv_baseline: float | None,
     water_ml: float | None,
     water_goal_ml: float,
+    #: A hora local, para julgar a hidratação pelo ritmo do dia e não pelo total.
+    hour: int,
 ) -> list[Component]:
     if hrv_baseline is None:
         # Faixa populacional ampla: não diz muito, mas é honesto sobre isso.
@@ -189,11 +210,22 @@ def _components(
     else:
         liters = f"{water_ml / 1000:.1f}".replace(".", ",")
         goal = f"{water_goal_ml / 1000:.1f}".replace(".", ",")
+        # O esperado ATÉ AGORA, não o do dia inteiro. Antes do início da janela
+        # (madrugada), nada é esperado e a hidratação entra neutra: quem acorda
+        # às 5h não está desidratado por não ter bebido ainda.
+        ritmo = _ritmo_do_dia(hour)
+        if water_goal_ml <= 0:
+            fracao = 0.5
+        elif ritmo <= 0:
+            fracao = 0.5
+        else:
+            esperado = water_goal_ml * ritmo
+            fracao = _clamp01(water_ml / esperado)
         present.append(
             Component(
                 "hydration",
                 "Hidratação",
-                _clamp01(water_ml / water_goal_ml) if water_goal_ml > 0 else 0.5,
+                fracao,
                 WEIGHTS["hydration"],
                 f"{liters} L de {goal} L",
             )
@@ -237,7 +269,7 @@ def calc_energy(
     circadian_shift: float | None = None,
 ) -> EnergyResult:
     components = _components(
-        hrv_ms, sleep_score, resting_hr, temperature_c, hrv_baseline, water_ml, water_goal_ml
+        hrv_ms, sleep_score, resting_hr, temperature_c, hrv_baseline, water_ml, water_goal_ml, hour
     )
     base = sum(c.norm * c.weight for c in components)
     now = score_at_hour(base, hour, chronotype, circadian_shift)

@@ -32,17 +32,23 @@ insightsRoutes.use(requireAuth);
 insightsRoutes.get(
   '/energy',
   asyncRoute<AuthedRequest>(async (req, res) => {
-    const { hour, force } = z
+    const { hour, force, water_ml: waterMl } = z
       .object({
         hour: z.coerce.number().int().min(0).max(23).optional(),
         // O botão Atualizar da home: relê o dia no banco e rediz a frase,
         // ignorando o cache da hora.
         force: z.coerce.boolean().default(false),
+        /*
+         A água que o aparelho já registrou hoje. O teto é generoso e existe
+         só contra número absurdo: quem decide o que é muita água para aquela
+         pessoa é a meta, não esta validação.
+        */
+        water_ml: z.coerce.number().int().min(0).max(20_000).optional(),
       })
       .parse(req.query);
 
     try {
-      const result = await energyNow(req.userId, { hour, force });
+      const result = await energyNow(req.userId, { hour, force, waterMl });
       if (!result) return res.status(404).json({ error: 'Sem leitura ainda' });
       return res.json(result);
     } catch {

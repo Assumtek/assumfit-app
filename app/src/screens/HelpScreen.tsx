@@ -35,7 +35,7 @@ export function HelpScreen() {
         <Explica termo="Oxigênio (SpO₂)" texto="Saturação de oxigênio no sangue, em porcentagem." />
         <Explica
           termo="Estresse"
-          texto="De 0 a 100, calculado pelo firmware da pulseira a partir da variabilidade entre um batimento e outro (HRV): intervalos mais irregulares indicam o corpo em recuperação; mais uniformes, carga. Abaixo de 30 é calmo, até 59 moderado, a partir de 60 elevado. É carga do sistema nervoso, não humor, um treino pesado e uma briga podem dar o mesmo número."
+          texto="Comece pelo que o sensor faz: a luz verde na parte de baixo da pulseira mede o sangue passando no seu pulso e marca a hora exata de cada batida. Entre uma batida e a seguinte nunca passa o mesmo tanto de tempo, e essa diferença é a matéria-prima. Corpo descansado varia mais: o coração acelera e desacelera com a respiração, com folga. Corpo sob carga varia menos, as batidas ficam mais parecidas umas com as outras, como um metrônomo. O firmware faz essa conta a cada hora e devolve um número de 0 a 100, onde mais alto é mais carga. Abaixo de 30 é calmo, até 59 moderado, a partir de 60 elevado. Duas coisas importam para ler esse número: ele é carga do SISTEMA NERVOSO, não humor, então um treino pesado e uma discussão podem dar o mesmo valor; e um pico isolado não quer dizer nada, o que conta é quanto tempo do dia você passou acima da linha de recuperação."
         />
         <Explica
           termo="Sono"

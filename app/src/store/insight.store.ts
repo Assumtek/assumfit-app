@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import * as api from '../services/api.service';
+import { useHabitsStore } from './habits.store';
 import { syncQueue } from '../services/sync.service';
 
 type Status = 'idle' | 'loading' | 'ready' | 'offline';
@@ -43,7 +44,12 @@ export const useInsightStore = create<InsightState>((set, get) => ({
 
     set({ status: 'loading' });
     try {
-      const model = await api.fetchEnergyInsight(hour, opts?.force ?? false);
+      /*
+       A água de HOJE vai junto: o servidor só conhece o que já subiu, e o
+       resumo citava um volume que o indicador da mesma tela contradizia.
+      */
+      const aguaDeHoje = useHabitsStore.getState().today.waterMl;
+      const model = await api.fetchEnergyInsight(hour, opts?.force ?? false, aguaDeHoje);
       set({ model, status: 'ready', fetchedHour: hour });
     } catch {
       // 'offline' MESMO quando há modelo antigo na tela: é o que permite ao

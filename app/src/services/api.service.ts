@@ -466,9 +466,23 @@ export type EnergyFromModel = {
  * existe em relação ao relógio de quem está lendo, e o servidor roda em UTC.
  * Quem sabe a hora local é o aparelho.
  */
-export async function fetchEnergyInsight(hour: number, force = false): Promise<EnergyFromModel> {
+export async function fetchEnergyInsight(
+  hour: number,
+  force = false,
+  /**
+   * A água já registrada hoje NESTE aparelho.
+   *
+   * Vai junto porque o servidor só conhece o que subiu, e o resumo de saúde
+   * citava um número que o indicador logo abaixo contradizia na mesma tela.
+   */
+  waterMl?: number,
+): Promise<EnergyFromModel> {
   const { data } = await api.get<EnergyFromModel>('/insights/energy', {
-    params: force ? { hour, force: 1 } : { hour },
+    params: {
+      hour,
+      ...(force ? { force: 1 } : {}),
+      ...(waterMl != null && waterMl > 0 ? { water_ml: Math.round(waterMl) } : {}),
+    },
   });
   return data;
 }

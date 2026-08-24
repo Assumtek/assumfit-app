@@ -283,7 +283,7 @@ import { lerEmCurso } from '../services/sport-outbox';
 import { syncQueue } from '../services/sync.service';
 import { rateHeartRate, ratePressure, rateSpo2 } from '../domain/ratings';
 import { textoDaFalha } from '../domain/bandErrors';
-import { comAmostraDeHrv, mesclarSeries, ultimoInstante } from '../domain/series';
+import { comAmostraDeHrv, mesclarSeries, porHoraCronologico, ultimoInstante } from '../domain/series';
 import { useWorkoutStore } from './workout.store';
 import type {
   BandActivity,
@@ -568,15 +568,15 @@ async function lerMemoriaDoDia(set: Set, get: Get): Promise<void> {
   }
   if (!historico) return;
 
-  const porHora = (amostras: { at: number; value: number }[]) => {
-    // Uma amostra por hora, a última de cada — doze pontos legíveis no lugar
-    // de duzentos empilhados no mesmo rótulo.
-    const mapa = new Map<string, number>();
-    for (const a of amostras) mapa.set(`${new Date(a.at).getHours()}h`, a.value);
-    return [...mapa.entries()].map(([hour, value]) => ({ hour, value })).slice(-12);
-  };
-
-  const estresse = historico.stress.length ? porHora(historico.stress) : get().stressByHour;
+  /*
+   Uma amostra por hora, a última de cada, EM ORDEM DE RELÓGIO.
+   `porHoraCronologico` existe porque a versão local devolvia na ordem de
+   inserção e a memória do firmware não promete ordem: o eixo da tela de
+   estresse chegou a dizer "14h, 6h, 20h, 7h" (Leonardo, 24/08/2026).
+  */
+  const estresse = historico.stress.length
+    ? porHoraCronologico(historico.stress)
+    : get().stressByHour;
   const estresseCru = historico.stress.length ? historico.stress : get().stressHistory;
   const pressao = historico.pressure.length
     ? historico.pressure
@@ -1273,15 +1273,18 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
        */
       const rotulo = new Date(reading.recordedAt).getHours() + 'h';
 
-      const stress =
+      /*
+       As barras saem do histórico COM CARIMBO, não de uma lista paralela de
+       rótulos: era ela que embaralhava a ordem quando a memória e o ao vivo se
+       misturavam, e manter duas fontes para o mesmo gráfico é o que permitia a
+       divergência existir.
+      */
+      const historicoDeStress =
         reading.stressScore == null
-          ? stressByHour
-          : // Uma amostra por hora: substitui a da hora corrente em vez de
-            // empilhar dezenas de pontos no mesmo rótulo.
-            [
-              ...stressByHour.filter((p) => p.hour !== rotulo),
-              { hour: rotulo, value: reading.stressScore },
-            ].slice(-12);
+          ? get().stressHistory
+          : [...get().stressHistory, { at: reading.recordedAt, value: reading.stressScore }].slice(-HISTORY_SIZE);
+      const stress =
+        reading.stressScore == null ? stressByHour : porHoraCronologico(historicoDeStress);
 
       const pressao =
         reading.bpSystolic == null || reading.bpDiastolic == null

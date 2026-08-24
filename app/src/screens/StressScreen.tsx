@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { EmptyMetric } from '../components/BandStatus';
 import { Section } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
+import { LinkParaAjuda } from '../components/LinkParaAjuda';
 import { MeasuredAt } from '../components/MeasuredAt';
 import { DayPickerRow, useHistoricoDoDia } from '../components/DayPicker';
 import { DayChart } from '../components/charts/DayChart';
@@ -93,6 +94,7 @@ export function StressScreen() {
           Cada barra é uma hora fechada, picos curtos são normais. O que importa é quanto tempo
           passou acima da linha.
         </Data>
+        <LinkParaAjuda />
       </Section>
       )}
 
