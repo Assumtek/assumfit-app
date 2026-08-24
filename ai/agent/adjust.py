@@ -63,6 +63,10 @@ class WorkoutAdjustInput(BaseModel):
     flags: list[str] = Field(default_factory=list)
     constraints: dict = Field(default_factory=dict)
     allowed_exercises: list[CatalogExercise] = Field(default_factory=list)
+    #: O que aconteceu nesta semana, em texto: sessões, conclusão, esforço,
+    #: nota e o comentário da pessoa. É o que permite "revise com base no que
+    #: eu senti", que antes não tinha com o que ser respondido.
+    week_feedback: str = Field(default="", max_length=4000)
 
 
 # --------------------------------------------------------------------------
@@ -263,6 +267,10 @@ def build_adjust_user(inp: WorkoutAdjustInput, correction: str | None = None) ->
         "history": [m.model_dump() for m in inp.history],
         "message": inp.message,
     }
+    # Só entra quando existe: uma chave vazia no JSON convida o modelo a
+    # comentar a ausência ("não vi seus treinos da semana"), que é ruído.
+    if inp.week_feedback.strip():
+        payload["week_feedback"] = inp.week_feedback
     text = (
         "# Plano atual, contexto e conversa (JSON)\n"
         f"{json.dumps(payload, ensure_ascii=False, indent=2)}\n\n"

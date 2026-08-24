@@ -6,6 +6,7 @@ import { adjust, type AgentAdjustResult } from './agent.client';
 import { allowedExercises } from './catalog';
 import { buildContext, parseAnamnesis, type UserForContext } from './context-builder';
 import { buildHealthContext } from './health-context';
+import { weekFeedback } from './week-feedback';
 import { aplicarOperacoes, PropostaVencida, type AdjustOperation } from './plan-adjust';
 import { classify, isReferral } from './risk-tier';
 
@@ -98,8 +99,15 @@ export async function chatWithAgent(
   const catalog = await allowedExercises();
   if (catalog.length === 0) throw badRequest('Catálogo de exercícios indisponível');
 
+  /*
+   O que aconteceu NESTA semana vai junto: sem isso, "revise com base no que eu
+   senti nos treinos" não tinha com o que ser respondido (Leonardo, 24/08).
+  */
+  const semana = await weekFeedback(userId);
+
   const resultado = await adjust({
     message,
+    week_feedback: semana,
     // Os mais RECENTES, e não os primeiros: a conversa que importa é a que
     // acabou de acontecer, e mandar o histórico inteiro estoura a janela.
     history: history.slice(-HISTORY_LIMIT),
