@@ -43,7 +43,9 @@ REPROVA_CHECK = {
     "checks": [],
 }
 
-ENTRADA = WorkoutGenerationInput(knowledge=["ref"])
+#: Com flag clínica: é o perfil em que o avaliador clínico roda. Sem flag, o
+#: fluxo nem chama o modelo avaliador (ver `test_fluxo_simples.py`).
+ENTRADA = WorkoutGenerationInput(knowledge=["ref"], flags=["cardiopata"])
 
 
 def _prepara(monkeypatch, vereditos: list[dict], det_errors: list[str] | None = None):

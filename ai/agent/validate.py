@@ -129,6 +129,97 @@ def validate_plan(plan_json: str, inp: WorkoutGenerationInput) -> list[str]:
     return errors
 
 
+#: Equipamento que só existe em academia. Quem treina em casa e recebe leg
+#: press não recebeu um plano ruim: recebeu um plano que não dá para fazer.
+_SO_NA_ACADEMIA = {"machine", "cable", "smith", "leg press", "maquina", "máquina", "polia"}
+
+
+def _sem_equipamento(exercicio, local: str) -> bool:
+    if local.lower().startswith("academ"):
+        return False
+    equip = (exercicio.equipment or "").lower()
+    return any(termo in equip for termo in _SO_NA_ACADEMIA)
+
+
+def aderencia_errors(plan_json: str, inp: WorkoutGenerationInput) -> list[str]:
+    """O que o juiz avaliava como "aderência ao perfil", em código.
+
+    Dois dos seis critérios do avaliador clínico não precisam de juízo
+    semântico: contar dias de treino e conferir se o equipamento existe no
+    lugar onde a pessoa treina são contas. Trazê-las para cá é o que permite
+    rodar o modelo avaliador só quando há sinalização clínica, em vez de em
+    toda geração (decisão da fundadora, 24/08/2026, sobre simplificar o fluxo).
+
+    Devolve avisos com o mesmo formato dos outros erros. Não são mecânicos: um
+    plano com um dia a mais ainda é um plano, e a correção vale uma tentativa,
+    não o descarte.
+    """
+    erros: list[str] = []
+    try:
+        plan = json.loads(plan_json)
+    except json.JSONDecodeError:
+        return erros
+    if not isinstance(plan, dict) or plan.get("status") != "GENERATED":
+        return erros
+
+    dias = [d for d in (plan.get("days") or []) if isinstance(d, dict)]
+    treinos = [d for d in dias if d.get("dayType") == "WORKOUT"]
+
+    disponiveis = inp.constraints.get("dias_disponiveis")
+    if isinstance(disponiveis, list) and disponiveis:
+        # A pessoa disse quantos dias tem. Prescrever mais é prescrever o que
+        # ela já avisou que não vai fazer.
+        if len(treinos) > len(disponiveis):
+            erros.append(
+                f"dias_acima_do_disponivel: {len(treinos)} treinos para {len(disponiveis)} dias"
+            )
+
+    minutos = inp.constraints.get("minutos_por_sessao")
+    if isinstance(minutos, (int, float)) and minutos > 0:
+        for dia in treinos:
+            previsto = (dia.get("workout") or {}).get("estimatedDuration")
+            if isinstance(previsto, (int, float)) and previsto > minutos * 1.5:
+                erros.append(
+                    f"sessao_longa_demais: {dia.get('dayOfWeek')} com {int(previsto)} min "
+                    f"para o limite de {int(minutos)}"
+                )
+
+    local = str(inp.constraints.get("local") or "academia")
+    porId = {e.id: e for e in inp.allowed_exercises}
+    for dia in treinos:
+        for fase in (dia.get("workout") or {}).get("phases") or []:
+            for item in fase.get("exercises") or []:
+                ex = porId.get(item.get("exerciseId"))
+                if ex and _sem_equipamento(ex, local):
+                    erros.append(f"equipamento_indisponivel: {ex.name} ({ex.equipment})")
+    return erros
+
+
+def estrutura_errors(plan_json: str) -> list[str]:
+    """O que o juiz avaliava como "estrutura da sessão", em código.
+
+    Toda sessão precisa de preparo antes do esforço. É a checagem mais barata
+    do conjunto e uma das que mais pesava no parecer do avaliador.
+    """
+    erros: list[str] = []
+    try:
+        plan = json.loads(plan_json)
+    except json.JSONDecodeError:
+        return erros
+    if not isinstance(plan, dict) or plan.get("status") != "GENERATED":
+        return erros
+
+    for dia in plan.get("days") or []:
+        if not isinstance(dia, dict) or dia.get("dayType") != "WORKOUT":
+            continue
+        fases = [f.get("type") for f in ((dia.get("workout") or {}).get("phases") or [])]
+        if "ALONGAMENTO" not in fases:
+            erros.append(f"sessao_sem_preparo: {dia.get('dayOfWeek')}")
+        if "TREINO" not in fases and "CARDIO" not in fases:
+            erros.append(f"sessao_sem_parte_principal: {dia.get('dayOfWeek')}")
+    return erros
+
+
 def catalog_errors(errors: list[str]) -> list[str]:
     """Filtra só as violações de catálogo."""
     return [e for e in errors if e.startswith(CATALOG_ERROR_PREFIXES)]

@@ -15,7 +15,9 @@ from agent.knowledge import gather_knowledge
 from agent.models import AgentResult, WorkoutGenerationInput
 from agent.rationale import reescrever_para_pessoa
 from agent.validate import (
+    aderencia_errors,
     catalog_errors,
+    estrutura_errors,
     json_errors,
     mechanical_errors,
     substituir_fora_do_catalogo,
@@ -206,6 +208,39 @@ def _e_opiniao(breakdown: dict) -> bool:
     return all(f.get("type") != "check" for f in breakdown.get("hard_failures", []))
 
 
+def _ressalva_de_aviso(aviso: str) -> str:
+    """O aviso técnico vira a frase que a pessoa lê na tela."""
+    chave = aviso.split(":", 1)[0]
+    detalhe = aviso.split(": ", 1)[1] if ": " in aviso else ""
+    if chave == "sessao_sem_preparo":
+        return f"O treino de {detalhe.lower()} saiu sem aquecimento; faça alguns minutos leves antes."
+    if chave == "sessao_sem_parte_principal":
+        return f"O treino de {detalhe.lower()} ficou só com preparo, sem a parte principal."
+    if chave == "dias_acima_do_disponivel":
+        return "O plano tem mais dias de treino do que você disse ter disponíveis."
+    if chave == "sessao_longa_demais":
+        return f"Uma sessão ficou mais longa que o seu limite de tempo ({detalhe})."
+    if chave == "equipamento_indisponivel":
+        return f"Um exercício pede equipamento que talvez você não tenha: {detalhe}."
+    return aviso
+
+
+def _sem_juiz(errors: list[str]) -> dict:
+    """O veredito quando o avaliador clínico não roda.
+
+    O chamador espera sempre um `breakdown` com nota: aqui ela vem das
+    checagens de código, sem fingir opinião que ninguém deu. `judges` fica
+    vazio de propósito, e é o que permite ao log distinguir "aprovado sem
+    avaliação clínica" de "aprovado pelo avaliador".
+    """
+    return {
+        "score": 0.0 if errors else 10.0,
+        "hard_failures": [],
+        "judges": [],
+        "deterministic_only": True,
+    }
+
+
 async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
     trace_id = uuid.uuid4().hex
 
@@ -281,10 +316,43 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
         indent=2,
     )
     plano_julgado = _plano_com_nomes(plan, inp.allowed_exercises)
-    breakdown = await grade(
-        question=request, answer=plano_julgado, context=context, latency_ms=latency_ms
-    )
-    blocked = bool(errors) or _juiz_reprovou(breakdown)
+
+    """
+    O avaliador CLÍNICO roda quando há o que avaliar clinicamente.
+
+    Ele custa uma chamada com raciocínio ligado e era executado em toda
+    geração, inclusive para quem não tem sinalização nenhuma. Dos seis
+    critérios que ele pontuava, dois viraram código (`estrutura_errors` e
+    `aderencia_errors`), e o peso maior, segurança clínica, só tem o que dizer
+    quando existe condição clínica no perfil.
+
+    Decisão da fundadora (24/08/2026) ao simplificar o fluxo: para perfil sem
+    flag, o caminho é gerar, checar por código e entregar. Para quem tem
+    flag, o juiz continua inteiro, com revisão.
+    """
+    """
+    AVISOS não são erros de forma, e por isso ficam numa lista à parte.
+
+    Erro determinístico significa que não há plano válido para entregar (JSON
+    quebrado, id inexistente). Já "faltou alongamento na terça" ou "tem leg
+    press para quem treina em casa" descrevem um plano que existe e dá para
+    seguir, só que pior. O avaliador clínico tratava isso como nota, não como
+    veto, e a regra do produto é a mesma: sempre sai um plano, com o que foi
+    ajustado à vista.
+
+    Então avisos não bloqueiam nem gastam uma geração sozinhos: entram na
+    instrução quando já houver revisão por outro motivo, e viram ressalva na
+    entrega.
+    """
+    avisos = estrutura_errors(plan) + aderencia_errors(plan, inp)
+    precisa_de_juiz = bool(inp.flags)
+    if precisa_de_juiz:
+        breakdown = await grade(
+            question=request, answer=plano_julgado, context=context, latency_ms=latency_ms
+        )
+    else:
+        breakdown = _sem_juiz(errors)
+    blocked = bool(errors) or (precisa_de_juiz and _juiz_reprovou(breakdown))
 
     # Bloqueio por opinião exige maioria. O mesmo plano, mesmo perfil, levou
     # hard-fail de segurança em 1 de 4 avaliações na rodada de testes 1 — e um
@@ -299,7 +367,7 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
     # ressalvas — e aí confirmar a reprovação com duas avaliações extras custa
     # dois terços do orçamento de tempo para decidir algo que a revisão resolve
     # melhor. Com revisão disponível, vai direto revisar.
-    revota = settings.grader_confirm_blocks and settings.max_judge_retries == 0
+    revota = precisa_de_juiz and settings.grader_confirm_blocks and settings.max_judge_retries == 0
     if blocked and not errors and revota and _e_opiniao(breakdown):
         contra, a_favor = 1, 0
         while contra < 2 and a_favor < 2:
@@ -346,7 +414,7 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
         # A correção diz o que ESTÁ errado — validação ou parecer do juiz. Uma
         # falha estrutural ("dia repetido") é tão corrigível quanto volume alto
         # demais, e as duas se resolvem do mesmo jeito: dizendo ao gerador.
-        instrucao = _correcao(errors) if errors else _correcao_do_juiz(breakdown)
+        instrucao = _correcao(errors + avisos) if (errors or avisos) else _correcao_do_juiz(breakdown)
         log.info(
             "agent.judge_revision",
             trace_id=trace_id,
@@ -362,16 +430,20 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
             mecanicas += 1
             plan = await generate_plan(inp, correction=_correcao(errors))
             errors = validate_plan(plan, inp)
+        avisos = estrutura_errors(plan) + aderencia_errors(plan, inp)
         plano_julgado = _plano_com_nomes(plan, inp.allowed_exercises)
-        breakdown = await grade(
-            question=request, answer=plano_julgado, context=context, latency_ms=latency_ms
-        )
-        blocked = bool(errors) or _juiz_reprovou(breakdown)
+        if precisa_de_juiz:
+            breakdown = await grade(
+                question=request, answer=plano_julgado, context=context, latency_ms=latency_ms
+            )
+        else:
+            breakdown = _sem_juiz(errors)
+        blocked = bool(errors) or (precisa_de_juiz and _juiz_reprovou(breakdown))
 
     # Esgotadas as revisões, o plano SAI com as ressalvas. Só continua bloqueado
     # o que não tem plano para entregar: erro determinístico significa que não
     # há JSON válido, e não existe "melhor esforço" de um plano que não parseia.
-    notas: list[str] = list(trocas)
+    notas: list[str] = list(trocas) + [_ressalva_de_aviso(a) for a in avisos]
     if blocked and not errors:
         notas += _ressalvas(breakdown)
         blocked = False
@@ -384,6 +456,8 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
         blocked=blocked,
         revisoes=revisoes,
         det_errors=len(errors),
+        avisos=len(avisos),
+        avaliador_clinico=precisa_de_juiz,
         catalog_retries=retries,
         hard_failures=len(breakdown.get("hard_failures", [])),
         latency_ms=latency_ms,

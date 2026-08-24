@@ -38,14 +38,21 @@ def _dia(dia: str, ids: list[str], subtype: str = "STRENGTH") -> dict:
         "dayType": "WORKOUT",
         "workout": {
             "name": f"Treino {dia}",
+            # Com a fase de preparo, como um plano real: desde 24/08/2026 a
+            # ausência dela vira ressalva na entrega, e um plano de teste sem
+            # aquecimento testaria o aviso, não o cenário.
             "phases": [
+                {
+                    "type": "ALONGAMENTO",
+                    "exercises": [{"exerciseId": ids[0], "subtype": "MOBILITY", "sets": 1}],
+                },
                 {
                     "type": "TREINO",
                     "exercises": [
                         {"exerciseId": i, "subtype": subtype, "sets": 3, "reps": "10"}
                         for i in ids
                     ],
-                }
+                },
             ],
         },
     }
@@ -73,7 +80,11 @@ REPROVA = {
     "checks": [],
 }
 
-ENTRADA = WorkoutGenerationInput(knowledge=["ref"], allowed_exercises=CATALOGO)
+#: Com flag clínica, porque estes cenários exercitam o avaliador. O caminho
+#: sem flag, que é o da maioria das pessoas, está em `test_fluxo_simples.py`.
+ENTRADA = WorkoutGenerationInput(
+    knowledge=["ref"], allowed_exercises=CATALOGO, flags=["cardiopata"]
+)
 
 
 def _monta(monkeypatch, saidas: list[str], vereditos: list[dict], validacoes=None):

@@ -97,7 +97,7 @@ class Settings(BaseModel):
     # Quantas REVISÕES o plano ganha quando o avaliador reprova por opinião.
     # Reprovar sem revisar entrega nada a quem pediu; revisar sem teto gastaria
     # a geração inteira num perfil que o modelo não consegue atender.
-    max_judge_retries: int = 2
+    max_judge_retries: int = 1
 
     log_level: str = "INFO"
 
