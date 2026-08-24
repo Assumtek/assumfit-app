@@ -462,6 +462,18 @@ _OUT_OF_SCOPE_REPLY = (
     "Treino novo ou mais um dia: atualize a anamnese e gere um plano."
 )
 
+#: Quando o modelo TENTOU e a alteração não saiu válida.
+#:
+#: Antes esta situação usava a resposta de fora de escopo, e o efeito foi pior
+#: que o defeito: a pessoa pediu quatro dias de treino, o agente tentou montar,
+#: as operações não passaram no contrato, e a tela respondeu que isso não se faz
+#: por ali, o que é falso e ainda a mandava refazer a anamnese. Dizer "não
+#: consegui" é honesto e deixa a porta aberta.
+_NAO_CONSEGUI_MONTAR = (
+    "Não consegui montar essa alteração agora. Tente de novo, ou me diga de "
+    "outro jeito o que quer mudar."
+)
+
 
 async def adjust_plan(inp: WorkoutAdjustInput) -> WorkoutAdjustResult:
     """Roda o ajuste e devolve a resposta com o diff já validado."""
@@ -480,13 +492,24 @@ async def adjust_plan(inp: WorkoutAdjustInput) -> WorkoutAdjustResult:
             # inventando uma operação para atender a um pedido que não cabe no
             # ajuste. Degrada para resposta bloqueada no chat em vez de estourar
             # e virar "erro interno" na tela.
+            # QUAIS campos falharam, e não só quantos.
+            #
+            # O log dizia "ValidationError, 3 erros" e a tela dizia à pessoa que
+            # o pedido estava fora do escopo. As duas coisas juntas escondiam o
+            # que de fato acontecia: o modelo TENTOU a alteração e errou a forma
+            # das operações. Sem os campos, não havia como corrigir o contrato
+            # nem o prompt (fundadora, 24/08/2026, pedindo 4 dias de treino).
             log.warning(
                 "agent.adjust.invalid_operations_fallback",
                 trace_id=trace_id,
                 error_type=type(exc2).__name__,
+                erros=[
+                    {"campo": ".".join(str(x) for x in e.get("loc", [])), "erro": e.get("msg", "")}
+                    for e in exc2.errors()[:8]
+                ],
             )
             return WorkoutAdjustResult(
-                reply=_OUT_OF_SCOPE_REPLY,
+                reply=_NAO_CONSEGUI_MONTAR,
                 operations=[],
                 blocked=True,
                 block_reason=f"operacoes fora do contrato apos retry: {exc2.error_count()} erro(s)",

@@ -46,3 +46,19 @@ def test_o_dia_de_hoje_entra_no_payload():
 
 def test_sem_dia_a_chave_nao_aparece():
     assert "today" not in build_adjust_user(entrada())[0]["text"]
+
+
+def test_a_resposta_de_falha_nao_diz_que_esta_fora_de_escopo():
+    """Tentar e não conseguir é diferente de não fazer.
+
+    A pessoa pediu quatro dias de treino, o agente tentou, as operações não
+    passaram no contrato e a tela respondeu que isso se resolve refazendo a
+    anamnese, o que é falso: o prompt manda resolver frequência semanal com
+    SET_DAY_TYPE (fundadora, 24/08/2026).
+    """
+    from agent.adjust import _NAO_CONSEGUI_MONTAR, _OUT_OF_SCOPE_REPLY
+
+    assert "anamnese" not in _NAO_CONSEGUI_MONTAR
+    assert "Não consegui montar" in _NAO_CONSEGUI_MONTAR
+    # A de fora de escopo continua existindo, para o que realmente está fora.
+    assert "anamnese" in _OUT_OF_SCOPE_REPLY
