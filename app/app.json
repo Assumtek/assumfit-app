@@ -13,7 +13,7 @@
       "appleTeamId": "5695J86AVD",
       "supportsTablet": false,
       "bundleIdentifier": "br.com.assumtek.assumfit",
-      "buildNumber": "8",
+      "buildNumber": "9",
       "infoPlist": {
         "NSAlarmKitUsageDescription": "O AssumFit marca o despertador que você escolhe no planejador de sono. Só quando você toca em Definir despertador.",
         "NSBluetoothAlwaysUsageDescription": "O AssumFit usa Bluetooth para ler os dados do seu AssumFit Watch.",
