@@ -1364,6 +1364,12 @@
       "nota": "Corrigido nos três pontos que você citou. Montar o treino de um dia (a aula de tênis que caiu) não é plano novo: o plano continua o mesmo e um dia dele muda, e as operações para isso já existiam. Quem recusava era a instrução do agente, que tratava qualquer 'montar treino' como geração do zero; agora só o plano inteiro e a mudança de objetivo vão para a geração, que tem o avaliador de segurança. Reorganizar e encaixar treinos na semana também é ajuste. E o agente passou a receber o consolidado da semana (sessões, conclusão, esforço, nota e o seu comentário, literal), que é o que faltava para revisar com base no que você sentiu. Isso vive no servidor e no modelo, então depende do deploy, não de um build novo.",
       "versao": "1.0.5 (9)",
       "em": "2026-08-24T08:16:04"
+    },
+    "AHaQkjbza82qP78rl8lmNmI": {
+      "commit": "f4f584a",
+      "nota": "Achei três coisas, e as três explicam parte do que você viu. A varredura das noites guardadas na pulseira se dava por cumprida no dia sempre que a memória respondia com qualquer noite, mesmo velha, então a noite que o aparelho ainda não tinha fechado ficava para o dia seguinte, e assim por diante. O botão de buscar noite só aparecia quando não havia nenhuma, então quem tinha uma noite antiga na tela não tinha caminho nenhum. E esse botão buscava no app Saúde da Apple, que na nossa pulseira não tem nada. Na 1.0.5 (9): a tela avisa quando a noite mostrada não é a de hoje, e o botão busca na pulseira, varre a memória e responde o que achou. Quando instalar, toque nele e me diga a frase que aparecer: é ela que vai dizer se as noites de 22 e 23 estão na memória da pulseira ou se o aparelho não as registrou.",
+      "versao": "1.0.5 (9)",
+      "em": "2026-08-24T09:26:48"
     }
   }
 }
