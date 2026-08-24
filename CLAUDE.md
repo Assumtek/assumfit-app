@@ -697,6 +697,56 @@ e só então poda os antigos. Invertida, uma sequência de falhas apagaria os
 backups bons até não sobrar nenhum. `prisma/seed.ts` também se recusa a
 rodar, ele cria contas com senha pública.
 
+### Deploy (feito em 24/08/2026, do começo ao fim)
+
+O servidor não é um clone do git: `~/assumfit/` tem `backend/` e `ai/` como
+FONTES, e o compose os constrói ali (`build: ./ai`, `build: ./backend`). O
+deploy é sincronizar e reconstruir:
+
+```bash
+rsync -az --delete --exclude node_modules --exclude .env --exclude dist \
+  -e "ssh -i ~/.ssh/assumfit-prod.pem" backend/ ubuntu@52.67.144.172:~/assumfit/backend/
+rsync -az --delete --exclude __pycache__ --exclude venv --exclude '*.pyc' \
+  -e "ssh -i ~/.ssh/assumfit-prod.pem" ai/ ubuntu@52.67.144.172:~/assumfit/ai/
+ssh … "cd ~/assumfit && docker compose -f docker-compose.prod.yml up -d --build backend ai"
+```
+
+**Excluir `.env` do rsync não é opcional**: o do servidor tem as chaves de
+produção e o local tem as de exemplo.
+
+**Ensaie antes**: `--dry-run --itemize-changes` e depois `grep '^\*deleting'`. Com
+`--delete`, um caminho errado apaga o que o servidor tinha e o repositório não
+tem.
+
+**A porta 22 é liberada por IP**, num grupo de segurança que acumula regras
+(`sg-002881c8aceee1b6a`). A rede da fundadora é dinâmica: quando o SSH dá
+timeout, o IP mudou, e não há bloqueio nenhum a resolver. Com as credenciais
+da AWS na máquina:
+
+```bash
+aws ec2 describe-security-groups --group-ids sg-002881c8aceee1b6a \
+  --query "SecurityGroups[].IpPermissions[?ToPort==\`22\`]"
+aws ec2 authorize-security-group-ingress --group-id sg-002881c8aceee1b6a \
+  --ip-permissions 'IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=<IP>/32,Description="…"}]'
+```
+
+O bastion do MUVX (`i-05e3ef063bd545196`) responde por SSM e o `assumfit-prod`
+NÃO: o Session Manager não é caminho para cá.
+
+**As migrations rodam no start do backend**, antes de o tráfego entrar. Antes de
+subir migration com função do TimescaleDB, confira a assinatura no banco: os
+nomes dos parâmetros mudam entre versões, e migration que falha deixa o Prisma
+travado para os deploys seguintes.
+
+```sql
+SELECT p.proname, pg_get_function_arguments(p.oid) FROM pg_proc p
+WHERE p.proname IN ('add_retention_policy','remove_continuous_aggregate_policy');
+```
+
+Conferir depois: `/health` responde `{"status":"ok","db":"up","rateLimit":"redis"}`,
+`docker compose ps` mostra tudo `healthy`, e as políticas ficaram como se
+queria (`timescaledb_information.jobs`).
+
 O endereço da API vai fixado no build por perfil do `eas.json`. Sem
 `EXPO_PUBLIC_API_URL`, um build de produção **não compila** em vez de apontar
 para localhost em silêncio.
