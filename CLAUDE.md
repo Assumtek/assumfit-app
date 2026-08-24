@@ -769,6 +769,65 @@ passos. O enum de três posições não representa isso, e por isso existe
 `circadian_shift` derivado da hora de dormir, que substitui o cronótipo quando
 presente.
 
+## Como um plano de treino nasce
+
+Três camadas, e a ordem importa: **tudo que é decisão de segurança acontece
+antes de o modelo ser chamado.**
+
+1. **Backend, sem IA.** Junta anamnese, rotina e a biometria real (linha de
+   base de HRV, sono, passos, sessões concluídas), e **classifica o risco de
+   forma determinística**. Caso de encaminhamento clínico para aqui: é o único
+   desfecho em que não gerar é a resposta responsável. O prompt também instrui
+   a encaminhar, mas confiar a regra de segurança a quem pode alucinar seria o
+   erro.
+2. **Referências clínicas por flag e objetivo**, lidas do disco, sem busca
+   semântica: quem é cardiopata recebe a referência de cardiopatas SEMPRE, não
+   quando um recuperador achar relevante.
+3. **Gerar, checar, entregar.**
+
+### O avaliador clínico roda quando há o que avaliar
+
+Ele custava uma chamada com raciocínio ligado em TODA geração, inclusive para
+perfil sem flag nenhuma, onde o critério de maior peso (segurança clínica) não
+tem o que dizer. Desde 24/08/2026 (decisão da fundadora, "o mais simples que
+ainda funcione") ele roda **quando `inp.flags` não está vazio**.
+
+Dois dos seis critérios dele viraram código, porque eram conta e não juízo:
+
+- `estrutura_errors`: a sessão tem preparo? tem parte principal?
+- `aderencia_errors`: mais dias do que a pessoa tem, sessão mais longa que o
+  limite declarado, equipamento de academia para quem treina em casa.
+
+### Aviso não é erro
+
+Erro determinístico significa que **não há plano válido para entregar** (JSON
+quebrado, id fora do catálogo), e aí bloqueia. As checagens acima produzem
+AVISOS: descrevem um plano que existe e dá para seguir, só que pior. Aviso não
+bloqueia, não paga uma geração extra, entra na instrução quando já houver
+revisão por outro motivo e vira **ressalva na tela**, na frase que a pessoa lê.
+
+A regra de ouro não mudou: **sempre sai um plano**, com o que foi ajustado à
+vista. Quem respondeu uma anamnese inteira não pode receber "não foi possível
+gerar".
+
+### O que já foi tentado e não se repete
+
+- **Juntar a fundamentação na geração.** O prompt do gerador pede o texto em
+  palavras da pessoa e o modelo principal não obedece com constância; o plano
+  chegava à tela com "RIR (Zourdos et al.), ACSM 12ª ed.". Por isso
+  `agent/rationale.py` existe como passo à parte, com um modelo barato e um
+  detector de jargão. Custa dois milésimos de dólar por plano.
+- **O juiz recebendo o catálogo.** A conformidade já é checada por código, e
+  mandar 390 exercícios para um juízo que não os usa é desperdício puro.
+- **Bloquear por opinião sem maioria.** O mesmo plano, mesmo perfil, levou
+  reprovação em uma de quatro avaliações. Reprovar virou revisar.
+
+### Custo, medido em 24/08/2026
+
+~US$ 0,20 por plano no caminho simples (era ~US$ 0,70 com o avaliador em toda
+geração), sendo a saída do Sonnet a maior parte. O relatório de agosto está em
+`docs/` e a conta inteira do AssumFit até aqui foi US$ 34.
+
 ## Escopo médico
 
 O produto é de esporte, bem-estar e autoconhecimento, **não é dispositivo médico**. Não há diagnóstico, alerta clínico nem recomendação de tratamento em nenhuma tela. (Desde ago/2026 a home incentiva treino e recuperação, não produtividade, ver PRODUCT.md § Reposicionamento.)
