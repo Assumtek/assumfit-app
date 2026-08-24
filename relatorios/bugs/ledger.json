@@ -1358,6 +1358,12 @@
       "nota": "Acho que achei: as conquistas passaram a aparecer na home nesta versão e não diziam quando aconteceram, então uma antiga (por exemplo 'Primeiro treino') lida num domingo sem treino vira 'o app marcou que treinei hoje'. Agora cada conquista mostra a data. Se o que você viu foi em outra tela, me diga qual que eu corrijo lá: era o bloco Conquistas na home, o trilho da semana no plano de treino, ou os anéis da semana?",
       "versao": "1.0.5 (9)",
       "em": "2026-08-23T22:32:19"
+    },
+    "AFv0VCjniAiMcS0lgeF0YmU": {
+      "commit": "e7bbf61",
+      "nota": "Corrigido nos três pontos que você citou. Montar o treino de um dia (a aula de tênis que caiu) não é plano novo: o plano continua o mesmo e um dia dele muda, e as operações para isso já existiam. Quem recusava era a instrução do agente, que tratava qualquer 'montar treino' como geração do zero; agora só o plano inteiro e a mudança de objetivo vão para a geração, que tem o avaliador de segurança. Reorganizar e encaixar treinos na semana também é ajuste. E o agente passou a receber o consolidado da semana (sessões, conclusão, esforço, nota e o seu comentário, literal), que é o que faltava para revisar com base no que você sentiu. Isso vive no servidor e no modelo, então depende do deploy, não de um build novo.",
+      "versao": "1.0.5 (9)",
+      "em": "2026-08-24T08:16:04"
     }
   }
 }
