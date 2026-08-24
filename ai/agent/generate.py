@@ -11,6 +11,7 @@ import json
 import re
 from pathlib import Path
 
+from agent.catalogo import como_texto, para_o_lugar
 from agent.models import WorkoutGenerationInput
 from core.logging import get_logger
 from core.settings import settings
@@ -34,10 +35,12 @@ def _load_system_template() -> str:
 
 
 def _catalog_text(inp: WorkoutGenerationInput) -> str:
-    catalog = json.dumps(
-        [e.model_dump() for e in inp.allowed_exercises], ensure_ascii=False, indent=2
-    )
-    return "# Catalogo permitido (prescreva SOMENTE estes exercicios)\n" + catalog
+    """O catálogo por NOME, já filtrado pelo lugar onde a pessoa treina.
+
+    Era JSON indentado com todos os campos: 42.262 tokens, 81% do prompt. Ver
+    `agent/catalogo.py` para o porquê de cada corte.
+    """
+    return como_texto(para_o_lugar(inp.allowed_exercises, inp.constraints.get("local")))
 
 
 def _references_text(inp: WorkoutGenerationInput) -> str:

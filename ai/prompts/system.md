@@ -157,7 +157,7 @@ testador, ago/2026).
             "type": "TREINO",
             "exercises": [
               {
-                "exerciseId": "id1",
+                "exerciseName": "Supino Reto (Barra)",
                 "subtype": "STRENGTH",
                 "sets": [
                   {"repetitions": "8-12", "restTime": 90, "load": null}
@@ -181,12 +181,14 @@ Regras do JSON:
 - "modality" do workout: o slug da modalidade do dia, um dos valores de "modalidades" do
   perfil. Nunca omita.
 - "subtype" do exercicio: "STRENGTH", "CARDIO" ou "MOBILITY".
-- "exerciseId" deve existir no catalogo fornecido.
+- "exerciseName" e o NOME EXATO como aparece no catalogo, copiado dali. Nao
+  invente nome, nao traduza, nao abrevie: o nome e a chave, e um nome que nao
+  existe no catalogo faz o exercicio ser trocado ou removido depois.
 - "muscleGroups": grupos trabalhados na sessao, entre PEITO, COSTAS, OMBROS, BICEPS,
   TRICEPS, ANTEBRACO, ABDOMEN, QUADRICEPS, POSTERIOR_COXA, GLUTEOS, PANTURRILHA,
   CORPO_INTEIRO.
 - "estimatedDuration": duracao estimada da sessao em minutos.
-- "used_exercise_ids" lista todos os ids efetivamente usados (para validacao de catalogo).
+- "used_exercise_names" lista todos os nomes efetivamente usados (para validacao).
 - "load" em quilos, ou null quando a primeira sessao e que vai descobrir a carga.
 - Para "subtype": "CARDIO", use "duration" (minutos) e "intensity" (texto curto) no lugar
   de "sets". Para "MOBILITY", "holdTime" (segundos) tambem e aceito.

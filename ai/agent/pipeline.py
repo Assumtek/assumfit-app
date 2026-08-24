@@ -11,6 +11,7 @@ import time
 import uuid
 
 from agent.generate import generate_plan
+from agent.catalogo import resolver_nomes
 from agent.knowledge import gather_knowledge
 from agent.models import AgentResult, WorkoutGenerationInput
 from agent.rationale import reescrever_para_pessoa
@@ -250,6 +251,12 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
     started = time.perf_counter()
     plan = await generate_plan(inp)
 
+    # O modelo prescreve por NOME: o catálogo deixou de carregar ids, que
+    # custavam 13.300 tokens por chamada e eram o campo em que ele inventava.
+    # A volta é determinística, e nome desconhecido segue para o mesmo caminho
+    # que já tratava id inventado: substituir por um do mesmo tipo, ou remover.
+    plan, _ = resolver_nomes(plan, inp.allowed_exercises)
+
     errors = validate_plan(plan, inp)
 
     # Erro MECÂNICO — id fora do catálogo ou JSON malformado — é falha de FORMA,
@@ -279,6 +286,7 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
             kinds=sorted({e.split(":", 1)[0] for e in mechanical_errors(errors)}),
         )
         plan = await generate_plan(inp, correction=instrucao)
+        plan, _ = resolver_nomes(plan, inp.allowed_exercises)
         errors = validate_plan(plan, inp)
 
     # ÚLTIMO RECURSO do catálogo: substituir em vez de desistir.
@@ -422,6 +430,7 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
             por=("validacao" if errors else "avaliador"),
         )
         plan = await generate_plan(inp, correction=instrucao)
+        plan, _ = resolver_nomes(plan, inp.allowed_exercises)
         errors = validate_plan(plan, inp)
         # Uma revisão pode quebrar o JSON de novo — o retry mecânico vale aqui
         # também, senão a revisão troca um bloqueio por outro.
@@ -429,6 +438,7 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
         while mechanical_errors(errors) and mecanicas < settings.max_catalog_retries:
             mecanicas += 1
             plan = await generate_plan(inp, correction=_correcao(errors))
+            plan, _ = resolver_nomes(plan, inp.allowed_exercises)
             errors = validate_plan(plan, inp)
         avisos = estrutura_errors(plan) + aderencia_errors(plan, inp)
         plano_julgado = _plano_com_nomes(plan, inp.allowed_exercises)

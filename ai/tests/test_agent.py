@@ -78,10 +78,15 @@ def test_exercicio_fora_do_catalogo_bloqueia():
     assert catalog_errors(errors)
 
 
-def test_used_ids_tambem_sao_checados():
-    plan = _plan(_full_week(), used_exercise_ids=["ex-1", "fantasma"])
+def test_used_names_tambem_sao_checados():
+    """A lista de conferência passou a ser por NOME.
+
+    O catálogo deixou de carregar ids (24/08/2026): eles custavam 13.300 tokens
+    por chamada e eram justamente o campo que o modelo inventava.
+    """
+    plan = _plan(_full_week(), used_exercise_names=["Supino", "Exercicio Fantasma"])
     errors = validate_plan(plan, _input())
-    assert any(e.startswith("used_id_fora_do_catalogo") for e in errors)
+    assert any(e.startswith("used_nome_fora_do_catalogo") for e in errors)
 
 
 def test_erro_estrutural_nao_e_reprocessavel():

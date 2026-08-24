@@ -75,6 +75,16 @@ async def complete(
     """
     resolved = model or settings.llm_main_model
 
+    # O provedor sai do PREFIXO do modelo. Trocar `llm_main_model` de
+    # "claude-sonnet-5" para "gpt-5" é a mudança inteira, e ela é reversível
+    # por variável de ambiente (decisão da fundadora, 24/08/2026).
+    if resolved.startswith(("gpt-", "o1", "o3", "o4")):
+        from llm import openai_client
+
+        return await openai_client.complete(
+            system=system, user=user, model=resolved, max_tokens=max_tokens, effort=effort
+        )
+
     kwargs: dict = {
         "model": resolved,
         "max_tokens": max_tokens,

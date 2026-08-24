@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 
+from agent.catalogo import normalizar
 from agent.models import WorkoutGenerationInput
 
 VALID_DAYS = {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"}
@@ -122,9 +123,12 @@ def validate_plan(plan_json: str, inp: WorkoutGenerationInput) -> list[str]:
     if missing:
         errors.append(f"dias_faltando: {','.join(sorted(missing))}")
 
-    for exercise_id in plan.get("used_exercise_ids") or []:
-        if exercise_id not in allowed_ids:
-            errors.append(f"used_id_fora_do_catalogo: {exercise_id}")
+    # A lista de conferência agora vem por NOME (o modelo não vê mais ids). O id
+    # já foi resolvido antes de chegar aqui, em `catalogo.resolver_nomes`.
+    nomes_permitidos = {normalizar(e.name) for e in inp.allowed_exercises}
+    for nome in plan.get("used_exercise_names") or []:
+        if isinstance(nome, str) and normalizar(nome) not in nomes_permitidos:
+            errors.append(f"used_nome_fora_do_catalogo: {nome}")
 
     return errors
 

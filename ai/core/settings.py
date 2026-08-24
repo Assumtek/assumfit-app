@@ -27,6 +27,10 @@ from pydantic import BaseModel
 
 class Settings(BaseModel):
     anthropic_api_key: str = ""
+    #: Usada quando `llm_main_model` (ou outro) for um modelo da OpenAI. O
+    #: provedor é escolhido pelo PREFIXO do nome do modelo, não por uma chave
+    #: de configuração à parte: assim trocar de modelo é uma linha só.
+    openai_api_key: str = ""
     #: Geração do plano. Tarefa longa, com catálogo de 370 exercícios no prompt e
     #: referências clínicas — é onde a capacidade do modelo aparece.
     #: Haiku por decisão de CUSTO (US$ 1/5 por MTok contra US$ 5/25 do Opus — 5×
@@ -43,7 +47,13 @@ class Settings(BaseModel):
     #: 7,0, depois uma falha dura). Geração bloqueada custa dinheiro e não
     #: entrega nada — o Sonnet a US$ 2/10 (lançamento) sai 60% mais barato que o
     #: Opus e passa. Para forçar Haiku de volta: LLM_MAIN_MODEL=claude-haiku-4-5.
-    llm_main_model: str = "claude-sonnet-5"
+    #: A geração do plano. Passou de "claude-sonnet-5" para "gpt-5" em
+    #: 24/08/2026, por custo: a mesma geração sai por menos da metade
+    #: (US$ 0,12 contra US$ 0,28, medido com o prompt real). A qualidade da
+    #: prescrição precisa ser acompanhada pelo avaliador e pelas validações,
+    #: que continuam iguais; voltar é trocar esta linha ou a variável de
+    #: ambiente LLM_MAIN_MODEL.
+    llm_main_model: str = "gpt-5"
     #: Avaliação do plano gerado. Mesmo modelo, papel diferente: o julgamento é
     #: sobre segurança clínica, e economizar aqui economiza justamente na
     #: barreira que existe para não entregar plano ruim.
@@ -129,7 +139,8 @@ def _env_int(name: str, default: int) -> int:
 def get_settings() -> Settings:
     return Settings(
         anthropic_api_key=os.getenv("ANTHROPIC_API_KEY", ""),
-        llm_main_model=os.getenv("LLM_MAIN_MODEL", "claude-sonnet-5"),
+        openai_api_key=os.getenv("OPENAI_API_KEY", ""),
+        llm_main_model=os.getenv("LLM_MAIN_MODEL", "gpt-5"),
         llm_grader_model=os.getenv("LLM_GRADER_MODEL", "claude-haiku-4-5"),
         llm_chat_model=os.getenv("LLM_CHAT_MODEL", "claude-haiku-4-5"),
         nutrition_model=os.getenv("NUTRITION_MODEL", "claude-sonnet-5"),
