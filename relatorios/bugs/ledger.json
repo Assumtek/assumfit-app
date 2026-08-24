@@ -1382,6 +1382,24 @@
       "nota": "Reescrevi a explicação do estresse começando pelo que o sensor faz: a luz verde marca a hora de cada batida, a diferença de tempo entre uma e outra é a matéria-prima, corpo descansado varia mais e corpo sob carga bate mais parecido, como um metrônomo. Está em Ajuda, e a tela de estresse agora tem o caminho até lá (Como isto é medido), que era o que faltava. Na sua captura apareceu outra coisa: o eixo do gráfico estava fora de ordem (14h, 6h, 20h, 7h). As barras saíam na ordem em que as amostras chegavam da pulseira, e não na do relógio. Corrigido.",
       "versao": "1.0.5 (9)",
       "em": "2026-08-24T09:42:01"
+    },
+    "ALExo7wUVz6twbIrpyfg7Z8": {
+      "commit": "a297afc",
+      "nota": "O personal não tem relógio e ninguém tinha mandado a data para ele, por isso a pergunta de volta. Agora ele recebe o dia e o nome do dia da semana no seu fuso, e a instrução diz para nunca perguntar isso. Já está no ar, não precisa de build novo: tente de novo.",
+      "versao": "1.0.5 (10)",
+      "em": "2026-08-24T11:24:24"
+    },
+    "AFrPCrVpJBFWRsasAjVbPi4": {
+      "commit": "a297afc",
+      "nota": "Boa pergunta, e a tela é que estava incompleta. 117 por 85: a sistólica (117) está na faixa ótima e a diastólica (85) cai na faixa elevada da diretriz brasileira (85 a 89), e a classificação segue sempre a pior das duas. A tela mostrava só o resultado, então quem olhava o 117 não entendia. Agora ela diz qual dos dois números define a faixa e onde o outro está, e tem um caminho para a explicação completa na Ajuda. Isso é descrição da conta, não avaliação clínica: pressão pelo pulso serve para acompanhar tendência, e a de braçadeira continua sendo a referência. Sobe na 1.0.5 (10).",
+      "versao": "1.0.5 (10)",
+      "em": "2026-08-24T11:24:27"
+    },
+    "AL8t-vnz1Jx67fydC46ZGMA": {
+      "commit": "a297afc",
+      "nota": "Você tinha razão em insistir: meu diagnóstico anterior estava incompleto. A frase que você viu ('a pulseira não tem noite mais recente') podia estar mentindo, porque a ponte tratava consulta que FALHOU como consulta que respondeu vazio. Isso já está separado: se não conseguirmos perguntar, a tela diz isso, e não que a noite não existe. E achei a causa provável: sua pulseira usa o protocolo NOVO de sono do fabricante, e nós consultávamos só a porta antiga, que devolve vazio do mesmo jeito que não ter dado. Agora, quando a antiga vem vazia, perguntamos pela nova. Isso é código nativo, então precisa de build: sobe na 1.0.5 (10). Quando instalar, toque em Buscar noite e me diga a frase de novo, que ela vai distinguir os dois casos.",
+      "versao": "1.0.5 (10)",
+      "em": "2026-08-24T11:24:44"
     }
   }
 }
