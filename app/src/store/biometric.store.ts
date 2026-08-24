@@ -71,6 +71,14 @@ function gravarSemPulseira() {
  */
 let sonoRetroativoDoDia: string | null = null;
 
+/**
+ * As últimas medições de pressão e de oxigênio, para decidir se um aviso se
+ * sustenta. Vivem fora do estado porque não são informação de tela: são a
+ * memória curta que separa "uma leitura estranha" de "isto está acontecendo".
+ */
+const medicoesDePressao: { at: number; alerta: boolean }[] = [];
+const medicoesDeSpo2: { at: number; alerta: boolean }[] = [];
+
 /** Última tentativa de buscar noite vencida — o garrote do ciclo de 4 min. */
 let ultimaBuscaDeSono = 0;
 /** Último envio da memória de hoje ao servidor; e o dia civil da varredura dos dias anteriores. */
@@ -277,6 +285,7 @@ import {
   type FatiaDoDia,
 } from '../domain/hourly';
 import { spo2DaNoite } from '../domain/sleep';
+import { atencaoSustentada, CRITERIOS } from '../domain/alertaSustentado';
 import { noiteSustentaODia } from '../domain/bodyBattery';
 import { avaliarInicioDeExercicio, ESTADO_INICIAL, type EstadoDeExercicio } from '../domain/exerciseOnset';
 import { lerEmCurso } from '../services/sport-outbox';
@@ -1478,9 +1487,37 @@ function vigiarLeitura(reading: Reading) {
     batimentoAltoDesde = null;
   }
   const batimentoSustentado = batimentoAltoDesde != null && agora - batimentoAltoDesde >= BATIMENTO_SUSTENTADO_MS;
+  /*
+   Pressão e oxigênio agora exigem SUSTENTAÇÃO, como o batimento sempre exigiu.
+
+   Avisavam na primeira leitura fora da faixa, e um testador recebeu "sua
+   pressão merece atenção" para abrir o app numa pressão ótima (Leonardo,
+   24/08/2026). A pressão daqui é estimada por sensor óptico, e a própria tela
+   diz que serve para tendência: alarmar a partir de uma estimativa isolada
+   contradiz o produto duas telas adiante.
+
+   Só medições REAIS entram na conta: leitura sem o valor da grandeza não é
+   medição normal nem alterada, é ausência, e ausência não quebra nem sustenta
+   sequência.
+  */
+  if (reading.bpSystolic != null && reading.bpDiastolic != null) {
+    medicoesDePressao.push({
+      at: reading.recordedAt,
+      alerta: ratePressure(reading.bpSystolic, reading.bpDiastolic).state === 'alert',
+    });
+    if (medicoesDePressao.length > 20) medicoesDePressao.shift();
+  }
+  if (reading.spo2Pct != null) {
+    medicoesDeSpo2.push({
+      at: reading.recordedAt,
+      alerta: rateSpo2(reading.spo2Pct).state === 'alert',
+    });
+    if (medicoesDeSpo2.length > 20) medicoesDeSpo2.shift();
+  }
+
   const alertas: [MetricaDeAtencao, boolean][] = [
-    ['spo2', rateSpo2(reading.spo2Pct).state === 'alert'],
-    ['pressao', ratePressure(reading.bpSystolic, reading.bpDiastolic).state === 'alert'],
+    ['spo2', atencaoSustentada(medicoesDeSpo2, CRITERIOS.spo2, agora)],
+    ['pressao', atencaoSustentada(medicoesDePressao, CRITERIOS.pressao, agora)],
     ['hr', batimentoSustentado],
   ];
   for (const [metrica, alerta] of alertas) {

@@ -24,6 +24,36 @@ export function fatiasVazias(): FatiaDoDia[] {
 }
 
 /**
+ * A caloria de uma fatia, na unidade certa ou estimada.
+ *
+ * O firmware não promete unidade: o mesmo campo já chegou em kcal e em cal
+ * (`activityEstimates.caloriasDoDia` existe por isso, depois de um testador ver
+ * "886.149 kcal"). Quando trouxemos a caloria por fatia, o saneamento não veio
+ * junto, e o gráfico de movimento por hora apareceu com escala de 30.838
+ * (Leonardo, 24/08/2026): trinta mil calorias numa hora.
+ *
+ * A régua é a mesma do dia: caloria por passo entre 0,015 e 0,15. Fora disso,
+ * tenta como cal e, se ainda não couber, estima pelo passo, que é o número que
+ * nunca mente por três ordens de grandeza.
+ */
+const KCAL_POR_PASSO_MIN = 0.015;
+const KCAL_POR_PASSO_MAX = 0.15;
+const KCAL_POR_PASSO = 0.04;
+
+export function caloriaSaneada(bruta: number | null | undefined, passos: number): number {
+  const p = Math.max(0, passos);
+  if (p <= 0) return 0;
+  if (bruta != null && Number.isFinite(bruta) && bruta > 0) {
+    for (const fator of [1, 1 / 1000]) {
+      const kcal = bruta * fator;
+      const porPasso = kcal / p;
+      if (porPasso >= KCAL_POR_PASSO_MIN && porPasso <= KCAL_POR_PASSO_MAX) return kcal;
+    }
+  }
+  return p * KCAL_POR_PASSO;
+}
+
+/**
  * Funde as fatias da memória com o que já havia.
  *
  * Por hora fica o MAIOR dos dois: a memória tem grão de cinco minutos mas
@@ -40,7 +70,7 @@ export function comFatiasDaMemoria(
     const hora = new Date(a.at).getHours();
     if (hora < 0 || hora >= HORAS_DO_DIA) continue;
     daMemoria[hora].passos += Math.max(0, a.steps);
-    daMemoria[hora].kcal += Math.max(0, a.kcal ?? 0);
+    daMemoria[hora].kcal += caloriaSaneada(a.kcal, a.steps);
   }
   const base = normalizar(atuais);
   return daMemoria.map((f, i) => ({

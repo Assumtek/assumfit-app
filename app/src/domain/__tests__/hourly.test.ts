@@ -1,5 +1,6 @@
 import {
   acumuladoAteAgora,
+  caloriaSaneada,
   barrasDoDia,
   comDeltaNaHora,
   comFatiasDaMemoria,
@@ -46,9 +47,11 @@ describe('comFatiasDaMemoria', () => {
     expect(totalDoDia(f)).toEqual({ passos: 0, kcal: 0 });
   });
 
-  it('fatia sem calorias no firmware não vira NaN', () => {
+  it('fatia sem caloria do firmware ganha a estimativa pelo passo', () => {
+    // Zero seria dizer que andar cem passos não gasta nada. A estimativa é a
+    // mesma régua que o total do dia usa quando o aparelho não informa.
     const f = comFatiasDaMemoria(fatiasVazias(), [{ at: hoje(7), steps: 100 }]);
-    expect(f[7]).toEqual({ hora: 7, passos: 100, kcal: 0 });
+    expect(f[7]).toEqual({ hora: 7, passos: 100, kcal: 4 });
   });
 });
 
@@ -245,5 +248,31 @@ describe('acumuladoAteAgora com o total ancorado', () => {
     const f = comDeltaNaHora(fatiasVazias(), 7, 1000, 40);
     expect(acumuladoAteAgora(f, 8).at(-1)).toBe(1000);
     expect(acumuladoAteAgora(f, 8, null).at(-1)).toBe(1000);
+  });
+});
+
+describe('caloriaSaneada', () => {
+  it('kcal plausível passa direto', () => {
+    // 320 passos e 13 kcal: 0,04 por passo, exatamente o esperado.
+    expect(caloriaSaneada(13, 320)).toBe(13);
+  });
+
+  it('valor mil vezes maior é lido como cal, não como kcal', () => {
+    // Foi o que encheu o gráfico de movimento por hora com dezenas de milhares.
+    expect(caloriaSaneada(13000, 320)).toBe(13);
+  });
+
+  it('valor que não cabe em nenhuma unidade vira estimativa pelo passo', () => {
+    expect(caloriaSaneada(999999, 320)).toBe(320 * 0.04);
+    expect(caloriaSaneada(null, 320)).toBe(320 * 0.04);
+  });
+
+  it('fatia sem passo não gera caloria', () => {
+    expect(caloriaSaneada(50, 0)).toBe(0);
+  });
+
+  it('a fatia da memória entra saneada', () => {
+    const f = comFatiasDaMemoria(fatiasVazias(), [{ at: hoje(8), steps: 320, kcal: 13000 }]);
+    expect(f[8].kcal).toBe(13);
   });
 });
