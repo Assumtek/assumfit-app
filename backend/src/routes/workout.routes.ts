@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { AuthedRequest, requireAuth } from '../middleware/auth';
 import { asyncRoute } from '../middleware/error';
 import { badRequest, forbidden, notFound } from '../lib/errors';
-import { applyAdjustment, chatWithAgent } from '../services/workout/chat';
+import { applyAdjustment, chatWithAgent, historicoDoChat } from '../services/workout/chat';
 import {
   answerConversation,
   editAnswer,
@@ -416,24 +416,36 @@ workoutRoutes.post(
     res.json(result);
   }));
 
+/**
+ * A conversa com o personal, para a tela abrir de onde parou.
+ *
+ * Existe porque a conversa passou a viver na conta: sem esta rota, o app
+ * continuaria começando do zero a cada abertura, que é justamente o que se
+ * queria corrigir.
+ */
+workoutRoutes.get(
+  '/chat',
+  asyncRoute<AuthedRequest>(async (req, res) => {
+    const turnos = await historicoDoChat(req.userId);
+    res.json({ turnos });
+  }));
+
 workoutRoutes.post(
   '/chat',
   asyncRoute<AuthedRequest>(async (req, res) => {
-    const { message, history } = z
-      .object({
-        message: z.string().min(1).max(1000),
-        history: z
-          .array(
-            z.object({
-              role: z.enum(['user', 'assistant']),
-              content: z.string().max(2000),
-            }))
-          .max(40)
-          .default([]),
-      })
+    /*
+     O histórico NÃO vem mais do corpo da requisição.
+
+     A conversa é do servidor desde 24/08/2026: ela segue a conta em vez de
+     morrer com a tela, e o contexto que chega ao modelo deixa de ser o que o
+     aparelho disser que é. Campo antigo enviado por um app desatualizado é
+     simplesmente ignorado, sem quebrar a requisição.
+    */
+    const { message } = z
+      .object({ message: z.string().min(1).max(1000) })
       .parse(req.body ?? {});
 
-    const result = await chatWithAgent(req.userId, message, history);
+    const result = await chatWithAgent(req.userId, message);
     res.json({
       reply: result.reply,
       blocked: result.blocked,

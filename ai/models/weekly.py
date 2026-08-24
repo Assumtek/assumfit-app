@@ -13,7 +13,8 @@ import os
 from dataclasses import dataclass, field
 from models.texto import sem_travessao_em
 
-MODEL = "claude-haiku-4-5"
+#: Migrado para a OpenAI em 24/08/2026 (decisão da fundadora, "tudo GPT").
+MODEL = "gpt-4.1-mini"
 MAX_TOKENS = 900
 TIMEOUT_S = 15.0
 
@@ -96,26 +97,33 @@ def _prompt(f: WeeklyFacts) -> str:
 
 
 def write_weekly(facts: WeeklyFacts) -> dict | None:
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    if not os.environ.get("OPENAI_API_KEY"):
         return None
     try:
-        import anthropic
+        from openai import OpenAI
     except ImportError:
         return None
     try:
-        client = anthropic.Anthropic(timeout=TIMEOUT_S, max_retries=1)
-        response = client.messages.create(
+        client = OpenAI(timeout=TIMEOUT_S, max_retries=1)
+        response = client.chat.completions.create(
             model=MODEL,
             max_tokens=MAX_TOKENS,
-            system=SYSTEM,
-            output_config={"format": {"type": "json_schema", "schema": SCHEMA}},
-            messages=[{"role": "user", "content": _prompt(facts)}],
+            messages=[
+                {"role": "system", "content": SYSTEM},
+                {"role": "user", "content": _prompt(facts)},
+            ],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {"name": "weekly", "schema": SCHEMA, "strict": True},
+            },
         )
-        texto = "".join(b.text for b in response.content if getattr(b, "type", "") == "text")
+        texto = response.choices[0].message.content
+        if not texto:
+            return None
         dados = json.loads(texto)
         # Travessão se troca por vírgula, não custa o resumo inteiro: descartar
         # aqui era jogar fora um texto bom por um sinal de pontuação.
         return sem_travessao_em(dados)
     except Exception as err:  # noqa: BLE001
-        print(f"[weekly] anthropic falhou: {type(err).__name__}: {err}", flush=True)
+        print(f"[weekly] openai falhou: {type(err).__name__}: {err}", flush=True)
         return None

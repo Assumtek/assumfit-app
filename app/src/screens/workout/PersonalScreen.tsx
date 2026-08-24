@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../components/Icon';
 import { VoiceInput } from '../../components/VoiceInput';
 import { Body, BodyLarge, Button, Data, Label, MetricSm } from '../../components/ui';
-import { applyAdjustment, chatWithAgent, type ChatTurn } from '../../services/api.service';
+import { applyAdjustment, chatWithAgent, fetchChatHistory, type ChatTurn } from '../../services/api.service';
 import { darkPalette } from '../../theme/palette';
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -38,6 +38,26 @@ export function PersonalScreen() {
   const rolagem = useRef<ScrollView>(null);
 
   const [turnos, setTurnos] = useState<ChatTurn[]>([]);
+  const [carregandoConversa, setCarregandoConversa] = useState(true);
+  /*
+   A conversa abre de onde parou.
+
+   Ela vivia só nesta tela: fechar o app apagava tudo e a pessoa repetia
+   contexto que já tinha dado (fundadora, 24/08/2026). Agora ela mora no
+   servidor, e o que a tela faz é buscá-la. Falha de rede não trava a tela:
+   fica a conversa vazia, e a próxima mensagem funciona igual.
+  */
+  useEffect(() => {
+    let vivo = true;
+    fetchChatHistory()
+      .then((anteriores) => vivo && setTurnos(anteriores))
+      .catch(() => undefined)
+      .finally(() => vivo && setCarregandoConversa(false));
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
   /*
    Texto inicial vindo do check-in ("hoje tenho só 30 minutos"): a caixa já
    nasce com a frase, e a pessoa só confirma ou edita. Pedido de um testador
@@ -77,7 +97,7 @@ export function PersonalScreen() {
     setPensando(true);
 
     try {
-      const r = await chatWithAgent(pergunta, turnos);
+      const r = await chatWithAgent(pergunta);
       // A resposta entra DIGITANDO, como num chat de verdade (fundadora,
       // 23/08): a bolha cresce caractere a caractere e a proposta de ajuste
       // só aparece quando o texto terminou de chegar à tela.

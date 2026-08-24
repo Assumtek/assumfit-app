@@ -943,12 +943,20 @@ export async function applyAdjustment(adjustmentId: string): Promise<ApplyAdjust
   return data;
 }
 
-export async function chatWithAgent(message: string, history: ChatTurn[]): Promise<ChatReply> {
-  const { data } = await api.post<ChatReply>(
-    '/workout/chat',
-    { message, history },
-    { timeout: TETO_DO_AGENTE_MS });
+export async function chatWithAgent(message: string): Promise<ChatReply> {
+  /*
+   O histórico não vai mais junto: a conversa vive no servidor desde 24/08/2026,
+   e é ele que monta o contexto. Mandar daqui era pedir ao aparelho que
+   lembrasse por todo mundo, e a conversa morria ao fechar a tela.
+  */
+  const { data } = await api.post<ChatReply>('/workout/chat', { message });
   return data;
+}
+
+/** A conversa guardada, para a tela abrir de onde parou. */
+export async function fetchChatHistory(): Promise<ChatTurn[]> {
+  const { data } = await api.get<{ turnos: ChatTurn[] }>('/workout/chat');
+  return data.turnos ?? [];
 }
 
 export async function fetchExecutionDetail(id: string): Promise<ExecutionDetail> {

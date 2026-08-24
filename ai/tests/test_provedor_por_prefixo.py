@@ -51,3 +51,21 @@ def test_blocos_viram_texto():
     ]
     assert _texto(blocos) == "instruções\n\ncatálogo"
     assert _texto("já é texto") == "já é texto"
+
+
+def test_imagem_vira_data_uri_para_a_openai():
+    """A foto da refeição não pode sumir na conversão.
+
+    Ela chega no formato da Anthropic (`image` + `source` base64). Se o
+    conversor a descartasse, o modelo responderia sobre uma foto que nunca
+    viu, e o número que sai daí é o que a pessoa lê como caloria do prato.
+    """
+    from llm.openai_client import _partes
+
+    blocos = [
+        {"type": "text", "text": "o que tem no prato?"},
+        {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": "QUJD"}},
+    ]
+    partes = _partes(blocos)
+    assert partes[0] == {"type": "text", "text": "o que tem no prato?"}
+    assert partes[1]["image_url"]["url"] == "data:image/jpeg;base64,QUJD"

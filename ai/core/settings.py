@@ -57,18 +57,24 @@ class Settings(BaseModel):
     #: Avaliação do plano gerado. Mesmo modelo, papel diferente: o julgamento é
     #: sobre segurança clínica, e economizar aqui economiza justamente na
     #: barreira que existe para não entregar plano ruim.
-    llm_grader_model: str = "claude-haiku-4-5"
+    #: O avaliador clínico. Migrado para GPT-5 (não para o mini) em
+    #: 24/08/2026: ele é a rede que decide se um plano é seguro para quem tem
+    #: condição clínica, e economizar no juiz é economizar no lugar errado.
+    llm_grader_model: str = "gpt-5"
     #: O chat de ajuste responde CURTO mas carrega o catálogo inteiro na
     #: entrada — é a chamada mais frequente do produto. Haiku aqui corta o
     #: custo por mensagem pela metade, e as operações que ele propõe não são
     #: aplicadas automaticamente: o servidor ainda é quem decide.
-    llm_chat_model: str = "claude-haiku-4-5"
+    #: Chat do personal, extração e reescrita da fundamentação.
+    llm_chat_model: str = "gpt-4.1-mini"
     #: A análise de foto de prato tem modelo PRÓPRIO, um degrau acima do chat:
     #: identificar alimento e estimar porção é visão fina, onde o Haiku erra o
     #: que o Sonnet acerta — e a chamada é rara (uma por refeição fotografada),
     #: então o custo extra não pesa. Separado do chat para um ajuste não
     #: arrastar o outro.
-    nutrition_model: str = "claude-sonnet-5"
+    #: Foto de refeição: visão. GPT-5 e não o mini, porque o número que sai
+    #: daqui é o que a pessoa lê como caloria do prato.
+    nutrition_model: str = "gpt-5"
     #: Profundidade do raciocínio. Substitui o antigo orçamento de tokens de
     #: pensamento, que os modelos 5 rejeitam. `high` é o piso para trabalho
     #: sensível a acerto; abaixo disso a prescrição fica rasa.
@@ -141,9 +147,9 @@ def get_settings() -> Settings:
         anthropic_api_key=os.getenv("ANTHROPIC_API_KEY", ""),
         openai_api_key=os.getenv("OPENAI_API_KEY", ""),
         llm_main_model=os.getenv("LLM_MAIN_MODEL", "gpt-5"),
-        llm_grader_model=os.getenv("LLM_GRADER_MODEL", "claude-haiku-4-5"),
-        llm_chat_model=os.getenv("LLM_CHAT_MODEL", "claude-haiku-4-5"),
-        nutrition_model=os.getenv("NUTRITION_MODEL", "claude-sonnet-5"),
+        llm_grader_model=os.getenv("LLM_GRADER_MODEL", "gpt-5"),
+        llm_chat_model=os.getenv("LLM_CHAT_MODEL", "gpt-4.1-mini"),
+        nutrition_model=os.getenv("NUTRITION_MODEL", "gpt-5"),
         llm_effort=os.getenv("LLM_EFFORT", "high"),
         llm_max_tokens=_env_int("LLM_MAX_TOKENS", 32768),
         grader_enabled=_env_bool("GRADER_ENABLED", True),

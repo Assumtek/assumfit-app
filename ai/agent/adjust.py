@@ -249,10 +249,23 @@ def _load_adjust_template() -> str:
 
 
 def _catalog_text(inp: WorkoutAdjustInput) -> str:
-    catalog = json.dumps(
-        [e.model_dump() for e in inp.allowed_exercises], ensure_ascii=False, indent=2
-    )
-    return "# Catalogo permitido (use SOMENTE estes exercicios, por id)\n" + catalog
+    """O catálogo em LINHA, não em JSON indentado.
+
+    O mesmo conteúdo custava 42.262 tokens por mensagem em JSON com indentação;
+    em linha custa 25.878, e o modelo lê igual. A geração foi além e tirou os
+    ids (12.580 tokens), mas aqui eles ficam: as operações do chat referenciam
+    exercícios do PLANO ATUAL por id, e trocar isso mexe no que o backend
+    aplica no banco. Uma coisa de cada vez.
+    """
+    linhas = [
+        "# Catalogo permitido (use SOMENTE estes exercicios, pelo id)",
+        "# formato: id | nome | grupo muscular | equipamento | nivel",
+    ]
+    for e in inp.allowed_exercises:
+        linhas.append(
+            f"{e.id} | {e.name} | {e.muscle_group or '-'} | {e.equipment or '-'} | {e.level or '-'}"
+        )
+    return "\n".join(linhas)
 
 
 def build_adjust_system(inp: WorkoutAdjustInput) -> list[dict]:

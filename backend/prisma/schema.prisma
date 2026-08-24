@@ -156,6 +156,7 @@ model User {
   anamnesisConversations AnamnesisConversation[]
 
   @@map("users")
+  planChatMessages PlanChatMessage[]
 }
 
 /// Consentimento por finalidade, versionado. Sem isso não há base legal para
@@ -892,6 +893,34 @@ model PlanAdjustment {
   @@index([userId, createdAt])
   @@index([planId, status])
   @@map("plan_adjustments")
+}
+
+/// Uma mensagem da conversa com o personal.
+///
+/// A conversa vivia SÓ na tela: fechou o app, recomeçava do zero, e era o
+/// cliente que devolvia o histórico a cada pedido. Duas consequências, e as
+/// duas foram corrigidas juntas (fundadora, 24/08/2026, "o chat deveria ser
+/// contínuo, como uma conversa"): a pessoa repetia contexto que já tinha dado,
+/// e o histórico que chegava ao modelo vinha do aparelho, isto é, podia ser
+/// forjado por quem quisesse escrever o próprio contexto.
+///
+/// Guardar aqui resolve os dois: a conversa segue a CONTA (troca de aparelho e
+/// continua), e o contexto do modelo passa a ser montado pelo servidor.
+model PlanChatMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  /// "user" ou "assistant", como o modelo espera.
+  role      String
+  content   String
+  /// A proposta que esta resposta gerou, quando gerou: é o que permite a tela
+  /// remontar a conversa com o botão de confirmar no lugar certo.
+  adjustmentId String? @map("adjustment_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("plan_chat_messages")
 }
 
 enum PlanAdjustmentStatus {

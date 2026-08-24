@@ -19,7 +19,9 @@ import os
 from dataclasses import dataclass
 from models.texto import sem_travessao
 
-MODEL = "claude-haiku-4-5"
+#: Migrado para a OpenAI em 24/08/2026 (decisão da fundadora, "tudo GPT").
+#: O mini basta para duas frases com número dado, e custa um terço do Haiku.
+MODEL = "gpt-4.1-mini"
 MAX_TOKENS = 400
 TIMEOUT_S = 12.0
 
@@ -159,30 +161,35 @@ def _numeros(texto: str) -> set[str]:
 def write_morning(facts: MorningFacts) -> dict | None:
     """Redige a saudação. Sem modelo, devolve None: texto pronto de reserva não
     entra (decisão da fundadora, 22/08/2026); a manhã fica em silêncio."""
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    if not os.environ.get("OPENAI_API_KEY"):
         return None
 
     try:
-        import anthropic
+        from openai import OpenAI
     except ImportError:
         return None
 
     try:
-        client = anthropic.Anthropic(timeout=TIMEOUT_S, max_retries=1)
-        response = client.messages.create(
+        client = OpenAI(timeout=TIMEOUT_S, max_retries=1)
+        response = client.chat.completions.create(
             model=MODEL,
             max_tokens=MAX_TOKENS,
-            system=SYSTEM,
-            # Sem `thinking` e sem `effort`: o Haiku 4.5 rejeita `effort` com
-            # 400 (visto em produção, ago/2026) e omitir `thinking` já
-            # significa "sem thinking" nesta geração.
-            output_config={"format": {"type": "json_schema", "schema": SCHEMA}},
-            messages=[{"role": "user", "content": _prompt(facts)}],
+            messages=[
+                {"role": "system", "content": SYSTEM},
+                {"role": "user", "content": _prompt(facts)},
+            ],
+            # `strict` prende a FORMA da resposta ao esquema; o conteúdo
+            # continua passando por `_valido`, que é quem barra número
+            # inventado.
+            response_format={
+                "type": "json_schema",
+                "json_schema": {"name": "morning", "schema": SCHEMA, "strict": True},
+            },
         )
-        if response.stop_reason == "refusal":
+        escolha = response.choices[0]
+        if escolha.finish_reason == "content_filter":
             return None
-
-        texto = next((b.text for b in response.content if b.type == "text"), None)
+        texto = escolha.message.content
         if not texto:
             return None
         dados = json.loads(texto)

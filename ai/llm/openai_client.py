@@ -40,12 +40,40 @@ def get_client() -> AsyncOpenAI:
 
 
 def _texto(conteudo) -> str:
-    """Blocos do formato Anthropic viram um texto só."""
+    """Blocos de TEXTO do formato Anthropic viram um texto só."""
     if isinstance(conteudo, str):
         return conteudo
     return "\n\n".join(
         b.get("text", "") for b in conteudo if isinstance(b, dict) and b.get("type") == "text"
     )
+
+
+def _partes(conteudo) -> list[dict] | str:
+    """Converte blocos, incluindo IMAGEM, para o formato de partes da OpenAI.
+
+    A foto da refeição vem como bloco `{"type": "image", "source": {"type":
+    "base64", ...}}`, que é a forma da Anthropic. Aqui ela vira `image_url`
+    com data URI. Sem isto, a imagem sumiria em silêncio e o modelo receberia
+    só o texto, respondendo sobre uma foto que nunca viu: o pior desfecho
+    possível para uma tela que mostra caloria.
+    """
+    if isinstance(conteudo, str):
+        return conteudo
+    partes: list[dict] = []
+    for b in conteudo:
+        if not isinstance(b, dict):
+            continue
+        if b.get("type") == "text":
+            partes.append({"type": "text", "text": b.get("text", "")})
+        elif b.get("type") == "image":
+            fonte = b.get("source") or {}
+            if fonte.get("type") == "base64":
+                media = fonte.get("media_type", "image/jpeg")
+                dados = fonte.get("data", "")
+                partes.append(
+                    {"type": "image_url", "image_url": {"url": f"data:{media};base64,{dados}"}}
+                )
+    return partes
 
 
 async def complete(
@@ -61,7 +89,7 @@ async def complete(
         "max_completion_tokens": max_tokens,
         "messages": [
             {"role": "system", "content": _texto(system)},
-            {"role": "user", "content": _texto(user)},
+            {"role": "user", "content": _partes(user)},
         ],
     }
     if model.startswith(_COM_RACIOCINIO):

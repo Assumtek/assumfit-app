@@ -37,14 +37,29 @@ export type ChatResult = AgentAdjustResult & {
   adjustmentId: string | null;
 };
 
-/** Quantos turnos anteriores viajam junto. */
+/**
+ * Quantos turnos anteriores viajam junto no prompt.
+ *
+ * A conversa INTEIRA fica guardada; o que entra no prompt é uma janela. Mandar
+ * tudo estouraria o contexto numa conversa longa, e as mensagens de semanas
+ * atrás dizem menos sobre o plano de hoje que as últimas.
+ */
 const HISTORY_LIMIT = 12;
 
-export async function chatWithAgent(
-  userId: string,
-  message: string,
-  history: ChatTurn[],
-): Promise<ChatResult> {
+/** A conversa desta pessoa, do mais antigo para o mais novo. */
+export async function historicoDoChat(userId: string, limite = 60): Promise<ChatTurn[]> {
+  const linhas = await prisma.planChatMessage.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    take: limite,
+    select: { role: true, content: true },
+  });
+  return linhas
+    .reverse()
+    .map((l) => ({ role: l.role === 'assistant' ? 'assistant' : 'user', content: l.content }));
+}
+
+export async function chatWithAgent(userId: string, message: string): Promise<ChatResult> {
   const consent = await prisma.consent.findFirst({
     where: { userId, purpose: 'workout_generation', revokedAt: null },
   });
@@ -124,6 +139,16 @@ export async function chatWithAgent(
     dia_da_semana: DIAS_PT[agoraLocal.getUTCDay()],
   };
 
+  /*
+   O histórico vem do BANCO, não do aparelho.
+
+   Antes o cliente devolvia a conversa a cada pedido: fechou o app, o personal
+   esquecia tudo, e o contexto que chegava ao modelo era o que o aparelho
+   dissesse que era. Agora a conversa segue a conta, e quem a monta é quem
+   também guarda as travas clínicas.
+  */
+  const history = await historicoDoChat(userId);
+
   const resultado = await adjust({
     message,
     today: hoje,
@@ -139,6 +164,19 @@ export async function chatWithAgent(
   });
 
   const adjustmentId = await guardarProposta(userId, plan.id, message, resultado);
+
+  /*
+   A conversa é gravada DEPOIS da resposta, as duas de uma vez: gravar a
+   pergunta antes deixaria uma mensagem órfã na tela quando o modelo falhasse,
+   e a pessoa veria a própria fala sem resposta nenhuma ao reabrir.
+  */
+  await prisma.planChatMessage.createMany({
+    data: [
+      { userId, role: 'user', content: message },
+      { userId, role: 'assistant', content: resultado.reply, adjustmentId },
+    ],
+  });
+
   return { ...resultado, adjustmentId };
 }
 
