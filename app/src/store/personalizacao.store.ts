@@ -121,6 +121,11 @@ export const usePersonalizacaoStore = create<State>((set, get) => ({
         body: `Você costuma treinar por volta das ${treino.replace(':', 'h')}. O de hoje está pronto.`,
         route: 'Plan',
       });
+    } else {
+      // Deixou de haver hábito (ou nunca houve, e a versão anterior inventou um):
+      // o que já está agendado no aparelho precisa SAIR. Sem isto, um horário
+      // errado continua tocando por dias depois de o app parar de acreditar nele.
+      await cancelPrefix(TREINO);
     }
     if (cama) {
       await scheduleDailyAt(CAMA, menosMinutos(cama, 30), {
@@ -128,6 +133,8 @@ export const usePersonalizacaoStore = create<State>((set, get) => ({
         body: 'Baixar a luz e largar a tela agora é o que mais pesa no sono profundo.',
         route: 'Sleep',
       });
+    } else {
+      await cancelPrefix(CAMA);
     }
 
     // Relatório da semana de sono — domingo à noite, com os números da semana.

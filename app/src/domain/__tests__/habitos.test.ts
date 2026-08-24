@@ -3,7 +3,7 @@ import { horarioTipico, horariosDeRefeicao, lugaresFrequentes, menosMinutos } fr
 const as = (h: number, m = 0, dia = 1) => new Date(2026, 7, dia, h, m).getTime();
 
 describe('horário típico', () => {
-  it('é a mediana, arredondada ao quarto de hora', () => {
+  it('é o meio do grupo que se repete, arredondado ao quarto de hora', () => {
     expect(horarioTipico([as(12, 20, 1), as(12, 35, 2), as(12, 25, 3), as(13, 50, 4), as(12, 22, 5)])).toBe('12:30');
   });
 
@@ -13,6 +13,25 @@ describe('horário típico', () => {
 
   it('um jantar tardio não arrasta o horário', () => {
     expect(horarioTipico([as(19, 30), as(19, 40), as(19, 25), as(19, 35), as(23, 30)])).toBe('19:30');
+  });
+
+  it('três ocorrências espalhadas não são um hábito', () => {
+    // O relato do Bruno, com os instantes que o banco de produção mostrou:
+    // esporte às 09:44, treino às 15:35, treino às 20:30. A mediana da lista
+    // dava 15:35, e o app afirmava "você costuma treinar por volta das 15h30"
+    // a quem nunca repetiu horário nenhum. Agora não afirma nada.
+    expect(horarioTipico([as(9, 44, 1), as(15, 35, 2), as(20, 30, 3)])).toBeNull();
+  });
+
+  it('não basta o grupo existir, ele precisa ser a maioria das vezes', () => {
+    const tres = [as(7, 0, 1), as(7, 10, 2), as(7, 5, 3)];
+    const outras = [as(12, 0, 4), as(16, 0, 5), as(20, 0, 6), as(22, 0, 7)];
+    expect(horarioTipico(tres)).toBe('07:00');
+    expect(horarioTipico([...tres, ...outras])).toBeNull();
+  });
+
+  it('atravessa a meia-noite: 23h50 e 00h10 são o mesmo horário', () => {
+    expect(horarioTipico([as(23, 50, 1), as(0, 10, 2), as(0, 0, 3)])).toBe('00:00');
   });
 });
 

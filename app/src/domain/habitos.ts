@@ -1,13 +1,15 @@
 /**
- * O que o USO ensina sobre a pessoa — horários e lugares que se repetem.
+ * O que o USO ensina sobre a pessoa: horários e lugares que se repetem.
  *
  * Pedido de dois testadores (ago/2026): "aprender com os hábitos de uso e
- * mandar notificações personalizadas — horário das refeições, do treino, de
+ * mandar notificações personalizadas: horário das refeições, do treino, de
  * ir para a cama", e "reconhecer pelo GPS quando chega no lugar do treino e
- * lembrar do check-in". Tudo aqui é estatística pequena e legível: mediana de
- * horários, agrupamento por proximidade. Nada é inferido com menos de três
- * ocorrências — duas vezes é coincidência, e lembrete baseado em coincidência
- * é ruído que ensina a ignorar o app.
+ * lembrar do check-in". Tudo aqui é estatística pequena e legível: horários
+ * que se concentram, lugares que se repetem. Nada é inferido com menos de três
+ * ocorrências (duas vezes é coincidência), e nada é inferido de ocorrências
+ * espalhadas: lembrete baseado em coincidência é ruído que ensina a ignorar o
+ * app, e horário que a pessoa não reconhece como dela é pior, porque ele diz
+ * uma inverdade sobre ela.
  *
  * Domínio puro: recebe instantes e pontos, devolve horários e lugares.
  */
@@ -25,22 +27,57 @@ const minutosDoDia = (ms: number) => {
   return d.getHours() * 60 + d.getMinutes();
 };
 
-/** Arredonda para o quarto de hora mais próximo — lembrete às 12:23 soa aleatório; 12:30, intencional. */
+/** Arredonda para o quarto de hora mais próximo: 12:23 soa aleatório; 12:30, intencional. */
 function aoQuartoDeHora(min: number): string {
   const m = Math.round(min / 15) * 15;
   const h = Math.floor(m / 60) % 24;
   return `${String(h).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 }
 
+/** Raio da janela que ainda conta como "o mesmo horário". */
+export const RAIO_DO_HABITO_MIN = 90;
+
+/** Diferença entre dois minutos do dia pelo caminho mais curto do relógio. */
+function distanciaCircular(a: number, b: number): number {
+  const d = Math.abs(a - b) % 1440;
+  return Math.min(d, 1440 - d);
+}
+
 /**
- * O horário típico de uma lista de instantes: a MEDIANA dos minutos do dia.
- * Mediana e não média — um jantar às 23h numa semana não arrasta o lembrete
- * das 19h30. `null` sem ocorrências suficientes.
+ * O horário típico de uma lista de instantes.
+ *
+ * NÃO é a mediana da lista inteira, e a diferença é o produto todo. A mediana
+ * de 09:44, 15:35 e 20:30 é 15:35, e o app dizia "você COSTUMA treinar por
+ * volta das 15h30" a quem treinou uma vez de manhã, uma à tarde e uma à noite.
+ * Um testador respondeu, com razão: "esse horário é uma inverdade" (Bruno,
+ * ago/2026, três execuções em trinta dias espalhadas por onze horas).
+ *
+ * O que se procura é CONCENTRAÇÃO, não meio. Cada ocorrência é candidata a
+ * âncora, e vence a que reúne mais vizinhos dentro de `RAIO_DO_HABITO_MIN` no
+ * relógio (circular: 23h50 e 00h10 são vizinhos). O grupo vencedor só vira
+ * horário se tiver o mínimo de ocorrências E for MAIORIA das vezes: se metade
+ * das vezes a pessoa faz aquilo em outra hora, não há hábito para lembrar.
+ * O valor devolvido é a mediana DO GRUPO, não a da lista.
  */
-export function horarioTipico(instantes: number[]): string | null {
+export function horarioTipico(instantes: number[], raioMin = RAIO_DO_HABITO_MIN): string | null {
   if (instantes.length < MINIMO_DE_OCORRENCIAS) return null;
-  const mins = instantes.map(minutosDoDia).sort((a, b) => a - b);
-  return aoQuartoDeHora(mins[Math.floor(mins.length / 2)]);
+  const mins = instantes.map(minutosDoDia);
+
+  let melhor: number[] = [];
+  for (const ancora of mins) {
+    // Desenrolado em torno da âncora: 23h50 vira -10 quando a âncora é 00h05.
+    const grupo = mins
+      .filter((m) => distanciaCircular(m, ancora) <= raioMin)
+      .map((m) => ancora + ((((m - ancora) % 1440) + 2160) % 1440 - 720));
+    if (grupo.length > melhor.length) melhor = grupo;
+  }
+
+  if (melhor.length < MINIMO_DE_OCORRENCIAS) return null;
+  if (melhor.length * 2 <= mins.length) return null;
+
+  const ordenado = melhor.sort((a, b) => a - b);
+  const mediana = ordenado[Math.floor(ordenado.length / 2)];
+  return aoQuartoDeHora(((mediana % 1440) + 1440) % 1440);
 }
 
 /** As faixas do dia em que uma refeição cai. */
@@ -57,8 +94,8 @@ export function faixaDaRefeicao(ms: number): Refeicao {
 /**
  * Os horários típicos de refeição, um por faixa que se repete.
  *
- * Agrupar por faixa antes de tirar a mediana evita a mediana do dia inteiro —
- * que cairia no meio da tarde, hora em que ninguém come.
+ * Agrupar por faixa antes de procurar o horário evita o horário do dia
+ * inteiro, que cairia no meio da tarde, hora em que ninguém come.
  */
 export function horariosDeRefeicao(instantes: number[]): string[] {
   const porFaixa = new Map<Refeicao, number[]>();
@@ -83,7 +120,7 @@ export function menosMinutos(hora: string, minutos: number): string {
 
 export type Lugar = { lat: number; lon: number; vezes: number };
 
-/** Distância aproximada em metros — bastante para "é o mesmo lugar". */
+/** Distância aproximada em metros, bastante para "é o mesmo lugar". */
 function metrosEntre(a: { lat: number; lon: number }, b: { lat: number; lon: number }): number {
   const dLat = (b.lat - a.lat) * 111_195;
   const dLon = (b.lon - a.lon) * 111_195 * Math.cos((a.lat * Math.PI) / 180);
@@ -95,7 +132,7 @@ function metrosEntre(a: { lat: number; lon: number }, b: { lat: number; lon: num
  *
  * Agrupamento guloso por proximidade: cada ponto entra no primeiro grupo a
  * menos de `raioM`, ou abre um novo. O centro é a média dos pontos do grupo.
- * Só volta o que se repete — e os mais frequentes primeiro.
+ * Só volta o que se repete, e os mais frequentes primeiro.
  */
 export function lugaresFrequentes(
   pontos: { lat: number; lon: number }[],
