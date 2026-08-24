@@ -1424,6 +1424,18 @@
       "nota": "A pulseira parou de REGISTRAR, e o app não tinha como te contar. Comparando as grandezas no servidor: batimento, oxigênio e estresse zeraram todos juntos na sua conta em 22/08 à noite, e só os passos continuaram chegando (passos vêm do acelerômetro, o resto depende de um agendamento no firmware que estava desligado). Sem batimento gravado não há noite para fechar, e era esse o buraco. Agora o app confere esse agendamento todo dia na sincronização, e não só quando reconecta, mostra na tela do aparelho o que a pulseira está registrando e o que parou, e tem um botão para religar. O botão de buscar noite também parou de dizer 'Noite atualizada' quando o que veio é de dias atrás. Uma pergunta que ajuda a fechar: o app do fabricante (QRing) mostra as noites de 22 para 23 e de 23 para 24?",
       "versao": "1.0.6 (1)",
       "em": "2026-08-24T15:35:34"
+    },
+    "AO3OeJIXlsSzlknVfZXCK8c": {
+      "commit": "35bc32a",
+      "nota": "Implementado. A tela Meu projeto agora abre com o prazo (em que semana das quantas você está, com régua, quantos dias faltam para a revisão do plano e o que acontece nela) e com uma seção 'onde isto vai dar': o seu objetivo declarado, o que a estrutura do plano faz por ele, e marcos que dá para conferir, sessões a fechar até a data, constância, carga maior no fim do que no começo. Os marcos são de processo e não de corpo, de propósito: o app não é dispositivo médico e não pode prometer resultado, então ele afirma o que consegue medir e você consegue controlar. Foi exatamente o seu ponto sobre o hábito ser o obstáculo necessário.",
+      "versao": "1.0.6 (1)",
+      "em": "2026-08-24T15:39:43"
+    },
+    "ALgYZtFCDR1B6L_REWhCjzs": {
+      "commit": "99a21b0",
+      "nota": "A pulseira parou de REGISTRAR, e o app não tinha como te contar. Comparando as grandezas no servidor: batimento, oxigênio e estresse zeraram todos juntos na sua conta em 22/08 à noite, e só os passos continuaram chegando (passos vêm do acelerômetro; o resto depende de um agendamento no firmware que estava desligado). Sem batimento gravado não há noite para fechar, e era esse o buraco. Agora o app confere esse agendamento todo dia na sincronização, e não só quando reconecta, mostra na tela do aparelho o que a pulseira está registrando e o que parou, com botão para religar. O botão de buscar noite também parou de dizer 'Noite atualizada' quando o que veio é de dias atrás. Uma pergunta que fecha o diagnóstico: o app do fabricante (QRing) mostra as noites de 22 para 23 e de 23 para 24?",
+      "versao": "1.0.6 (1)",
+      "em": "2026-08-24T15:40:37"
     }
   }
 }
