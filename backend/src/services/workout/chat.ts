@@ -105,8 +105,28 @@ export async function chatWithAgent(
   */
   const semana = await weekFeedback(userId);
 
+  /*
+   O DIA DE HOJE vai explícito.
+
+   O agente é sem estado e não tem relógio: pedimos "uma recomendação pontual
+   para hoje" e ele respondeu "qual dia é hoje?" para a pessoa (Leonardo,
+   24/08/2026). Quem sabe o fuso dela é o servidor, e o plano é organizado por
+   dia da semana, então mandamos os dois: a data e o nome do dia.
+  */
+  const usuario = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { tzOffsetMin: true },
+  });
+  const agoraLocal = new Date(Date.now() + (usuario?.tzOffsetMin ?? -180) * 60_000);
+  const DIAS_PT = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+  const hoje = {
+    data: agoraLocal.toISOString().slice(0, 10),
+    dia_da_semana: DIAS_PT[agoraLocal.getUTCDay()],
+  };
+
   const resultado = await adjust({
     message,
+    today: hoje,
     week_feedback: semana,
     // Os mais RECENTES, e não os primeiros: a conversa que importa é a que
     // acabou de acontecer, e mandar o histórico inteiro estoura a janela.

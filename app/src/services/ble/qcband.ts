@@ -828,11 +828,40 @@ export class QCBandService implements BleService {
        59 minutos do primeiro bloco. Quem junta os blocos é o domínio
        (`montarNoites`); aqui só se recolhe tudo e se entrega a mais recente.
       */
+      /*
+       Falha e vazio são coisas diferentes, e o `.catch(() => [])` de antes
+       apagava a diferença: a consulta que NÃO respondeu virava lista vazia, e
+       a tela dizia "a pulseira não tem noite mais recente" com a mesma
+       confiança de quem perguntou e ouviu não (Bruno, 24/08/2026, com o botão
+       novo já instalado). Num app de saúde, afirmar ausência a partir de erro
+       é o mesmo defeito de tratar sinal ausente como zero.
+
+       Se TODAS as consultas falharem, isto rejeita, e quem chamou diz que não
+       conseguiu perguntar. Uma que responda já é resposta.
+      */
       const bruto: SegmentoBruto[] = [];
+      let falhas = 0;
       for (const dia of [1, 0]) {
-        const doDia = await comTeto(QCBand.getSleep(dia), TETO_CONSULTA_MS, 'sono').catch(() => []);
+        const doDia = await comTeto(QCBand.getSleep(dia), TETO_CONSULTA_MS, 'sono').catch(() => {
+          falhas += 1;
+          return [] as SegmentoBruto[];
+        });
         if (__DEV__) console.log(`[qcband] sono do dia ${dia}: ${doDia.length} segmentos`);
         bruto.push(...doDia);
+      }
+      if (falhas === 2) throw new Error('A pulseira não respondeu à consulta de sono');
+      /*
+       Porta antiga vazia não quer dizer noite inexistente: esta pulseira
+       declara `newSleepProtocol`, e o protocolo novo (V2) tem a própria porta.
+       Só se pergunta por ela quando a primeira não trouxe nada, para não
+       gastar o canal serial em duplicidade.
+      */
+      if (bruto.length === 0 && QCBand.getSleepV2) {
+        const v2 = await comTeto(QCBand.getSleepV2(1), TETO_CONSULTA_MS, 'sono v2').catch(
+          () => [] as SegmentoBruto[],
+        );
+        if (__DEV__) console.log(`[qcband] sono v2: ${v2.length} segmentos`);
+        bruto.push(...v2);
       }
       return noitesDoBruto(bruto)[0] ?? null;
     } finally {
@@ -863,10 +892,25 @@ export class QCBandService implements BleService {
     // Recolhe os sete dias e monta as noites de uma vez: noite que cruza a
     // fronteira de "dia" do firmware (levantada na madrugada) sai inteira.
     const bruto: SegmentoBruto[] = [];
+    let falhas = 0;
     for (let dia = 0; dia <= 6; dia++) {
       this.setActivity({ kind: 'sync', step: 'memory', done: dia + 1, total: 7 });
-      const doDia = await comTeto(QCBand.getSleep(dia), TETO_CONSULTA_MS, 'sono').catch(() => []);
+      const doDia = await comTeto(QCBand.getSleep(dia), TETO_CONSULTA_MS, 'sono').catch(() => {
+        falhas += 1;
+        return [] as SegmentoBruto[];
+      });
       bruto.push(...doDia);
+    }
+    // Sete consultas mudas é aparelho fora de alcance, não sete noites em
+    // claro: quem chamou precisa saber a diferença.
+    if (falhas === 7) throw new Error('A pulseira não respondeu à memória de sono');
+    // A memória inteira pela porta nova, quando a antiga veio vazia.
+    if (bruto.length === 0 && QCBand.getSleepV2) {
+      const v2 = await comTeto(QCBand.getSleepV2(6), TETO_CONSULTA_MS, 'sono v2').catch(
+        () => [] as SegmentoBruto[],
+      );
+      if (__DEV__) console.log(`[qcband] memória de sono v2: ${v2.length} segmentos`);
+      bruto.push(...v2);
     }
     const noites = noitesDoBruto(bruto);
     if (__DEV__) console.log(`[qcband] noites na memória: ${noites.length}`);

@@ -1475,6 +1475,40 @@ public class QCBandModule: Module {
       })
     }
 
+    /**
+     Sono pelo protocolo NOVO (V2), que devolve vários dias de uma vez.
+
+     A pulseira declara `QCBandFeatureNewSleepProtocol` desde o primeiro
+     pareamento, e nós consultávamos só pela porta antiga
+     (`getSleepDetailDataByDay`). Um testador ficou três dias sem noite nova
+     enquanto o app afirmava, com o botão de buscar na mão, que a pulseira não
+     tinha nada (Bruno, 24/08/2026): perguntar pela porta errada devolve vazio
+     do mesmo jeito que não ter dado.
+
+     O dicionário vem com o dia como chave; achatamos tudo, porque cada
+     segmento carrega o próprio carimbo e quem monta as noites é o domínio.
+     */
+    AsyncFunction("getSleepV2") { (dayIndex: Int, promise: Promise) in
+      QCSDKCmdCreator.getSleepDetailDataV2(byDay: dayIndex, sleepDatas: { porDia in
+        var segmentos: [[String: Any]] = []
+        for (_, modelos) in porDia {
+          for m in modelos {
+            let tipo: Int = m.type.rawValue
+            guard tipo >= 1, tipo <= 4, m.total > 0 else { continue }
+            segmentos.append([
+              "type": tipo,
+              "minutes": m.total,
+              "start": m.happenDate,
+              "end": m.endTime,
+            ])
+          }
+        }
+        promise.resolve(segmentos)
+      }, fail: {
+        promise.reject("falha", "A pulseira não respondeu à consulta de sono (v2)")
+      })
+    }
+
     AsyncFunction("getBattery") { (promise: Promise) in
       QCSDKCmdCreator.readBatterySuccess({ battery, charging in
         let level: Int = Int(battery)

@@ -35,3 +35,14 @@ def test_mensagem_e_plano_continuam_no_payload():
     texto = build_adjust_user(entrada(week_feedback="algo"))[0]["text"]
     assert "current_plan" in texto
     assert "revisa meu treino" in texto
+
+
+def test_o_dia_de_hoje_entra_no_payload():
+    # Sem isto o agente pergunta que dia é hoje a quem pediu treino para hoje.
+    texto = build_adjust_user(entrada(today={"data": "2026-08-24", "dia_da_semana": "segunda"}))[0]["text"]
+    assert "today" in texto
+    assert "segunda" in texto
+
+
+def test_sem_dia_a_chave_nao_aparece():
+    assert "today" not in build_adjust_user(entrada())[0]["text"]

@@ -1527,7 +1527,9 @@ export async function buscarNoiteSeVencida(): Promise<void> {
 export type ResultadoDaBuscaDeNoite =
   | { estado: 'sem-pulseira' }
   | { estado: 'nova'; noite: SleepNight }
-  | { estado: 'sem-novidade'; noiteNaMemoria: SleepNight | null };
+  | { estado: 'sem-novidade'; noiteNaMemoria: SleepNight | null }
+  /** Perguntamos e a pulseira não respondeu. Não é o mesmo que não ter noite. */
+  | { estado: 'nao-respondeu' };
 
 export async function buscarNoiteAgora(): Promise<ResultadoDaBuscaDeNoite> {
   const st = useBiometricStore.getState();
@@ -1537,7 +1539,17 @@ export async function buscarNoiteAgora(): Promise<ResultadoDaBuscaDeNoite> {
   sonoRetroativoDoDia = null; // o botão fura o portão do dia, é para isso que ele existe
   const antes = st.sleep;
 
-  const nova = await comTeto(ble.fetchSleep(), TETO_SONO_MS, 'sono da pulseira').catch(() => null);
+  /*
+   `null` aqui é "consultei e não há"; a exceção é "não consegui consultar". A
+   tela precisa dos dois, porque dizer "a pulseira não tem noite" quando a
+   pergunta nem chegou é afirmar ausência a partir de erro.
+  */
+  let nova: SleepNight | null = null;
+  try {
+    nova = await comTeto(ble.fetchSleep(), TETO_SONO_MS, 'sono da pulseira');
+  } catch {
+    return { estado: 'nao-respondeu' };
+  }
   if (nova && (!antes || nova.date > antes.date)) {
     useBiometricStore.setState({
       sleep: comOxigenioDaNoite({ ...nova, source: 'band' }, useBiometricStore.getState().spo2History),

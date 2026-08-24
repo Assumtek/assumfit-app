@@ -5,12 +5,13 @@ import React, { useEffect, useState } from 'react';
 import { EmptyMetric } from '../components/BandStatus';
 import { Row, Section } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
+import { LinkParaAjuda } from '../components/LinkParaAjuda';
 import { MeasuredAt } from '../components/MeasuredAt';
 import { MeasureButton } from '../components/MeasureButton';
 import { ScatterPlot } from '../components/charts/ScatterPlot';
 import { Body, Data, Display, Headline, Metric, RatingText } from '../components/ui';
 import { nomeDoPeriodo, PeriodTabs, PERIODOS } from '../components/PeriodTabs';
-import { pressureZones, ratePressure } from '../domain/ratings';
+import { pressureZones, quemPuxaAPressao, ratePressure } from '../domain/ratings';
 import * as api from '../services/api.service';
 import { useBiometricStore } from '../store/biometric.store';
 
@@ -60,6 +61,7 @@ export function PressureScreen() {
     );
 
   const rating = ratePressure(latest.bpSystolic, latest.bpDiastolic);
+  const explicacao = quemPuxaAPressao(latest.bpSystolic, latest.bpDiastolic);
 
   return (
     <DetailScreen title="Pressão arterial">
@@ -88,6 +90,11 @@ export function PressureScreen() {
         >
           {rating.label}
         </RatingText>
+        {/*
+          Qual dos dois números decidiu a faixa. Sem isto, 117 por 85 aparece
+          como "Elevada" e a pessoa olha o 117, que é ótimo, sem entender.
+        */}
+        {explicacao ? <Body marginTop="$sm">{explicacao}</Body> : null}
       </YStack>
 
       <Section label={`Sistólica × diastólica · ${nomeDoPeriodo(periodo).toLowerCase()}`}>
@@ -126,6 +133,7 @@ export function PressureScreen() {
           Sistólica e diastólica não são duas séries: são um par, e o diagnóstico depende da
           combinação. Por isso o plano cartesiano, e não duas linhas lado a lado.
         </Data>
+        <LinkParaAjuda />
       </Section>
 
       <Section label="Faixas de referência">

@@ -223,6 +223,34 @@ export function ratePressure(sys: number | null, dia: number | null): Rating & {
   };
 }
 
+/**
+ * Qual dos dois números puxou a classificação.
+ *
+ * 117 por 85 aparece como "Elevada" e a pessoa olha o 117, que está na faixa
+ * ótima, e não entende (Leonardo, 24/08/2026: "essa pressão seria considerada
+ * alta?"). A classificação é do PAR, e quando um dos dois está numa faixa pior
+ * que o outro é ele quem decide: dizer isso não é diagnóstico, é explicar a
+ * conta que a própria tela fez.
+ *
+ * Devolve `null` quando os dois estão na mesma faixa, porque aí não há o que
+ * desempatar e a frase seria ruído.
+ */
+export function quemPuxaAPressao(sys: number | null, dia: number | null): string | null {
+  if (sys == null || dia == null) return null;
+  const faixaDe = (s: number, d: number) =>
+    pressureZones.findIndex((z) => z.matches(s, d));
+  // Cada número julgado sozinho, com o outro num valor que não interfere.
+  const soSistolica = faixaDe(sys, 70);
+  const soDiastolica = faixaDe(100, dia);
+  if (soSistolica === soDiastolica) return null;
+  const pior = soSistolica > soDiastolica ? 'sistólica' : 'diastólica';
+  const melhor = pior === 'sistólica' ? 'diastólica' : 'sistólica';
+  const valorPior = pior === 'sistólica' ? sys : dia;
+  const valorMelhor = pior === 'sistólica' ? dia : sys;
+  const faixaMelhor = pressureZones[Math.min(soSistolica, soDiastolica)];
+  return `Quem define a faixa aqui é a ${pior} (${valorPior}); a ${melhor}, ${valorMelhor}, está na faixa ${faixaMelhor.label.toLowerCase()}.`;
+}
+
 export function rateActivity({ steps, goal }: { steps: number | null; goal: number }): Rating {
   if (steps == null) return semMedicao();
   const fraction = clamp01(steps / goal);

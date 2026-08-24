@@ -197,6 +197,12 @@ declare class QCBandNativeModule extends NativeModule<QCBandEvents> {
    * determinável lendo o cabeçalho.
    */
   getSleep(dayIndex: number): Promise<{ type: number; minutes: number; start: string; end: string }[]>;
+  /**
+   * Sono pelo protocolo novo (V2), de `dayIndex` até hoje, num pedido só.
+   * A pulseira declara `newSleepProtocol`; a porta antiga pode devolver vazio
+   * para as mesmas noites que esta traz.
+   */
+  getSleepV2?(dayIndex: number): Promise<{ type: number; minutes: number; start: string; end: string }[]>;
   getBattery(): Promise<{ level: number; charging: boolean }>;
   /** Vibra a pulseira — o "localizar" de quem não lembra onde a deixou. */
   findBand(): Promise<boolean>;

@@ -67,6 +67,10 @@ class WorkoutAdjustInput(BaseModel):
     #: nota e o comentário da pessoa. É o que permite "revise com base no que
     #: eu senti", que antes não tinha com o que ser respondido.
     week_feedback: str = Field(default="", max_length=4000)
+    #: `{"data": "2026-08-24", "dia_da_semana": "segunda"}`, no fuso da pessoa.
+    #: O agente não tem relógio: sem isto ele PERGUNTA que dia é hoje a quem
+    #: pediu um treino para hoje.
+    today: dict = Field(default_factory=dict)
 
 
 # --------------------------------------------------------------------------
@@ -271,6 +275,8 @@ def build_adjust_user(inp: WorkoutAdjustInput, correction: str | None = None) ->
     # comentar a ausência ("não vi seus treinos da semana"), que é ruído.
     if inp.week_feedback.strip():
         payload["week_feedback"] = inp.week_feedback
+    if inp.today:
+        payload["today"] = inp.today
     text = (
         "# Plano atual, contexto e conversa (JSON)\n"
         f"{json.dumps(payload, ensure_ascii=False, indent=2)}\n\n"

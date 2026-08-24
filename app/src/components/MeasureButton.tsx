@@ -163,9 +163,15 @@ export function SyncSleepButton() {
           setResposta('Noite atualizada.');
           return;
         }
+        if (r.estado === 'nao-respondeu') {
+          setResposta(
+            'A pulseira não respondeu à consulta de sono. Aproxime o pulso do celular e tente de novo: isto não quer dizer que a noite não exista, só que não conseguimos perguntar.',
+          );
+          return;
+        }
         if (r.estado === 'sem-novidade') {
           setResposta(
-            'A pulseira não tem noite mais recente do que a que está aqui. Se você dormiu com ela, o registro pode levar algumas horas para fechar no aparelho.',
+            'Perguntamos e a pulseira não tem noite mais recente do que a que está aqui. Se você dormiu com ela, verifique se o monitoramento de sono está ligado no app do fabricante: o registro também leva algumas horas para fechar no aparelho.',
           );
           return;
         }
