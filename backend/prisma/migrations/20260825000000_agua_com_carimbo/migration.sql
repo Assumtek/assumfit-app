@@ -1,0 +1,11 @@
+-- Carimbo do APARELHO para o total de água do dia.
+--
+-- O app envia o total do dia inteiro a cada mudança, e uma rajada de goles
+-- produzia uma escrita por gole: cinco PUT /habits no mesmo segundo em
+-- produção (24/08/2026). Escritas concorrentes do mesmo campo chegam em
+-- qualquer ordem, e a última a ser processada vencia, ainda que carregasse um
+-- total menor. A água do dia voltava no tempo sozinha.
+--
+-- Nulo nas linhas existentes: escrita sem carimbo continua valendo, o que
+-- mantém compatível o app que ainda não subiu a versão nova.
+ALTER TABLE "daily_habits" ADD COLUMN IF NOT EXISTS "water_at" TIMESTAMPTZ;

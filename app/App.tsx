@@ -18,7 +18,7 @@ import { IntroScreen } from './src/screens/IntroScreen';
 import { scheduleWeeklyAt } from './src/services/notifications.service';
 import { useAlertsStore } from './src/store/alerts.store';
 import { useAmbientStore } from './src/store/ambient.store';
-import { useHabitsStore } from './src/store/habits.store';
+import { reenviarAguaPendente, useHabitsStore } from './src/store/habits.store';
 import { reagendarLembreteDeRefeicao } from './src/store/meal-reminder.store';
 import { usePersonalizacaoStore } from './src/store/personalizacao.store';
 import { buscarNoiteSeVencida, useBiometricStore } from './src/store/biometric.store';
@@ -105,6 +105,10 @@ function Root() {
       // E relê o total do servidor: registro feito em outro aparelho, ou antes
       // de a sessão existir, aparece sem precisar abrir a tela de Água.
       void useHabitsStore.getState().hydrate();
+      // O que não conseguiu subir sobe agora. Água registrada com a rede fora,
+      // ou no instante em que o token venceu, ficava só no aparelho e sumia na
+      // próxima releitura (Leonardo, 24/08/2026).
+      void reenviarAguaPendente();
 
       /*
        Token renovado com o aparelho bloqueado pode não ter chegado ao Keychain.

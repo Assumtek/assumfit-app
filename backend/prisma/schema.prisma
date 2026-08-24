@@ -353,6 +353,12 @@ model DailyHabit {
   /// ser uma noite ótima de 7h ou um cochilo bem pontuado — `ratings.ts` exige os dois.
   sleepMinutes Int?     @map("sleep_minutes")
   mood         String?
+  /// Quando o APARELHO registrou este total de água, não quando o servidor o
+  /// gravou. É o que permite recusar uma escrita que chegou atrasada: o app
+  /// envia o total do dia inteiro a cada mudança, e escritas concorrentes do
+  /// mesmo campo chegam fora de ordem (cinco no mesmo segundo em produção,
+  /// 24/08/2026), fazendo o total do dia voltar no tempo.
+  waterAt      DateTime? @map("water_at") @db.Timestamptz(6)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

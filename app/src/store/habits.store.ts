@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import { api, isAuthenticated } from '../services/api.service';
+import { reconciliarDia } from '../domain/aguaSync';
 import { diaCorrente, isoHoje } from '../domain/water';
 import { waterGoalMl, waterGoalReason } from '../domain/waterGoal';
 import { treinoConta } from '../domain/movement';
@@ -308,12 +309,28 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
        o ramo de baixo devolve `atual`, e um `atual` de ontem faria o total do
        dia anterior sobreviver à virada — que era exatamente o defeito.
       */
-      const hoje = porDia.get(isoHoje());
-      const atual = diaCorrente(get().today);
-      const today =
-        hoje && atual.pours.length === 0 ? { ...atual, waterMl: hoje.waterMl } : atual;
+      /*
+       A regra de desempate mora no domínio (`domain/aguaSync.ts`), e ela não
+       olha mais para `pours`, e sim para os VALORES.
 
-      set({ week, today });
+       Olhar só para "houve gole nesta sessão" deixava o total voltar no tempo
+       sempre que uma gravação se perdia: o app reabria, lia o servidor
+       desatualizado e adotava, e a água registrada sumia da tela e do
+       histórico (Leonardo, 24/08/2026). Dentro do dia a água só desce por
+       decisão de gente, nunca por releitura, e discordância a mais no app
+       significa gravação que falta subir.
+      */
+      const doServidor = porDia.get(isoHoje());
+      const atual = diaCorrente(get().today);
+      const r = reconciliarDia(
+        { date: atual.date, waterMl: atual.waterMl },
+        doServidor ? { date: isoHoje(), waterMl: doServidor.waterMl } : null);
+      const today = { ...atual, waterMl: r.waterMl };
+      if (r.reenviar) void enviarAgora({ date: today.date, waterMl: r.waterMl });
+
+      // A semana também acompanha: a coluna de hoje é o total reconciliado, e
+      // não o do servidor, senão a barra discorda do número grande logo acima.
+      set({ week: comHoje(week, today), today });
       get().publicarNoWidget();
     } catch {
       // Sem servidor a semana fica zerada — vazio honesto, não exemplo.
@@ -326,12 +343,52 @@ function comHoje(week: Day[], today: Today): Day[] {
   return week.map((d) => (d.date === today.date ? { ...d, waterMl: today.waterMl } : d));
 }
 
-/** Envia o dia inteiro; o backend faz upsert por (usuário, data). */
-async function persist(today: Today): Promise<void> {
-  if (!isAuthenticated()) return;
-  await api
-    .put('/habits', { date: today.date, waterMl: today.waterMl })
-    .catch(() => undefined);
+/*
+ A gravação da água, com as duas defesas que o relato de 24/08/2026 exigiu.
+
+ **Uma escrita por rajada.** Cada gole disparava um PUT, e o log de produção
+ mostra cinco no MESMO segundo (a fila do widget sendo drenada). Cinco escritas
+ concorrentes do mesmo campo chegam em qualquer ordem, e o servidor guarda a
+ última que chegar, que pode ser a de total menor. Água que some sozinha. Agora
+ as escritas do mesmo dia se juntam numa só, com o total mais recente, depois
+ que o dedo para.
+
+ **Falha não é esquecimento.** O `.catch(() => undefined)` de antes engolia
+ 401 e requisição cancelada pelo iOS ao suspender o app, e nada reenviava. O
+ dia pendente fica guardado e sobe de novo na próxima oportunidade, que é a
+ volta ao primeiro plano.
+*/
+const ESPERA_DE_ESCRITA_MS = 800;
+let escritaAgendada: ReturnType<typeof setTimeout> | null = null;
+let pendente: { date: string; waterMl: number } | null = null;
+async function enviarAgora(dia: { date: string; waterMl: number }): Promise<boolean> {
+  if (!isAuthenticated()) return false;
+  try {
+    await api.put('/habits', { date: dia.date, waterMl: dia.waterMl, at: new Date().toISOString() });
+    if (pendente && pendente.date === dia.date && pendente.waterMl === dia.waterMl) pendente = null;
+    return true;
+  } catch {
+    // Fica pendente: quem reenvia é `reenviarPendente`, na volta ao primeiro
+    // plano. Perder água por rede ruim é o defeito, não o remédio.
+    return false;
+  }
+}
+
+function persist(today: Today): void {
+  pendente = { date: today.date, waterMl: today.waterMl };
+  if (escritaAgendada) clearTimeout(escritaAgendada);
+  escritaAgendada = setTimeout(() => {
+    escritaAgendada = null;
+    const dia = pendente;
+    if (dia) void enviarAgora(dia);
+  }, ESPERA_DE_ESCRITA_MS);
+}
+
+/** Reenvia o que não chegou. Barato e idempotente: o backend faz upsert. */
+export async function reenviarAguaPendente(): Promise<void> {
+  const dia = pendente;
+  if (!dia) return;
+  await enviarAgora(dia);
 }
 
 /**
