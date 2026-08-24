@@ -69,7 +69,16 @@ describe('normalizarLayout', () => {
     const posAneis = n.findIndex((b) => b.chave === 'aneis');
     const posResumo = n.findIndex((b) => b.chave === 'resumo');
     const posIndicadores = n.findIndex((b) => b.chave === 'indicadores');
-    expect(posAneis).toBe(posResumo + 1);
+    /*
+     Os dois blocos que nasceram depois desta pessoa (anéis em 23/08,
+     assinatura do dia em 24/08) entram JUNTOS, na ordem de fábrica entre si,
+     no espaço entre o resumo e os indicadores. O que se afirma aqui não é uma
+     posição fixa, que muda a cada bloco novo, e sim a regra: bloco novo cai ao
+     lado do vizinho de fábrica, nunca no rodapé.
+    */
+    const posAssinatura = n.findIndex((b) => b.chave === 'assinatura');
+    expect(posAssinatura).toBe(posResumo + 1);
+    expect(posAneis).toBe(posAssinatura + 1);
     expect(posAneis).toBeLessThan(posIndicadores);
     // A ordem que a pessoa escolheu continua a mesma entre si.
     expect(posResumo).toBeLessThan(posIndicadores);

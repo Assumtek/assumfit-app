@@ -18,6 +18,7 @@
 
 export type ChaveDeBloco =
   | 'resumo'
+  | 'assinatura'
   | 'aneis'
   | 'indicadores'
   | 'semana'
@@ -48,6 +49,18 @@ export const BLOCOS: DescricaoDeBloco[] = [
     chave: 'resumo',
     titulo: 'Resumo de saúde',
     descricao: 'A leitura do seu dia em uma frase, com o porquê.',
+    padrao: true,
+  },
+  {
+    chave: 'assinatura',
+    titulo: 'Assinatura do dia',
+    descricao: 'Sono, energia, recuperação, atividade e calma numa forma só, contra a sua média.',
+    /*
+     Ligada de fábrica, e no alto: é a peça de destaque da tela (decisão da
+     fundadora, 24/08/2026, a partir de uma proposta visual que ela aprovou).
+     Quem prefere os números soltos desliga em Personalizar a home e fica com
+     os anéis, que continuam existindo logo abaixo.
+    */
     padrao: true,
   },
   {

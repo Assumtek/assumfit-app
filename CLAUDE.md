@@ -589,6 +589,31 @@ da fundadora (22/08/2026). A primeira carga veio de HOMOLOGAÇÃO
 O app mostra thumbnail e só baixa o vídeo ao toque (`components/ExerciseVideo.tsx`,
 `expo-video`, dependência nativa).
 
+### A assinatura do dia
+
+O bloco de destaque da home (24/08/2026), a partir de uma proposta visual que a
+fundadora aprovou: os cinco eixos do produto, sono, energia, recuperação,
+atividade e calma, num pentágono, com a média dos dias anteriores tracejada por
+baixo. Domínio em `app/src/domain/assinatura.ts`, desenho em
+`components/home/AssinaturaDoDia.tsx`.
+
+Três regras vieram junto e valem para qualquer gráfico comparativo novo:
+
+- **Fração de eixo sai de `ratings.ts`**, a mesma que preenche o anel da tela de
+  detalhe. Régua própria no gráfico é uma segunda avaliação do mesmo dado.
+- **Eixo sem medição é `null`, nunca zero.** Zero desenha dia ruim onde houve
+  sensor calado. A figura fecha com uma ponte tracejada, que se lê como falta.
+- **A média não inclui hoje**, senão a referência anda junto com o dia e some
+  justamente a diferença que se quer ver. Sem três dias medidos, não há média, e
+  a frase diz que ainda está juntando.
+
+**Nenhum número solto nos vértices.** Os cinco eixos têm escalas diferentes (ms,
+passos, score) e cinco escalas num desenho só não se comparam. O número grande é
+um, o de energia, e ele vem com a avaliação derivada do PRÓPRIO score
+(`rotuloDoScore`): a primeira versão mostrava o score do servidor ao lado do
+rótulo do cálculo offline, e dava para ler "44" e "prontidão alta" na mesma
+linha.
+
 ## Regras de dados
 
 - Dado biométrico é **dado pessoal sensível** (LGPD Art. 5º II). Toda tabela nova que armazene biometria precisa de vínculo com consentimento e política de retenção. Nunca logar valor biométrico com `user_id` junto.

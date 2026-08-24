@@ -8,10 +8,12 @@ import { BandStatusLine } from '../components/BandStatus';
 import { HomeBanners } from '../components/HomeBanners';
 import { HomeRings } from '../components/HomeRings';
 import { IndicatorList } from '../components/IndicatorList';
+import { AssinaturaDoDia } from '../components/home/AssinaturaDoDia';
 import { BlocoConquistas } from '../components/home/BlocoConquistas';
 import { BlocoMetas } from '../components/home/BlocoMetas';
 import { BlocoSemana } from '../components/home/BlocoSemana';
 import { BlocoTendencias } from '../components/home/BlocoTendencias';
+import { assinaturaDoDia, diasComparaveis } from '../domain/assinatura';
 import { indicadoresDaHome } from '../domain/homeIndicators';
 import { ageFromBirthDate, calorieGoal } from '../domain/nutritionGoal';
 import { useHabitsStore } from '../store/habits.store';
@@ -23,7 +25,7 @@ import { Body, Button, Data, Label, SectionTitle } from '../components/ui';
 import { Card } from '../components/ui/Card';
 import { LineChart } from '../components/charts/LineChart';
 import { LiveDot } from '../components/charts/LiveChart';
-import { energyState } from '../domain/energy';
+import { energyState, rotuloDoScore } from '../domain/energy';
 import { rateSleep, rateStress, shown, stateColor } from '../domain/ratings';
 import { faixaInicial, noPeriodo, rotulosDoPeriodo } from '../domain/series';
 import { isSportDay, modalityMeta } from '../domain/workout';
@@ -109,6 +111,26 @@ export function HomeScreen() {
   useEffect(() => {
     void carregarCards();
   }, [carregarCards]);
+
+  /*
+   Os dias anteriores, para a assinatura ter contra o que se comparar. Oito
+   dias: sete de média mais o de hoje, que ela descarta. Só carrega se o bloco
+   estiver ligado, como as tendências, senão quem o desligou paga a consulta
+   de qualquer jeito.
+  */
+  const [historico, setHistorico] = useState<api.DailySummary[]>([]);
+  const querAssinatura = blocosDaHome.some((b) => b.chave === 'assinatura' && b.ligado);
+  useEffect(() => {
+    if (!querAssinatura) return;
+    let vivo = true;
+    void api
+      .fetchDailyHistory(8)
+      .then((dias) => vivo && setHistorico(dias))
+      .catch(() => undefined);
+    return () => {
+      vivo = false;
+    };
+  }, [querAssinatura]);
 
   useEffect(() => {
     void refreshAmbient();
@@ -322,6 +344,27 @@ export function HomeScreen() {
   const stress = rateStress(stressAtual);
 
   /*
+   A assinatura do dia: os cinco eixos de hoje contra a média dos anteriores.
+   O "hoje" vem do estado AO VIVO (a pulseira acabou de medir), não da linha de
+   hoje do servidor, que só se fecha no fim do dia. Os dias anteriores vêm do
+   servidor. As duas fontes passam pela mesma régua em `domain/assinatura.ts`.
+  */
+  const agora = new Date();
+  const dataDeHoje = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
+  const eixosDeHoje = assinaturaDoDia({
+    hoje: {
+      sleep_score: sleep?.score ?? null,
+      energy_score: energy.score,
+      hrv_ms: latest.hrvMs ?? null,
+      steps: activity.steps ?? null,
+      stress_score: stressAtual,
+    },
+    dias: historico,
+    metaDePassos: activity.goal,
+    dataDeHoje,
+  });
+
+  /*
    Os cinco indicadores do dia (fundadora, 22/08/2026) no lugar do carrossel:
    água, atividade, alimentação, sono e estresse, cada um com seta e frase.
    As réguas são as de ratings.ts; a direção e a frase vêm do domínio.
@@ -361,9 +404,15 @@ export function HomeScreen() {
       />
 
       <XStack alignItems="flex-end" justifyContent="space-between">
+        {/*
+          A data em cima, a saudação com o nome embaixo. Era o contrário, com o
+          nome sozinho no lugar do título, e nome não é informação para quem já
+          sabe quem é: o dia é. Ordem trazida da proposta visual aprovada pela
+          fundadora (24/08/2026).
+        */}
         <YStack flex={1}>
-          <Label marginBottom="$sm">{greeting()}</Label>
-          <SectionTitle>{user.name}</SectionTitle>
+          <Label marginBottom="$sm">{dataPorExtenso()}</Label>
+          <SectionTitle>{saudacaoCom(user.name)}</SectionTitle>
         </YStack>
 
         {/* O canto do nome: ambiente em cima, relógio embaixo. A linha do
@@ -431,6 +480,19 @@ export function HomeScreen() {
                     <Body>{energy.description}</Body>
                   </YStack>
                 </Pressable>
+              );
+
+            case 'assinatura':
+              return (
+                <AssinaturaDoDia
+                  key={bloco.chave}
+                  eixos={eixosDeHoje}
+                  energia={energy.score}
+                  avaliacao={rotuloDoScore(energy.score)}
+                  diasNaMedia={diasComparaveis(historico, dataDeHoje, activity.goal)}
+                  largura={larguraGrafico}
+                  onAbrir={abrir}
+                />
               );
 
             case 'aneis':
@@ -629,4 +691,21 @@ function Cabecalho({
       </XStack>
     </XStack>
   );
+}
+
+/** "segunda, 24 ago" — o dia por extenso, curto, em minúsculas. */
+function dataPorExtenso(agora = new Date()): string {
+  const dia = agora.toLocaleDateString('pt-BR', { weekday: 'long' }).replace('-feira', '');
+  const mes = agora.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+  return `${dia}, ${agora.getDate()} ${mes}`;
+}
+
+/**
+ * "Boa tarde, Silvia". Só o primeiro nome, e sem vírgula pendurada quando o
+ * cadastro não tem nome nenhum: "Boa tarde, Silvia Souza de Oliveira" quebra em
+ * três linhas e soa como cadastro, e "Boa tarde, " soa como defeito.
+ */
+function saudacaoCom(nome: string | null | undefined): string {
+  const primeiro = (nome ?? '').trim().split(/\s+/)[0];
+  return primeiro ? `${greeting()}, ${primeiro}` : greeting();
 }

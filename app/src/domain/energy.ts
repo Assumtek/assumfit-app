@@ -72,6 +72,18 @@ const levelOf = (score: number): EnergyLevel =>
 
 const RANK: Record<EnergyLevel, number> = { low: 0, mid: 1, high: 2 };
 
+/**
+ * A avaliação em palavras de um SCORE, e não de um estado já montado.
+ *
+ * Existe porque a home mostra o score do modelo (servidor) e mostrava, ao
+ * lado, o rótulo do cálculo offline: dava para ler "44" e "prontidão alta" na
+ * mesma linha, que é o app se contradizendo em dois centímetros de tela. Quem
+ * exibe o número tira daqui a palavra que o acompanha.
+ */
+export function rotuloDoScore(score: number): string {
+  return COPY[levelOf(score)](score).levelLabel;
+}
+
 /** Ganho mínimo para chamar um horário de melhor janela. Abaixo disso é ruído. */
 const MIN_PEAK_GAIN = 5;
 

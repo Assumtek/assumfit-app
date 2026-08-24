@@ -1412,6 +1412,12 @@
       "nota": "Sobre os passos: o número que a tela mostra é o contador da própria pulseira, o mesmo que o app do fabricante mostra, então não há diferença de cálculo do nosso lado. Acelerômetro conta trepidação de carro como passo, e isso é limitação do sensor; se quiser, dá para comparar com o app do fabricante numa viagem para confirmar que os dois mostram igual. Mas a sua captura tinha outra coisa, que era defeito nosso e você não reportou: o gráfico de movimento por hora estava com escala de 30.838, trinta mil calorias numa hora. Ao trazer a caloria por hora do firmware, faltou o saneamento de unidade que o resto do app já fazia (o mesmo campo já chegou em kcal e em cal). Corrigido na 1.0.5 (10).",
       "versao": "1.0.5 (10)",
       "em": "2026-08-24T13:12:47"
+    },
+    "slack:1787594521.589929": {
+      "commit": "15dfa8a",
+      "nota": "Você tinha razão, o horário era inventado. O app tirava a mediana dos seus registros, e como havia um esporte às 09h44 e treinos às 15h35 e 20h30, a conta deu 15h30, uma hora em que você nunca treinou. Agora ele só afirma um horário quando as ocorrências se concentram de verdade na mesma faixa e isso é a maioria das vezes; se não há hábito, ele não inventa um e cancela o lembrete que já estava agendado.",
+      "versao": "1.0.6 (1)",
+      "em": "2026-08-24T15:13:32"
     }
   }
 }
