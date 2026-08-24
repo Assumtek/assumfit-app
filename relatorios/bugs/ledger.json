@@ -1346,6 +1346,18 @@
       "nota": "Feito: os três anéis voltam a ser o padrão da home, e quem não os quiser desliga em Personalizar a home. Sobe na 1.0.5 (8) junto com o resto.",
       "versao": "1.0.5 (8)",
       "em": "2026-08-23T20:53:57"
+    },
+    "ACifF4_zvGU3HOw6aE63p_A": {
+      "commit": "3417e12",
+      "nota": "Corrigido, e era efeito da correção de ontem: o número grande passou a vir do contador da pulseira (que é o que bate com o app do fabricante) e a curva continuou somando as fatias da memória, que chega atrasada. Agora a curva termina no mesmo número, e o gráfico deixa de cortar a linha quando você passa da meta.",
+      "versao": "1.0.5 (9)",
+      "em": "2026-08-23T22:32:16"
+    },
+    "AHUkQnF94XCT_RBBt5UYInc": {
+      "commit": "3417e12",
+      "nota": "Acho que achei: as conquistas passaram a aparecer na home nesta versão e não diziam quando aconteceram, então uma antiga (por exemplo 'Primeiro treino') lida num domingo sem treino vira 'o app marcou que treinei hoje'. Agora cada conquista mostra a data. Se o que você viu foi em outra tela, me diga qual que eu corrijo lá: era o bloco Conquistas na home, o trilho da semana no plano de treino, ou os anéis da semana?",
+      "versao": "1.0.5 (9)",
+      "em": "2026-08-23T22:32:19"
     }
   }
 }
