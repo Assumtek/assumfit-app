@@ -37,6 +37,7 @@ from dataclasses import dataclass
 
 from models.insight import HomeInsight
 from models.texto import sem_travessao
+import time
 
 #: Modelo da OpenAI. A tarefa é redigir duas frases a partir de fatos prontos —
 #: a classe "mini" é a régua certa de custo e latência, e esta é a chamada mais
@@ -212,10 +213,17 @@ def write(facts: Facts, fallback: HomeInsight) -> HomeInsight | None:
 
     # OpenAI primeiro; se ela FALHAR (não só se faltar a chave), a Anthropic
     # tenta antes de entregar o molde. A primeira versão só caía na segunda via
-    # quando a chave da OpenAI estava ausente — e no primeiro dia a conta da
+    # quando a chave da OpenAI estava ausente, e no primeiro dia a conta da
     # OpenAI estava sem créditos (429 insufficient_quota): chave presente,
     # chamada falhando, e a home no molde com a Anthropic parada ao lado.
-    dados = _redigir_openai(facts) if tem_openai else None
+    #
+    # Conta sem crédito não é falha passageira: ela vai falhar em TODAS as
+    # requisições até alguém pagar. Insistir custa uma chamada perdida e a
+    # latência dela antes de cada texto (visto no deploy de 24/08, com o log
+    # cheio de 429 e o texto saindo pela Anthropic). `_openai_fora_ate` é a
+    # trégua: depois de um erro de cota, a OpenAI sai da frente por um tempo, e
+    # a próxima requisição vai direto a quem está funcionando.
+    dados = _redigir_openai(facts) if tem_openai and not _openai_em_trégua() else None
     if dados is None and tem_anthropic:
         dados = _redigir_anthropic(facts)
 
@@ -245,6 +253,23 @@ def write(facts: Facts, fallback: HomeInsight) -> HomeInsight | None:
         # contra a outra depois.
         source="llm",
     )
+
+
+#: Até quando a OpenAI fica fora, em epoch. Zero é "disponível".
+_openai_fora_ate = 0.0
+#: Quanto dura a trégua depois de um erro de COTA (a conta não se recupera
+#: sozinha em minutos; meia hora só evita que um pagamento demore a valer).
+TREGUA_DE_COTA_S = 1800
+
+
+def _openai_em_trégua() -> bool:
+    return time.time() < _openai_fora_ate
+
+
+def _openai_fora_por_cota(err: Exception) -> bool:
+    """O erro é de conta sem crédito, e não uma falha passageira?"""
+    texto = f"{type(err).__name__}: {err}".lower()
+    return "insufficient_quota" in texto or "credit_balance_exhausted" in texto
 
 
 def _redigir_openai(facts: Facts) -> dict | None:
@@ -288,7 +313,16 @@ def _redigir_openai(facts: Facts) -> dict | None:
         # isso, "a frase não veio" e "a frase veio errada" ficam
         # indistinguíveis, e não há como saber se o modelo está sequer sendo
         # chamado.
-        print(f"[insight_llm] openai falhou: {type(err).__name__}: {err}", flush=True)
+        global _openai_fora_ate
+        if _openai_fora_por_cota(err):
+            _openai_fora_ate = time.time() + TREGUA_DE_COTA_S
+            print(
+                f"[insight_llm] openai sem crédito: fora por {TREGUA_DE_COTA_S // 60} min, "
+                "o texto sai pela anthropic",
+                flush=True,
+            )
+        else:
+            print(f"[insight_llm] openai falhou: {type(err).__name__}: {err}", flush=True)
         return None
 
 
