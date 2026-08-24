@@ -1370,6 +1370,18 @@
       "nota": "Achei três coisas, e as três explicam parte do que você viu. A varredura das noites guardadas na pulseira se dava por cumprida no dia sempre que a memória respondia com qualquer noite, mesmo velha, então a noite que o aparelho ainda não tinha fechado ficava para o dia seguinte, e assim por diante. O botão de buscar noite só aparecia quando não havia nenhuma, então quem tinha uma noite antiga na tela não tinha caminho nenhum. E esse botão buscava no app Saúde da Apple, que na nossa pulseira não tem nada. Na 1.0.5 (9): a tela avisa quando a noite mostrada não é a de hoje, e o botão busca na pulseira, varre a memória e responde o que achou. Quando instalar, toque nele e me diga a frase que aparecer: é ela que vai dizer se as noites de 22 e 23 estão na memória da pulseira ou se o aparelho não as registrou.",
       "versao": "1.0.5 (9)",
       "em": "2026-08-24T09:26:48"
+    },
+    "AMAs3fZGckuHBLmjmKEhcsk": {
+      "commit": "79bffd0",
+      "nota": "Eram duas causas para a mesma contradição. A régua: a hidratação era julgada pela fração do dia inteiro a qualquer hora, então às nove da manhã todo mundo aparecia mal, enquanto o indicador da home sempre julgou pelo ritmo da hora. Agora as duas usam a mesma janela, das 7h às 22h. E a fonte: o servidor só conhecia a água que já tinha subido, e a tela mostra o copo que você acabou de registrar; o app passou a informar a água de hoje ao pedir o resumo. Sobe na 1.0.5 (9), com a parte do servidor dependendo do deploy.",
+      "versao": "1.0.5 (9)",
+      "em": "2026-08-24T09:41:57"
+    },
+    "APyVV3w-a4NFOjOQQDd8kNg": {
+      "commit": "79bffd0",
+      "nota": "Reescrevi a explicação do estresse começando pelo que o sensor faz: a luz verde marca a hora de cada batida, a diferença de tempo entre uma e outra é a matéria-prima, corpo descansado varia mais e corpo sob carga bate mais parecido, como um metrônomo. Está em Ajuda, e a tela de estresse agora tem o caminho até lá (Como isto é medido), que era o que faltava. Na sua captura apareceu outra coisa: o eixo do gráfico estava fora de ordem (14h, 6h, 20h, 7h). As barras saíam na ordem em que as amostras chegavam da pulseira, e não na do relógio. Corrigido.",
+      "versao": "1.0.5 (9)",
+      "em": "2026-08-24T09:42:01"
     }
   }
 }
