@@ -30,6 +30,16 @@ export type Achievement = {
   detail: string;
   /** `true` quando foi desbloqueada NESTA sessão — é o que a tela celebra. */
   fresh: boolean;
+  /**
+   * Quando a conquista aconteceu, em epoch.
+   *
+   * Na tela de fim de treino a data é óbvia: acabou agora. Fora dela não é, e
+   * a home passou a mostrar conquistas em agosto: "Primeiro treino" aparecendo
+   * num domingo em que a pessoa não treinou foi lido como "o app marcou que eu
+   * treinei hoje" (Bruno, 23/08/2026). Conquista sem data é uma afirmação
+   * sobre hoje.
+   */
+  at: number | null;
 };
 
 const DIA = 86_400_000;
@@ -85,6 +95,18 @@ export function achievementsFor(executions: Execution[], now: number): Achieveme
   const total = concluidos.length;
   const lista: Achievement[] = [];
 
+  // Do mais antigo ao mais novo: cada conquista carrega o instante do treino
+  // que a destravou, e é ele que a tela mostra fora do fim de sessão.
+  const emOrdem = [...concluidos].sort(
+    (a, b) => new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime(),
+  );
+  const quando = (indice: number): number | null => {
+    const e = emOrdem[indice];
+    const t = e ? new Date(e.startedAt).getTime() : Number.NaN;
+    return Number.isFinite(t) ? t : null;
+  };
+  const ultimo = quando(emOrdem.length - 1);
+
   const marco = MARCOS.filter((m) => total >= m).pop();
   if (marco) {
     lista.push({
@@ -95,6 +117,8 @@ export function achievementsFor(executions: Execution[], now: number): Achieveme
           ? 'O começo é a parte que mais gente não faz.'
           : `Você concluiu ${total} sessões desde que começou.`,
       fresh: total === marco,
+      // O treino que fechou o marco, não o mais recente.
+      at: quando(marco - 1),
     });
   }
 
@@ -107,6 +131,7 @@ export function achievementsFor(executions: Execution[], now: number): Achieveme
       // Nova quando a semana corrente acabou de entrar na conta: a sessão de
       // hoje é a primeira desta semana.
       fresh: concluidos.filter((e) => weekStart(new Date(e.startedAt).getTime()) === weekStart(now)).length === 1,
+      at: ultimo,
     });
   }
 
@@ -128,6 +153,7 @@ export function achievementsFor(executions: Execution[], now: number): Achieveme
       title: 'Melhor semana até agora',
       detail: `${estaSemana} treinos nesta semana.`,
       fresh: true,
+      at: ultimo,
     });
   }
 

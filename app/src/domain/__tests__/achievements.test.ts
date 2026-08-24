@@ -106,3 +106,23 @@ describe('achievementsFor', () => {
     }
   });
 });
+
+describe('quando a conquista aconteceu', () => {
+  const exec = (dias: number) => ({
+    startedAt: new Date(Date.parse('2026-08-23T12:00:00Z') - dias * 86_400_000).toISOString(),
+    status: 'FINISHED',
+  });
+  const AGORA = Date.parse('2026-08-23T12:00:00Z');
+
+  it('o marco carrega o treino que o fechou, não o mais recente', () => {
+    // Primeiro treino foi há 20 dias; o último, hoje.
+    const lista = achievementsFor([exec(20), exec(10), exec(0)], AGORA);
+    const primeiro = lista.find((a) => a.key.startsWith('total-'));
+    expect(primeiro?.at).toBe(Date.parse('2026-08-03T12:00:00Z'));
+  });
+
+  it('conquista sem execução conhecida não inventa data', () => {
+    const lista = achievementsFor([], AGORA);
+    expect(lista.every((a) => a.at === null || Number.isFinite(a.at))).toBe(true);
+  });
+});

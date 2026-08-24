@@ -2,9 +2,10 @@ import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useState } from 'react';
 
 import { Icon } from '../Icon';
-import { Row, Section } from '../List';
+import { Row, RowValue, Section } from '../List';
 import { Body, Data, Skeleton } from '../ui';
 import { achievementsFor, type Achievement } from '../../domain/achievements';
+import { frescor } from '../../domain/ratings';
 import * as api from '../../services/api.service';
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -42,6 +43,11 @@ export function BlocoConquistas() {
             <Body color="$foreground">{c.title}</Body>
             <Data>{c.detail}</Data>
           </YStack>
+          {/*
+            QUANDO foi. Sem isso, uma conquista antiga na home de hoje lê como
+            "você treinou hoje", que foi exatamente o relato (Bruno, 23/08).
+          */}
+          <RowValue>{frescor(c.at ?? undefined, Date.now()) ?? '–'}</RowValue>
         </Row>
       ))}
     </Section>

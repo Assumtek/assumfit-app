@@ -107,12 +107,44 @@ export function totalDoDia(fatias: FatiaDoDia[]): { passos: number; kcal: number
   );
 }
 
-/** A curva acumulada, para o gráfico de "cheguei à meta?". */
-export function acumuladoAteAgora(fatias: FatiaDoDia[], horaAtual: number): number[] {
+/**
+ * A curva acumulada, para o gráfico de "cheguei à meta?".
+ *
+ * `total` é o número grande da tela, ancorado no contador do aparelho. Sem
+ * ele, a curva termina na soma das fatias, e as duas coisas divergem na mesma
+ * tela: o topo dizia 9.896 passos e a curva parava antes (relato do Bruno,
+ * 23/08). Duas verdades lado a lado é pior do que qualquer uma das duas.
+ *
+ * Falta de fatia é o caso comum: a memória da pulseira chega atrasada, e o que
+ * o contador tem a mais aconteceu recentemente, então entra na hora corrente.
+ * Sobra é raro (fatia de outro dia, contador reiniciado) e aí a curva é
+ * reescalada para terminar no total, preservando a forma do dia.
+ */
+export function acumuladoAteAgora(
+  fatias: FatiaDoDia[],
+  horaAtual: number,
+  total?: number | null,
+): number[] {
   const base = normalizar(fatias);
   const ate = Math.max(0, Math.min(HORAS_DO_DIA - 1, horaAtual));
   let soma = 0;
-  return base.slice(0, ate + 1).map((f) => (soma += f.passos));
+  const curva = base.slice(0, ate + 1).map((f) => (soma += f.passos));
+  if (total == null || !Number.isFinite(total) || total < 0 || curva.length === 0) return curva;
+
+  const fim = curva[curva.length - 1];
+  if (fim === total) return curva;
+  if (fim === 0) {
+    // Nenhuma fatia ainda: o dia inteiro está no contador, e a curva sobe de
+    // uma vez na hora corrente. Distribuí-lo pelas horas seria inventar.
+    curva[curva.length - 1] = total;
+    return curva;
+  }
+  if (total > fim) {
+    curva[curva.length - 1] = total;
+    return curva;
+  }
+  const fator = total / fim;
+  return curva.map((v) => Math.round(v * fator));
 }
 
 export type Barra = { label: string; value: number };

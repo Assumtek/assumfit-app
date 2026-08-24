@@ -360,7 +360,7 @@ export function HealthScreen() {
             <Celula
               label="atividade"
               icone="steps"
-              serie={acumuladoAteAgora(horas, new Date().getHours())}
+              serie={acumuladoAteAgora(horas, new Date().getHours(), activity.steps ?? null)}
               rating={rateActivity(activity)}
               onPress={() => (navigation as any).push('Activity' as never)}
             />

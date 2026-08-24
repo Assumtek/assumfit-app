@@ -162,10 +162,14 @@ export function ActivityScreen() {
       <Section label="Acúmulo do dia">
         <YStack onLayout={onLayoutChartWidth}>
           <LineChart
-            data={acumuladoAteAgora(horas, new Date().getHours())}
+            /* O total ancorado entra na curva: sem ele, o gráfico terminava
+               abaixo do número grande logo acima (Bruno, 23/08). */
+            data={acumuladoAteAgora(horas, agora, activity.steps ?? null)}
             width={chartWidth}
             height={152}
-            domain={[0, activity.goal]}
+            /* O teto acompanha o dia: com domínio fixo na meta, quem a bate vê
+               a curva sair pelo topo do gráfico. */
+            domain={[0, Math.max(activity.goal, activity.steps ?? 0)]}
             thresholds={[{ value: activity.goal, label: 'meta' }]}
             xLabels={rotulosDoAcumulado(agora)}
             id="steps"

@@ -215,3 +215,35 @@ describe('comoAcumulado', () => {
     expect(comoAcumulado(bruto).map((a) => a.steps)).toEqual([210, 640, 2147]);
   });
 });
+
+describe('acumuladoAteAgora com o total ancorado', () => {
+  it('a curva termina no número grande da tela', () => {
+    let f = comDeltaNaHora(fatiasVazias(), 7, 1000, 40);
+    f = comDeltaNaHora(f, 8, 500, 20);
+    const curva = acumuladoAteAgora(f, 9, 2147);
+    expect(curva.at(-1)).toBe(2147);
+    // O que a memória ainda não trouxe entra na hora corrente, não some.
+    expect(curva[7]).toBe(1000);
+    expect(curva[8]).toBe(1500);
+  });
+
+  it('sem fatia nenhuma, a curva sobe de uma vez em vez de ficar em zero', () => {
+    const curva = acumuladoAteAgora(fatiasVazias(), 9, 2147);
+    expect(curva.at(-1)).toBe(2147);
+    expect(curva[0]).toBe(0);
+  });
+
+  it('quando as fatias somam mais que o contador, a curva é reescalada e não passa dele', () => {
+    let f = comDeltaNaHora(fatiasVazias(), 7, 6000, 240);
+    f = comDeltaNaHora(f, 8, 6000, 240);
+    const curva = acumuladoAteAgora(f, 8, 2147);
+    expect(curva.at(-1)).toBe(2147);
+    expect(curva.every((v, i) => i === 0 || v >= curva[i - 1])).toBe(true);
+  });
+
+  it('sem total, continua sendo a soma das fatias', () => {
+    const f = comDeltaNaHora(fatiasVazias(), 7, 1000, 40);
+    expect(acumuladoAteAgora(f, 8).at(-1)).toBe(1000);
+    expect(acumuladoAteAgora(f, 8, null).at(-1)).toBe(1000);
+  });
+});
