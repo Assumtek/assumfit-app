@@ -63,6 +63,20 @@ npx expo start --dev-client --port 8090
 Projeto EAS: `@assumtek/assumfit`. O dev client só precisa ser reconstruído
 quando muda dependência nativa ou `app.json`, mudança de JS chega por Metro.
 
+### Live Activity sobrevive ao app
+
+A referência de `Activity` vive na memória do PROCESSO; a Live Activity vive no
+SISTEMA e continua na tela de bloqueio por horas depois de o app morrer. Guardar
+só a referência fazia cada abertura do treino empilhar um cartão novo, sem
+ninguém capaz de encerrar os anteriores: um testador acumulou quatro do mesmo
+treino, três parados (Bruno, 24/08/2026).
+
+Quem enxerga as órfãs é `Activity<T>.activities`, e é por ela que se encerra.
+Vale a regra: **iniciar encerra todas as anteriores, encerrar encerra todas, e
+atualizar reidrata a referência a partir da lista.** Não limpe na abertura do
+app: a atividade de um treino em andamento é legítima, e apagá-la ao voltar
+para a home tira da tela de bloqueio o que a pessoa quer ver.
+
 ### Deep links
 
 Toda tela tem rota (`assumfit://bioage`, `assumfit://hrv`, `assumfit://sono`,

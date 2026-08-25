@@ -1442,6 +1442,12 @@
       "nota": "Achamos, e você perdeu água de verdade, não foi impressão. O app manda o total do dia a cada copo registrado, e quando vários entram juntos (a fila do botão do widget, por exemplo) saem várias gravações no mesmo segundo. Elas chegam ao servidor fora de ordem, e a última a ser processada vencia mesmo carregando um total menor: o dia inteiro voltava para o primeiro copo. O registro do seu dia às 22h03 tem cinco gravações no mesmo segundo, é exatamente isso. Agora o app junta as escritas numa só, guarda e reenvia o que não conseguiu subir (o seu horário teve falha de token no meio), e o servidor recusa gravação de água que chega atrasada. Se ainda faltar água de hoje, dá para acertar o total no botão de ajustar, e ele não vai mais voltar sozinho.",
       "versao": "1.0.6 (1)",
       "em": "2026-08-24T20:18:10"
+    },
+    "slack:1787618626.051709": {
+      "commit": "0d6f7e8",
+      "nota": "Corrigido, e obrigado pela captura: ela mostrava o essencial. O cronômetro tinha largura fixa medida na fonte padrão, então com o texto grande do iOS o número não cabia e virava reticências, escondendo justamente a informação principal da barra. Agora a largura acompanha o conteúdo. Reproduzindo a sua condição no simulador apareceram mais três do mesmo tipo, todos corrigidos junto: a pílula de batimento saindo pela borda da tela, o nome do próximo exercício truncado, e os rótulos dos três anéis da home se sobrepondo. Ficou também uma regra no guia do projeto para não repetirmos isso em tela nova.",
+      "versao": "1.0.6 (1)",
+      "em": "2026-08-24T21:51:22"
     }
   }
 }

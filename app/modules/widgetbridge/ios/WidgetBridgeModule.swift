@@ -27,6 +27,36 @@ struct SportActivityAttributes: ActivityAttributes {
 @available(iOS 16.2, *)
 private enum AtividadeCorrente {
   static var ativa: Activity<SportActivityAttributes>?
+
+  /**
+   A atividade viva, mesmo quando esta referência se perdeu.
+
+   `ativa` é memória do PROCESSO e a Live Activity é do SISTEMA: ela sobrevive
+   ao app ser morto e continua na tela de bloqueio por horas. Depois de um
+   encerramento forçado a referência volta nula com a atividade ainda lá, e sem
+   consultar o `ActivityKit` ninguém mais consegue encerrá-la nem atualizá-la.
+  */
+  @available(iOS 16.2, *)
+  static var viva: Activity<SportActivityAttributes>? {
+    ativa ?? Activity<SportActivityAttributes>.activities.first
+  }
+
+  /**
+   Encerra TODAS as atividades deste tipo, inclusive as órfãs.
+
+   Um testador acumulou quatro cartões do mesmo treino empilhados na tela de
+   bloqueio, três deles parados (Bruno, 24/08/2026). Cada abertura do treino
+   criava uma nova, e as anteriores, sem referência viva no processo, não
+   tinham como ser encerradas. Encerrar pela lista do sistema é o que alcança
+   as de sessões passadas.
+  */
+  @available(iOS 16.2, *)
+  static func encerrarTodas() {
+    ativa = nil
+    for atividade in Activity<SportActivityAttributes>.activities {
+      Task { await atividade.end(nil, dismissalPolicy: .immediate) }
+    }
+  }
 }
 
 /**
@@ -156,6 +186,9 @@ public class WidgetBridgeModule: Module {
       guard ActivityAuthorizationInfo().areActivitiesEnabled else { return false }
       // Ação de uma sessão anterior não pode vazar para a nova.
       UserDefaults(suiteName: self.suite)?.removeObject(forKey: self.chaveDeAcoes)
+      // Nem a ATIVIDADE anterior. Sem isto, cada abertura do treino empilha um
+      // cartão novo na tela de bloqueio e os antigos ficam lá, parados.
+      AtividadeCorrente.encerrarTodas()
       let estado = SportActivityAttributes.ContentState(
         startedAt: Date(timeIntervalSince1970: startedAtMs / 1000),
         pausedAt: nil, distanceKm: nil, bpm: nil,
@@ -174,7 +207,11 @@ public class WidgetBridgeModule: Module {
     }
 
     Function("updateSportActivity") { (startedAtMs: Double, pausedAtMs: Double?, distanceKm: Double?, bpm: Int?, endsAtMs: Double?, phase: String?) -> Void in
-      guard #available(iOS 16.2, *), let ativa = AtividadeCorrente.ativa else { return }
+      // `viva` e não `ativa`: reabrir o app no meio de um treino perde a
+      // referência do processo, e a atividade continua na tela de bloqueio.
+      // Sem isto ela ficaria congelada no estado em que o app morreu.
+      guard #available(iOS 16.2, *), let ativa = AtividadeCorrente.viva else { return }
+      AtividadeCorrente.ativa = ativa
       let estado = SportActivityAttributes.ContentState(
         startedAt: Date(timeIntervalSince1970: startedAtMs / 1000),
         pausedAt: pausedAtMs.map { Date(timeIntervalSince1970: $0 / 1000) },
@@ -187,9 +224,10 @@ public class WidgetBridgeModule: Module {
     }
 
     Function("endSportActivity") { () -> Void in
-      guard #available(iOS 16.2, *), let ativa = AtividadeCorrente.ativa else { return }
-      AtividadeCorrente.ativa = nil
-      Task { await ativa.end(nil, dismissalPolicy: .immediate) }
+      guard #available(iOS 16.2, *) else { return }
+      // Todas, não só a referenciada: encerrar o treino é o momento certo para
+      // limpar também o que sobrou de sessões que o app não viu terminar.
+      AtividadeCorrente.encerrarTodas()
     }
   }
 }
