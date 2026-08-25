@@ -16,7 +16,7 @@ import {
 import { buildDashboard } from '../services/workout/dashboard';
 import { deriveFlags, parseAnamnesis } from '../services/workout/context-builder';
 import { prisma } from '../lib/prisma';
-import { similarExercises } from '../services/workout/catalog';
+import { similarExercises, trocarNoPlano } from '../services/workout/catalog';
 import {
   activePlan,
   cancelExecution,
@@ -284,6 +284,33 @@ workoutRoutes.get(
   '/exercise/:exerciseId/similar',
   asyncRoute<AuthedRequest>(async (req, res) => {
     res.json(await similarExercises(req.params.exerciseId));
+  }));
+
+/**
+ * Fixa a troca no PLANO, não só na sessão de hoje.
+ *
+ * A troca durante o treino é local por princípio: máquina ocupada não deve
+ * reescrever as próximas semanas. O que faltava era a pessoa poder dizer que
+ * aquela troca é para valer (Bruno, 24/08/2026). Quem decide é ela, e a decisão
+ * é explícita: o app pergunta antes.
+ *
+ * As travas estão no serviço, que só aceita substituto vindo da lista de
+ * similares e só altera exercício de plano do próprio usuário.
+ */
+workoutRoutes.patch(
+  '/plan/exercise/:workoutExerciseId',
+  asyncRoute<AuthedRequest>(async (req, res) => {
+    const { exerciseId } = z.object({ exerciseId: z.string().uuid() }).parse(req.body);
+    const r = await trocarNoPlano({
+      userId: req.userId,
+      workoutExerciseId: req.params.workoutExerciseId,
+      exerciseId,
+    });
+    if (r === 'nao-encontrado') return res.status(404).json({ error: 'Exercício não encontrado no seu plano' });
+    if (r === 'substituto-invalido') {
+      return res.status(422).json({ error: 'Esse exercício não é um substituto oferecido para este' });
+    }
+    res.json({ ok: true });
   }));
 
 // ==========================================================================

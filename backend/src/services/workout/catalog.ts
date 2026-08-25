@@ -83,3 +83,50 @@ export async function similarExercises(exerciseId: string, limit = 6): Promise<C
     type: e.type,
   }));
 }
+
+/**
+ * Troca o exercício prescrito, no PLANO, e não só na sessão de hoje.
+ *
+ * Pedido de testador (Bruno, 24/08/2026): "ao trocar o exercício, perguntar se
+ * na ficha para os próximos treinos desse dia trazer o que foi selecionado ou
+ * se é especificamente para aquele treino". A troca de hoje já existia; o que
+ * faltava era poder fixá-la.
+ *
+ * Duas travas, e nenhuma é opcional:
+ *
+ * 1. **O exercício tem que ser do dono.** A linha só é alterada se pertencer a
+ *    um treino de um plano DESTE usuário. Sem isso, um id adivinhado reescreve
+ *    a ficha de outra pessoa.
+ * 2. **O substituto tem que estar entre os SIMILARES** que o próprio servidor
+ *    ofereceu. É a mesma lista da troca de hoje, com o mesmo grupo muscular e
+ *    o mesmo tipo, e é o que impede a troca permanente de virar uma porta para
+ *    prescrever qualquer coisa do catálogo por fora do agente e das travas
+ *    clínicas que geraram o plano.
+ */
+export async function trocarNoPlano({
+  userId,
+  workoutExerciseId,
+  exerciseId,
+}: {
+  userId: string;
+  workoutExerciseId: string;
+  exerciseId: string;
+}): Promise<'ok' | 'nao-encontrado' | 'substituto-invalido'> {
+  const atual = await prisma.workoutExercise.findFirst({
+    where: {
+      id: workoutExerciseId,
+      workout: { planDays: { some: { plan: { userId } } } },
+    },
+    select: { id: true, exerciseId: true },
+  });
+  if (!atual) return 'nao-encontrado';
+
+  const permitidos = await similarExercises(atual.exerciseId, 24);
+  if (!permitidos.some((e) => e.id === exerciseId)) return 'substituto-invalido';
+
+  await prisma.workoutExercise.update({
+    where: { id: atual.id },
+    data: { exerciseId },
+  });
+  return 'ok';
+}

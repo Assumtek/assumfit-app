@@ -16,10 +16,10 @@ import { Icon } from '../../components/Icon';
 import { Body, BodyLarge, Button, Subtitle, IconButton, PillButton } from '../../components/ui';
 import { ExerciseVideo } from '../../components/ExerciseVideo';
 import { acumularKcal, type PerfilParaEnergia } from '../../domain/workoutEnergy';
-import { fetchAnamnesis } from '../../services/api.service';
+import { fetchAnamnesis, trocarExercicioNoPlano } from '../../services/api.service';
 import { useBiometricStore } from '../../store/biometric.store';
 import { useUserStore } from '../../store/user.store';
-import { formatSessionClock } from '../../domain/workout';
+import { devePosicionarNoPedido, formatSessionClock } from '../../domain/workout';
 import type { WorkoutExercise } from '../../services/api.service';
 import { elapsedSeconds, useWorkoutStore } from '../../store/workout.store';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -286,11 +286,26 @@ export function TrainingScreen() {
    desconectar), invisíveis no log da Apple porque o iOS não carrega a
    mensagem do JS. Achado na rodada de testes no simulador, com a tela
    vermelha dizendo a linha. Hooks ficam todos antes de qualquer retorno.
-  */  useEffect(() => {
-    if (!pedido || !workout) return;
+  */
+  /*
+   O salto acontece UMA vez por pedido, e o ref é o que garante isso.
+
+   Este efeito depende de `workout`, e `workout` é reescrito a cada troca de
+   exercício. Sem a guarda, trocar um exercício reposicionava a tela no
+   exercício com que ela foi ABERTA: a pessoa concluía a troca e a tela voltava
+   para trás sozinha (Bruno, 24/08/2026). A regra em si mora no domínio, com
+   teste, porque ela é sutil e já voltou como defeito uma vez.
+  */
+  const pedidoAtendido = useRef<string | null>(null);
+  useEffect(() => {
+    if (!workout) return;
     const todos = workout.phases.flatMap((f) => f.exercises);
     const alvo = todos.findIndex((e) => e.id === pedido);
-    if (alvo >= 0) setIndex(alvo);
+    if (!devePosicionarNoPedido({ pedido, atendido: pedidoAtendido.current, encontrado: alvo >= 0 })) {
+      return;
+    }
+    pedidoAtendido.current = pedido ?? null;
+    setIndex(alvo);
   }, [pedido, workout]);
 
   if (!execution || !workout || !current) {
@@ -727,9 +742,18 @@ export function TrainingScreen() {
           /*
            `onPick` era opcional e ninguém passava: a pessoa escolhia o
            substituto, a folha fechava e o treino seguia com o mesmo exercício.
-           A troca vale só para esta sessão — o plano não muda.
+
+           A troca vale para esta sessão sempre, e para o PLANO quando a pessoa
+           pediu na folha. A ordem importa: a sessão muda na hora, e a escrita
+           no plano vai atrás. Se ela falhar, o treino de hoje já está trocado e
+           a pessoa não fica esperando a rede no meio de uma série.
           */
-          onPick={(substituto) => swapExercise(exercise.id, substituto)}
+          onPick={(substituto, tambemNoPlano) => {
+            swapExercise(exercise.id, substituto);
+            if (tambemNoPlano) {
+              void trocarExercicioNoPlano(exercise.id, substituto.id).catch(() => undefined);
+            }
+          }}
         />
       ) : null}
 

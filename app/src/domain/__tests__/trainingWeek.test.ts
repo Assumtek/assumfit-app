@@ -1,3 +1,4 @@
+import { devePosicionarNoPedido } from '../workout';
 import {
   treinoPendente, diaCorrente, montarSemanaDeTreino } from '../trainingWeek';
 import type { DiaDoPlano } from '../trainingWeek';
@@ -213,5 +214,31 @@ describe('treino feito em outro dia da semana', () => {
     const comFeito = montarSemanaDeTreino(plano, new Map(), sabado, new Set(['Corpo Inteiro C']));
     expect(treinoPendente(comFeito)).toBeNull();
     expect(comFeito.cumpridos).toBe(1);
+  });
+});
+
+describe('posicionar a tela no exercício pedido', () => {
+  it('salta na primeira vez, quando o treino já carregou', () => {
+    expect(devePosicionarNoPedido({ pedido: 'ex-4', atendido: null, encontrado: true })).toBe(true);
+  });
+
+  it('não salta de novo pelo mesmo pedido', () => {
+    // O defeito: trocar um exercício reescreve o treino, o efeito rodava de
+    // novo e a tela voltava para onde a pessoa entrou (Bruno, 24/08/2026).
+    expect(devePosicionarNoPedido({ pedido: 'ex-4', atendido: 'ex-4', encontrado: true })).toBe(false);
+  });
+
+  it('um pedido NOVO salta, ainda que já tenha havido outro', () => {
+    expect(devePosicionarNoPedido({ pedido: 'ex-9', atendido: 'ex-4', encontrado: true })).toBe(true);
+  });
+
+  it('sem pedido, a tela fica onde está', () => {
+    expect(devePosicionarNoPedido({ pedido: null, atendido: null, encontrado: true })).toBe(false);
+  });
+
+  it('pedido que ainda não está na lista não salta, e continua pendente', () => {
+    // Treino que chega meio segundo depois: dar por atendido aqui faria a tela
+    // nunca posicionar.
+    expect(devePosicionarNoPedido({ pedido: 'ex-4', atendido: null, encontrado: false })).toBe(false);
   });
 });

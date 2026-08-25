@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView } from 'react-native';
 
 import { Icon } from '../../components/Icon';
+import { SwitchRow } from '../../components/List';
 import { Body, Data, Label, SectionTitle } from '../../components/ui';
 import { Card } from '../../components/ui/Card';
 import { Sheet } from '../../components/ui/Dialog';
@@ -17,13 +18,22 @@ import { useTheme } from '../../theme/ThemeProvider';
 /**
  * Troca de exercício durante a execução.
  *
- * A troca é **local à sessão**: não reescreve o plano. Quem chegou e encontrou
- * a máquina ocupada precisa de uma alternativa agora, não de uma prescrição
- * nova — e alterar o plano por causa de uma máquina ocupada seria deixar a
- * academia decidir o treino das próximas quatro semanas.
+ * A troca é **local à sessão por padrão**: não reescreve o plano. Quem chegou e
+ * encontrou a máquina ocupada precisa de uma alternativa agora, não de uma
+ * prescrição nova, e alterar o plano por causa de uma máquina ocupada seria
+ * deixar a academia decidir o treino das próximas quatro semanas.
  *
- * Para mudar o plano de verdade existe o ajuste conversacional, que passa pelo
- * agente e pelas mesmas travas clínicas.
+ * O que mudou em 24/08/2026, a pedido de um testador: existe um caso em que a
+ * troca É para valer, e o app decidia por ele. "Ao trocar, perguntar se na
+ * ficha para os próximos treinos desse dia trazer o que foi selecionado ou se
+ * é especificamente para aquele treino" (Bruno). Agora quem decide é a pessoa,
+ * num interruptor que fica ao lado da lista e cujo padrão continua sendo o
+ * conservador: só hoje.
+ *
+ * A trava não afrouxou. O servidor só aceita fixar um substituto que ele mesmo
+ * ofereceu como similar, o que mantém grupo muscular e tipo, e a porta para
+ * prescrever qualquer coisa do catálogo continua sendo só o ajuste
+ * conversacional, com o agente e as travas clínicas.
  */
 export function ExerciseSwapSheet({
   exercise,
@@ -35,10 +45,16 @@ export function ExerciseSwapSheet({
   /** De Sinalizar: ordena a lista. `null` no botão Trocar, que não pergunta. */
   motivo?: MotivoDeTroca | null;
   onClose: () => void;
-  onPick?: (replacement: SimilarExercise) => void;
+  onPick?: (replacement: SimilarExercise, tambemNoPlano: boolean) => void;
 }) {
   const { colors } = useTheme();
   const [options, setOptions] = useState<SimilarExercise[] | null>(null);
+  /*
+   Padrão FALSO, e é uma decisão de produto, não um detalhe: a troca de hoje é
+   o caso comum (máquina ocupada), e um padrão que reescreve o plano faria a
+   academia decidir as próximas semanas sem ninguém pedir.
+  */
+  const [fixarNoPlano, setFixarNoPlano] = useState(false);
   /*
    A ordem é do MOTIVO. O servidor manda o mesmo equipamento primeiro; com a
    máquina ocupada é exatamente o que não serve, e quem não sabe executar
@@ -92,7 +108,7 @@ export function ExerciseSwapSheet({
                 <Card
                   key={option.id}
                   onPress={() => {
-                    onPick?.(option);
+                    onPick?.(option, fixarNoPlano);
                     onClose();
                   }}
                   accessibilityLabel={option.name}
@@ -112,7 +128,17 @@ export function ExerciseSwapSheet({
           </ScrollView>
         )}
 
-        <Data>A troca vale só para hoje, seu plano continua o mesmo.</Data>
+        <SwitchRow
+          title="Valer nos próximos treinos deste dia"
+          subtitle={
+            fixarNoPlano
+              ? 'O exercício escolhido entra na ficha e volta nas próximas semanas.'
+              : 'A troca vale só para hoje, seu plano continua o mesmo.'
+          }
+          value={fixarNoPlano}
+          onValueChange={setFixarNoPlano}
+          last
+        />
       </>
     </Sheet>
   );

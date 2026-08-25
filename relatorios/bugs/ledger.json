@@ -1448,6 +1448,12 @@
       "nota": "Corrigido, e obrigado pela captura: ela mostrava o essencial. O cronômetro tinha largura fixa medida na fonte padrão, então com o texto grande do iOS o número não cabia e virava reticências, escondendo justamente a informação principal da barra. Agora a largura acompanha o conteúdo. Reproduzindo a sua condição no simulador apareceram mais três do mesmo tipo, todos corrigidos junto: a pílula de batimento saindo pela borda da tela, o nome do próximo exercício truncado, e os rótulos dos três anéis da home se sobrepondo. Ficou também uma regra no guia do projeto para não repetirmos isso em tela nova.",
       "versao": "1.0.6 (1)",
       "em": "2026-08-24T21:51:22"
+    },
+    "slack:1787619817.426689": {
+      "commit": "fc7605d",
+      "nota": "Corrigido. O cartão do treino na tela de bloqueio é uma Live Activity, e ela pertence ao sistema, não ao app: continua lá por horas mesmo depois de o app ser encerrado. O app guardava só uma referência em memória, então quando ele voltava não tinha mais como encerrar a que ficou, e a abertura seguinte do treino criava outra por cima. Daí os quatro empilhados, três parados. Agora o app consulta a lista do sistema: começar um treino encerra as anteriores, terminar encerra todas, e uma atividade que sobreviveu ao app volta a ser atualizada em vez de congelar. Como é código nativo, essa correção só aparece com a build nova, não chega na que você tem instalada.",
+      "versao": "1.0.6 (1)",
+      "em": "2026-08-24T22:07:01"
     }
   }
 }

@@ -255,3 +255,36 @@ export function workoutMetaSemRepetir(
 
   return `${exerciseCount} ${exerciseCount === 1 ? 'exercício' : 'exercícios'}`;
 }
+
+/**
+ * A tela de treino deve saltar para o exercício pedido?
+ *
+ * A tela pode ser aberta apontando para um exercício específico (pelo
+ * checklist, por uma notificação, voltando do check-in). O salto tem que
+ * acontecer UMA vez, quando o treino termina de carregar, e nunca mais.
+ *
+ * Reavaliar isso a cada mudança do treino era um defeito com sintoma
+ * desconcertante: trocar um exercício reescreve o objeto do treino, o salto
+ * acontecia de novo, e a tela voltava para onde a pessoa tinha ENTRADO. Nas
+ * palavras de quem reportou: "substituo um exercício, ele conclui, mas volta
+ * para o anterior" (Bruno, 24/08/2026).
+ *
+ * `encontrado` separa "ainda não carregou" de "não existe": pedido que não está
+ * na lista não se dá por atendido, senão o treino que chega meio segundo depois
+ * nunca posiciona.
+ */
+export function devePosicionarNoPedido({
+  pedido,
+  atendido,
+  encontrado,
+}: {
+  /** Id do exercício com que a tela foi aberta, se houve. */
+  pedido: string | null | undefined;
+  /** O último pedido já atendido nesta montagem da tela. */
+  atendido: string | null;
+  /** O pedido existe na lista de exercícios carregada agora. */
+  encontrado: boolean;
+}): boolean {
+  if (!pedido || !encontrado) return false;
+  return pedido !== atendido;
+}

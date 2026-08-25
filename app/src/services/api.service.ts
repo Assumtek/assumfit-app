@@ -677,6 +677,19 @@ export type SimilarExercise = {
   type: string;
 };
 
+/**
+ * Fixa a troca no plano, para os próximos treinos deste dia.
+ *
+ * A troca durante a sessão continua sendo local; isto é o "para valer", e só é
+ * chamado quando a pessoa pede explicitamente na folha de troca. O servidor só
+ * aceita substituto da lista de similares que ele mesmo ofereceu.
+ */
+export async function trocarExercicioNoPlano(
+  workoutExerciseId: string,
+  exerciseId: string): Promise<void> {
+  await api.patch(`/workout/plan/exercise/${workoutExerciseId}`, { exerciseId });
+}
+
 export async function fetchSimilarExercises(exerciseId: string): Promise<SimilarExercise[]> {
   const { data } = await api.get<SimilarExercise[]>(`/workout/exercise/${exerciseId}/similar`);
   return data;
