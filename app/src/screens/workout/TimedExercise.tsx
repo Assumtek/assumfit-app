@@ -6,6 +6,7 @@ import { Icon } from '../../components/Icon';
 import { Body, Button, Data, Display, Label, Subtitle } from '../../components/ui';
 import { useTheme } from '../../theme/ThemeProvider';
 import { ble } from '../../services/ble';
+import { avisoNoPulsoLigado } from '../../store/avisosNoPulso.store';
 import { cancelTimedEnd, scheduleTimedEnd } from '../../services/notifications.service';
 import { PHASE_COLOR, type PhaseType } from './PhaseBar';
 
@@ -108,7 +109,8 @@ export function TimedExercise({
     */
     if (!vibrou.current) {
       Vibration.vibrate([0, 200, 100, 200]);
-      void ble.vibrate?.().catch(() => undefined);
+      // Só com os avisos no pulso ligados (tela do dispositivo).
+      if (avisoNoPulsoLigado()) void ble.vibrate?.().catch(() => undefined);
       vibrou.current = true;
     }
   }, [lado, lados]);

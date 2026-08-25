@@ -3,6 +3,7 @@ import { create } from 'zustand';
 
 import { publicarTreinoDeHoje, type TreinoDoWidget } from '../../modules/widgetbridge';
 import { resumoDoVolume, workoutMeta } from '../domain/workout';
+import { avisoNoPulsoLigado } from './avisosNoPulso.store';
 
 import { ble } from '../services/ble';
 import { armTrainingNudge, cancelRestEnd, scheduleRestEnd } from '../services/notifications.service';
@@ -43,6 +44,12 @@ function armarVibracaoDoDescanso(seconds: number) {
   cancelarVibracaoDoDescanso();
   vibracaoDoDescanso = setTimeout(() => {
     vibracaoDoDescanso = null;
+    /*
+     Respeita a preferência de avisos no pulso. Ela é a metade que o app
+     controla de verdade: o ANCS, que cobre a tela apagada, o firmware só liga
+     e nunca desliga, então desligar aqui é o que existe de desligar.
+    */
+    if (!avisoNoPulsoLigado()) return;
     // Falha muda: a pulseira pode estar carregando, e um erro no meio do treino
     // por causa de um reforço de aviso seria pior que não vibrar.
     void ble.vibrate?.().catch(() => undefined);

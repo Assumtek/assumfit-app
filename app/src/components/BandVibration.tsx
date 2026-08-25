@@ -13,6 +13,7 @@ import {
   type CategoriaDeAviso,
 } from '../domain/bandNotifications';
 import { ble } from '../services/ble';
+import { useAvisosNoPulsoStore } from '../store/avisosNoPulso.store';
 import { useTheme } from '../theme/ThemeProvider';
 
 /**
@@ -33,7 +34,13 @@ export function BandVibration() {
   const { colors } = useTheme();
   /** `undefined` carregando; `null` a pulseira não respondeu; `[]` sem categorias. */
   const [filtro, setFiltro] = React.useState<CategoriaDeAviso[] | null | undefined>(undefined);
-  const [ancs, setAncs] = React.useState<'idle' | 'ok' | 'falhou'>('idle');
+  const ligado = useAvisosNoPulsoStore((e) => e.ligado);
+  const ancsRecusado = useAvisosNoPulsoStore((e) => e.ancsRecusado);
+  const definir = useAvisosNoPulsoStore((e) => e.definir);
+  const carregarPreferencia = useAvisosNoPulsoStore((e) => e.carregar);
+  React.useEffect(() => {
+    void carregarPreferencia();
+  }, [carregarPreferencia]);
   const [salvando, setSalvando] = React.useState(false);
   const [erro, setErro] = React.useState<string | null>(null);
 
@@ -47,16 +54,7 @@ export function BandVibration() {
     consultar();
   }, [consultar]);
 
-  /*
-   Ligar o ANCS sozinho: é ele que faz o iOS oferecer o emparelhamento e
-   entregar os avisos do app (fim do descanso, fim do alongamento) à
-   pulseira. Existe separado do filtro porque o filtro pode não responder e o
-   ANCS continuar funcionando.
-  */
-  const ligarAncs = async () => {
-    const ok = await ble.enableAncs?.().catch(() => false);
-    setAncs(ok ? 'ok' : 'falhou');
-  };
+
 
   /*
    Firmware que não responde ao filtro não ganha um interruptor que não faz
@@ -68,7 +66,7 @@ export function BandVibration() {
    respondia vazio) escondia tudo, e o testador não encontrava a opção que o
    anúncio citava. Sem filtro, fica o que importa: ligar os avisos do app.
   */
-  if (filtro === undefined) {
+  if (filtro === undefined || ligado === undefined) {
     return (
       <Section label="Avisos no pulso">
         <Skeleton lines={2} />
@@ -80,17 +78,28 @@ export function BandVibration() {
     return (
       <YStack gap="$md">
         <Section label="Avisos no pulso">
-          <ActionRow
+          {/*
+            Interruptor, não ação, e o estado vem do disco.
+
+            Era um toque cujo resultado morava no componente: voltar para a
+            tela desmontava tudo e a linha reaparecia como se nada tivesse
+            acontecido. "Eu seleciono, porém quando volto ele desliga. Pode
+            substituir o clique por um toggle pra elucidar se está ativo"
+            (Bruno, 25/08/2026). As duas metades do pedido são a mesma coisa:
+            a pessoa precisa VER o estado, e para isso ele precisa existir.
+          */}
+          <SwitchRow
             icon="bell"
-            title="Ligar avisos do AssumFit no pulso"
+            title="Avisos do AssumFit no pulso"
             subtitle={
-              ancs === 'ok'
-                ? 'Ligado. Se o iPhone pedir para emparelhar a pulseira, aceite.'
-                : ancs === 'falhou'
-                  ? 'A pulseira não aceitou. Aproxime o pulso e tente de novo.'
-                  : 'Fim do descanso e do alongamento vibram no pulso, mesmo com a tela apagada.'
+              !ligado
+                ? 'Ligado, o fim do descanso e do alongamento vibram no pulso.'
+                : ancsRecusado
+                  ? 'Vibra com o app aberto. Para vibrar com a tela apagada, a pulseira precisa aceitar o emparelhamento do iPhone: aproxime o pulso e ligue de novo.'
+                  : 'Fim do descanso e do alongamento vibram no pulso. Se o iPhone pedir para emparelhar a pulseira, aceite.'
             }
-            onPress={() => void ligarAncs()}
+            value={ligado}
+            onValueChange={(v) => void definir(v)}
           />
           <ActionRow
             icon="refresh"

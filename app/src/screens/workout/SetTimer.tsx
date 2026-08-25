@@ -5,6 +5,7 @@ import { Pressable, Vibration } from 'react-native';
 
 import { Icon } from '../../components/Icon';
 import { ble } from '../../services/ble';
+import { avisoNoPulsoLigado } from '../../store/avisosNoPulso.store';
 import { useTheme } from '../../theme/ThemeProvider';
 
 /**
@@ -53,7 +54,8 @@ export function SetTimer({
         terminou.current = true;
         alvo.current = null;
         Vibration.vibrate([0, 200, 100, 200]);
-        void ble.vibrate?.().catch(() => undefined);
+        // Só com os avisos no pulso ligados (tela do dispositivo).
+        if (avisoNoPulsoLigado()) void ble.vibrate?.().catch(() => undefined);
         onDone();
       }
     };
