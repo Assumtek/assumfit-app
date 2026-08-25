@@ -1,5 +1,6 @@
 import ActivityKit
 import ExpoModulesCore
+import UIKit
 import WidgetKit
 
 /**
@@ -161,6 +162,50 @@ public class WidgetBridgeModule: Module {
       let fila = defaults.array(forKey: "golesDoWidget") as? [[String: Any]] ?? []
       defaults.removeObject(forKey: "golesDoWidget")
       return fila
+    }
+
+    /**
+     O Instagram consegue receber uma story deste aparelho?
+
+     `canOpenURL` só responde a verdade para esquemas declarados em
+     `LSApplicationQueriesSchemes` (o `instagram-stories` no `app.json`). Sem a
+     declaração ele devolve `false` sempre, e o botão simplesmente nunca
+     apareceria: falso negativo, não falha.
+    */
+    Function("podeAbrirInstagramStories") { () -> Bool in
+      guard let url = URL(string: "instagram-stories://share") else { return false }
+      return UIApplication.shared.canOpenURL(url)
+    }
+
+    /**
+     Abre o Instagram Stories já com a imagem como fundo.
+
+     Pedido de testador (Bruno, 24/08/2026): "vincular botão direto com o
+     Instagram, pra facilitar o post". O caminho oficial não é um `share`
+     comum: a imagem vai para o pasteboard sob a CHAVE que o Instagram procura,
+     e só então o esquema é aberto. Por isso isto é nativo e não sai de
+     `expo-sharing`, que entrega um arquivo genérico e faz o Instagram abrir na
+     tela de escolher mídia.
+
+     O item do pasteboard expira em cinco minutos: é conteúdo da pessoa, e
+     deixá-lo na área de transferência do aparelho depois do post seria vazar
+     uma imagem para qualquer app que a leia.
+    */
+    Function("abrirInstagramStories") { (caminho: String) -> Bool in
+      guard let url = URL(string: "instagram-stories://share?source_application=\(Bundle.main.bundleIdentifier ?? "")"),
+            UIApplication.shared.canOpenURL(url) else { return false }
+
+      // `captureRef` devolve `file://…`; `URL(string:)` só entende a forma com
+      // esquema, e o caminho cru precisa de `fileURLWithPath`.
+      let arquivo = caminho.hasPrefix("file://") ? URL(string: caminho) : URL(fileURLWithPath: caminho)
+      guard let arquivo, let dados = try? Data(contentsOf: arquivo) else { return false }
+
+      UIPasteboard.general.setItems(
+        [["com.instagram.sharedSticker.backgroundImage": dados]],
+        options: [.expirationDate: Date().addingTimeInterval(300)]
+      )
+      DispatchQueue.main.async { UIApplication.shared.open(url) }
+      return true
     }
 
     /** Limpa. Usado ao sair da conta — o widget não pode sobreviver ao logout. */

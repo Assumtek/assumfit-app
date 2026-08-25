@@ -1454,6 +1454,18 @@
       "nota": "Corrigido. O cartão do treino na tela de bloqueio é uma Live Activity, e ela pertence ao sistema, não ao app: continua lá por horas mesmo depois de o app ser encerrado. O app guardava só uma referência em memória, então quando ele voltava não tinha mais como encerrar a que ficou, e a abertura seguinte do treino criava outra por cima. Daí os quatro empilhados, três parados. Agora o app consulta a lista do sistema: começar um treino encerra as anteriores, terminar encerra todas, e uma atividade que sobreviveu ao app volta a ser atualizada em vez de congelar. Como é código nativo, essa correção só aparece com a build nova, não chega na que você tem instalada.",
       "versao": "1.0.6 (1)",
       "em": "2026-08-24T22:07:01"
+    },
+    "AOoSd6aOL9a0awEaA4OYrvc": {
+      "commit": "deea8ec",
+      "nota": "Corrigido. A tela de treino pode ser aberta apontando para um exercício específico, e esse salto estava sendo refeito toda vez que o treino mudava por dentro. Trocar um exercício muda o treino, então o salto acontecia de novo e a tela voltava para onde você tinha entrado. Agora ele acontece uma vez só, quando a tela abre.",
+      "versao": "1.0.6 (1)",
+      "em": "2026-08-24T22:26:42"
+    },
+    "AMG5PVUooBmBXDIiTkrtjCM": {
+      "commit": "deea8ec",
+      "nota": "Implementado, do jeito que você descreveu. A folha de troca agora tem um interruptor: 'valer nos próximos treinos deste dia'. Desligado (o padrão), a troca vale só para hoje, como antes; ligado, o exercício escolhido entra na ficha e volta nas próximas semanas. Deixamos o padrão no conservador de propósito, porque o motivo mais comum de trocar é a máquina estar ocupada, e isso não deveria reescrever seu plano sozinho. Só entram na ficha os substitutos que o app oferece na lista, que mantêm o mesmo grupo muscular e o mesmo tipo de exercício; mudanças maiores continuam pelo chat com o personal, que passa pelas checagens clínicas.",
+      "versao": "1.0.6 (1)",
+      "em": "2026-08-24T22:26:45"
     }
   }
 }

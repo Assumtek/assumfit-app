@@ -2,7 +2,7 @@ import axios from 'axios';
 import { create } from 'zustand';
 
 import { publicarTreinoDeHoje, type TreinoDoWidget } from '../../modules/widgetbridge';
-import { workoutMeta } from '../domain/workout';
+import { resumoDoVolume, workoutMeta } from '../domain/workout';
 
 import { ble } from '../services/ble';
 import { armTrainingNudge, cancelRestEnd, scheduleRestEnd } from '../services/notifications.service';
@@ -147,7 +147,15 @@ type WorkoutState = {
     perceivedEffort?: number | null;
     rating?: number | null;
     comment?: string | null;
-  }) => Promise<{ durationSec: number | null; completionPct: number | null; workoutName: string }>;
+  }) => Promise<{
+    durationSec: number | null;
+    completionPct: number | null;
+    workoutName: string;
+    /** Quantos exercícios tiveram ao menos uma série concluída. */
+    exercicios: number | null;
+    /** Carga × repetições somadas nas séries concluídas. */
+    volumeKg: number | null;
+  }>;
   cancel: () => Promise<void>;
 };
 
@@ -351,6 +359,14 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   finish: async (params) => {
     const { execution } = get();
     if (!execution) throw new Error('Nenhuma sessão em andamento');
+    /*
+     A carga total é lida ANTES do `set` que limpa o progresso, e essa ordem é
+     o ponto todo: as séries digitadas só existem aqui, e o `finish` do servidor
+     ainda não devolve nem contagem nem volume. A tela de conclusão mandava
+     `null` para os dois, e o cartão de compartilhar mostrava os chips
+     "Exerc." e "Carga" marcados sem nada por trás (Bruno, 24/08/2026).
+    */
+    const volume = resumoDoVolume(get().progress);
     const result = await apiFinish(execution.id, params);
     set({ execution: null, progress: {}, restEndsAt: null, timerBase: 0, timerRunSince: null });
     // Treinou: a cobrança das 15h de HOJE morre e renasce para amanhã. É o que
@@ -360,6 +376,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
       durationSec: result.durationSec,
       completionPct: result.completionPct,
       workoutName: result.workoutName,
+      ...volume,
     };
   },
 

@@ -2,6 +2,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from '@tamagui/linear-gradient';
 import { XStack, YStack } from '@tamagui/stacks';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
+import { irParaOInstagram, podeIrParaOInstagram } from '../../../modules/widgetbridge';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
@@ -70,6 +71,25 @@ const CHIPS: { id: BlocoId; rotulo: string }[] = [
   { id: 'data', rotulo: 'Data' },
   { id: 'marca', rotulo: 'AssumFit' },
 ];
+
+/**
+ * O cartão tem o que desenhar neste bloco?
+ *
+ * Espelha as condições de render de cada bloco. Se as duas listas divergirem, o
+ * sintoma é o chip prometendo o que o cartão não mostra, que foi o defeito
+ * relatado. Blocos sem dado variável (selo, título, data, marca) estão sempre
+ * disponíveis.
+ */
+function temDado(id: BlocoId, params: Params): boolean {
+  if (params.metricas) {
+    const i = (['duracao', 'exercicios', 'volume'] as BlocoId[]).indexOf(id);
+    return i < 0 || i < params.metricas.length;
+  }
+  if (id === 'duracao') return params.durationSec != null;
+  if (id === 'exercicios') return (params.exercises ?? 0) > 0;
+  if (id === 'volume') return (params.volumeKg ?? 0) > 0;
+  return true;
+}
 
 /** Com métricas genéricas, os chips de Duração/Exerc./Carga passam a ter o rótulo de cada métrica. */
 function chipGenerico(
@@ -178,6 +198,35 @@ export function WorkoutShareScreen() {
     }
   };
 
+  /*
+   O Instagram é consultado uma vez, na montagem: a resposta não muda enquanto
+   a tela está aberta, e `canOpenURL` no caminho de render piscaria o botão.
+  */
+  const [temInstagram] = useState(() => podeIrParaOInstagram());
+
+  /**
+   * Vai direto para o story, com o cartão já como fundo.
+   *
+   * Cair no compartilhamento comum quando não dá é deliberado: a pessoa tocou
+   * para publicar, e ficar sem resposta nenhuma é pior do que abrir a folha do
+   * sistema, de onde o Instagram também é alcançável.
+   */
+  const irParaOStory = async () => {
+    setOcupado(true);
+    try {
+      const uri = await gerar();
+      if (!uri) return;
+      if (irParaOInstagram(uri)) return;
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png' });
+      }
+    } catch {
+      Alert.alert('Não foi possível abrir o Instagram', 'Tente pelo botão de compartilhar.');
+    } finally {
+      setOcupado(false);
+    }
+  };
+
   const compartilhar = async () => {
     setOcupado(true);
     try {
@@ -242,10 +291,16 @@ export function WorkoutShareScreen() {
         Dois dedos redimensionam ou giram. Toque fora para tirar a seleção.
       </Data>
 
-      {/* Os chips ligam e desligam blocos — publicar a carga é decisão, não padrão. */}
+      {/*
+        Os chips ligam e desligam blocos, e publicar a carga é decisão, não
+        padrão. Chip de bloco SEM DADO não aparece: ele prometia um conteúdo que
+        o cartão não tinha como desenhar, e ficava marcado ao lado de um cartão
+        sem aquele número, o que se lê como defeito (Bruno, 24/08/2026: "mesmo
+        selecionado, a carga total não veio"). Nada a mostrar, nada a oferecer.
+      */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
         <XStack gap="$sm">
-          {CHIPS.map((chip) => chipGenerico(chip, params.metricas)).map((chip) => (
+          {CHIPS.filter((chip) => temDado(chip.id, params)).map((chip) => chipGenerico(chip, params.metricas)).map((chip) => (
             <Pressable
               key={chip.id}
               onPress={() => alternar(chip.id)}
@@ -481,7 +536,23 @@ export function WorkoutShareScreen() {
       </XStack>
 
       <YStack gap="$sm" marginTop="$xl">
-        <Button title="Compartilhar" loading={ocupado} onPress={() => void compartilhar()} />
+        {/*
+          Com o Instagram instalado, ele PASSA A SER a ação principal da tela, e
+          o "Compartilhar" desce para secundário: continua valendo um preenchido
+          por tela (regra 2 do sistema). Para quem faz story esse é o destino, e
+          o compartilhamento comum é o caminho de todo o resto (pedido do Bruno,
+          24/08/2026). Sem o app instalado o atalho nem aparece, senão seria um
+          botão que não leva a lugar nenhum.
+        */}
+        {temInstagram ? (
+          <Button title="Story no Instagram" loading={ocupado} onPress={() => void irParaOStory()} />
+        ) : null}
+        <Button
+          title="Compartilhar"
+          variant={temInstagram ? 'secondary' : 'primary'}
+          loading={ocupado}
+          onPress={() => void compartilhar()}
+        />
         <Button title="Salvar na galeria" variant="secondary" onPress={() => void salvar()} />
         <Button title="Agora não" variant="ghost" onPress={() => navigation.goBack()} />
       </YStack>

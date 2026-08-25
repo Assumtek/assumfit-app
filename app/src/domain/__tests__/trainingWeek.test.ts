@@ -1,4 +1,4 @@
-import { devePosicionarNoPedido } from '../workout';
+import { devePosicionarNoPedido, resumoDoVolume } from '../workout';
 import {
   treinoPendente, diaCorrente, montarSemanaDeTreino } from '../trainingWeek';
 import type { DiaDoPlano } from '../trainingWeek';
@@ -240,5 +240,42 @@ describe('posicionar a tela no exercício pedido', () => {
     // Treino que chega meio segundo depois: dar por atendido aqui faria a tela
     // nunca posicionar.
     expect(devePosicionarNoPedido({ pedido: 'ex-4', atendido: null, encontrado: false })).toBe(false);
+  });
+});
+
+describe('carga total da sessão', () => {
+  const serie = (load: string, reps: string, completed = true) => ({ load, reps, completed });
+
+  it('soma carga por repetições das séries concluídas', () => {
+    const r = resumoDoVolume({ 'ex-1': [serie('50', '10'), serie('50', '8')] });
+    expect(r.volumeKg).toBe(900);
+    expect(r.exercicios).toBe(1);
+  });
+
+  it('série não concluída não entra: ela não aconteceu', () => {
+    const r = resumoDoVolume({ 'ex-1': [serie('50', '10'), serie('50', '10', false)] });
+    expect(r.volumeKg).toBe(500);
+  });
+
+  it('exercício sem nenhuma série concluída não conta como feito', () => {
+    const r = resumoDoVolume({ 'ex-1': [serie('50', '10')], 'ex-2': [serie('40', '10', false)] });
+    expect(r.exercicios).toBe(1);
+  });
+
+  it('vírgula decimal é o que a pessoa digita em português', () => {
+    expect(resumoDoVolume({ 'ex-1': [serie('7,5', '12')] }).volumeKg).toBe(90);
+  });
+
+  it('sem nada levantado devolve null, nunca zero', () => {
+    // Zero afirmaria que a pessoa não levantou nada; o cartão omite o bloco.
+    expect(resumoDoVolume({})).toEqual({ exercicios: null, volumeKg: null });
+    expect(resumoDoVolume({ 'ex-1': [serie('', '')] }).volumeKg).toBeNull();
+  });
+
+  it('peso corporal sem carga digitada não zera o exercício feito', () => {
+    // Flexão: reps sim, carga não. O exercício conta; o volume, não.
+    const r = resumoDoVolume({ 'ex-1': [serie('', '15')] });
+    expect(r.exercicios).toBe(1);
+    expect(r.volumeKg).toBeNull();
   });
 });

@@ -269,12 +269,19 @@ export function GuiasDeCentro({ v, h }: { v: boolean; h: boolean }) {
 }
 
 /**
- * A lixeira do canvas, no rodapé, como no story do Instagram.
+ * A lixeira do canvas, no CANTO inferior direito.
  *
  * Aparece só enquanto um bloco está sendo arrastado e cresce quando o dedo
  * entra nela. É o segundo caminho para tirar um bloco do card, e não o único:
  * os chips acima continuam ligando e desligando cada um, porque arrastar até
- * o rodapé é gesto de quem já sabe que ele existe.
+ * ela é gesto de quem já sabe que ela existe.
+ *
+ * Era grande e centralizada no rodapé, como no story do Instagram, e um
+ * testador pediu o contrário: "diminuir o ícone de lixeira, deixa no canto
+ * inferior" (Bruno, 24/08/2026). Faz sentido no nosso caso: centralizada, ela
+ * fica no caminho de quem arrasta um bloco para a parte de baixo do card, que
+ * é onde moram duração e data. No canto, ela sai da rota mais usada e continua
+ * alcançável, e a folga de toque do domínio compensa o alvo menor.
  *
  * Mora FORA do `YStack` que o `captureRef` fotografa: dentro, ela entraria no
  * PNG se a captura acontecesse com um arrasto em curso.
@@ -293,9 +300,8 @@ export function LixeiraDoCanvas({
   return (
     <YStack
       position="absolute"
-      bottom={24}
-      left={0}
-      right={0}
+      bottom={16}
+      right={16}
       alignItems="center"
       pointerEvents="none"
       onLayout={(e) => {
@@ -307,8 +313,8 @@ export function LixeiraDoCanvas({
       }}
     >
       <YStack
-        width={ativa ? 72 : 56}
-        height={ativa ? 72 : 56}
+        width={ativa ? 56 : 44}
+        height={ativa ? 56 : 44}
         borderRadius={999}
         alignItems="center"
         justifyContent="center"
@@ -320,10 +326,12 @@ export function LixeiraDoCanvas({
           borderColor: ativa ? colors.alert : 'rgba(255,255,255,0.24)',
         }}
       >
-        <Icon name="trash" size={ativa ? 30 : 24} color="#FFFFFF" strokeWidth={1.5} />
+        <Icon name="trash" size={ativa ? 24 : 20} color="#FFFFFF" strokeWidth={1.5} />
       </YStack>
-      <Micro marginTop="$sm" style={{ color: '#FFFFFF' }}>
-        {ativa ? 'solte para remover' : 'arraste aqui para remover'}
+      {/* No canto não cabe a frase inteira, e ela também não é mais necessária:
+          o alvo está à vista enquanto o dedo arrasta. */}
+      <Micro marginTop="$xs" style={{ color: '#FFFFFF' }}>
+        {ativa ? 'solte' : 'remover'}
       </Micro>
     </YStack>
   );

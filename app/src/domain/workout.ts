@@ -288,3 +288,47 @@ export function devePosicionarNoPedido({
   if (!pedido || !encontrado) return false;
   return pedido !== atendido;
 }
+
+/** Uma série como a tela de execução a guarda: carga e reps digitadas, texto. */
+export type SerieRegistrada = { load: string; reps: string; completed: boolean };
+
+/**
+ * O que a sessão levantou: exercícios tocados e carga total.
+ *
+ * Carga total é o volume clássico da musculação, carga × repetições somado em
+ * todas as séries CONCLUÍDAS. Série não concluída não entra: ela não aconteceu.
+ *
+ * Existe porque o cartão de compartilhar prometia esses dois números e não os
+ * tinha. Quem compartilhava logo depois de terminar via os chips "Exerc." e
+ * "Carga" marcados e nenhum dos dois no cartão, porque a tela de conclusão
+ * mandava `null` para os dois (Bruno, 24/08/2026: "mesmo selecionado, a carga
+ * total não veio"). O dado sempre esteve no aparelho: é o que a pessoa digitou
+ * série a série.
+ *
+ * Devolve `null` em vez de zero quando não há o que somar. Zero afirmaria que a
+ * pessoa não levantou nada, e o cartão omite bloco sem valor.
+ */
+export function resumoDoVolume(progresso: Record<string, SerieRegistrada[]>): {
+  exercicios: number | null;
+  volumeKg: number | null;
+} {
+  const numero = (t: string) => {
+    // Vírgula é o separador decimal de quem digita em português.
+    const n = Number(String(t).replace(',', '.'));
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  };
+
+  let volume = 0;
+  let exercicios = 0;
+  for (const series of Object.values(progresso)) {
+    const feitas = series.filter((s) => s.completed);
+    if (feitas.length === 0) continue;
+    exercicios += 1;
+    for (const s of feitas) volume += numero(s.load) * numero(s.reps);
+  }
+
+  return {
+    exercicios: exercicios > 0 ? exercicios : null,
+    volumeKg: volume > 0 ? Math.round(volume) : null,
+  };
+}

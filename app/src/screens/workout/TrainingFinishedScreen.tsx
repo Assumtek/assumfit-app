@@ -39,6 +39,8 @@ export function TrainingFinishedScreen() {
     durationSec: number | null;
     completionPct: number | null;
     workoutName: string;
+    exercicios: number | null;
+    volumeKg: number | null;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -156,11 +158,18 @@ export function TrainingFinishedScreen() {
               (navigation as any).push('WorkoutShare', {
                 workoutName: result.workoutName,
                 durationSec: result.durationSec,
-                // Contagem e volume ainda não vêm do `finish` do servidor. O
-                // card omite o bloco quando o valor falta, em vez de mostrar
-                // zero — zero afirmaria que a pessoa não levantou nada.
-                exercises: null,
-                volumeKg: null,
+                /*
+                 Contagem e carga saem das séries que a pessoa digitou nesta
+                 sessão, lidas na conclusão. O `finish` do servidor ainda não
+                 devolve nenhum dos dois, e mandar `null` fazia o cartão exibir
+                 os chips "Exerc." e "Carga" marcados sem nada por trás.
+
+                 Continuam podendo ser nulos, e aí o cartão omite o bloco: quem
+                 fez um treino sem carga (peso corporal) não deve ver zero, que
+                 afirmaria que não levantou nada.
+                */
+                exercises: result.exercicios,
+                volumeKg: result.volumeKg,
               })
             }
           />

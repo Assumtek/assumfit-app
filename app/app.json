@@ -22,7 +22,11 @@
           "bluetooth-central"
         ],
         "ITSAppUsesNonExemptEncryption": false,
-        "NSSupportsLiveActivities": true
+        "NSSupportsLiveActivities": true,
+        "LSApplicationQueriesSchemes": [
+          "instagram-stories",
+          "instagram"
+        ]
       },
       "entitlements": {
         "com.apple.security.application-groups": [

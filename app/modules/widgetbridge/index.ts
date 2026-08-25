@@ -28,6 +28,8 @@ declare class WidgetBridgeNativeModule {
   endSportActivity?(): void;
   consumeSportActions?(): { action: string; atMs: number }[];
   addListener?(evento: 'onSportAction', ouvinte: () => void): { remove(): void };
+  podeAbrirInstagramStories?(): boolean;
+  abrirInstagramStories?(caminho: string): boolean;
 }
 
 const nativo = requireOptionalNativeModule<WidgetBridgeNativeModule>('WidgetBridge');
@@ -169,5 +171,39 @@ export function aoTocarNaIlha(ouvinte: () => void): () => void {
     return () => sub?.remove();
   } catch {
     return () => {};
+  }
+}
+
+// ============================================================================
+// Instagram Stories — o caminho curto do cartão para o story.
+// ============================================================================
+
+/**
+ * O Instagram está instalado e aceita story deste app?
+ *
+ * `false` também quando a checagem não pode ser feita (Android, build sem o
+ * módulo). O botão não aparece, e o "Compartilhar" comum continua ali: nunca
+ * se oferece um atalho que pode não levar a lugar nenhum.
+ */
+export function podeIrParaOInstagram(): boolean {
+  try {
+    return nativo?.podeAbrirInstagramStories?.() ?? false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Abre o Instagram Stories com a imagem já como fundo.
+ *
+ * Pedido de testador (Bruno, 24/08/2026): "vincular botão direto com o
+ * Instagram, pra facilitar o post". Devolve `false` quando não deu, e aí a
+ * tela cai no compartilhamento comum em vez de não fazer nada.
+ */
+export function irParaOInstagram(caminhoDaImagem: string): boolean {
+  try {
+    return nativo?.abrirInstagramStories?.(caminhoDaImagem) ?? false;
+  } catch {
+    return false;
   }
 }
