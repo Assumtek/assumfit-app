@@ -137,12 +137,19 @@ class Facts:
     recent: tuple[str, ...] = ()
 
 
+# O nível é um enum interno em inglês, e o modelo REPETE o vocabulário que
+# recebe: a home chegou a mostrar "um valor da faixa mid" para quem usa o app
+# em português (encontrado em 24/08/2026, testando a tela com o texto grande do
+# iOS). Nada em inglês entra no prompt sem tradução.
+FAIXA_EM_PALAVRAS = {"low": "baixa", "mid": "média", "high": "alta"}
+
+
 def _prompt(f: Facts) -> str:
     linhas = [
         # "Prontidão", não "energia": é a palavra que a tela usa, e o modelo
         # repete o vocabulário que recebe — nomear diferente aqui faria a home
         # falar duas línguas na mesma dobra.
-        f"Prontidão do corpo: {f.score} de 100 (faixa: {f.level}).",
+        f"Prontidão do corpo: {f.score} de 100 (faixa {FAIXA_EM_PALAVRAS.get(f.level, f.level)}).",
         f"Hora do dia: {f.hour}h.",
     ]
 

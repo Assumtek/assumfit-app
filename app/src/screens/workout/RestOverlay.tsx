@@ -119,23 +119,34 @@ export function RestOverlay({
     >
       <XStack alignItems="center" gap="$md" paddingVertical={16} paddingHorizontal={16}>
         {/*
-          78, medido — não 64.
+          Piso de 80, não largura de 80.
 
-          A largura fixa existe para o bloco do meio não reposicionar a cada
-          dezena de segundo. Mas 64 (o valor do MUVX, que usa fonte mono mais
-          estreita) não comporta `01:31` em 26 px: o texto QUEBRAVA em duas
-          linhas. Quatro dígitos tabulares nesta fonte pedem ~70 px; 78 dá folga.
+          A medida existe para o bloco do meio não reposicionar a cada dezena de
+          segundo, e 80 é o que `01:31` ocupa na fonte padrão. Como LARGURA, ela
+          fazia o próprio cronômetro sumir: quem usa o texto maior do iOS via
+          `00:…`, com a informação principal da barra substituída por
+          reticências (Bruno, 24/08/2026). O número é o conteúdo, não o
+          contêiner: ele dita a largura, e o piso continua segurando o tremor.
+
+          Pelo mesmo motivo o `lineHeight` fixo saiu. Trinta pixels de linha com
+          a fonte escalada a trinta e cinco cortam o glifo por cima e por baixo.
         */}
-        <YStack width={80}>
+        <YStack minWidth={80}>
           <Title
             fontWeight="600"
             color="$foreground"
             letterSpacing={0.5}
-            lineHeight={30}
             // Dígitos de largura fixa: o número muda a cada segundo, e sem isso
             // tudo à direita dele treme junto.
             fontVariant={['tabular-nums']}
             numberOfLines={1}
+            /*
+             O relógio acompanha o texto maior do sistema, mas até um limite:
+             passando disto ele empurraria "Descanso" e o nome do exercício
+             para fora da barra, e a pessoa perderia as três informações em vez
+             de uma. Acessibilidade aqui é o número CABER, não crescer sem fim.
+            */
+            maxFontSizeMultiplier={1.6}
           >
             {formatRest(remaining)}
           </Title>
@@ -150,7 +161,10 @@ export function RestOverlay({
           >
             Descanso
           </Micro>
-          <Body fontWeight="600" color="$foreground" numberOfLines={1}>
+          {/* Duas linhas: "Próxima série: Supino inclinado com halteres" não
+              cabe numa só nem na fonte padrão, e virava "Supin…". Saber qual é
+              o próximo exercício é a razão de a frase existir. */}
+          <Body fontWeight="600" color="$foreground" numberOfLines={2} maxFontSizeMultiplier={1.6}>
             {nextName ? `${nextLabel ?? 'A seguir'}: ${nextName}` : 'Próxima série em breve'}
           </Body>
         </YStack>
@@ -169,8 +183,9 @@ export function RestOverlay({
             paddingVertical={12}
             borderRadius={999}
             backgroundColor="$primary"
+            flexShrink={0}
           >
-            <Body fontWeight="800" color="$primaryForeground">
+            <Body fontWeight="800" color="$primaryForeground" numberOfLines={1} maxFontSizeMultiplier={1.4}>
               Pular
             </Body>
           </YStack>

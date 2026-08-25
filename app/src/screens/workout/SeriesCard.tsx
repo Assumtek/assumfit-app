@@ -64,7 +64,7 @@ export function SeriesCard({
         borderBottomColor="$border"
         opacity={0.7}
       >
-        <Body color="$mutedForeground" width={28}>
+        <Body color="$mutedForeground" minWidth={28}>
           {number}ª
         </Body>
         <Body color="$mutedForeground" flex={1}>
@@ -101,7 +101,7 @@ export function SeriesCard({
         borderBottomColor="$border"
         opacity={0.35}
       >
-        <Body color="$mutedForeground" width={28}>
+        <Body color="$mutedForeground" minWidth={28}>
           {number}ª
         </Body>
         <Body color="$mutedForeground" flex={1}>
@@ -117,7 +117,7 @@ export function SeriesCard({
     return (
       <YStack paddingVertical="$lg" borderBottomWidth={1} borderBottomColor="$border">
         <XStack alignItems="center" gap="$md">
-          <SectionTitle color="$foreground" width={28}>
+          <SectionTitle color="$foreground" minWidth={28}>
             {number}ª
           </SectionTitle>
           <YStack flex={1}>
@@ -160,7 +160,7 @@ export function SeriesCard({
   return (
     <YStack paddingVertical="$lg" borderBottomWidth={1} borderBottomColor="$border">
       <XStack alignItems="center" gap="$md">
-        <SectionTitle color="$foreground" width={28}>
+        <SectionTitle color="$foreground" minWidth={28}>
           {number}ª
         </SectionTitle>
         <Body fontWeight="500" color="$primary" flex={1}>

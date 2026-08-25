@@ -109,7 +109,7 @@ export function WorkoutHistoryScreen() {
                 accessibilityLabel={`${meta?.label ?? s.sport}, ${data}`}
               >
                 <XStack alignItems="center" gap="$md">
-                  <Data width={52}>{data}</Data>
+                  <Data minWidth={52}>{data}</Data>
                   <Icon name={meta?.icon ?? 'footprints'} size={16} color={colors.textMuted} />
                   <YStack flex={1} minWidth={0} gap={4}>
                     <Body color="$foreground" numberOfLines={1}>
@@ -135,7 +135,7 @@ export function WorkoutHistoryScreen() {
               accessibilityLabel={item.workoutName}
             >
               <XStack alignItems="center" gap="$md">
-                <Data width={52}>{data}</Data>
+                <Data minWidth={52}>{data}</Data>
                 <Icon name="dumbbell" size={16} color={colors.textMuted} />
                 <YStack flex={1} minWidth={0} gap={4}>
                   <Body color="$foreground" numberOfLines={1}>

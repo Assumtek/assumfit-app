@@ -1436,6 +1436,12 @@
       "nota": "A pulseira parou de REGISTRAR, e o app não tinha como te contar. Comparando as grandezas no servidor: batimento, oxigênio e estresse zeraram todos juntos na sua conta em 22/08 à noite, e só os passos continuaram chegando (passos vêm do acelerômetro; o resto depende de um agendamento no firmware que estava desligado). Sem batimento gravado não há noite para fechar, e era esse o buraco. Agora o app confere esse agendamento todo dia na sincronização, e não só quando reconecta, mostra na tela do aparelho o que a pulseira está registrando e o que parou, com botão para religar. O botão de buscar noite também parou de dizer 'Noite atualizada' quando o que veio é de dias atrás. Uma pergunta que fecha o diagnóstico: o app do fabricante (QRing) mostra as noites de 22 para 23 e de 23 para 24?",
       "versao": "1.0.6 (1)",
       "em": "2026-08-24T15:40:37"
+    },
+    "AF4WXkfxbBRFOwpzyeDsDLY": {
+      "commit": "d811111",
+      "nota": "Achamos, e você perdeu água de verdade, não foi impressão. O app manda o total do dia a cada copo registrado, e quando vários entram juntos (a fila do botão do widget, por exemplo) saem várias gravações no mesmo segundo. Elas chegam ao servidor fora de ordem, e a última a ser processada vencia mesmo carregando um total menor: o dia inteiro voltava para o primeiro copo. O registro do seu dia às 22h03 tem cinco gravações no mesmo segundo, é exatamente isso. Agora o app junta as escritas numa só, guarda e reenvia o que não conseguiu subir (o seu horário teve falha de token no meio), e o servidor recusa gravação de água que chega atrasada. Se ainda faltar água de hoje, dá para acertar o total no botão de ajustar, e ele não vai mais voltar sozinho.",
+      "versao": "1.0.6 (1)",
+      "em": "2026-08-24T20:18:10"
     }
   }
 }

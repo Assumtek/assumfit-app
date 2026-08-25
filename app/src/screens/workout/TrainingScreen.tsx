@@ -451,7 +451,13 @@ export function TrainingScreen() {
           <Icon name="back" size={20} color={colors.text} />
         </IconButton>
 
-        <XStack alignItems="center" gap="$md">
+        {/*
+          `flexShrink` e `minWidth={0}`: com o texto maior do iOS as pílulas
+          crescem, e sem isto a última saía pela borda direita da tela, cortada
+          ao meio (Bruno, 24/08/2026). Encolher e truncar dentro da pílula é
+          feio; sair da tela esconde o dado inteiro.
+        */}
+        <XStack alignItems="center" gap="$md" flexShrink={1} minWidth={0}>
           <IconButton
             label="Checklist do treino"
             onPress={() => (navigation as any).push('Checklist')}
@@ -473,6 +479,7 @@ export function TrainingScreen() {
             borderRadius={16}
             paddingHorizontal="$lg"
             paddingVertical="$md"
+            flexShrink={0}
           >
             <Icon name="clock" size={16} color={colors.text} />
             <BodyLarge
@@ -481,6 +488,8 @@ export function TrainingScreen() {
               // Dígitos tabulares: sem eles a largura muda a cada segundo e o
               // cronômetro treme dentro da pílula.
               fontVariant={['tabular-nums']}
+              numberOfLines={1}
+              maxFontSizeMultiplier={1.4}
             >
               {formatSessionClock(elapsedSec)}
             </BodyLarge>
@@ -494,13 +503,26 @@ export function TrainingScreen() {
               borderColor="$border"
               paddingHorizontal="$md"
               paddingVertical="$md"
+              flexShrink={1}
+              minWidth={0}
             >
               <Icon name="heart" size={16} color={colors.text} />
-              <BodyLarge fontWeight="500" color="$foreground" fontVariant={['tabular-nums']}>
+              <BodyLarge
+                fontWeight="500"
+                color="$foreground"
+                fontVariant={['tabular-nums']}
+                numberOfLines={1}
+                maxFontSizeMultiplier={1.4}
+              >
                 {Math.round(bpmAoVivo)}
               </BodyLarge>
               {pesoKg != null ? (
-                <Body color="$mutedForeground" fontVariant={['tabular-nums']}>
+                <Body
+                  color="$mutedForeground"
+                  fontVariant={['tabular-nums']}
+                  numberOfLines={1}
+                  maxFontSizeMultiplier={1.4}
+                >
                   · {Math.round(kcal)} kcal
                 </Body>
               ) : null}

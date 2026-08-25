@@ -510,7 +510,22 @@ lá. As seis que mais se quebra por descuido:
    comentário, relatório: vírgula, dois-pontos ou ponto no lugar do traço longo (U+2014). O
    ponto médio (·) continua sendo o separador de dado. Decisão da fundadora
    (22/08/2026). Marcador de "sem dado" é o traço curto (U+2013).
-8. **Todo número de layout é múltiplo de dois.** Fonte, padding, gap, largura,
+8. **Largura fixa em texto não sobrevive ao texto grande do iOS.** `width={80}`
+   medido na fonte padrão vira `00:…` para quem usa Dynamic Type maior, e foi
+   assim que o cronômetro de descanso escondeu o próprio número (Bruno,
+   24/08/2026). Em texto, a medida é `minWidth`: o conteúdo dita a largura e o
+   piso segura o alinhamento. Onde o espaço é mesmo fixo (um terço da tela, uma
+   pílula), o rótulo ENCOLHE para caber inteiro (`adjustsFontSizeToFit` com
+   `minimumFontScale`), porque truncar e quebrar no meio da palavra perdem o
+   nome do indicador, que é o que dá sentido ao número. `maxFontSizeMultiplier`
+   é legítimo em número de instrumento e em rótulo de controle: ali
+   acessibilidade é o dado CABER, não crescer sem fim.
+
+   Confira com `xcrun simctl ui booted content_size accessibility-large`. Foi
+   assim que apareceram, na mesma rodada, os rótulos dos três anéis se
+   sobrepondo e a pílula de batimento saindo pela borda da tela.
+
+9. **Todo número de layout é múltiplo de dois.** Fonte, padding, gap, largura,
    altura, raio, ícone: 13 vira 14, 15 vira 16. Exceções: hairline de 1 px, o
    999 do pill e a ESPESSURA DE TRAÇO (`strokeWidth`), que é desenho, não
    grade: arredondá-la engrossou os gráficos (testador, 22/08/2026). Regra da proporcionalidade (22/08/2026).

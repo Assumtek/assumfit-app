@@ -149,7 +149,7 @@ export function ProjectScreen() {
       {horizonte ? (
         <Section label="o prazo">
           <Row>
-            <Data flexShrink={0} width={112}>
+            <Data flexShrink={0} minWidth={112}>
               {horizonte.vencido ? 'Encerrado' : `Semana ${horizonte.semanaAtual} de ${horizonte.semanas}`}
             </Data>
             <YStack flex={1} height={4} borderRadius={2} backgroundColor="$muted" overflow="hidden">
@@ -218,7 +218,7 @@ export function ProjectScreen() {
       <Section label="a semana">
         {semana.map((dia, i) => (
           <Row key={dia.dayOfWeek} last={i === semana.length - 1}>
-            <Data flexShrink={0} width={72}>
+            <Data flexShrink={0} minWidth={72}>
               {DAY_LABEL[dia.dayOfWeek]}
             </Data>
             {dia.nome ? (
