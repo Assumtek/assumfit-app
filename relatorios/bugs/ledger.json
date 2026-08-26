@@ -1484,6 +1484,12 @@
       "nota": "Implementado. Quando o Instagram está instalado, aparece o botão 'Story no Instagram', que abre o story já com o cartão como fundo, sem passar pela folha de compartilhamento nem pela escolha de mídia. Ele vira o botão principal da tela nesse caso, e o Compartilhar comum continua logo abaixo para os outros destinos. Se por algum motivo o Instagram não abrir, o app cai no compartilhamento normal em vez de não fazer nada. Como é código nativo, isso só aparece na build nova.",
       "versao": "1.0.6 (1)",
       "em": "2026-08-24T22:58:25"
+    },
+    "slack:1787666811.225349": {
+      "commit": "1ad2551",
+      "nota": "Corrigido, e você identificou as duas metades certas do problema. O que acontecia: aquilo era uma ação, e o resultado dela só existia enquanto a tela estava aberta. O comando ia mesmo para a pulseira; o que se perdia era a memória de ter mandado, então ao voltar a linha parecia desligada. Virou interruptor, com o estado guardado no aparelho, como você sugeriu. Ele agora vale para os dois caminhos do aviso: o app vibrando no fim do descanso e do alongamento, e o aviso com a tela apagada. Uma diferença que a tela passa a dizer em vez de esconder: o firmware da pulseira só LIGA o segundo caminho, não existe comando para desligar, então desligar aqui faz o app parar de mandar vibrar, e o emparelhamento com o iPhone continua até você desfazê-lo nos Ajustes. Sobe na próxima build.",
+      "versao": "1.0.6 (2)",
+      "em": "2026-08-25T11:13:54"
     }
   }
 }

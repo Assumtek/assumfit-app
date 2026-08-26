@@ -6,7 +6,7 @@ import { DetailScreen } from '../components/DetailScreen';
 import { ActionRow, Row, Section } from '../components/List';
 import { ProgressRing } from '../components/ProgressRing';
 import { Body, Data, Label, Metric, MetricSm, RatingText, Skeleton } from '../components/ui';
-import { aneisDoCalendario, caloriasAtivas, detalheDoDia, diasFechados, metaEfetiva, repousoAteAgora } from '../domain/dailyGoals';
+import { aneisDoCalendario, caloriasAtivas, detalheDoDia, diasFechados, kcalDoTreinoGuiado, metaEfetiva, repousoAteAgora } from '../domain/dailyGoals';
 import { ageFromBirthDate, calorieGoal } from '../domain/nutritionGoal';
 import { isoHoje } from '../domain/water';
 import * as api from '../services/api.service';
@@ -42,12 +42,15 @@ export function DailyGoalsScreen() {
     void carregar();
     let vivo = true;
     void (async () => {
-      const [anamnese, perfil, rotina, d, s] = await Promise.all([
+      const [anamnese, perfil, rotina, d, s, execucoes] = await Promise.all([
         api.fetchAnamnesis().catch(() => null),
         api.fetchProfile().catch(() => null),
         api.fetchLifestyle().catch(() => null),
         api.fetchDailyHistory(30).catch(() => []),
         api.fetchSportSessions(30).catch(() => []),
+        // O treino guiado da academia: ele não é sessão de esporte nem produz
+        // passos, e ficava inteiro fora da conta de calorias ativas.
+        api.fetchExecutionHistory(2).catch(() => []),
       ]);
       if (!vivo) return;
       const resp = (anamnese?.answers ?? {}) as Record<string, unknown>;
@@ -65,7 +68,18 @@ export function DailyGoalsScreen() {
       setSessoes(s);
       const inicio = new Date();
       inicio.setHours(0, 0, 0, 0);
-      setSessoesHoje(s.filter((x) => new Date(x.startedAt) >= inicio).reduce((soma, x) => soma + (x.kcal ?? 0), 0));
+      const doEsporte = s.filter((x) => new Date(x.startedAt) >= inicio).reduce((soma, x) => soma + (x.kcal ?? 0), 0);
+      /*
+       Sessão de esporte VINCULADA a um treino guiado não é somada duas vezes:
+       quem faz musculação com o cronômetro de esporte aberto gera as duas
+       coisas para o mesmo esforço.
+      */
+      const vinculadas = new Set(
+        s.filter((x) => x.workoutExecutionId).map((x) => x.workoutExecutionId));
+      const doTreino = kcalDoTreinoGuiado(
+        execucoes.filter((e) => !vinculadas.has(e.id)),
+        num(resp.weightKg));
+      setSessoesHoje(Math.round(doEsporte + doTreino));
     })();
     return () => {
       vivo = false;
@@ -109,7 +123,7 @@ export function DailyGoalsScreen() {
         </ProgressRing>
         <YStack flex={1} gap="$sm">
           <RatingText>{fracao >= 1 ? 'Meta fechada' : `${Math.round(fracao * 100)}% da meta`}</RatingText>
-          <Body>{`Ativas: ${ativas} kcal, de passos e sessões de hoje.`}</Body>
+          <Body>{`Ativas: ${ativas} kcal, de passos, treinos e sessões de hoje.`}</Body>
           <Body>{repouso != null ? `Repouso até agora: ~${repouso} kcal (${bmr} por dia).` : 'Repouso: precisa de peso, altura e idade na anamnese.'}</Body>
         </YStack>
       </XStack>

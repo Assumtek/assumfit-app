@@ -119,6 +119,41 @@ export function HomeScreen() {
    de qualquer jeito.
   */
   const [historico, setHistorico] = useState<api.DailySummary[]>([]);
+  /*
+   Minutos de treino e esporte concluídos hoje.
+
+   O indicador de atividade lia só passos, e musculação quase não produz passo:
+   quem fechava uma hora de treino via "pouco movimento, 40% da meta de passos"
+   na home (Leonardo, 25/08/2026). É a mesma conta que a meta de água já fazia
+   por baixo, agora também à vista.
+  */
+  const [minutosDeTreino, setMinutosDeTreino] = useState(0);
+  useEffect(() => {
+    let vivo = true;
+    void (async () => {
+      const inicio = new Date();
+      inicio.setHours(0, 0, 0, 0);
+      const [execucoes, sessoes] = await Promise.all([
+        api.fetchExecutionHistory(2).catch(() => []),
+        api.fetchSportSessions(2).catch(() => []),
+      ]);
+      if (!vivo) return;
+      // Sessão vinculada a um treino não conta duas vezes o mesmo esforço.
+      const vinculadas = new Set(sessoes.map((s) => s.workoutExecutionId).filter(Boolean));
+      const minutos =
+        execucoes
+          .filter((e) => e.status === 'FINISHED' && new Date(e.startedAt) >= inicio)
+          .filter((e) => !vinculadas.has(e.id))
+          .reduce((soma, e) => soma + (e.durationSec ?? 0) / 60, 0) +
+        sessoes
+          .filter((s) => new Date(s.startedAt) >= inicio)
+          .reduce((soma, s) => soma + s.durationS / 60, 0);
+      setMinutosDeTreino(Math.round(minutos));
+    })();
+    return () => {
+      vivo = false;
+    };
+  }, []);
   const querAssinatura = blocosDaHome.some((b) => b.chave === 'assinatura' && b.ligado);
   useEffect(() => {
     if (!querAssinatura) return;
@@ -547,6 +582,7 @@ export function HomeScreen() {
                     refeicoes: { quantidade: mealsToday?.length ?? 0, kcalMin, kcalMax, metaKcal },
                     sono: sleep,
                     stress: stressAtual,
+                    minutosDeTreino,
                   })}
                   onAbrir={abrir}
                 />

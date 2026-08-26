@@ -41,3 +41,38 @@ describe('indicadoresDaHome', () => {
     expect(indicadoresDaHome({ ...base, stress: 44 })[4]).toMatchObject({ direcao: 'down', frase: 'Moderado' });
   });
 });
+
+describe('atividade não é só passo', () => {
+  const base = {
+    hora: 20,
+    agua: { ml: 2000, metaMl: 2500 },
+    passos: { hoje: 4000, meta: 10_000 },
+    refeicoes: { quantidade: 2, kcalMin: 800, kcalMax: 1200, metaKcal: 2000 },
+    sono: null,
+    stress: 40,
+  };
+  const atividade = (extra: Record<string, unknown> = {}) =>
+    indicadoresDaHome({ ...base, ...extra } as never).find((i) => i.key === 'atividade')!;
+
+  it('uma hora de treino não é "pouco movimento"', () => {
+    // O relato: musculação quase não produz passo, e a home dizia "pouco
+    // movimento, 40% da meta de passos" depois de um treino inteiro.
+    const i = atividade({ minutosDeTreino: 62 });
+    expect(i.direcao).toBe('up');
+    expect(i.frase).toContain('62 min de treino hoje');
+  });
+
+  it('a frase mantém os passos quando eles existem', () => {
+    expect(atividade({ minutosDeTreino: 62 }).frase).toContain('40% da meta de passos');
+  });
+
+  it('check-in aberto por engano não vira treino', () => {
+    const i = atividade({ minutosDeTreino: 5 });
+    expect(i.direcao).toBe('down');
+    expect(i.frase).toContain('meta de passos');
+  });
+
+  it('sem treino, a régua de passos continua mandando', () => {
+    expect(atividade().frase).toContain('meta de passos');
+  });
+});

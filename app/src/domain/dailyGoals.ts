@@ -216,3 +216,54 @@ export function detalheDoDia(
     vazio: false,
   };
 }
+
+/**
+ * O que o TREINO GUIADO gastou hoje.
+ *
+ * A conta de calorias ativas somava passos e sessões de esporte, e o treino da
+ * academia não é nenhum dos dois: musculação quase não produz passo, e o
+ * check-in guiado grava uma execução, não uma sessão de esporte. Quem fechou
+ * uma hora de treino via "121 kcal, de passos e sessões" e "40% da meta de
+ * passos" (Leonardo, 25/08/2026: "calorias não considerou meu treino",
+ * "atividade física está considerando apenas passos mas eu fiz um mega
+ * treino"). O esforço estava registrado; ninguém o somava.
+ *
+ * A conta é a mesma do esporte, MET × peso × horas, com o MET de musculação do
+ * catálogo (5.0). Sem peso no cadastro, usa o meio da faixa de referência, e o
+ * número continua sendo estimativa declarada, nunca medição.
+ */
+export const MET_DO_TREINO_GUIADO = 5.0;
+/** Meio da faixa 60–85 kg usada no esporte, para quando o cadastro não tem peso. */
+const PESO_DE_REFERENCIA_KG = 72;
+
+export type ExecucaoDoDia = {
+  startedAt: string;
+  durationSec: number | null;
+  status: string;
+};
+
+/**
+ * Soma as execuções CONCLUÍDAS que começaram hoje.
+ *
+ * Execução em andamento fica de fora: ela ainda não tem duração final, e somar
+ * um treino pela metade faria o número andar para trás quando ele fechasse com
+ * a duração real. Sessão sem duração também sai, em vez de virar zero contado.
+ */
+export function kcalDoTreinoGuiado(
+  execucoes: ExecucaoDoDia[],
+  pesoKg: number | null,
+  agora: Date = new Date()): number {
+  const inicio = new Date(agora);
+  inicio.setHours(0, 0, 0, 0);
+  const peso = pesoKg != null && pesoKg > 0 ? pesoKg : PESO_DE_REFERENCIA_KG;
+
+  return Math.round(
+    execucoes
+      .filter((e) => e.status === 'FINISHED')
+      .filter((e) => new Date(e.startedAt) >= inicio)
+      .reduce((soma, e) => {
+        const segundos = e.durationSec ?? 0;
+        if (segundos <= 0) return soma;
+        return soma + (MET_DO_TREINO_GUIADO * peso * segundos) / 3600;
+      }, 0));
+}

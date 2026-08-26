@@ -1,12 +1,4 @@
-import {
-  aneisDoCalendario,
-  caloriasAtivas,
-  detalheDoDia,
-  diasFechados,
-  fitaDaSemana,
-  metaEfetiva,
-  repousoAteAgora,
-} from '../dailyGoals';
+import { aneisDoCalendario, caloriasAtivas, detalheDoDia, diasFechados, fitaDaSemana, kcalDoTreinoGuiado, metaEfetiva, repousoAteAgora } from '../dailyGoals';
 
 describe('metaEfetiva', () => {
   it('só para hoje vale hoje; amanhã volta ao padrão', () => {
@@ -142,5 +134,40 @@ describe('aneisDoCalendario com o valor de hoje medido no aparelho', () => {
   it('sem o valor do aparelho, hoje volta a ser o do servidor', () => {
     const aneis = aneisDoCalendario([{ day: chaveHoje, steps: 10000 }], [], 400, hoje, 28, null);
     expect(aneis.find((a) => a.day === chaveHoje)?.ativas).toBeGreaterThan(0);
+  });
+});
+
+describe('calorias do treino guiado', () => {
+  const hoje = new Date(2026, 7, 25, 20, 0);
+  const exec = (min: number, status = 'FINISHED', dia = 25) => ({
+    startedAt: new Date(2026, 7, dia, 18, 0).toISOString(),
+    durationSec: min * 60,
+    status,
+  });
+
+  it('uma hora de treino com 80 kg dá o MET vezes o peso', () => {
+    // 5.0 × 80 × 1h = 400 kcal.
+    expect(kcalDoTreinoGuiado([exec(60)], 80, hoje)).toBe(400);
+  });
+
+  it('sem peso no cadastro usa a referência, e não zera', () => {
+    expect(kcalDoTreinoGuiado([exec(60)], null, hoje)).toBe(360);
+  });
+
+  it('treino em andamento não entra: a duração ainda não é final', () => {
+    expect(kcalDoTreinoGuiado([exec(30, 'IN_PROGRESS')], 80, hoje)).toBe(0);
+  });
+
+  it('treino de ontem não entra no dia de hoje', () => {
+    expect(kcalDoTreinoGuiado([exec(60, 'FINISHED', 24)], 80, hoje)).toBe(0);
+  });
+
+  it('duração ausente não vira zero contado nem quebra a soma', () => {
+    const sem = { startedAt: new Date(2026, 7, 25, 18, 0).toISOString(), durationSec: null, status: 'FINISHED' };
+    expect(kcalDoTreinoGuiado([sem, exec(30)], 80, hoje)).toBe(200);
+  });
+
+  it('vários treinos no dia somam', () => {
+    expect(kcalDoTreinoGuiado([exec(30), exec(30)], 80, hoje)).toBe(400);
   });
 });

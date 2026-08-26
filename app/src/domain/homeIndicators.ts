@@ -26,6 +26,15 @@ export type EntradaIndicadores = {
   hora: number;
   agua: { ml: number; metaMl: number };
   passos: { hoje: number | null; meta: number };
+  /**
+   * Minutos de treino guiado e esporte concluídos hoje.
+   *
+   * Existe porque passo não é a única forma de se mexer, e a régua de passos
+   * sozinha dizia "pouco movimento, 40% da meta" a quem tinha acabado de fechar
+   * uma hora de musculação (Leonardo, 25/08/2026). Musculação quase não produz
+   * passo: contar só passos é medir a modalidade errada.
+   */
+  minutosDeTreino?: number;
   refeicoes: { quantidade: number; kcalMin: number; kcalMax: number; metaKcal: number | null };
   sono: SleepNight | null;
   stress: number | null;
@@ -57,21 +66,31 @@ export function indicadoresDaHome(e: EntradaIndicadores): Indicador[] {
     rota: 'Habits',
   };
 
-  // Atividade: a régua de passos, julgada pela hora.
+  /*
+   Atividade: passos OU treino. Quem treinou já se mexeu, e a frase diz o que
+   aconteceu em vez de cobrar a régua que aquela modalidade não preenche.
+
+   O piso de vinte minutos é o que separa treino de check-in aberto por engano;
+   abaixo disso a régua de passos volta a mandar.
+  */
   const a = rateActivity({ steps: e.passos.hoje, goal: e.passos.meta });
   const pctPassos = e.passos.hoje != null && e.passos.meta > 0 ? e.passos.hoje / e.passos.meta : 0;
   const passosOk = pctPassos >= 1 || (ritmo > 0 && pctPassos >= ritmo * 0.6);
+  const minutos = Math.round(e.minutosDeTreino ?? 0);
+  const treinou = minutos >= 20;
   const atividade: Indicador = {
     key: 'atividade',
     rotulo: 'Atividade física',
-    direcao: a.available && passosOk ? 'up' : 'down',
-    frase: !a.available
-      ? 'Sem leitura de passos'
-      : pctPassos >= 1
-        ? 'Meta de passos batida'
-        : passosOk
-          ? `Em movimento, ${Math.round(pctPassos * 100)}% da meta de passos`
-          : `Pouco movimento, ${Math.round(pctPassos * 100)}% da meta de passos`,
+    direcao: treinou || (a.available && passosOk) ? 'up' : 'down',
+    frase: treinou
+      ? `${minutos} min de treino hoje${a.available && pctPassos > 0 ? `, ${Math.round(pctPassos * 100)}% da meta de passos` : ''}`
+      : !a.available
+        ? 'Sem leitura de passos'
+        : pctPassos >= 1
+          ? 'Meta de passos batida'
+          : passosOk
+            ? `Em movimento, ${Math.round(pctPassos * 100)}% da meta de passos`
+            : `Pouco movimento, ${Math.round(pctPassos * 100)}% da meta de passos`,
     rota: 'Activity',
   };
 
