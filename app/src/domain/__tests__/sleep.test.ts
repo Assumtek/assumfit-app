@@ -1,4 +1,4 @@
-import { horaHabitualDeAcordar, deepSleepContinuity, nightFrom, sleepScore, spo2DaNoite, dataDaNoite } from '../sleep';
+import { dataDaNoite, deepSleepContinuity, horaHabitualDeAcordar, montarNoites, nightFrom, sleepScore, spo2DaNoite } from '../sleep';
 import type { SleepSegment } from '../types';
 
 /**
@@ -179,5 +179,40 @@ describe('horaHabitualDeAcordar', () => {
     expect(horaHabitualDeAcordar([as(6, 40), as(5, 40), as(6, 10)])).toBe(6 * 60 + 10);
     expect(horaHabitualDeAcordar([{ endAt: null }])).toBeNull();
     expect(horaHabitualDeAcordar([])).toBeNull();
+  });
+});
+
+describe('noite entregue pela metade', () => {
+  const seg = (phase: 'light' | 'deep' | 'rem' | 'awake', minutes: number, hora: number, dia = 25) => ({
+    phase,
+    minutes,
+    startAt: new Date(2026, 7, dia, hora, 0).getTime(),
+    endAt: new Date(2026, 7, dia, hora, 0).getTime() + minutes * 60_000,
+  });
+
+  it('a noite inteira soma o que foi dormido, sem o desperto', () => {
+    // 23h às 7h30: 8h30 na cama, com 30 min acordada no meio.
+    const noite = montarNoites([
+      seg('light', 120, 23),
+      seg('deep', 90, 1, 26),
+      seg('awake', 30, 2, 26),
+      seg('rem', 60, 3, 26),
+      seg('light', 210, 4, 26),
+    ])[0];
+    expect(noite.totalMin).toBe(480);
+  });
+
+  it('só o último bloco é uma noite curta, e é o sintoma do relato', () => {
+    // O que a fundadora viu (26/08/2026): 1h09 na tela contra 8h30 no app do
+    // fabricante. Com um pedaço só, o total fica muito abaixo do plausível, e
+    // é isso que faz o app perguntar de novo ao aparelho pela porta nova.
+    const noite = montarNoites([seg('light', 69, 6, 26)])[0];
+    expect(noite.totalMin).toBe(69);
+  });
+
+  it('lacuna maior que três horas separa noites, e a mais recente vem primeiro', () => {
+    const noites = montarNoites([seg('light', 120, 23), seg('light', 60, 12, 26)]);
+    expect(noites).toHaveLength(2);
+    expect(noites[0].totalMin).toBe(60);
   });
 });

@@ -929,19 +929,36 @@ export class QCBandService implements BleService {
       }
       if (falhas === 2) throw new Error('A pulseira não respondeu à consulta de sono');
       /*
-       Porta antiga vazia não quer dizer noite inexistente: esta pulseira
-       declara `newSleepProtocol`, e o protocolo novo (V2) tem a própria porta.
-       Só se pergunta por ela quando a primeira não trouxe nada, para não
-       gastar o canal serial em duplicidade.
+       A porta nova entra quando a antiga volta VAZIA ou CURTA DEMAIS.
+
+       Vazia já se sabia: esta pulseira declara `newSleepProtocol`, e perguntar
+       pela porta errada devolve nada do mesmo jeito que não ter dado. Curta
+       demais é o caso novo, e chegou pela fundadora (26/08/2026): o app mostrou
+       1h09 de sono numa noite em que o app do fabricante mostrava 8h30. Uma
+       noite que a porta antiga entrega pela metade não zera a soma, então a
+       condição de vazio nunca disparava, e ficávamos com o pedaço.
+
+       Vence a versão com MAIS sono, e isso não infla nada: as duas portas
+       descrevem a mesma noite, e a mais completa é a que tem mais blocos dela.
+       Cochilo real continua curto nas duas, e o resultado não muda.
       */
-      if (bruto.length === 0 && QCBand.getSleepV2) {
+      const noiteDaPortaAntiga = noitesDoBruto(bruto)[0] ?? null;
+      const curtaDemais = (noiteDaPortaAntiga?.totalMin ?? 0) < MINIMO_PLAUSIVEL_DE_NOITE_MIN;
+
+      if ((bruto.length === 0 || curtaDemais) && QCBand.getSleepV2) {
         const v2 = await comTeto(QCBand.getSleepV2(1), TETO_CONSULTA_MS, 'sono v2').catch(
           () => [] as SegmentoBruto[],
         );
-        if (__DEV__) console.log(`[qcband] sono v2: ${v2.length} segmentos`);
-        bruto.push(...v2);
+        console.log(`[qcband] sono v2: ${v2.length} segmentos (antiga: ${bruto.length})`);
+        const noiteV2 = noitesDoBruto(v2)[0] ?? null;
+        if ((noiteV2?.totalMin ?? 0) > (noiteDaPortaAntiga?.totalMin ?? 0)) {
+          console.log(
+            `[qcband] a porta nova trouxe mais noite: ${noiteV2?.totalMin} min contra ` +
+              `${noiteDaPortaAntiga?.totalMin ?? 0} min`);
+          return noiteV2;
+        }
       }
-      return noitesDoBruto(bruto)[0] ?? null;
+      return noiteDaPortaAntiga;
     } finally {
       if (this.activity?.kind === 'sync') this.setActivity(null);
     }
@@ -1144,16 +1161,56 @@ type SegmentoBruto = { type: number; minutes: number; start: string; end?: strin
  * início e fim de cada bloco. Aqui só se traduz; quem decide o que é "a mesma
  * noite" é `montarNoites`, no domínio, onde isso é testável sem pulseira.
  */
+/**
+ * Abaixo disto, uma "noite" provavelmente é um pedaço de noite.
+ *
+ * Quatro horas: quem dorme menos que isso de verdade tem uma noite ruim, não
+ * uma leitura incompleta, e as duas portas devolveriam o mesmo. Serve só para
+ * decidir se vale uma segunda pergunta ao aparelho, nunca para corrigir número.
+ */
+const MINIMO_PLAUSIVEL_DE_NOITE_MIN = 240;
+
 function noitesDoBruto(bruto: SegmentoBruto[]): SleepNight[] {
   const fases: Record<number, SleepPhase> = { 1: 'awake', 2: 'light', 3: 'deep', 4: 'rem' };
   const segmentos: SegmentoComInstante[] = [];
+  /*
+   O que foi DESCARTADO é contado e registrado.
+
+   Duas linhas deste laço jogam segmento fora em silêncio: tipo fora do
+   vocabulário conhecido e carimbo que não parseia. Se o firmware mudar a
+   numeração das fases ou o formato da data, a noite chega pela metade e não
+   há nada, em lugar nenhum, que diga por quê. Foi assim que o sono da
+   fundadora apareceu como 1h09 contra 8h30 do app do fabricante (26/08/2026):
+   dava para ver o resultado errado e não a causa.
+
+   Contagem de segmento não é valor biométrico: são quantidades e códigos de
+   fase, sem nada que descreva o corpo de ninguém.
+  */
+  let tipoDesconhecido = 0;
+  let carimboInvalido = 0;
+  const tiposVistos = new Set<number>();
+
   for (const s of bruto) {
+    tiposVistos.add(s.type);
     const phase = fases[s.type];
-    if (!phase || !(s.minutes > 0)) continue;
+    if (!phase || !(s.minutes > 0)) {
+      if (!phase) tipoDesconhecido += 1;
+      continue;
+    }
     const startAt = instanteDoFirmware(s.start ?? '');
-    if (startAt <= 0) continue;
+    if (startAt <= 0) {
+      carimboInvalido += 1;
+      continue;
+    }
     const fim = instanteDoFirmware(s.end ?? '');
     segmentos.push({ phase, minutes: s.minutes, startAt, endAt: fim > startAt ? fim : startAt + s.minutes * 60_000 });
+  }
+
+  if (tipoDesconhecido > 0 || carimboInvalido > 0) {
+    console.log(
+      `[qcband] sono: ${segmentos.length} segmentos usados, ${tipoDesconhecido} de tipo ` +
+        `desconhecido, ${carimboInvalido} com carimbo ilegível. Tipos vistos: ` +
+        `${[...tiposVistos].sort((a, b) => a - b).join(', ')}`);
   }
   return montarNoites(segmentos);
 }
