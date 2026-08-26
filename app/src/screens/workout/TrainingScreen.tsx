@@ -480,35 +480,48 @@ export function TrainingScreen() {
             <Icon name="checklist" size={20} color={colors.text} />
           </IconButton>
 
-          <IconButton
-            label={running ? 'Pausar cronômetro' : 'Retomar cronômetro'}
-            onPress={toggleTimer}
-          >
-            <Icon name={running ? 'pause' : 'play'} size={20} color={colors.text} />
-          </IconButton>
+          {/*
+            O pause mora DENTRO da pílula do cronômetro, e não ao lado dela.
 
-          <XStack
-            alignItems="center"
-            gap="$xs"
-            backgroundColor="$control"
-            borderRadius={16}
-            paddingHorizontal="$lg"
-            paddingVertical="$md"
-            flexShrink={0}
+            Eram cinco peças numa linha só (voltar, checklist, pause, relógio,
+            batimento), e elas não cabem em 393 pontos: a última saía pela borda
+            direita, cortada. "Calorias e batimento ficou cortado no topo
+            direito" (Leonardo, 25/08/2026), ainda na build que já trazia a
+            correção de largura, porque aquela tratava o texto crescendo e esta
+            é falta de espaço na linha inteira.
+
+            Juntar as duas é o que devolve o espaço sem tirar função de
+            ninguém: tocar no relógio pausa e retoma, que é onde a mão já vai.
+          */}
+          <Pressable
+            onPress={toggleTimer}
+            accessibilityRole="button"
+            accessibilityLabel={running ? 'Pausar cronômetro' : 'Retomar cronômetro'}
+            style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
           >
-            <Icon name="clock" size={16} color={colors.text} />
-            <BodyLarge
-              fontWeight="500"
-              color="$foreground"
-              // Dígitos tabulares: sem eles a largura muda a cada segundo e o
-              // cronômetro treme dentro da pílula.
-              fontVariant={['tabular-nums']}
-              numberOfLines={1}
-              maxFontSizeMultiplier={1.4}
+            <XStack
+              alignItems="center"
+              gap="$xs"
+              backgroundColor="$control"
+              borderRadius={16}
+              paddingHorizontal="$lg"
+              paddingVertical="$md"
+              flexShrink={0}
             >
-              {formatSessionClock(elapsedSec)}
-            </BodyLarge>
-          </XStack>
+              <Icon name={running ? 'pause' : 'play'} size={16} color={colors.text} />
+              <BodyLarge
+                fontWeight="500"
+                color="$foreground"
+                // Dígitos tabulares: sem eles a largura muda a cada segundo e o
+                // cronômetro treme dentro da pílula.
+                fontVariant={['tabular-nums']}
+                numberOfLines={1}
+                maxFontSizeMultiplier={1.4}
+              >
+                {formatSessionClock(elapsedSec)}
+              </BodyLarge>
+            </XStack>
+          </Pressable>
           {bpmAoVivo != null ? (
             <XStack
               alignItems="center"

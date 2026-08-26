@@ -150,3 +150,37 @@ export function textoDaFalha(
   const f = falhaDeMedicao(mensagem, codigo);
   return f ? `${f.titulo}. ${f.corpo}` : null;
 }
+
+/**
+ * O aviso de "a pulseira sumiu", com a causa certa quando ela é conhecida.
+ *
+ * O app avisa duas horas depois de perder a pulseira, e dizia sempre a mesma
+ * coisa: "a pulseira está longe". Um testador recebeu isso com o BLUETOOTH
+ * desligado (Leonardo, 25/08/2026: "bluetooth estava desligado nesse caso"), e
+ * aí o aviso manda procurar a pulseira quando bastava tocar num botão do
+ * próprio celular. Culpar a distância quando a causa é outra faz a pessoa
+ * gastar a ação errada, que é pior do que não avisar.
+ *
+ * O motivo vem do estado da conexão, como o serviço de BLE o reporta. Quando
+ * ele não diz nada, o texto genérico continua valendo: afirmar Bluetooth
+ * desligado sem saber seria o mesmo erro na direção oposta.
+ */
+export type AvisoDeAusencia = { titulo: string; corpo: string };
+
+export function avisoDePulseiraAusente(motivo?: string | null): AvisoDeAusencia {
+  const t = (motivo ?? '').toLowerCase();
+  const bluetoothFora =
+    t.includes('bluetooth') &&
+    (t.includes('deslig') || t.includes('off') || t.includes('unsupported') || t.includes('unauthorized'));
+
+  if (bluetoothFora) {
+    return {
+      titulo: 'O Bluetooth está desligado',
+      corpo: 'Sem ele o app não lê a pulseira, e o dia de hoje não entra. Ligue nos ajustes do iPhone.',
+    };
+  }
+  return {
+    titulo: 'A pulseira está longe',
+    corpo: 'Faz duas horas que o app não lê a pulseira. Sem ela, o dia de hoje não entra.',
+  };
+}

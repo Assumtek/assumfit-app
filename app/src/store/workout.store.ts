@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { publicarTreinoDeHoje, type TreinoDoWidget } from '../../modules/widgetbridge';
 import { resumoDoVolume, workoutMeta } from '../domain/workout';
 import { avisoNoPulsoLigado } from './avisosNoPulso.store';
+import { usePersonalizacaoStore } from './personalizacao.store';
 
 import { ble } from '../services/ble';
 import { armTrainingNudge, cancelRestEnd, scheduleRestEnd } from '../services/notifications.service';
@@ -292,6 +293,12 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   start: async (workoutId, planDayId) => {
     const workout = get().workout?.id === workoutId ? get().workout! : await fetchWorkout(workoutId);
     const execution = await apiStart(workoutId, planDayId);
+    /*
+     Começou a treinar: o lembrete de hoje sai. Ele é agendado no aparelho e
+     dispara sem o app rodar, então cancelar na hora do disparo não existe;
+     quem cancela é o começo do treino.
+    */
+    void usePersonalizacaoStore.getState().treinouHoje();
     // Progresso zerado ao INICIAR, não ao carregar o treino: entrar para ver os
     // exercícios e voltar não pode apagar nada, mas um check-in novo começa do
     // zero.
@@ -405,6 +412,8 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
     // Treinou: a cobrança das 15h de HOJE morre e renasce para amanhã. É o que
     // impede o app de cobrar à tarde um treino feito de manhã.
     void armTrainingNudge(true);
+    // E o lembrete personalizado, que é outro agendamento e vive noutro store.
+    void usePersonalizacaoStore.getState().treinouHoje();
     return {
       durationSec: result.durationSec,
       completionPct: result.completionPct,

@@ -126,3 +126,32 @@ describe('quando a conquista aconteceu', () => {
     expect(lista.every((a) => a.at === null || Number.isFinite(a.at))).toBe(true);
   });
 });
+
+describe('semanas seguidas com substância', () => {
+  const em = (ano: number, mes: number, dia: number) => ({
+    status: 'FINISHED' as const,
+    startedAt: new Date(ano, mes, dia, 19, 0).toISOString(),
+  });
+  const agora = (ano: number, mes: number, dia: number) => new Date(ano, mes, dia, 21, 0).getTime();
+
+  it('domingo e segunda não são duas semanas de treino', () => {
+    // O relato: dois treinos em dias seguidos tocavam duas semanas do
+    // calendário, e o app anunciava "2 semanas seguidas" no segundo treino.
+    const execs = [em(2026, 7, 23), em(2026, 7, 24)];
+    expect(weekStreak(execs as never, agora(2026, 7, 24))).toBe(1);
+  });
+
+  it('uma terça e a terça seguinte são duas semanas', () => {
+    const execs = [em(2026, 7, 18), em(2026, 7, 25)];
+    expect(weekStreak(execs as never, agora(2026, 7, 25))).toBe(2);
+  });
+
+  it('três semanas de verdade continuam contando três', () => {
+    const execs = [em(2026, 7, 11), em(2026, 7, 18), em(2026, 7, 25)];
+    expect(weekStreak(execs as never, agora(2026, 7, 25))).toBe(3);
+  });
+
+  it('um treino só é uma semana', () => {
+    expect(weekStreak([em(2026, 7, 25)] as never, agora(2026, 7, 25))).toBe(1);
+  });
+});

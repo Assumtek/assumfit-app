@@ -23,6 +23,7 @@ import { WeekRail } from '../components/WeekRail';
 import { BarChart } from '../components/charts/BarChart';
 import { Body, BodyLarge, Button, Data, Display, Headline, Label, Micro, RatingText, Readout, ReadoutCluster, SectionTitle } from '../components/ui';
 import { Card } from '../components/ui/Card';
+import { EscalaSlider } from '../components/EscalaSlider';
 import { ScalePicker } from '../components/ScalePicker';
 import { ConfirmDialog, Sheet } from '../components/ui/Dialog';
 import { ShadowView } from '../components/ui/ShadowView';
@@ -788,18 +789,19 @@ export function SportScreen() {
         <YStack gap="$md" marginTop="$xl" marginBottom="$xl">
           <Card>
             <SectionTitle>Quanto esta sessão puxou?</SectionTitle>
+            {/* O mesmo slider do fim de treino guiado: é a MESMA pergunta, e
+                duas telas com réguas diferentes para ela produziriam dois
+                históricos de esforço que não se comparam. */}
             <YStack marginTop="$md">
-              <ScalePicker
-                values={[2, 4, 6, 8, 10]}
+              <EscalaSlider
+                faixa={{ minimo: 1, maximo: 10 }}
                 value={esforco}
                 onPick={setEsforco}
-                label="Esforço"
+                label="Esforço percebido"
+                legendaMin="leve"
+                legendaMax="no limite"
               />
             </YStack>
-            <XStack justifyContent="space-between" marginTop="$sm">
-              <Data>leve</Data>
-              <Data>no limite</Data>
-            </XStack>
           </Card>
 
           <Card>

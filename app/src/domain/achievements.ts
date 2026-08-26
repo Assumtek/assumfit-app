@@ -61,10 +61,10 @@ export function weekStart(at: number): number {
  * perderia se a semana acabasse vazia, o que ainda não aconteceu.
  */
 export function weekStreak(executions: Execution[], now: number): number {
-  const semanas = new Set(
-    executions
-      .filter((e) => e.status === 'FINISHED')
-      .map((e) => weekStart(new Date(e.startedAt).getTime())));
+  const treinos = executions
+    .filter((e) => e.status === 'FINISHED')
+    .map((e) => new Date(e.startedAt).getTime());
+  const semanas = new Set(treinos.map(weekStart));
   if (semanas.size === 0) return 0;
 
   const atual = weekStart(now);
@@ -74,11 +74,29 @@ export function weekStreak(executions: Execution[], now: number): number {
   // Sem treino nem nesta semana nem na anterior, a sequência já morreu.
   if (!semanas.has(cursor)) return 0;
 
+  const inicioDaSequencia = () => cursor + 7 * DIA;
   while (semanas.has(cursor)) {
     sequencia += 1;
     cursor -= 7 * DIA;
   }
-  return sequencia;
+
+  /*
+   Semana de CALENDÁRIO não é semana de treino, e a diferença tem cara de erro.
+
+   Quem treinou no domingo e na segunda tocou duas semanas do calendário com
+   dois dias seguidos, e recebia "2 semanas seguidas" no segundo treino da
+   vida. Um testador leu isso e perguntou, com razão: "2 semanas seguidas de
+   treino sem parar?" (Leonardo, 25/08/2026).
+
+   O corte é o tempo REAL coberto: uma sequência de N semanas precisa abranger
+   pelo menos N-1 semanas de distância entre o primeiro e o último treino dela.
+   Domingo e segunda cobrem um dia, então valem uma semana, não duas. Terça e a
+   terça seguinte cobrem sete, e valem as duas.
+  */
+  const naSequencia = [...treinos].filter((t) => t >= inicioDaSequencia());
+  if (naSequencia.length === 0) return sequencia;
+  const abrangencia = Math.max(...naSequencia) - Math.min(...naSequencia);
+  return Math.min(sequencia, Math.floor(abrangencia / (7 * DIA)) + 1);
 }
 
 /** Marcos de contagem total. Espaçados para não virar confete a cada sessão. */

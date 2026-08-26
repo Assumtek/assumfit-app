@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, TextInput } from 'react-native';
 
 import { DetailScreen } from '../../components/DetailScreen';
+import { EscalaSlider } from '../../components/EscalaSlider';
 import { ScalePicker } from '../../components/ScalePicker';
 import { Icon } from '../../components/Icon';
 import { Body, BodyLarge, Button, Card, Data, Heading, HeroCard, Metric, RatingText, SectionTitle, Subtitle } from '../../components/ui';
@@ -210,15 +211,25 @@ export function TrainingFinishedScreen() {
           <BodyLarge color="$foreground" marginTop="$sm" marginBottom="$md">
             Quanto este treino puxou?
           </BodyLarge>
-          <ScalePicker values={[2, 4, 6, 8, 10]} value={effort} onPick={setEffort} label="Esforço" />
-          <XStack justifyContent="space-between" marginTop="$sm">
-            <Data color="$mutedForeground">
-              leve
-            </Data>
-            <Data color="$mutedForeground">
-              no limite
-            </Data>
-          </XStack>
+          {/*
+            Slider de 1 a 10, e não cinco botões pares.
+
+            "Quanto este treino puxou está de 2 em 2, seria legal ter um slider"
+            (Leonardo, 25/08/2026). O pedido é de método antes de ser de gosto:
+            esforço percebido é escala de um em um, e oferecer só os pares
+            empurra a resposta para o vizinho.
+
+            A nota da sessão abaixo continua em botões: cinco opções cabem, e
+            ali cada número é uma categoria, não um ponto de uma régua.
+          */}
+          <EscalaSlider
+            faixa={{ minimo: 1, maximo: 10 }}
+            value={effort}
+            onPick={setEffort}
+            label="Esforço percebido"
+            legendaMin="leve"
+            legendaMax="no limite"
+          />
         </Card>
 
         <Card>

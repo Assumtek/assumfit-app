@@ -34,6 +34,16 @@ type Aprendido = {
   treino: string | null;
   cama: string | null;
   atualizadoEm: string | null;
+  /**
+   * O dia (YYYY-MM-DD) em que a pessoa já treinou, para não ser cobrada nele.
+   *
+   * "Notificação de treino enviada mas estou com treino já em andamento,
+   * desconsidere caso o treino já tenha sido realizado no dia OU esteja em
+   * andamento" (Leonardo, 25/08/2026). O lembrete é AGENDADO no aparelho e
+   * dispara sem o app rodar, então não há como decidir na hora: quem cancela é
+   * o começo do treino.
+   */
+  treinouEm?: string | null;
 };
 
 type State = {
@@ -44,6 +54,8 @@ type State = {
   ligar: (ligado: boolean) => Promise<void>;
   /** Relê o uso e refaz os agendamentos. Barato; chame ao voltar ao primeiro plano. */
   aprender: () => Promise<void>;
+  /** A pessoa começou ou concluiu um treino hoje: o lembrete de hoje sai. */
+  treinouHoje: () => Promise<void>;
 };
 
 function gravar(estado: { ligado: boolean; aprendido: Aprendido }) {
@@ -54,7 +66,12 @@ function gravar(estado: { ligado: boolean; aprendido: Aprendido }) {
   }
 }
 
-const vazio: Aprendido = { refeicoes: [], treino: null, cama: null, atualizadoEm: null };
+const vazio: Aprendido = { refeicoes: [], treino: null, cama: null, atualizadoEm: null, treinouEm: null };
+
+/** `YYYY-MM-DD` local. O lembrete é do DIA da pessoa, não do relógio UTC. */
+function isoDeHoje(d = new Date()): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 export const usePersonalizacaoStore = create<State>((set, get) => ({
   ligado: false,
@@ -87,6 +104,18 @@ export const usePersonalizacaoStore = create<State>((set, get) => ({
     }
   },
 
+  treinouHoje: async () => {
+    if (!get().carregado) await get().carregar();
+    const hoje = isoDeHoje();
+    if (get().aprendido.treinouEm === hoje) return;
+    const aprendido = { ...get().aprendido, treinouEm: hoje };
+    set({ aprendido });
+    gravar({ ligado: get().ligado, aprendido });
+    // Cancela o que já está agendado para hoje. O reagendamento normal, na
+    // próxima volta ao primeiro plano, já nasce pulando o dia.
+    if (get().ligado) await cancelPrefix(TREINO);
+  },
+
   aprender: async () => {
     if (!get().carregado) await get().carregar();
     if (!get().ligado || !api.isAuthenticated()) return;
@@ -116,11 +145,19 @@ export const usePersonalizacaoStore = create<State>((set, get) => ({
     }
 
     if (treino) {
-      await scheduleDailyAt(TREINO, menosMinutos(treino, 30), {
-        title: 'Quase hora do treino',
-        body: `Você costuma treinar por volta das ${treino.replace(':', 'h')}. O de hoje está pronto.`,
-        route: 'Plan',
-      });
+      // Já treinou hoje: o lembrete começa amanhã. Cobrar quem está no meio do
+      // treino é o tipo de aviso que ensina a desligar os avisos.
+      const pularHoje = aprendido.treinouEm === isoDeHoje() ? 1 : 0;
+      await scheduleDailyAt(
+        TREINO,
+        menosMinutos(treino, 30),
+        {
+          title: 'Quase hora do treino',
+          body: `Você costuma treinar por volta das ${treino.replace(':', 'h')}. O de hoje está pronto.`,
+          route: 'Plan',
+        },
+        3,
+        pularHoje);
     } else {
       // Deixou de haver hábito (ou nunca houve, e a versão anterior inventou um):
       // o que já está agendado no aparelho precisa SAIR. Sem isto, um horário

@@ -1,4 +1,4 @@
-import { falhaDeMedicao, textoDaFalha } from '../bandErrors';
+import { avisoDePulseiraAusente, falhaDeMedicao, textoDaFalha } from '../bandErrors';
 
 describe('falhaDeMedicao', () => {
   it('a recusa de medição cobre as DUAS causas medidas em campo', () => {
@@ -87,5 +87,26 @@ describe('textoDaFalha', () => {
 
   it('sem tradução conhecida, não inventa frase', () => {
     expect(textoDaFalha('erro qualquer')).toBeNull();
+  });
+});
+
+describe('aviso de pulseira ausente', () => {
+  it('bluetooth desligado manda ligar o bluetooth, não procurar a pulseira', () => {
+    // O relato: o aviso dizia "a pulseira está longe" com o Bluetooth
+    // desligado, e a pessoa gasta a ação errada.
+    const a = avisoDePulseiraAusente('Bluetooth desligado');
+    expect(a.titulo).toMatch(/bluetooth/i);
+    expect(a.corpo).toMatch(/ajustes/i);
+  });
+
+  it('reconhece o vocabulário do CoreBluetooth', () => {
+    expect(avisoDePulseiraAusente('bluetooth unauthorized').titulo).toMatch(/bluetooth/i);
+    expect(avisoDePulseiraAusente('Bluetooth is powered off').titulo).toMatch(/bluetooth/i);
+  });
+
+  it('sem motivo conhecido, mantém o texto genérico', () => {
+    // Afirmar Bluetooth desligado sem saber é o mesmo erro na direção oposta.
+    expect(avisoDePulseiraAusente(null).titulo).toBe('A pulseira está longe');
+    expect(avisoDePulseiraAusente('conexão perdida').titulo).toBe('A pulseira está longe');
   });
 });

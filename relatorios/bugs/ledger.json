@@ -1508,6 +1508,24 @@
       "nota": "Corrigido. A atividade física olhava só passos, e musculação quase não produz passo: por isso um treino inteiro aparecia como 'pouco movimento, 40% da meta'. Agora, quando há treino concluído no dia, a home diz os minutos de treino (e mantém a porcentagem de passos ao lado, quando ela existe). O piso é de vinte minutos, para um check-in aberto por engano não virar treino. As calorias do treino também entraram na conta do dia, no mesmo commit.",
       "versao": "1.0.6 (2)",
       "em": "2026-08-26T10:09:58"
+    },
+    "ANeGCWBLqZlh1g9tC871iLU": {
+      "commit": "c9545b4",
+      "nota": "Corrigido. A troca mexia só no id e no nome do exercício, então a descrição, o vídeo e o equipamento continuavam sendo os do anterior. Na verdade o app nem recebia esses dados do substituto: a lista de alternativas não os trazia. Agora traz, e o exercício troca inteiro. Quando algum campo não vier, ele fica vazio em vez de manter o antigo: descrição de outro movimento é pior que descrição nenhuma, porque parece certa.",
+      "versao": "1.0.6 (2)",
+      "em": "2026-08-26T10:13:24"
+    },
+    "APS-oh2OfsiPY_588EkOh1w": {
+      "commit": "c9545b4",
+      "nota": "Feito exatamente como você descreveu. O peso agora é o da sua última vez NAQUELE exercício, buscado pelo exercício em si e não pela posição na ficha, então vale mesmo que você o tenha feito em outro treino. Se você nunca registrou peso nele, o campo fica vazio em vez de sugerir o peso do exercício anterior, que é de outro movimento.",
+      "versao": "1.0.6 (2)",
+      "em": "2026-08-26T10:13:28"
+    },
+    "AMNFZhgpgLvbClzmcvtm738": {
+      "commit": "c9545b4",
+      "nota": "Você tem razão, e a lista de alternativas passou a excluir o que o treino de hoje já prescreve. O motivo é prático: a troca existe para resolver máquina ocupada ou incômodo, e oferecer algo que a ficha manda fazer dali a dois exercícios não resolve nenhum dos dois, só duplica o estímulo.",
+      "versao": "1.0.6 (2)",
+      "em": "2026-08-26T10:13:32"
     }
   }
 }

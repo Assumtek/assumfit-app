@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { avisoDePulseiraAusente } from '../domain/bandErrors';
 
 import { WATER_NUDGE_PADRAO, waterNudge } from '../domain/water';
 import { Platform } from 'react-native';
@@ -269,12 +270,21 @@ export async function scheduleDailyAt(
   prefixo: string,
   hhmm: string,
   conteudo: { title: string; body: string; route: string },
-  dias = 3) {
+  dias = 3,
+  /**
+   * Primeiro dia a agendar, contado de hoje.
+   *
+   * `1` pula o dia corrente. Serve para o lembrete de treino não cobrar quem
+   * já treinou hoje: "notificação de treino enviada mas estou com treino já em
+   * andamento, desconsidere caso o treino já tenha sido realizado no dia ou
+   * esteja em andamento" (Leonardo, 25/08/2026).
+   */
+  comecarEm = 0) {
   if (!(await ensurePermission())) return;
   await cancelPrefix(prefixo, dias + 2);
   const agora = new Date();
   const [hour, minute] = hhmm.split(':').map(Number);
-  for (let dia = 0; dia < dias; dia++) {
+  for (let dia = comecarEm; dia < dias; dia++) {
     const quando = new Date(agora);
     quando.setDate(quando.getDate() + dia);
     quando.setHours(hour, minute, 0, 0);
@@ -540,7 +550,7 @@ let lembreteDePulseiraEm: string | null = null;
  * um aviso só, duas horas depois de desconectar, só de dia (8h às 21h) e no
  * máximo um por dia. Reconectou antes, o aviso é cancelado.
  */
-export async function armarLembreteDePulseira() {
+export async function armarLembreteDePulseira(motivo?: string | null) {
   const hoje = new Date().toDateString();
   if (lembreteDePulseiraEm === hoje) return;
   const quando = new Date(Date.now() + 2 * 3_600_000);
@@ -548,11 +558,17 @@ export async function armarLembreteDePulseira() {
   if (h < 8 || h >= 21) return;
   if (!(await ensurePermission())) return;
   await Notifications.cancelScheduledNotificationAsync(PULSEIRA_LONGE).catch(() => undefined);
+  /*
+   O texto depende da CAUSA. Com o Bluetooth desligado, "a pulseira está longe"
+   manda procurar o aparelho quando bastava tocar num botão do celular
+   (Leonardo, 25/08/2026). A escolha mora no domínio, com teste.
+  */
+  const aviso = avisoDePulseiraAusente(motivo);
   await Notifications.scheduleNotificationAsync({
     identifier: PULSEIRA_LONGE,
     content: {
-      title: 'A pulseira está longe',
-      body: 'Faz duas horas que o app não lê a pulseira. Sem ela, o dia de hoje não entra.',
+      title: aviso.titulo,
+      body: aviso.corpo,
       sound: false,
       data: { route: 'Device' },
     },

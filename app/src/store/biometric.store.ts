@@ -1242,7 +1242,9 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
       // Lembrar de usar a pulseira, sem ser chato: arma ao desconectar com
       // pulseira pareada, cancela ao reconectar (sugestão de testador, 23/08).
       if (connection === 'connected') void cancelarLembreteDePulseira().catch(() => undefined);
-      else if ((connection === 'idle' || connection === 'error') && typeof get().pairedDeviceId === 'string') void armarLembreteDePulseira().catch(() => undefined);
+      // O motivo vai junto: é o que permite ao aviso dizer "ligue o Bluetooth"
+      // em vez de mandar procurar uma pulseira que está no pulso.
+      else if ((connection === 'idle' || connection === 'error') && typeof get().pairedDeviceId === 'string') void armarLembreteDePulseira(reason).catch(() => undefined);
       if (connection === 'connected') {
         leituraInicial = setTimeout(() => void puxarDoAparelho(), 10_000);
         cicloSync = setInterval(() => void puxarDoAparelho(), 4 * 60_000);
