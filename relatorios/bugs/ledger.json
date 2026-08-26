@@ -1556,6 +1556,12 @@
       "nota": "Você duvidou com razão, era um defeito. A conquista contava semanas de CALENDÁRIO: quem treina no domingo e na segunda toca duas semanas diferentes com dois dias seguidos, e ganhava '2 semanas seguidas' no segundo treino. Agora a sequência exige o tempo real coberto, então domingo mais segunda valem uma semana, e uma terça mais a terça seguinte valem duas.",
       "versao": "1.0.6 (2)",
       "em": "2026-08-26T10:22:14"
+    },
+    "ALhNehICc274fPjjgF3fFQg": {
+      "commit": "4613975",
+      "nota": "Achamos pela sua captura, e o problema estava na resposta, não na troca. O personal propõe a mudança e pergunta 'confirma?', mas quem realmente mexia no plano era o botão 'Aplicar no meu plano', lá embaixo. Você respondeu escrevendo, que é o natural, e o texto ia para o agente, que reproponha a mesma coisa: daí o laço. Agora, quando existe uma proposta esperando e você responde confirmando ('sim', 'pode trocar', 'quero esse treino hoje'), isso aplica de verdade, como se tivesse tocado no botão. Negativa nunca aplica nada, isso está travado com teste, porque aplicar uma mudança recusada seria bem pior que o defeito original.",
+      "versao": "1.0.6 (2)",
+      "em": "2026-08-26T10:25:52"
     }
   }
 }
