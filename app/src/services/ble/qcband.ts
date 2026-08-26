@@ -945,18 +945,41 @@ export class QCBandService implements BleService {
       const noiteDaPortaAntiga = noitesDoBruto(bruto)[0] ?? null;
       const curtaDemais = (noiteDaPortaAntiga?.totalMin ?? 0) < MINIMO_PLAUSIVEL_DE_NOITE_MIN;
 
-      if ((bruto.length === 0 || curtaDemais) && QCBand.getSleepV2) {
-        const v2 = await comTeto(QCBand.getSleepV2(1), TETO_CONSULTA_MS, 'sono v2').catch(
-          () => [] as SegmentoBruto[],
-        );
-        console.log(`[qcband] sono v2: ${v2.length} segmentos (antiga: ${bruto.length})`);
-        const noiteV2 = noitesDoBruto(v2)[0] ?? null;
-        if ((noiteV2?.totalMin ?? 0) > (noiteDaPortaAntiga?.totalMin ?? 0)) {
+      if (bruto.length === 0 || curtaDemais) {
+        /*
+         São TRÊS portas de sono no SDK, e a pulseira decide qual responde.
+
+         A antiga (`getSleepDetailDataByDay`), a do protocolo novo (V2) e a de
+         dia inteiro, que é a única que declara trazer os cochilos junto. Com a
+         noite chegando pela metade ou não chegando, perguntamos às outras duas
+         e ficamos com a resposta mais completa: as três descrevem a MESMA
+         noite, então a mais completa é a que tem mais blocos dela.
+
+         O motivo de existirem as três está no cabeçalho do fabricante, não em
+         suposição nossa, e o motivo de consultarmos todas está numa noite real:
+         a pulseira entregou batimento a cada cinco minutos das 23h às 11h e
+         mesmo assim o app não teve sono nenhum para mostrar (fundadora,
+         26/08/2026). O aparelho tinha a noite; nós perguntávamos errado.
+        */
+        let melhor = noiteDaPortaAntiga;
+        const outras: [string, ((d: number) => Promise<SegmentoBruto[]>) | undefined][] = [
+          ['v2', QCBand.getSleepV2],
+          ['dia inteiro', QCBand.getSleepFullDay],
+        ];
+        for (const [nome, porta] of outras) {
+          if (!porta) continue;
+          const segs = await comTeto(porta(1), TETO_CONSULTA_MS, `sono ${nome}`).catch(
+            () => [] as SegmentoBruto[]);
+          const noite = noitesDoBruto(segs)[0] ?? null;
           console.log(
-            `[qcband] a porta nova trouxe mais noite: ${noiteV2?.totalMin} min contra ` +
-              `${noiteDaPortaAntiga?.totalMin ?? 0} min`);
-          return noiteV2;
+            `[qcband] sono pela porta ${nome}: ${segs.length} segmentos, ` +
+              `${noite?.totalMin ?? 0} min`);
+          if ((noite?.totalMin ?? 0) > (melhor?.totalMin ?? 0)) melhor = noite;
         }
+        if (melhor !== noiteDaPortaAntiga) {
+          console.log(`[qcband] noite escolhida: ${melhor?.totalMin} min`);
+        }
+        return melhor;
       }
       return noiteDaPortaAntiga;
     } finally {

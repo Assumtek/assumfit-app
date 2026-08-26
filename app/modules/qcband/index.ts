@@ -203,6 +203,14 @@ declare class QCBandNativeModule extends NativeModule<QCBandEvents> {
    * para as mesmas noites que esta traz.
    */
   getSleepV2?(dayIndex: number): Promise<{ type: number; minutes: number; start: string; end: string }[]>;
+  /**
+   * Sono do dia inteiro: noite mais cochilos, achatados numa lista só.
+   *
+   * A terceira porta de sono do SDK, e a única que declara trazer as sonecas.
+   * Existe porque as duas primeiras não trouxeram a noite de uma pulseira que
+   * comprovadamente a tinha (fundadora, 26/08/2026).
+   */
+  getSleepFullDay?(dayIndex: number): Promise<{ type: number; minutes: number; start: string; end: string }[]>;
   getBattery(): Promise<{ level: number; charging: boolean }>;
   /** Vibra a pulseira — o "localizar" de quem não lembra onde a deixou. */
   findBand(): Promise<boolean>;

@@ -1488,6 +1488,37 @@ public class QCBandModule: Module {
      O dicionário vem com o dia como chave; achatamos tudo, porque cada
      segmento carrega o próprio carimbo e quem monta as noites é o domínio.
      */
+    /**
+     Sono do dia INTEIRO: noite mais cochilos, em duas listas.
+
+     A terceira porta de sono do SDK, e a única que declara devolver as sonecas
+     junto. Entrou quando a fundadora viu 1h09 no AssumFit contra 8h30 no app do
+     fabricante (26/08/2026) com a pulseira entregando batimento a noite toda:
+     o aparelho tinha a noite, e as duas portas que consultávamos não a traziam.
+
+     As duas listas são achatadas numa só. Quem separa noite de cochilo é o
+     domínio, pelo intervalo entre os blocos, e ele já fazia isso: manter a
+     divisão do firmware aqui só criaria uma segunda regra para a mesma coisa.
+     */
+    AsyncFunction("getSleepFullDay") { (dayIndex: Int, promise: Promise) in
+      QCSDKCmdCreator.getFulldaySleepDetailData(byDay: dayIndex, sleepDatas: { noite, sonecas in
+        var segmentos: [[String: Any]] = []
+        for m in (noite ?? []) + (sonecas ?? []) {
+          let tipo: Int = m.type.rawValue
+          guard tipo >= 1, tipo <= 4, m.total > 0 else { continue }
+          segmentos.append([
+            "type": tipo,
+            "minutes": m.total,
+            "start": m.happenDate,
+            "end": m.endTime,
+          ])
+        }
+        promise.resolve(segmentos)
+      }, fail: {
+        promise.reject("falha", "A pulseira não respondeu à consulta de sono (dia inteiro)")
+      })
+    }
+
     AsyncFunction("getSleepV2") { (dayIndex: Int, promise: Promise) in
       QCSDKCmdCreator.getSleepDetailDataV2(byDay: dayIndex, sleepDatas: { porDia in
         var segmentos: [[String: Any]] = []
@@ -1721,6 +1752,9 @@ public class QCBandModule: Module {
       promise.reject("indisponivel", "sem radio no simulador")
     }
     AsyncFunction("getSleep") { (_: Int, promise: Promise) in
+      promise.resolve([[String: Any]]())
+    }
+    AsyncFunction("getSleepFullDay") { (_: Int, promise: Promise) in
       promise.resolve([[String: Any]]())
     }
     AsyncFunction("getBattery") { (promise: Promise) in

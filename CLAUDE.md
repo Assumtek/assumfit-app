@@ -366,6 +366,21 @@ da série presente e o fim faltando; com uma noite antiga na memória, a soma do
 sete dias nunca zera e o recurso que existe para recuperar noite perdida fica
 cego justamente no caso que o fez existir.
 
+**São TRÊS portas de sono no SDK, e a pulseira decide qual responde.**
+`getSleepDetailDataByDay` (antiga), `getSleepDetailDataV2ByDay` (protocolo novo)
+e `getFulldaySleepDetailDataByDay` (a única que declara trazer os cochilos). Com
+a noite vindo pela metade ou não vindo, o app pergunta às outras e fica com a
+resposta mais completa: as três descrevem a MESMA noite. O caso que fechou isso:
+a pulseira entregou batimento a cada cinco minutos das 23h às 11h e o app não
+teve sono nenhum para mostrar (fundadora, 26/08/2026), enquanto o app do
+fabricante mostrava 8h30.
+
+**Sono é o único número que pode vir de dois APARELHOS**, e a tela diz quando não
+é a pulseira. Sem o wearable, o app cai no app Saúde do iPhone, que pode ter um
+pedaço de noite: 41 minutos contra oito horas e meia, no mesmo dia. A noite do
+HealthKit também carrega janela (`startAt`/`endAt`), porque foi a ausência do
+horário na tela que revelou a origem do número.
+
 **"Nova" não é "de hoje".** `buscarNoiteAgora` devolve `nova` para qualquer
 noite mais recente que a da tela, e o botão dizia "Noite atualizada." sobre uma
 noite de três dias atrás, ao lado do próprio aviso de que aquela não era a noite
