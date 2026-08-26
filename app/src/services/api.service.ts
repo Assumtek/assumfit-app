@@ -675,6 +675,12 @@ export type SimilarExercise = {
   equipment: string;
   level: string;
   type: string;
+  /** Descrição e vídeo do substituto: sem eles a tela ficava com os do anterior. */
+  description?: string | null;
+  video_url?: string | null;
+  thumbnail_url?: string | null;
+  /** A última carga desta pessoa NESTE exercício. `null` quando nunca registrou. */
+  last_load?: number | null;
 };
 
 /**

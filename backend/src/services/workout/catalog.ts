@@ -19,6 +19,22 @@ export type CatalogExercise = {
 };
 
 /**
+ * O substituto oferecido na troca durante o treino.
+ *
+ * Tipo PRÓPRIO, e não `CatalogExercise` com campos a mais, porque o catálogo é
+ * o que vai ao modelo na geração do plano: descrição e vídeo ali seriam
+ * milhares de tokens por chamada para um texto que o modelo não usa. Aqui são
+ * seis itens numa tela.
+ */
+export type SubstitutoSugerido = CatalogExercise & {
+  description: string | null;
+  video_url: string | null;
+  thumbnail_url: string | null;
+  /** A última carga que ESTA pessoa registrou neste exercício, se houver. */
+  last_load?: number | null;
+};
+
+/**
  * Teto de itens enviados ao modelo.
  *
  * O catálogo inteiro (370) cabe folgado no prompt e é cacheado, então não há
@@ -54,7 +70,7 @@ export async function allowedExercises(): Promise<CatalogExercise[]> {
  * melhor que a alternativa de não oferecer troca nenhuma quando a máquina está
  * ocupada.
  */
-export async function similarExercises(exerciseId: string, limit = 6): Promise<CatalogExercise[]> {
+export async function similarExercises(exerciseId: string, limit = 6): Promise<SubstitutoSugerido[]> {
   const base = await prisma.exercise.findUnique({ where: { id: exerciseId } });
   if (!base) return [];
 
@@ -65,7 +81,25 @@ export async function similarExercises(exerciseId: string, limit = 6): Promise<C
       muscleGroup: base.muscleGroup,
       type: base.type,
     },
-    select: { id: true, name: true, muscleGroup: true, equipment: true, level: true, type: true },
+    /*
+     Descrição e vídeo vão JUNTO com o substituto.
+
+     Sem eles, o app trocava nome e id e deixava a descrição do exercício
+     anterior na tela: "ao substituir exercício a descrição não foi atualizada"
+     (Leonardo, 25/08/2026). A tela não tinha como corrigir sozinha, porque o
+     dado nunca chegava até ela.
+    */
+    select: {
+      id: true,
+      name: true,
+      muscleGroup: true,
+      equipment: true,
+      level: true,
+      type: true,
+      description: true,
+      videoUrl: true,
+      thumbnailUrl: true,
+    },
     take: limit * 3,
   });
 
@@ -81,7 +115,46 @@ export async function similarExercises(exerciseId: string, limit = 6): Promise<C
     equipment: e.equipment,
     level: e.level,
     type: e.type,
+    description: e.description,
+    video_url: e.videoUrl,
+    thumbnail_url: e.thumbnailUrl,
   }));
+}
+
+/**
+ * A última carga que a pessoa registrou em CADA um destes exercícios.
+ *
+ * Trocar de exercício mantinha o peso do anterior pré-preenchido, e o peso é
+ * de quem levanta, não do lugar na ficha: "manteve o peso do anterior mas
+ * deveria aparecer somente se já registrei peso pra esse exercício"
+ * (Leonardo, 25/08/2026). Aqui a busca é por EXERCÍCIO do catálogo, não por
+ * linha do treino, porque é assim que a pergunta faz sentido: quanto eu
+ * levantei nisto, em qualquer ficha.
+ *
+ * Exercício sem histórico simplesmente não aparece no resultado, e o app
+ * deixa o campo vazio em vez de sugerir um número que ninguém levantou.
+ */
+export async function ultimasCargasPorExercicio(
+  userId: string,
+  exerciseIds: string[]): Promise<Record<string, number>> {
+  if (exerciseIds.length === 0) return {};
+  const rows = await prisma.exerciseExecution.findMany({
+    where: {
+      execution: { userId, status: 'FINISHED' },
+      workoutExercise: { exerciseId: { in: exerciseIds } },
+      load: { not: null },
+    },
+    orderBy: { completedAt: 'desc' },
+    select: { load: true, workoutExercise: { select: { exerciseId: true } } },
+  });
+
+  const porExercicio: Record<string, number> = {};
+  for (const row of rows) {
+    const id = row.workoutExercise.exerciseId;
+    // Ordenado do mais recente para o mais antigo: o primeiro vence.
+    if (porExercicio[id] === undefined && row.load !== null) porExercicio[id] = row.load;
+  }
+  return porExercicio;
 }
 
 /**

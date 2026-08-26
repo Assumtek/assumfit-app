@@ -1490,6 +1490,24 @@
       "nota": "Corrigido, e você identificou as duas metades certas do problema. O que acontecia: aquilo era uma ação, e o resultado dela só existia enquanto a tela estava aberta. O comando ia mesmo para a pulseira; o que se perdia era a memória de ter mandado, então ao voltar a linha parecia desligada. Virou interruptor, com o estado guardado no aparelho, como você sugeriu. Ele agora vale para os dois caminhos do aviso: o app vibrando no fim do descanso e do alongamento, e o aviso com a tela apagada. Uma diferença que a tela passa a dizer em vez de esconder: o firmware da pulseira só LIGA o segundo caminho, não existe comando para desligar, então desligar aqui faz o app parar de mandar vibrar, e o emparelhamento com o iPhone continua até você desfazê-lo nos Ajustes. Sobe na próxima build.",
       "versao": "1.0.6 (2)",
       "em": "2026-08-25T11:13:54"
+    },
+    "AFI2E-YDsAenwHaYJFWI1Po": {
+      "commit": "ccc8d98",
+      "nota": "Achamos, e era o mesmo defeito nos três relatos que você mandou sobre isso. A conta de calorias ativas somava passos e sessões de esporte, e o treino guiado da academia não é nenhum dos dois: o check-in grava uma execução, e musculação quase não produz passo. Seu esforço estava registrado, mas ninguém o somava. Agora o treino concluído entra na conta pelo mesmo caminho do esporte (MET vezes peso vezes duração, com o peso da sua anamnese), e o indicador da home passa a dizer os minutos de treino em vez de cobrar a meta de passos, que aquela modalidade não preenche mesmo.",
+      "versao": "1.0.6 (2)",
+      "em": "2026-08-26T10:09:52"
+    },
+    "ACwwrFUxbGvZAouZ8kphe8Y": {
+      "commit": "ccc8d98",
+      "nota": "Achamos, e era o mesmo defeito nos três relatos que você mandou sobre isso. A conta de calorias ativas somava passos e sessões de esporte, e o treino guiado da academia não é nenhum dos dois: o check-in grava uma execução, e musculação quase não produz passo. Seu esforço estava registrado, mas ninguém o somava. Agora o treino concluído entra na conta pelo mesmo caminho do esporte (MET vezes peso vezes duração, com o peso da sua anamnese), e o indicador da home passa a dizer os minutos de treino em vez de cobrar a meta de passos, que aquela modalidade não preenche mesmo.",
+      "versao": "1.0.6 (2)",
+      "em": "2026-08-26T10:09:55"
+    },
+    "AHxzXmHf9jBu1SSqhwOK4Xo": {
+      "commit": "ccc8d98",
+      "nota": "Corrigido. A atividade física olhava só passos, e musculação quase não produz passo: por isso um treino inteiro aparecia como 'pouco movimento, 40% da meta'. Agora, quando há treino concluído no dia, a home diz os minutos de treino (e mantém a porcentagem de passos ao lado, quando ela existe). O piso é de vinte minutos, para um check-in aberto por engano não virar treino. As calorias do treino também entraram na conta do dia, no mesmo commit.",
+      "versao": "1.0.6 (2)",
+      "em": "2026-08-26T10:09:58"
     }
   }
 }

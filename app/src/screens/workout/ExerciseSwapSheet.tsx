@@ -12,7 +12,7 @@ import {
   type SimilarExercise,
   type WorkoutExercise,
 } from '../../services/api.service';
-import { ordenarSubstitutos, type MotivoDeTroca } from '../../domain/prescription';
+import { ordenarSubstitutos, semOsQueJaEstaoNoTreino, type MotivoDeTroca } from '../../domain/prescription';
 import { useTheme } from '../../theme/ThemeProvider';
 
 /**
@@ -38,6 +38,7 @@ import { useTheme } from '../../theme/ThemeProvider';
 export function ExerciseSwapSheet({
   exercise,
   motivo,
+  jaNoTreino,
   onClose,
   onPick,
 }: {
@@ -45,6 +46,11 @@ export function ExerciseSwapSheet({
   /** De Sinalizar: ordena a lista. `null` no botão Trocar, que não pergunta. */
   motivo?: MotivoDeTroca | null;
   onClose: () => void;
+  /**
+   * Os exercícios do treino de hoje, para não sugerir o que já está prescrito.
+   * Opcional: quem abre a folha fora da execução não tem essa lista.
+   */
+  jaNoTreino?: { exerciseId: string }[];
   onPick?: (replacement: SimilarExercise, tambemNoPlano: boolean) => void;
 }) {
   const { colors } = useTheme();
@@ -60,7 +66,15 @@ export function ExerciseSwapSheet({
    máquina ocupada é exatamente o que não serve, e quem não sabe executar
    quer o nível mais simples. Ordenar aqui não remove ninguém.
   */
-  const ordenadas = options ? ordenarSubstitutos(options, motivo, exercise.equipment) : null;
+  /*
+   Tira o que o treino de hoje já prescreve, e só então ordena. A troca existe
+   para resolver máquina ocupada ou incômodo, e oferecer algo que a ficha já
+   manda fazer dali a dois exercícios não resolve nem uma coisa nem outra.
+  */
+  const disponiveis = options
+    ? semOsQueJaEstaoNoTreino(options, jaNoTreino ?? [], exercise.exerciseId)
+    : null;
+  const ordenadas = disponiveis ? ordenarSubstitutos(disponiveis, motivo, exercise.equipment) : null;
   const legenda =
     motivo === 'equipamento'
       ? 'Mesmo músculo, outro equipamento primeiro.'

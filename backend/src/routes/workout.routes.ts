@@ -16,7 +16,7 @@ import {
 import { buildDashboard } from '../services/workout/dashboard';
 import { deriveFlags, parseAnamnesis } from '../services/workout/context-builder';
 import { prisma } from '../lib/prisma';
-import { similarExercises, trocarNoPlano } from '../services/workout/catalog';
+import { similarExercises, trocarNoPlano, ultimasCargasPorExercicio } from '../services/workout/catalog';
 import {
   activePlan,
   cancelExecution,
@@ -283,7 +283,14 @@ workoutRoutes.post(
 workoutRoutes.get(
   '/exercise/:exerciseId/similar',
   asyncRoute<AuthedRequest>(async (req, res) => {
-    res.json(await similarExercises(req.params.exerciseId));
+    const sugeridos = await similarExercises(req.params.exerciseId);
+    /*
+     A carga vai JUNTO com cada substituto, e é a desta pessoa neste exercício.
+     Sem ela o app pré-preenchia o peso do exercício ANTERIOR, que é peso de
+     outro movimento (Leonardo, 25/08/2026).
+    */
+    const cargas = await ultimasCargasPorExercicio(req.userId, sugeridos.map((e) => e.id));
+    res.json(sugeridos.map((e) => ({ ...e, last_load: cargas[e.id] ?? null })));
   }));
 
 /**

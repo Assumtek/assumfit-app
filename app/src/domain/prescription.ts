@@ -54,3 +54,25 @@ export function ordenarSubstitutos<T extends { equipment: string; level: string 
     .sort((a, b) => a.k - b.k || a.i - b.i)
     .map((x) => x.o);
 }
+
+/**
+ * Tira da lista de substitutos o que JÁ está no treino de hoje.
+ *
+ * "No exercício anterior eu troquei para rosca martelo, o app tem que ser
+ * inteligente o suficiente pra não sugerir uma troca que já está prevista no
+ * treino" (Leonardo, 25/08/2026). Ele estava certo por um motivo prático: a
+ * troca existe para resolver máquina ocupada ou incômodo, e trocar por algo que
+ * a ficha já manda fazer dali a dois exercícios não resolve nem uma coisa nem
+ * outra, só duplica o estímulo.
+ *
+ * O próprio exercício sendo trocado não conta como duplicata: ele sai da lista
+ * pelo id de catálogo do servidor, e incluí-lo aqui só o removeria duas vezes.
+ */
+export function semOsQueJaEstaoNoTreino<T extends { id: string }>(
+  substitutos: T[],
+  exerciciosDoTreino: { exerciseId: string }[],
+  exerciseIdAtual: string): T[] {
+  const jaPrescritos = new Set(
+    exerciciosDoTreino.map((e) => e.exerciseId).filter((id) => id !== exerciseIdAtual));
+  return substitutos.filter((s) => !jaPrescritos.has(s.id));
+}

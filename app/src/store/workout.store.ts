@@ -18,6 +18,7 @@ import {
   startExecution as apiStart,
   type Execution,
   type TrainingPlan,
+  type SimilarExercise,
   type WorkoutDetail,
 } from '../services/api.service';
 
@@ -109,7 +110,7 @@ type WorkoutState = {
    * ligam ao exercício, e trocar só o rótulo faria o registro apontar para o
    * movimento errado.
    */
-  swapExercise: (workoutExerciseId: string, replacement: { id: string; name: string }) => void;
+  swapExercise: (workoutExerciseId: string, replacement: SimilarExercise) => void;
   loading: boolean;
 
   /** Progresso local por exercício. Sobrevive a fechar a tela. */
@@ -211,7 +212,32 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
           ...phase,
           exercises: phase.exercises.map((ex) =>
             ex.id === workoutExerciseId
-              ? { ...ex, exerciseId: replacement.id, name: replacement.name }
+              ? {
+                  ...ex,
+                  exerciseId: replacement.id,
+                  name: replacement.name,
+                  /*
+                   O exercício inteiro troca, não só o nome.
+
+                   Trocava-se id e nome, e a tela seguia mostrando a descrição,
+                   o vídeo e o equipamento do exercício ANTERIOR: "ao substituir
+                   exercício a descrição não foi atualizada" (Leonardo,
+                   25/08/2026). Campo que o servidor não mandou vira null, e não
+                   o valor velho: descrição de outro movimento é pior que
+                   descrição nenhuma, porque parece certa.
+                  */
+                  description: replacement.description ?? null,
+                  videoUrl: replacement.video_url ?? null,
+                  thumbnailUrl: replacement.thumbnail_url ?? null,
+                  equipment: replacement.equipment ?? ex.equipment,
+                  muscleGroup: replacement.muscle_group ?? ex.muscleGroup,
+                  /*
+                   E a carga passa a ser a DESTE exercício. Peso é de quem
+                   levanta, não do lugar na ficha: manter o do anterior sugeria
+                   um número que a pessoa nunca levantou naquele movimento.
+                  */
+                  lastLoad: replacement.last_load ?? null,
+                }
               : ex),
         })),
       },

@@ -735,6 +735,9 @@ export function TrainingScreen() {
         <ExerciseSwapSheet
           exercise={exercise}
           motivo={swapMotivo}
+          // Tudo o que o treino de hoje já prescreve, para a lista não oferecer
+          // um exercício que aparece de novo dali a dois.
+          jaNoTreino={flat.map((f) => f.exercise)}
           onClose={() => {
             setSwapOpen(false);
             setSwapMotivo(null);

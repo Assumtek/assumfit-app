@@ -1,4 +1,4 @@
-import { ordenarSubstitutos, segundosDaPrescricao } from '../prescription';
+import { ordenarSubstitutos, segundosDaPrescricao, semOsQueJaEstaoNoTreino } from '../prescription';
 
 describe('segundosDaPrescricao', () => {
   it('a prancha do relato: "30-45s", é tempo, e o alvo é o teto', () => {
@@ -36,5 +36,23 @@ describe('ordenarSubstitutos', () => {
   it('sem motivo, a ordem que veio; ninguém é removido', () => {
     expect(ordenarSubstitutos(opcoes, null, 'Halteres')).toBe(opcoes);
     expect(ordenarSubstitutos(opcoes, 'equipamento', 'Halteres')).toHaveLength(4);
+  });
+});
+
+describe('substitutos que o treino já tem', () => {
+  const lista = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+
+  it('não sugere um exercício que já está adiante no treino', () => {
+    const treino = [{ exerciseId: 'x' }, { exerciseId: 'b' }];
+    expect(semOsQueJaEstaoNoTreino(lista, treino, 'x').map((e) => e.id)).toEqual(['a', 'c']);
+  });
+
+  it('o exercício sendo trocado não se remove a si mesmo duas vezes', () => {
+    const treino = [{ exerciseId: 'a' }];
+    expect(semOsQueJaEstaoNoTreino(lista, treino, 'a').map((e) => e.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('treino sem repetição devolve a lista inteira', () => {
+    expect(semOsQueJaEstaoNoTreino(lista, [{ exerciseId: 'z' }], 'z')).toHaveLength(3);
   });
 });
