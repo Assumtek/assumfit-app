@@ -35,3 +35,4 @@ app/assets/brand/Manual-de-Marca-Assumfit.pdf
 .claude/*
 !.claude/skills/
 .impeccable/
+build/
