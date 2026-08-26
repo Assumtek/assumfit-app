@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../components/Icon';
 import { VoiceInput } from '../../components/VoiceInput';
 import { Body, BodyLarge, Button, Data, Label, MetricSm } from '../../components/ui';
+import { ehConfirmacao } from '../../domain/confirmacao';
 import { applyAdjustment, chatWithAgent, fetchChatHistory, type ChatTurn } from '../../services/api.service';
 import { darkPalette } from '../../theme/palette';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -84,6 +85,26 @@ export function PersonalScreen() {
   const enviar = async () => {
     const pergunta = texto.trim();
     if (!pergunta || pensando) return;
+
+    /*
+     "Sim" digitado vale como o toque em Aplicar.
+
+     O agente pergunta "Confirma?" e a pessoa responde do jeito que se responde
+     a uma pergunta: escrevendo. Antes isso ia ao modelo, que repropunha a mesma
+     coisa, e o plano continuava igual: "não trocou", "não está trocando", "a
+     troca de treino ainda não funciona bem" (Leonardo, 25/08/2026).
+
+     Continua sendo ato explícito, porque a pessoa está respondendo a uma
+     proposta que acabou de ler. A fala dela entra na conversa antes de aplicar,
+     para o histórico contar o que aconteceu. Negativa nunca passa por aqui, e
+     quem garante isso é `domain/confirmacao.ts`, com teste.
+    */
+    if (proposta && ehConfirmacao(pergunta)) {
+      setTurnos([...turnos, { role: 'user', content: pergunta }]);
+      setTexto('');
+      await aplicar();
+      return;
+    }
 
     // Otimista: a fala da pessoa aparece na hora. Esperar a resposta do modelo
     // para mostrar o que ela acabou de escrever faz o app parecer travado por

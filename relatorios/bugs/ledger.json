@@ -1526,6 +1526,36 @@
       "nota": "Você tem razão, e a lista de alternativas passou a excluir o que o treino de hoje já prescreve. O motivo é prático: a troca existe para resolver máquina ocupada ou incômodo, e oferecer algo que a ficha manda fazer dali a dois exercícios não resolve nenhum dos dois, só duplica o estímulo.",
       "versao": "1.0.6 (2)",
       "em": "2026-08-26T10:13:32"
+    },
+    "AINzYJIzY8n1JLjm07iPT1g": {
+      "commit": "c36e624",
+      "nota": "Corrigido, e obrigado por insistir: a correção que subiu ontem tratava o texto crescendo com a fonte grande do iOS, e o seu caso é outro, a linha do cabeçalho simplesmente tem peças demais para caber (voltar, checklist, pause, relógio e batimento). O botão de pause passou para dentro da pílula do relógio: tocar nela pausa e retoma. Isso devolve o espaço de um botão sem tirar função de ninguém, e a pílula de batimento e calorias volta a caber inteira.",
+      "versao": "1.0.6 (2)",
+      "em": "2026-08-26T10:21:30"
+    },
+    "AHxcDLWSIzJSwPUz-3A1MBs": {
+      "commit": "c36e624",
+      "nota": "Feito. O lembrete é agendado no seu aparelho e dispara mesmo com o app fechado, então não dava para decidir na hora do disparo se você já estava treinando. Agora quem cancela é o começo do treino: iniciou ou concluiu um treino hoje, o lembrete de hoje sai, e o próximo reagendamento já nasce pulando o dia.",
+      "versao": "1.0.6 (2)",
+      "em": "2026-08-26T10:21:34"
+    },
+    "AKzV7fOMl9OQzqvTpU9NyoA": {
+      "commit": "c36e624",
+      "nota": "Feito, e você tem razão no método, não só na comodidade: esforço percebido é escala de um em um, e oferecer só os pares empurra a resposta para o número vizinho. Agora é um slider de 1 a 10, com o número aparecendo grande enquanto você arrasta. A mesma pergunta no registro de esporte recebeu o mesmo controle, para as duas telas não gerarem históricos de esforço que não se comparam.",
+      "versao": "1.0.6 (2)",
+      "em": "2026-08-26T10:22:04"
+    },
+    "APl8OIV6viKzR159WZ7yLoM": {
+      "commit": "c36e624",
+      "nota": "Corrigido. O aviso dizia sempre 'a pulseira está longe', e com o Bluetooth desligado isso manda você procurar a pulseira quando bastava um toque no próprio celular. Agora o motivo da desconexão acompanha o aviso: com o Bluetooth fora, o texto diz isso e manda ligar nos ajustes. Quando o motivo não é conhecido, ele mantém o texto antigo, porque afirmar Bluetooth desligado sem saber seria errar do outro lado.",
+      "versao": "1.0.6 (2)",
+      "em": "2026-08-26T10:22:10"
+    },
+    "AGSjp_lxd-q5RuuB6djeda8": {
+      "commit": "c36e624",
+      "nota": "Você duvidou com razão, era um defeito. A conquista contava semanas de CALENDÁRIO: quem treina no domingo e na segunda toca duas semanas diferentes com dois dias seguidos, e ganhava '2 semanas seguidas' no segundo treino. Agora a sequência exige o tempo real coberto, então domingo mais segunda valem uma semana, e uma terça mais a terça seguinte valem duas.",
+      "versao": "1.0.6 (2)",
+      "em": "2026-08-26T10:22:14"
     }
   }
 }
