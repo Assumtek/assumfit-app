@@ -186,8 +186,22 @@ export async function fetchLastNight(now = new Date()): Promise<SleepNight | nul
     // reconhece aquela como a noite do dia 28.
     // Local, pela tarde em que começou — `toISOString` é UTC e empurrava 23h
     // de Brasília para o dia seguinte.
+    /*
+     A JANELA vai junto, e não é detalhe.
+
+     Sem ela, a tela de sono não mostra "dormiu X, acordou Y", e uma noite vinda
+     do iPhone fica indistinguível de uma noite da pulseira, com um número só e
+     nenhuma origem. Foi assim que 41 minutos do app Saúde apareceram no lugar
+     das 8h30 que a pulseira tinha (fundadora, 26/08/2026): sem horário e sem
+     fonte na tela, não havia como perceber que o número nem era do wearable.
+    */
+    const inicioDaNoite = new Date(ultima[0].startDate).getTime();
+    const fimDaNoite = Math.max(...ultima.map((a) => new Date(a.endDate).getTime()));
     const noite: SleepNight = {
-      ...nightFrom(dataDaNoite(new Date(ultima[0].startDate).getTime()), segments),
+      ...nightFrom(dataDaNoite(inicioDaNoite), segments, [], {
+        startAt: inicioDaNoite,
+        endAt: fimDaNoite,
+      }),
       source: 'healthkit',
     };
     console.log(

@@ -68,6 +68,20 @@ export function SleepNightDetail({ sleep }: { sleep: SleepNight }) {
         {sleep.startAt != null && sleep.endAt != null ? (
           <Data marginTop="$xs">dormiu {horaLocal(sleep.startAt)} · acordou {horaLocal(sleep.endAt)}</Data>
         ) : null}
+        {/*
+          A ORIGEM aparece quando não é a pulseira.
+
+          O sono é o único número do app que pode vir de dois aparelhos, e a
+          diferença entre eles pode ser enorme: o app Saúde do iPhone registrou
+          41 minutos numa noite em que a pulseira tinha 8h30 (fundadora,
+          26/08/2026). Sem dizer de onde veio, o número parece do wearable e o
+          erro fica invisível. Quando é a pulseira, nada é dito: é o esperado.
+        */}
+        {sleep.source === 'healthkit' ? (
+          <Data marginTop="$xs" color="$mutedForeground">
+            do app Saúde do iPhone, não da pulseira
+          </Data>
+        ) : null}
         <RatingText
           marginTop="$lg"
           color={rating.state === 'alert' ? '$destructive' : '$foreground'}
