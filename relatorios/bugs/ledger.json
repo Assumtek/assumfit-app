@@ -1564,7 +1564,7 @@
       "em": "2026-08-26T10:25:52"
     },
     "AJInxX0dfZ96Ym026fe5-Bk": {
-      "commit": "O print resolveu, e mostrou que meu palpite anterior estava incompleto. Repare que aparecem 32 min de profundo e 37 de leve, com REM e acordado zerados: fases nessa granularidade não vêm do iPhone sozinho, vêm da sua pulseira, escritas no app Saúde pelo app do fabricante. Ou seja, o número não era inventado, era de OUTRO sono: o app pegava o último bloco de sono do dia, e um cochilo de manhã é o último bloco. Virava 'a noite'. Agora vence o bloco com mais sono, e quem só cochilou continua vendo o cochilo. Junto com a terceira porta de leitura da pulseira que subiu na build 3, o caminho fica coberto dos dois lados.",
+      "commit": "d4b66fc",
       "nota": "",
       "versao": "1.0.6 (4)",
       "em": "2026-08-27T13:59:03"
