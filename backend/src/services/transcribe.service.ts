@@ -28,6 +28,26 @@ export const configured = Boolean(process.env.AWS_ACCESS_KEY_ID);
 
 const FORMATS = new Set(['m4a', 'mp3', 'wav', 'mp4', 'ogg', 'webm', 'flac', 'amr']);
 
+/**
+ * O formato como o AWS Transcribe o conhece.
+ *
+ * `m4a` não existe para ele: a lista aceita é amr, flac, mp3, mp4, ogg, webm e
+ * wav. E `.m4a` É um contêiner MP4 com áudio AAC dentro, que é exatamente o que
+ * o `expo-audio` grava no iOS. Mandar a extensão como se fosse o formato fazia
+ * o serviço recusar TODO ditado por voz vindo do iPhone, e o app traduzia isso,
+ * corretamente, como "o áudio chegou num formato que o serviço não leu"
+ * (Bruno, 27/08/2026: "nunca dá certo quando eu mando áudio").
+ *
+ * A extensão do arquivo no S3 continua `.m4a`, que é o que ela é. Só a
+ * declaração ao serviço muda.
+ */
+const MEDIA_FORMAT: Record<string, string> = { m4a: 'mp4' };
+
+/** O formato declarado ao serviço, que nem sempre é a extensão do arquivo. */
+export function formatoParaOServico(format: string): string {
+  return MEDIA_FORMAT[format] ?? format;
+}
+
 export async function presignAudioUpload(userId: string, format: string) {
   if (!FORMATS.has(format)) throw new Error(`formato não suportado: ${format}`);
   const key = `audio/${userId}/${Date.now()}.${format}`;
@@ -50,7 +70,7 @@ export async function startTranscription(userId: string, key: string, format: st
       new StartTranscriptionJobCommand({
         TranscriptionJobName: jobName,
         LanguageCode: 'pt-BR',
-        MediaFormat: format as never,
+        MediaFormat: formatoParaOServico(format) as never,
         Media: { MediaFileUri: `s3://${BUCKET}/${key}` },
       }),
     )

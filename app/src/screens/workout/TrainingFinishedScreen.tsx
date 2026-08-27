@@ -9,6 +9,7 @@ import { ScalePicker } from '../../components/ScalePicker';
 import { Icon } from '../../components/Icon';
 import { Body, BodyLarge, Button, Card, Data, Heading, HeroCard, Metric, RatingText, SectionTitle, Subtitle } from '../../components/ui';
 import { achievementsFor, type Achievement } from '../../domain/achievements';
+import { mensagemDaFalha } from '../../domain/apiErrors';
 import { formatDuration, rateCompletion, rateEffort } from '../../domain/workout';
 import { fetchExecutionHistory } from '../../services/api.service';
 import { useWorkoutStore } from '../../store/workout.store';
@@ -51,8 +52,18 @@ export function TrainingFinishedScreen() {
     setError(null);
     try {
       setResult(await finish({ perceivedEffort: effort, rating, comment: comment || null }));
-    } catch {
-      setError('Não foi possível concluir a sessão. Tente de novo.');
+    } catch (err) {
+      /*
+       O MOTIVO, e não só o fato.
+
+       "Não foi possível concluir e não aparece o motivo, apenas o erro" (Bruno,
+       27/08/2026). Concluir um treino é o fim de uma hora de esforço, e é o
+       pior lugar para um erro mudo: sem saber se foi a sessão, o servidor ou a
+       rede, a única ação possível é tentar de novo até desistir. O tradutor de
+       causas já existia e era usado em oito outras telas.
+      */
+      setError(mensagemDaFalha(err, 'Concluir o treino'));
+      console.warn('[treino] concluir falhou:', err instanceof Error ? err.message : String(err));
     } finally {
       setBusy(false);
     }

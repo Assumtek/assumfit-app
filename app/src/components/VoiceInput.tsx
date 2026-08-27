@@ -102,7 +102,20 @@ export function VoiceInput({
        rota do som do sistema (campainha ao fone de ouvido, por exemplo).
       */
       await AudioModule.setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
-      await recorder.prepareToRecordAsync({ isMeteringEnabled: true });
+      /*
+       O PRESET vai junto, e essa é a linha que fazia todo ditado falhar.
+
+       As opções passadas aqui SUBSTITUEM as do `useAudioRecorder`, não se
+       somam a elas: mandando só `isMeteringEnabled`, o iOS caía no padrão do
+       módulo e gravava CAF, enquanto o app subia o arquivo dizendo que era
+       m4a. O AWS Transcribe abre o arquivo, vê o que ele é e recusa, com estas
+       palavras no log de produção: `Unsupported audio format: caf`. Do lado de
+       quem usa, "nunca dá certo quando eu mando áudio" (Bruno, 27/08/2026).
+      */
+      await recorder.prepareToRecordAsync({
+        ...RecordingPresets.HIGH_QUALITY,
+        isMeteringEnabled: true,
+      });
       recorder.record();
       cancelado.current = false;
       setEstado('gravando');
@@ -133,14 +146,26 @@ export function VoiceInput({
       const uri = recorder.uri;
       if (!uri) return falha('Gravação vazia.');
 
-      const { uploadUrl, key } = await api.presignAudio('m4a');
+      /*
+       O formato declarado é o do ARQUIVO, não uma constante.
+
+       Enviar "m4a" fixo é o que escondeu o defeito acima: o servidor confiava
+       na palavra e o serviço de transcrição confiava no conteúdo. A extensão do
+       arquivo gravado é a única fonte que descreve o que subiu de verdade.
+      */
+      const formato = (uri.split('.').pop() ?? 'm4a').toLowerCase().split('?')[0];
+      const { uploadUrl, key } = await api.presignAudio(formato);
       const blob = await (await fetch(uri)).blob();
-      const up = await fetch(uploadUrl, { method: 'PUT', body: blob, headers: { 'Content-Type': 'audio/m4a' } });
+      const up = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: blob,
+        headers: { 'Content-Type': `audio/${formato}` },
+      });
       // O `fetch` respondeu, então não é conexão: é o armazenamento recusando.
       // Culpar a rede aqui mandaria a pessoa conferir o Wi-Fi que está funcionando.
       if (!up.ok) return falha(`O envio do áudio falhou (erro ${up.status}). Tente de novo.`);
 
-      const { jobName } = await api.startTranscription(key, 'm4a');
+      const { jobName } = await api.startTranscription(key, formato);
 
       // Polling paciente: transcrição de um ditado leva ~5–20 s. O teto de 90 s
       // cobre áudio longo; passar dele é falha honesta, não espera infinita.

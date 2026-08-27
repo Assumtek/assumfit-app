@@ -23,6 +23,16 @@ import { Metric, Micro } from './ui';
  * pré-selecionada é resposta não dada, e num campo de percepção isso
  * contaminaria o dado que a pergunta existe para colher.
  */
+/**
+ * Folga lateral do controle.
+ *
+ * Tira a trilha da faixa em que o iOS escuta o gesto de voltar, e é DESCONTADA
+ * da conta: o que se mede no `onLayout` é a caixa inteira, e o que a pessoa
+ * arrasta é a trilha de dentro. Sem descontar, o polegar não alcançava as
+ * pontas da escala.
+ */
+const FOLGA_LATERAL = 20;
+
 export function EscalaSlider({
   faixa,
   value,
@@ -40,12 +50,25 @@ export function EscalaSlider({
 }) {
   const [largura, setLargura] = React.useState(0);
   const larguraRef = React.useRef(0);
-  const escolher = (x: number) => onPick(valorDaPosicao(x, larguraRef.current, faixa));
+  // `locationX` é relativo à caixa inteira; a trilha começa depois da folga.
+  const escolher = (x: number) =>
+    onPick(valorDaPosicao(x - FOLGA_LATERAL, larguraRef.current, faixa));
 
   const gestos = React.useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
+      /*
+       CAPTURA o gesto, e não o devolve.
+
+       O arrasto da esquerda para a direita é também o gesto de voltar do iOS, e
+       perto da borda quem ganhava era a navegação: puxar o slider fazia a tela
+       sair (Bruno, 27/08/2026). Capturar na descida e recusar o pedido de
+       término é o que mantém o movimento no controle que a pessoa está tocando.
+      */
+      onStartShouldSetPanResponderCapture: () => true,
+      onMoveShouldSetPanResponderCapture: () => true,
+      onPanResponderTerminationRequest: () => false,
       // `locationX` é relativo à trilha, que é exatamente o que a conta espera.
       onPanResponderGrant: (e) => escolher(e.nativeEvent.locationX),
       onPanResponderMove: (e) => escolher(e.nativeEvent.locationX),
@@ -64,8 +87,9 @@ export function EscalaSlider({
       <View
         {...gestos.panHandlers}
         onLayout={(e) => {
-          larguraRef.current = e.nativeEvent.layout.width;
-          setLargura(e.nativeEvent.layout.width);
+          const util = Math.max(0, e.nativeEvent.layout.width - FOLGA_LATERAL * 2);
+          larguraRef.current = util;
+          setLargura(util);
         }}
         accessibilityRole="adjustable"
         accessibilityLabel={label}
@@ -76,8 +100,8 @@ export function EscalaSlider({
           const passo = e.nativeEvent.actionName === 'increment' ? 1 : -1;
           onPick(Math.max(faixa.minimo, Math.min(faixa.maximo, atual + passo)));
         }}
-        // Alvo de toque generoso: a trilha é fina, o dedo não é.
-        style={{ paddingVertical: 16 }}
+        // Alvo de toque generoso na vertical; a folga lateral é a do gesto.
+        style={{ paddingVertical: 16, paddingHorizontal: FOLGA_LATERAL }}
       >
         <YStack height={6} borderRadius={3} backgroundColor="$muted" justifyContent="center">
           <YStack

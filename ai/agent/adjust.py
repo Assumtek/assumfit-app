@@ -468,7 +468,22 @@ async def _complete_adjust(inp: WorkoutAdjustInput, correction: str | None = Non
 
 # As respostas fixas seguem a mesma regra do prompt: duas frases, o limite e o
 # caminho. Elas são as que mais aparecem na tela, e eram as mais longas.
-_UNSAFE_REPLY = "Não consegui aplicar esse ajuste com segurança. Me diga de outra forma o que quer mudar."
+#: Quando a validação determinística recusa as operações que o modelo montou.
+#:
+#: Dizia "não consegui aplicar esse ajuste com SEGURANÇA", e isso mentia sobre a
+#: causa: o que falha aqui é contrato (dia fora do plano, exercício fora do
+#: catálogo, operação demais), não risco clínico. Quem pediu 72 horas entre
+#: treinos do mesmo grupo, um pedido comum e atendível movendo dias, ouviu que o
+#: ajuste era inseguro e que reformulasse, sem saber para onde (Bruno,
+#: 27/08/2026). Recusa por segurança continua existindo: é a do próprio modelo,
+#: com o motivo dele, logo acima.
+#:
+#: A frase agora diz o que ele FAZ, porque "de outra forma" não orienta ninguém.
+_UNSAFE_REPLY = (
+    "Não consegui montar essa alteração. Eu consigo trocar exercício, mudar "
+    "séries, repetições e descanso, remover ou incluir um, e mover o treino de "
+    "um dia para outro. Me diga assim o que você quer."
+)
 
 _OUT_OF_SCOPE_REPLY = (
     "Aqui eu troco exercício, ajusto séries, repetições e descanso, removo ou incluo um. "

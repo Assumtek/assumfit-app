@@ -481,6 +481,23 @@ export function TrainingScreen() {
           </IconButton>
 
           {/*
+            O personal DURANTE o treino, a pedido de um testador: "permitir
+            conversar com o personal enquanto faz o treino pra tirar dúvidas,
+            realizar pedidos" (Bruno, 27/08/2026). É o momento em que a dúvida
+            existe, e antes ela obrigava a sair da sessão pelo menu.
+
+            A sessão não é interrompida: a tela do personal abre por cima, o
+            cronômetro continua correndo no store e o descanso segue armado,
+            porque nenhum dos dois vive nesta tela.
+          */}
+          <IconButton
+            label="Falar com o personal"
+            onPress={() => (navigation as any).push('Personal')}
+          >
+            <Icon name="message" size={20} color={colors.text} />
+          </IconButton>
+
+          {/*
             O pause mora DENTRO da pílula do cronômetro, e não ao lado dela.
 
             Eram cinco peças numa linha só (voltar, checklist, pause, relógio,
