@@ -283,3 +283,25 @@ export function horaHabitualDeAcordar(noites: { endAt?: number | null }[]): numb
   if (minutos.length === 0) return null;
   return Math.round(minutos.reduce((s, m) => s + m, 0) / minutos.length);
 }
+
+/**
+ * Entre vários blocos de sono do dia, qual é A NOITE.
+ *
+ * O app Saúde devolve tudo o que foi registrado na janela, e o app pegava o
+ * ÚLTIMO bloco. Um cochilo de manhã é o último bloco, e virava "a noite": a
+ * fundadora viu 1h09 de sono, com 32 min de profundo e 37 de leve, numa noite
+ * em que o app do fabricante mostrava 8h30 (26/08/2026). O número não era falso,
+ * era de outro sono.
+ *
+ * Vence o bloco com MAIS sono, e o mais recente desempata. Quem realmente só
+ * cochilou tem um bloco só, e ele continua sendo a resposta.
+ */
+export function melhorCandidataDeNoite<T extends { minutos: number; inicio: number }>(
+  candidatas: T[]): T | null {
+  if (candidatas.length === 0) return null;
+  return candidatas.reduce((melhor, atual) => {
+    if (atual.minutos > melhor.minutos) return atual;
+    if (atual.minutos === melhor.minutos && atual.inicio > melhor.inicio) return atual;
+    return melhor;
+  });
+}

@@ -1562,6 +1562,12 @@
       "nota": "Achamos pela sua captura, e o problema estava na resposta, não na troca. O personal propõe a mudança e pergunta 'confirma?', mas quem realmente mexia no plano era o botão 'Aplicar no meu plano', lá embaixo. Você respondeu escrevendo, que é o natural, e o texto ia para o agente, que reproponha a mesma coisa: daí o laço. Agora, quando existe uma proposta esperando e você responde confirmando ('sim', 'pode trocar', 'quero esse treino hoje'), isso aplica de verdade, como se tivesse tocado no botão. Negativa nunca aplica nada, isso está travado com teste, porque aplicar uma mudança recusada seria bem pior que o defeito original.",
       "versao": "1.0.6 (2)",
       "em": "2026-08-26T10:25:52"
+    },
+    "AJInxX0dfZ96Ym026fe5-Bk": {
+      "commit": "O print resolveu, e mostrou que meu palpite anterior estava incompleto. Repare que aparecem 32 min de profundo e 37 de leve, com REM e acordado zerados: fases nessa granularidade não vêm do iPhone sozinho, vêm da sua pulseira, escritas no app Saúde pelo app do fabricante. Ou seja, o número não era inventado, era de OUTRO sono: o app pegava o último bloco de sono do dia, e um cochilo de manhã é o último bloco. Virava 'a noite'. Agora vence o bloco com mais sono, e quem só cochilou continua vendo o cochilo. Junto com a terceira porta de leitura da pulseira que subiu na build 3, o caminho fica coberto dos dois lados.",
+      "nota": "",
+      "versao": "1.0.6 (4)",
+      "em": "2026-08-27T13:59:03"
     }
   }
 }

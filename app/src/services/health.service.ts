@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-import { dataDaNoite, nightFrom } from '../domain/sleep';
+import { dataDaNoite, melhorCandidataDeNoite, nightFrom } from '../domain/sleep';
 import type { SleepNight, SleepPhase, SleepSegment } from '../domain/types';
 
 /**
@@ -168,7 +168,25 @@ export async function fetchLastNight(now = new Date()): Promise<SleepNight | nul
     }
     if (atual.length) noites.push(atual);
 
-    const ultima = noites[noites.length - 1];
+    /*
+     A NOITE é o bloco com mais sono, não o último.
+
+     Pegar o último fazia um cochilo da manhã virar "a noite": 1h09 no lugar de
+     8h30, com as fases certas e o total de outro sono (fundadora, 26/08/2026).
+     A escolha mora no domínio, com teste, porque o critério é a regra e não o
+     laço. Quem só cochilou tem um bloco só, e ele continua sendo a resposta.
+    */
+    const candidatas = noites.map((grupo) => ({
+      grupo,
+      inicio: new Date(grupo[0].startDate).getTime(),
+      minutos: grupo.reduce(
+        (soma, a) =>
+          soma + (new Date(a.endDate).getTime() - new Date(a.startDate).getTime()) / 60_000,
+        0),
+    }));
+    const escolhida = melhorCandidataDeNoite(candidatas);
+    if (!escolhida) return null;
+    const ultima = escolhida.grupo;
     const segments: SleepSegment[] = [];
     for (const a of ultima) {
       const phase = toPhase(Number(a.value));

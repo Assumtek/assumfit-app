@@ -1,4 +1,4 @@
-import { dataDaNoite, deepSleepContinuity, horaHabitualDeAcordar, montarNoites, nightFrom, sleepScore, spo2DaNoite } from '../sleep';
+import { dataDaNoite, deepSleepContinuity, horaHabitualDeAcordar, melhorCandidataDeNoite, montarNoites, nightFrom, sleepScore, spo2DaNoite } from '../sleep';
 import type { SleepSegment } from '../types';
 
 /**
@@ -214,5 +214,29 @@ describe('noite entregue pela metade', () => {
     const noites = montarNoites([seg('light', 120, 23), seg('light', 60, 12, 26)]);
     expect(noites).toHaveLength(2);
     expect(noites[0].totalMin).toBe(60);
+  });
+});
+
+describe('qual bloco é a noite', () => {
+  const bloco = (minutos: number, hora: number) => ({ minutos, inicio: new Date(2026, 7, 26, hora).getTime() });
+
+  it('a noite ganha do cochilo, mesmo o cochilo sendo mais recente', () => {
+    // O caso real: 8h30 de noite às 23h e um cochilo de 1h09 às 10h. O app
+    // pegava o último bloco e chamava o cochilo de noite.
+    const escolhida = melhorCandidataDeNoite([bloco(510, 23), bloco(69, 10)]);
+    expect(escolhida!.minutos).toBe(510);
+  });
+
+  it('empate fica com o mais recente', () => {
+    const escolhida = melhorCandidataDeNoite([bloco(60, 3), bloco(60, 14)]);
+    expect(escolhida!.inicio).toBe(new Date(2026, 7, 26, 14).getTime());
+  });
+
+  it('quem só cochilou continua vendo o cochilo', () => {
+    expect(melhorCandidataDeNoite([bloco(45, 14)])!.minutos).toBe(45);
+  });
+
+  it('sem bloco nenhum não inventa noite', () => {
+    expect(melhorCandidataDeNoite([])).toBeNull();
   });
 });
