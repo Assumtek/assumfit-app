@@ -1568,6 +1568,54 @@
       "nota": "",
       "versao": "1.0.6 (4)",
       "em": "2026-08-27T13:59:03"
+    },
+    "AEuh3zYz6oUs3IzzLurw6Eo": {
+      "commit": "caa599d",
+      "nota": "Achado, e o log de produção deu a causa em quatro palavras: 'Unsupported audio format: caf'. O app estava gravando em CAF e enviando o arquivo dizendo que era m4a; o serviço de transcrição abre o arquivo, vê o que ele é de verdade, e recusa. A linha culpada passava só uma opção na hora de preparar a gravação, e isso descartava o preset de qualidade inteiro, então o iPhone caía no formato padrão dele. Agora o preset vai junto, e o formato declarado passou a ser o do arquivo real em vez de um valor fixo, que foi justamente o que escondeu o defeito.",
+      "versao": "1.0.6 (4)",
+      "em": "2026-08-27T14:19:17"
+    },
+    "AFTinSKaAVXcmLTrmAeFdBA": {
+      "commit": "caa599d",
+      "nota": "Corrigido. Arrastar da esquerda para a direita é também o gesto de voltar do iOS, e com o slider colado na borda quem ganhava a disputa era a navegação. Agora o controle segura o gesto assim que você encosta nele e não o devolve, e a trilha ganhou uma folga lateral para sair da faixa que o sistema escuta. A folga é descontada da conta, então o valor 1 e o 10 continuam alcançáveis nas pontas.",
+      "versao": "1.0.6 (4)",
+      "em": "2026-08-27T14:19:20"
+    },
+    "ALJTiXVlvKC6YcN5KD2a8E0": {
+      "commit": "caa599d",
+      "nota": "Você apontou uma coisa que estava errada em dois níveis. Primeiro, o texto: 'não consegui aplicar com segurança' sugeria risco clínico, quando o que falhou foi o formato interno da alteração que o modelo montou. Segundo, 'me diga de outra forma' não orienta ninguém. A resposta agora diz o que o personal consegue fazer: trocar exercício, mudar séries, repetições e descanso, remover ou incluir um, e mover o treino de um dia para outro. O seu pedido de 72 horas entre treinos do mesmo grupo é atendível por esse último caminho, então vale repetir assim: 'mova o treino de X para Y'. Recusa por segurança de verdade continua existindo, e vem com o motivo.",
+      "versao": "1.0.6 (4)",
+      "em": "2026-08-27T14:19:23"
+    },
+    "ABsRI8qNZK4P99CNj5HTNuM": {
+      "commit": "caa599d",
+      "nota": "Corrigido. A tela engolia a causa e mostrava só 'não foi possível'. Concluir o treino é o fim de uma hora de esforço e é o pior lugar para um erro mudo: sem saber se foi a sessão expirada, o servidor ou a conexão, a única saída é tentar de novo até desistir. Agora a mensagem diz qual foi o motivo e o que fazer, usando o mesmo tradutor de erros que já valia em outras oito telas do app.",
+      "versao": "1.0.6 (4)",
+      "em": "2026-08-27T14:19:26"
+    },
+    "AGGpxlwinEz8lCyRK4AnB78": {
+      "commit": "caa599d",
+      "nota": "Implementado. A tela de treino ganhou um botão para falar com o personal no cabeçalho, ao lado do checklist. A sessão não é interrompida: o cronômetro continua correndo e o descanso segue armado, porque nenhum dos dois depende daquela tela estar aberta. É o momento em que a dúvida aparece mesmo, e antes obrigava a sair do treino pelo menu.",
+      "versao": "1.0.6 (4)",
+      "em": "2026-08-27T14:19:29"
+    },
+    "slack:1787849458.968829": {
+      "commit": "caa599d",
+      "nota": "Estava fora, sim: a sessão tinha sido pausada e os monitores caíram junto. Já voltou, e os seus cinco relatos da build 3 foram todos tratados agora, um a um, com resposta em cada thread. O vigia da fila foi remendado para não silenciar assim de novo.",
+      "versao": "1.0.6 (4)",
+      "em": "2026-08-27T14:21:14"
+    },
+    "slack:1787849511.437999": {
+      "commit": "caa599d",
+      "nota": "Anotado. Foi essa pausa que derrubou os monitores; o script deles vivia num diretório temporário e foi apagado junto. Agora mora no repositório, com a lista de já vistos guardada fora do temporário, então uma pausa não faz mais relato passar em silêncio.",
+      "versao": "1.0.6 (4)",
+      "em": "2026-08-27T14:21:28"
+    },
+    "slack:1787849550.002549": {
+      "commit": "caa599d",
+      "nota": "Bom descanso. Deixei tudo o que você reportou hoje corrigido e respondido nas threads: ditado por voz, slider voltando a tela, a recusa do personal, o erro sem motivo ao concluir e o pedido de falar com o personal durante o treino.",
+      "versao": "1.0.6 (4)",
+      "em": "2026-08-27T14:21:42"
     }
   }
 }
