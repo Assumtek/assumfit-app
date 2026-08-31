@@ -123,15 +123,33 @@ export function EscalaSlider({
         </YStack>
       </View>
 
-      <XStack justifyContent="space-between">
-        {marcas.map((m) => (
-          <Micro key={m} color="$mutedForeground">
-            {m}
-          </Micro>
-        ))}
-      </XStack>
+      {/*
+        Cada marca fica na POSIÇÃO do seu valor, não distribuída no espaço.
 
-      <XStack justifyContent="space-between">
+        Com `space-between` a régua desenhava intervalos iguais para valores que
+        não são igualmente espaçados, e ainda ignorava a folga lateral da
+        trilha: o polegar do 8 caía em cima do número 9. O testador descreveu
+        como o slider "funcionando, mas com comportamento estranho", e era a
+        régua que estava mentindo, não o controle.
+      */}
+      <YStack height={16} marginHorizontal={FOLGA_LATERAL}>
+        {largura > 0
+          ? marcas.map((m) => (
+              <Micro
+                key={m}
+                color="$mutedForeground"
+                position="absolute"
+                width={28}
+                textAlign="center"
+                left={fracaoDoValor(m, faixa) * largura - 14}
+              >
+                {m}
+              </Micro>
+            ))
+          : null}
+      </YStack>
+
+      <XStack justifyContent="space-between" marginHorizontal={FOLGA_LATERAL}>
         <Micro color="$mutedForeground">{legendaMin}</Micro>
         <Micro color="$mutedForeground">{legendaMax}</Micro>
       </XStack>

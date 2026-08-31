@@ -39,8 +39,20 @@ describe('slider de escala', () => {
     expect(fracaoDoValor(-3, rpe)).toBe(0);
   });
 
-  it('a régua rareia quando a escala é longa, e sempre mostra as pontas', () => {
+  it('as marcas são igualmente espaçadas e incluem as duas pontas', () => {
+    // O defeito: 1,3,5,7,9 mais um 10 colado no 9, desenhados com espaçamento
+    // igual. A régua mentia sobre onde cada valor fica, e o 8 caía sobre o 9.
+    expect(marcasDaEscala(rpe)).toEqual([1, 4, 7, 10]);
     expect(marcasDaEscala({ minimo: 1, maximo: 5 })).toEqual([1, 2, 3, 4, 5]);
-    expect(marcasDaEscala(rpe)).toEqual([1, 3, 5, 7, 9, 10]);
+  });
+
+  it('todo intervalo entre marcas tem o mesmo tamanho', () => {
+    for (const faixa of [rpe, { minimo: 0, maximo: 10 }, { minimo: 1, maximo: 7 }]) {
+      const m = marcasDaEscala(faixa);
+      const saltos = m.slice(1).map((v, i) => v - m[i]);
+      expect(new Set(saltos).size).toBe(1);
+      expect(m[0]).toBe(faixa.minimo);
+      expect(m[m.length - 1]).toBe(faixa.maximo);
+    }
   });
 });

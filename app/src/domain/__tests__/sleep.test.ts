@@ -1,4 +1,4 @@
-import { dataDaNoite, deepSleepContinuity, horaHabitualDeAcordar, melhorCandidataDeNoite, montarNoites, nightFrom, sleepScore, spo2DaNoite } from '../sleep';
+import { dataDaNoite, deepSleepContinuity, ehNoite, horaHabitualDeAcordar, melhorCandidataDeNoite, montarNoites, nightFrom, sleepScore, spo2DaNoite } from '../sleep';
 import type { SleepSegment } from '../types';
 
 /**
@@ -227,13 +227,29 @@ describe('qual bloco é a noite', () => {
     expect(escolhida!.minutos).toBe(510);
   });
 
-  it('empate fica com o mais recente', () => {
-    const escolhida = melhorCandidataDeNoite([bloco(60, 3), bloco(60, 14)]);
-    expect(escolhida!.inicio).toBe(new Date(2026, 7, 26, 14).getTime());
+  it('empate entre duas noites fica com a mais recente', () => {
+    // As duas precisam SER noite: o desempate só existe entre candidatas, e
+    // um cochilo da tarde não é candidata nenhuma.
+    const escolhida = melhorCandidataDeNoite([bloco(60, 22), bloco(60, 3)]);
+    expect(escolhida!.inicio).toBe(new Date(2026, 7, 26, 22).getTime());
   });
 
-  it('quem só cochilou continua vendo o cochilo', () => {
-    expect(melhorCandidataDeNoite([bloco(45, 14)])!.minutos).toBe(45);
+  it('cochilo da tarde NÃO é noite, mesmo sendo o único bloco', () => {
+    // 31 minutos às 13h viraram "a noite de 30 para 31", com score 13 e
+    // "pode melhorar" (Leonardo, 31/08/2026). Nota ruim sobre sono que não
+    // aconteceu é pior que a ausência do número.
+    expect(melhorCandidataDeNoite([bloco(31, 13)])).toBeNull();
+    expect(melhorCandidataDeNoite([bloco(45, 14)])).toBeNull();
+  });
+
+  it('quem trabalha de madrugada dorme de dia, e isso é noite', () => {
+    // Pela DURAÇÃO, não pelo horário: oito horas às 9h da manhã é noite.
+    expect(melhorCandidataDeNoite([bloco(480, 9)])!.minutos).toBe(480);
+  });
+
+  it('sono curto de madrugada continua sendo noite', () => {
+    expect(melhorCandidataDeNoite([bloco(50, 3)])!.minutos).toBe(50);
+    expect(melhorCandidataDeNoite([bloco(50, 22)])!.minutos).toBe(50);
   });
 
   it('sem bloco nenhum não inventa noite', () => {

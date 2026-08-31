@@ -8,6 +8,7 @@ import { Icon } from '../../components/Icon';
 import { VoiceInput } from '../../components/VoiceInput';
 import { Body, BodyLarge, Button, Data, Label, MetricSm } from '../../components/ui';
 import { ehConfirmacao } from '../../domain/confirmacao';
+import { useWorkoutStore } from '../../store/workout.store';
 import { applyAdjustment, chatWithAgent, fetchChatHistory, type ChatTurn } from '../../services/api.service';
 import { darkPalette } from '../../theme/palette';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -150,6 +151,20 @@ export function PersonalScreen() {
       } else {
         setAplicado(
           r.applied === 1 ? 'Pronto: 1 mudança aplicada no seu plano.' : `Pronto, ${r.applied} mudanças aplicadas no seu plano.`);
+        /*
+         O plano é RELIDO depois de aplicar.
+
+         O servidor gravava e o app seguia com o plano velho em memória: a ficha
+         mostrava o treino de antes, e a pessoa concluía, com razão, que a
+         confirmação não tinha valido. "Eu validei a mudança pra hoje mas não
+         refletiu na ficha" (Bruno, 28/08/2026) — e o banco mostra a proposta
+         dele como aplicada, no mesmo minuto da captura. A mudança estava lá; a
+         tela é que não sabia.
+
+         Sem bloquear a conversa: quem acabou de confirmar quer ler a resposta,
+         não esperar uma releitura de plano.
+        */
+        void useWorkoutStore.getState().refresh();
       }
       setProposta(null);
     } catch {

@@ -284,6 +284,28 @@ export function horaHabitualDeAcordar(noites: { endAt?: number | null }[]): numb
   return Math.round(minutos.reduce((s, m) => s + m, 0) / minutos.length);
 }
 
+/** Abaixo disto, só é noite se tiver começado na janela da madrugada. */
+const MINIMO_DE_NOITE_MIN = 120;
+
+/**
+ * Este bloco de sono é uma NOITE, ou é cochilo?
+ *
+ * Duas formas de ser noite, e basta uma: durar duas horas ou mais, o que cobre
+ * quem trabalha de madrugada e dorme de dia; ou ter começado entre 20h e 5h,
+ * que é noite mesmo quando foi curta.
+ *
+ * Trinta e um minutos começando às 13h não é nenhuma das duas, e era
+ * apresentado como "noite de 30 para 31" com score 13 e a avaliação "pode
+ * melhorar" (Leonardo, 31/08/2026, que nem estava usando a pulseira). Chamar
+ * cochilo de noite não é só impreciso: produz uma nota ruim sobre um sono que
+ * não aconteceu.
+ */
+export function ehNoite(bloco: { minutos: number; inicio: number }): boolean {
+  if (bloco.minutos >= MINIMO_DE_NOITE_MIN) return true;
+  const hora = new Date(bloco.inicio).getHours();
+  return hora >= 20 || hora < 5;
+}
+
 /**
  * Entre vários blocos de sono do dia, qual é A NOITE.
  *
@@ -293,13 +315,15 @@ export function horaHabitualDeAcordar(noites: { endAt?: number | null }[]): numb
  * em que o app do fabricante mostrava 8h30 (26/08/2026). O número não era falso,
  * era de outro sono.
  *
- * Vence o bloco com MAIS sono, e o mais recente desempata. Quem realmente só
- * cochilou tem um bloco só, e ele continua sendo a resposta.
+ * Vence o bloco com MAIS sono, e o mais recente desempata. E cochilo não conta:
+ * sem nenhum bloco que seja noite, a resposta é `null`, e a tela diz que não há
+ * noite registrada em vez de dar nota a uma soneca da tarde.
  */
 export function melhorCandidataDeNoite<T extends { minutos: number; inicio: number }>(
   candidatas: T[]): T | null {
-  if (candidatas.length === 0) return null;
-  return candidatas.reduce((melhor, atual) => {
+  const noites = candidatas.filter(ehNoite);
+  if (noites.length === 0) return null;
+  return noites.reduce((melhor, atual) => {
     if (atual.minutos > melhor.minutos) return atual;
     if (atual.minutos === melhor.minutos && atual.inicio > melhor.inicio) return atual;
     return melhor;

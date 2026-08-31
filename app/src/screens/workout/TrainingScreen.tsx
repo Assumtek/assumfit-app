@@ -19,7 +19,7 @@ import { acumularKcal, type PerfilParaEnergia } from '../../domain/workoutEnergy
 import { fetchAnamnesis, trocarExercicioNoPlano } from '../../services/api.service';
 import { useBiometricStore } from '../../store/biometric.store';
 import { useUserStore } from '../../store/user.store';
-import { devePosicionarNoPedido, formatSessionClock } from '../../domain/workout';
+import { devePosicionarNoPedido, formatSessionClock, segundosDoExercicio } from '../../domain/workout';
 import type { WorkoutExercise } from '../../services/api.service';
 import { elapsedSeconds, useWorkoutStore } from '../../store/workout.store';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -330,12 +330,9 @@ export function TrainingScreen() {
    porque significam coisas diferentes: um é quanto SUSTENTAR a posição, o
    outro é quanto DURAR a atividade. Força nunca tem nenhum dos dois.
   */
-  const tempoAlvo =
-    exercise.subtype === 'MOBILITY'
-      ? (exercise.holdTime ?? null)
-      : exercise.subtype === 'CARDIO'
-        ? (exercise.duration ?? null)
-        : null;
+  // A conversão mora no domínio: `holdTime` é segundo e `duration` é MINUTO,
+  // e tratar os dois igual transformava 15 minutos de bicicleta em 15 segundos.
+  const tempoAlvo = segundosDoExercicio(exercise);
   const isLast = index === flat.length - 1;
 
   const inPhase = flat.filter((f) => f.phase === phase);

@@ -332,3 +332,26 @@ export function resumoDoVolume(progresso: Record<string, SerieRegistrada[]>): {
     volumeKg: volume > 0 ? Math.round(volume) : null,
   };
 }
+
+/**
+ * Quantos SEGUNDOS um exercício por tempo pede.
+ *
+ * As duas fontes têm unidades diferentes, e é aí que mora o defeito: `holdTime`
+ * (alongamento) é em segundos, `duration` (cardio) é em MINUTOS. O schema diz
+ * isso desde sempre; a tela usava os dois como se fossem segundos, e um cardio
+ * de 15 minutos virava "15 SEGUNDOS" na tela e no cronômetro (Leonardo,
+ * 29/08/2026: "acredito que era pra ser 15 minutos").
+ *
+ * Força não tem nem um nem outro: devolve `null`, e a tela mostra séries.
+ */
+export function segundosDoExercicio(exercicio: {
+  subtype: string;
+  holdTime?: number | null;
+  duration?: number | null;
+}): number | null {
+  if (exercicio.subtype === 'MOBILITY') return exercicio.holdTime ?? null;
+  if (exercicio.subtype === 'CARDIO') {
+    return exercicio.duration != null ? exercicio.duration * 60 : null;
+  }
+  return null;
+}

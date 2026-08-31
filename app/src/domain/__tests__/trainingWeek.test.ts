@@ -1,4 +1,4 @@
-import { devePosicionarNoPedido, resumoDoVolume } from '../workout';
+import { devePosicionarNoPedido, resumoDoVolume, segundosDoExercicio } from '../workout';
 import {
   treinoPendente, diaCorrente, montarSemanaDeTreino } from '../trainingWeek';
 import type { DiaDoPlano } from '../trainingWeek';
@@ -277,5 +277,25 @@ describe('carga total da sessão', () => {
     const r = resumoDoVolume({ 'ex-1': [serie('', '15')] });
     expect(r.exercicios).toBe(1);
     expect(r.volumeKg).toBeNull();
+  });
+});
+
+describe('tempo do exercício, e a unidade de cada campo', () => {
+  it('cardio vem em MINUTOS e vira segundos', () => {
+    // O defeito: 15 minutos de bicicleta viraram "15 SEGUNDOS" na tela.
+    expect(segundosDoExercicio({ subtype: 'CARDIO', duration: 15 })).toBe(900);
+  });
+
+  it('alongamento já vem em segundos e não é multiplicado', () => {
+    expect(segundosDoExercicio({ subtype: 'MOBILITY', holdTime: 30 })).toBe(30);
+  });
+
+  it('força não é por tempo', () => {
+    expect(segundosDoExercicio({ subtype: 'STRENGTH', duration: 15, holdTime: 30 })).toBeNull();
+  });
+
+  it('campo ausente não vira zero segundos', () => {
+    expect(segundosDoExercicio({ subtype: 'CARDIO' })).toBeNull();
+    expect(segundosDoExercicio({ subtype: 'MOBILITY' })).toBeNull();
   });
 });

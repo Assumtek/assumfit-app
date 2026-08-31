@@ -44,16 +44,33 @@ export function fracaoDoValor(valor: number, faixa: FaixaDaEscala): number {
 /**
  * As marcas que a régua desenha por baixo do slider.
  *
- * Todas as posições quando a escala é curta; de duas em duas quando ela passa
- * de oito, para as marcas não virarem um borrão. É desenho, não dado: o valor
- * escolhido continua sendo qualquer inteiro da faixa.
+ * O passo precisa DIVIDIR a faixa, senão a última marca fica a uma distância
+ * diferente das outras e a régua mente sobre o espaçamento. Era o caso de 1 a
+ * 10 de dois em dois: saía 1, 3, 5, 7, 9 e um 10 acrescentado no fim, colado no
+ * 9, enquanto a régua os desenhava igualmente espaçados. O valor 8 aparecia em
+ * cima do 9, e um testador leu isso como o slider estar quebrado (Leonardo,
+ * 29/08/2026: "funciona mas está com um comportamento estranho").
+ *
+ * Vence o MENOR passo que divide a faixa e cabe em seis marcas: 1 a 10 vira 1,
+ * 4, 7, 10, com as duas pontas presentes e todos os intervalos iguais.
  */
+const MAXIMO_DE_MARCAS = 6;
+
 export function marcasDaEscala(faixa: FaixaDaEscala): number[] {
   const { minimo, maximo } = faixa;
-  const total = maximo - minimo + 1;
-  const passo = total > 8 ? 2 : 1;
+  const extensao = maximo - minimo;
+  if (extensao <= 0) return [minimo];
+
+  let passo = extensao;
+  for (let p = 1; p <= extensao; p++) {
+    if (extensao % p !== 0) continue;
+    if (extensao / p + 1 <= MAXIMO_DE_MARCAS) {
+      passo = p;
+      break;
+    }
+  }
+
   const marcas: number[] = [];
   for (let v = minimo; v <= maximo; v += passo) marcas.push(v);
-  if (marcas[marcas.length - 1] !== maximo) marcas.push(maximo);
   return marcas;
 }
