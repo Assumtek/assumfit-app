@@ -1640,6 +1640,30 @@
       "nota": "Corrigido, e obrigado por avisar que não estava com a pulseira: era a peça que faltava. Aqueles 31 minutos entre 13h07 e 13h38 são um cochilo, e o app os tratou como a noite de 30 para 31, dando score 13 e 'pode melhorar' a um sono que não aconteceu. Agora um bloco só conta como noite se durar pelo menos duas horas (o que cobre quem trabalha de madrugada e dorme de dia) ou se tiver começado entre 20h e 5h. Sem nenhum bloco que seja noite, a tela passa a dizer que não há noite registrada, em vez de dar nota a uma soneca.",
       "versao": "1.0.6 (5)",
       "em": "2026-08-31T14:02:54"
+    },
+    "ANMxCPAWwf_sdmZbvB7KKa4": {
+      "commit": "fc5e91a",
+      "nota": "Você apontou bem: 'agora não' é a frase de quem decidiu NÃO compartilhar, e continuava sendo a única saída depois de você já ter publicado. Agora, assim que a imagem sai por qualquer caminho (story, compartilhamento ou salvar na galeria), o botão passa a dizer 'Pronto'.",
+      "versao": "1.0.6 (6)",
+      "em": "2026-08-31T21:45:52"
+    },
+    "AGGwgKmMxWLRQwAbZQjbWrs": {
+      "commit": "fc5e91a",
+      "nota": "Feito. O gráfico de pressão mostrava a nuvem de pontos sem nenhuma escala, então dava para ver a forma e não o valor. Entraram os números nas pontas de cada eixo. Deixei só as pontas de propósito: a leitura ali é a posição do ponto dentro das faixas coloridas, e uma malha de números competiria com elas pela atenção.",
+      "versao": "1.0.6 (6)",
+      "em": "2026-08-31T21:45:57"
+    },
+    "ANt7Ovco2-W3ugfIhGJseLo": {
+      "commit": "fc5e91a",
+      "nota": "Corrigido, e adotei a sua sugestão. A causa desta vez foi minha: o botão do personal que entrou nessa build devolveu uma quinta peça à linha do cabeçalho, e o kcal voltou a sair pela borda. Como espremer texto ali já falhou duas vezes, a pílula agora tem só o batimento, e um toque abre os números da sessão (batimento, calorias e duração) com rótulo em cada um. Peço desculpas pela demora nesta resposta: eu tinha registrado a correção com o identificador errado do seu relato, e ela não chegou até você ontem.",
+      "versao": "1.0.6 (6)",
+      "em": "2026-09-01T19:32:19"
+    },
+    "ANa277spxAxA9atSiyN58dk": {
+      "commit": "fc5e91a",
+      "nota": "Achado. Aquilo acontecia quando você saía da tela com o teclado aberto: o conteúdo fica dentro de um componente que reserva a altura do teclado, e ao voltar o app recalculava a área já reduzida com a reserva ainda aplicada, sobrando altura zero para o exercício. Tocar no checklist resolvia porque navegar fecha o teclado. Agora o teclado é fechado ao sair da tela ou ao mandar o app para segundo plano. Esta resposta também atrasou por um erro meu de registro, desculpe.",
+      "versao": "1.0.6 (6)",
+      "em": "2026-09-01T19:32:25"
     }
   }
 }

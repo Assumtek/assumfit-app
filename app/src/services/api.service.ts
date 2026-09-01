@@ -968,7 +968,20 @@ export async function chatWithAgent(message: string): Promise<ChatReply> {
    e é ele que monta o contexto. Mandar daqui era pedir ao aparelho que
    lembrasse por todo mundo, e a conversa morria ao fechar a tela.
   */
-  const { data } = await api.post<ChatReply>('/workout/chat', { message });
+  /*
+   O teto do agente vale AQUI também, e é o que faltava.
+
+   Ele foi criado com o comentário certo e aplicado só no `apply`, que é a
+   chamada RÁPIDA: quem conversa com o modelo é esta. Um ajuste que precisa de
+   segunda tentativa de formato passa dos 10 s do padrão, e o app desligava na
+   cara do servidor. O log de acesso mostra a assinatura: `POST 0` com duração
+   exatamente 10,0 s, e o serviço de modelo respondendo 200 nove segundos
+   depois, com três operações prontas que ninguém recebeu (Leonardo,
+   01/09/2026: "personal agente não funcionou").
+  */
+  const { data } = await api.post<ChatReply>('/workout/chat', { message }, {
+    timeout: TETO_DO_AGENTE_MS,
+  });
   return data;
 }
 
