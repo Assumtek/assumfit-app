@@ -1,7 +1,7 @@
 import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useMemo, useState , useRef} from 'react';
-import { Alert, AppState, KeyboardAvoidingView, Platform, Pressable, ScrollView } from 'react-native';
+import { Alert, AppState, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -13,7 +13,9 @@ import {
 } from '../../../modules/widgetbridge';
 
 import { Icon } from '../../components/Icon';
-import { Body, BodyLarge, Button, Subtitle, IconButton, PillButton } from '../../components/ui';
+import { Body, BodyLarge, Button, Label, Subtitle, IconButton, PillButton } from '../../components/ui';
+import { Row } from '../../components/List';
+import { Sheet } from '../../components/ui/Dialog';
 import { ExerciseVideo } from '../../components/ExerciseVideo';
 import { acumularKcal, type PerfilParaEnergia } from '../../domain/workoutEnergy';
 import { fetchAnamnesis, trocarExercicioNoPlano } from '../../services/api.service';
@@ -90,6 +92,8 @@ export function TrainingScreen() {
   */
   const pedido = (route.params as { exerciseId?: string } | undefined)?.exerciseId;
   const [swapOpen, setSwapOpen] = useState(false);
+  /** Os números da sessão, que saíram do cabeçalho para caber. */
+  const [detalhesAbertos, setDetalhesAbertos] = useState(false);
   /** Por que a pessoa está trocando — vem de Sinalizar; o botão Trocar não diz. */
   const [swapMotivo, setSwapMotivo] = useState<MotivoDeTroca | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -164,6 +168,14 @@ export function TrainingScreen() {
    tempo de o `refresh` reencontrar uma sessão real antes de desistir.
   */
   const focada = useIsFocused();
+  /*
+   Perder o foco também fecha o teclado, pelo mesmo motivo do segundo plano: a
+   tela pode voltar com o `KeyboardAvoidingView` medindo o que já não existe.
+  */
+  useEffect(() => {
+    if (!focada) Keyboard.dismiss();
+  }, [focada]);
+
   useEffect(() => {
     if (!focada || execution) return;
     const id = setTimeout(() => {
@@ -257,6 +269,21 @@ export function TrainingScreen() {
     const tirarCampainha = aoTocarNaIlha(drenar);
     const assinatura = AppState.addEventListener('change', (estado) => {
       if (estado === 'active') drenar();
+      /*
+       Sair com o TECLADO ABERTO deixava a tela em branco na volta.
+
+       O conteúdo vive dentro de um `KeyboardAvoidingView` com `padding`, e o
+       padding é a altura do teclado. Atravessando a suspensão, o app volta com
+       a área útil já reduzida e o padding ainda aplicado: sobra altura zero
+       para o exercício, e a tela fica vazia entre o cabeçalho e o teclado.
+       Tocar no checklist consertava porque navegar fecha o teclado e recompõe.
+       "Às vezes quando saio e volto da tela do treino em andamento fica tudo
+       assim" (Leonardo, 31/08/2026).
+
+       Fechar o teclado ao sair é o que impede o estado inconsistente de nascer.
+       Ninguém digita carga com o app em segundo plano.
+      */
+      if (estado !== 'active') Keyboard.dismiss();
     });
     return () => {
       tirarCampainha();
@@ -536,39 +563,44 @@ export function TrainingScreen() {
               </BodyLarge>
             </XStack>
           </Pressable>
+          {/*
+            Só o BATIMENTO na pílula; o resto abre ao toque.
+
+            A linha tem cinco peças de novo desde que o personal entrou aqui, e
+            "75 · 21 kcal" volta a sair pela borda direita, cortado (Leonardo,
+            31/08/2026: "kcal ainda está quebrado"). Espremer mais texto na
+            mesma linha já falhou duas vezes; a saída é a que ele mesmo propôs,
+            deixar o batimento e abrir os detalhes num toque.
+          */}
           {bpmAoVivo != null ? (
-            <XStack
-              alignItems="center"
-              gap={8}
-              borderRadius={999}
-              borderWidth={1}
-              borderColor="$border"
-              paddingHorizontal="$md"
-              paddingVertical="$md"
-              flexShrink={1}
-              minWidth={0}
+            <Pressable
+              onPress={() => setDetalhesAbertos(true)}
+              accessibilityRole="button"
+              accessibilityLabel={`Batimento ${Math.round(bpmAoVivo)}, ver detalhes da sessão`}
+              style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
             >
-              <Icon name="heart" size={16} color={colors.text} />
-              <BodyLarge
-                fontWeight="500"
-                color="$foreground"
-                fontVariant={['tabular-nums']}
-                numberOfLines={1}
-                maxFontSizeMultiplier={1.4}
+              <XStack
+                alignItems="center"
+                gap={8}
+                borderRadius={999}
+                borderWidth={1}
+                borderColor="$border"
+                paddingHorizontal="$md"
+                paddingVertical="$md"
+                flexShrink={0}
               >
-                {Math.round(bpmAoVivo)}
-              </BodyLarge>
-              {pesoKg != null ? (
-                <Body
-                  color="$mutedForeground"
+                <Icon name="heart" size={16} color={colors.text} />
+                <BodyLarge
+                  fontWeight="500"
+                  color="$foreground"
                   fontVariant={['tabular-nums']}
                   numberOfLines={1}
                   maxFontSizeMultiplier={1.4}
                 >
-                  · {Math.round(kcal)} kcal
-                </Body>
-              ) : null}
-            </XStack>
+                  {Math.round(bpmAoVivo)}
+                </BodyLarge>
+              </XStack>
+            </Pressable>
           ) : null}
         </XStack>
       </XStack>
@@ -757,6 +789,36 @@ export function TrainingScreen() {
           {...nextUp}
         />
       ) : null}
+
+      {/*
+        Os números da sessão, tirados do cabeçalho por falta de espaço.
+
+        Aqui eles cabem inteiros e ganham rótulo, o que a pílula não permitia:
+        "75 · 21 kcal" exigia saber que o segundo número era caloria.
+      */}
+      <Sheet open={detalhesAbertos} onClose={() => setDetalhesAbertos(false)}>
+        <YStack gap="$md">
+          <Label>esta sessão</Label>
+          <Row>
+            <Body flex={1}>Batimento agora</Body>
+            <Body fontWeight="600" fontVariant={['tabular-nums']}>
+              {bpmAoVivo != null ? `${Math.round(bpmAoVivo)} bpm` : '–'}
+            </Body>
+          </Row>
+          <Row>
+            <Body flex={1}>Calorias</Body>
+            <Body fontWeight="600" fontVariant={['tabular-nums']}>
+              {pesoKg != null ? `${Math.round(kcal)} kcal` : 'precisa do peso na anamnese'}
+            </Body>
+          </Row>
+          <Row last>
+            <Body flex={1}>Duração</Body>
+            <Body fontWeight="600" fontVariant={['tabular-nums']}>
+              {formatSessionClock(elapsedSec)}
+            </Body>
+          </Row>
+        </YStack>
+      </Sheet>
 
       {swapOpen ? (
         <ExerciseSwapSheet

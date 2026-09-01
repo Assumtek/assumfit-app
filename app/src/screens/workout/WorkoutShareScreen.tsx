@@ -203,6 +203,8 @@ export function WorkoutShareScreen() {
    a tela está aberta, e `canOpenURL` no caminho de render piscaria o botão.
   */
   const [temInstagram] = useState(() => podeIrParaOInstagram());
+  /** A imagem já saiu daqui: por story, por compartilhamento ou para a galeria. */
+  const [jaSaiu, setJaSaiu] = useState(false);
 
   /**
    * Vai direto para o story, com o cartão já como fundo.
@@ -216,7 +218,10 @@ export function WorkoutShareScreen() {
     try {
       const uri = await gerar();
       if (!uri) return;
-      if (irParaOInstagram(uri)) return;
+      if (irParaOInstagram(uri)) {
+        setJaSaiu(true);
+        return;
+      }
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png' });
       }
@@ -234,6 +239,7 @@ export function WorkoutShareScreen() {
       if (!uri) return;
       if (!(await Sharing.isAvailableAsync())) return;
       await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png' });
+      setJaSaiu(true);
     } catch {
       Alert.alert('Não foi possível compartilhar', 'Tente de novo.');
     } finally {
@@ -254,6 +260,7 @@ export function WorkoutShareScreen() {
       // API de classes do expo-media-library 57 — `saveToLibraryAsync` da
       // raiz virou ERRO em agosto/2026, e era o "crash" do salvar.
       await MediaLibrary.Asset.create(uri);
+      setJaSaiu(true);
       Alert.alert('Salvo', 'O story está na sua galeria.');
     } catch {
       Alert.alert('Não foi possível salvar', 'Tente de novo.');
@@ -554,7 +561,19 @@ export function WorkoutShareScreen() {
           onPress={() => void compartilhar()}
         />
         <Button title="Salvar na galeria" variant="secondary" onPress={() => void salvar()} />
-        <Button title="Agora não" variant="ghost" onPress={() => navigation.goBack()} />
+        {/*
+          O texto da saída depende do que JÁ aconteceu.
+
+          "Agora não" é a frase de quem decidiu não compartilhar, e continuava
+          sendo a única saída depois de a pessoa ter publicado: "compartilhei no
+          story e não parece ter próximo passo além de agora não" (Leonardo,
+          31/08/2026). Quem já publicou não está adiando nada, está terminando.
+        */}
+        <Button
+          title={jaSaiu ? 'Pronto' : 'Agora não'}
+          variant="ghost"
+          onPress={() => navigation.goBack()}
+        />
       </YStack>
     </DetailScreen>
   );

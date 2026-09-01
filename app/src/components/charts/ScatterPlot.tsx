@@ -89,6 +89,32 @@ export function ScatterPlot({
         </>
       ) : null}
 
+      {/*
+        Os NÚMEROS dos eixos, nas duas pontas de cada um.
+
+        O gráfico dizia só "diastólica ↑" e "sistólica →": dava para ver a
+        nuvem e não onde ela está. "Inserir no gráfico marcadores nos eixos"
+        (Leonardo, 31/08/2026), e ele tem razão, um plano cartesiano sem escala
+        mostra forma sem valor.
+
+        Só as pontas do domínio, e não uma malha de números: a leitura aqui é
+        de POSIÇÃO relativa às faixas coloridas, e mais números competiriam com
+        elas pela atenção.
+      */}
+      <SvgText x={padLeft} y={plotH + 12} fill={colors.textFaint} fontSize={10} textAnchor="middle">
+        {xDomain[0]}
+      </SvgText>
+      <SvgText x={padLeft + plotW} y={plotH + 12} fill={colors.textFaint} fontSize={10} textAnchor="middle">
+        {xDomain[1]}
+      </SvgText>
+      <SvgText x={padLeft - 4} y={plotH} fill={colors.textFaint} fontSize={10} textAnchor="end">
+        {yDomain[0]}
+      </SvgText>
+      {/* Abaixo do rótulo do eixo, que ocupa a linha de cima na esquerda. */}
+      <SvgText x={padLeft - 4} y={24} fill={colors.textFaint} fontSize={10} textAnchor="end">
+        {yDomain[1]}
+      </SvgText>
+
       {yLabel ? (
         <SvgText x={0} y={10} fill={colors.textFaint} fontSize={10}>
           {yLabel}
