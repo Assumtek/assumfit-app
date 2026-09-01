@@ -21,6 +21,7 @@ from models.insight import DayContext, build as build_insight, day_notes
 from models.insight_llm import Facts, write as write_insight
 from models.lifestyle import Lifestyle, chronotype_from, circadian_shift
 from models.morning import MorningFacts, write_morning
+from models.workout_feedback import WorkoutFeedbackFacts, write_workout_feedback
 from models.weekly import WeeklyFacts, write_weekly
 
 app = FastAPI(title="AssumFit AI", version="1.0.0")
@@ -248,6 +249,52 @@ def morning(data: MorningInput) -> dict:
             streak_days=data.streak_days,
             city=data.city,
             recent=tuple(data.recent),
+        )
+    )
+    if texto is None:
+        raise HTTPException(status_code=503, detail="modelo indisponível")
+    return texto
+
+
+class WorkoutFeedbackInput(BaseModel):
+    """Os fatos da sessão recém-concluída.
+
+    Tudo opcional menos o nome e a duração: a sessão pode não ter carga
+    registrada (peso corporal), não ter batimento (pulseira fora) e não ter
+    esforço (a pessoa fechou sem responder). Campo ausente não vira zero, some
+    do prompt, e o modelo não fala do que não foi medido.
+    """
+
+    workout_name: str
+    duration_min: int
+    completion_pct: int | None = None
+    effort: int | None = None
+    rating: int | None = None
+    volume_kg: int | None = None
+    exercises: int | None = None
+    previous_volume_kg: int | None = None
+    avg_bpm: int | None = None
+
+
+@app.post("/workout/feedback")
+def workout_feedback(data: WorkoutFeedbackInput) -> dict:
+    """O comentário do treino recém-concluído (Leonardo, 31/08/2026).
+
+    Sem modelo ou sem crédito, 503: a tela de fim de treino simplesmente não
+    mostra o bloco, e é melhor assim do que uma frase genérica dando a entender
+    que alguém leu os números da sessão.
+    """
+    texto = write_workout_feedback(
+        WorkoutFeedbackFacts(
+            workout_name=data.workout_name,
+            duration_min=data.duration_min,
+            completion_pct=data.completion_pct,
+            effort=data.effort,
+            rating=data.rating,
+            volume_kg=data.volume_kg,
+            exercises=data.exercises,
+            previous_volume_kg=data.previous_volume_kg,
+            avg_bpm=data.avg_bpm,
         )
     )
     if texto is None:

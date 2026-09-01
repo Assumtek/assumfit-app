@@ -17,6 +17,7 @@ import { buildDashboard } from '../services/workout/dashboard';
 import { deriveFlags, parseAnamnesis } from '../services/workout/context-builder';
 import { prisma } from '../lib/prisma';
 import { similarExercises, trocarNoPlano, ultimasCargasPorExercicio } from '../services/workout/catalog';
+import { comentarioDaSessao } from '../services/workout/session-feedback';
 import {
   activePlan,
   cancelExecution,
@@ -389,6 +390,24 @@ workoutRoutes.post(
       completionPct: execution.completionPct,
       finishedAt: execution.finishedAt,
     });
+  }));
+
+/**
+ * O comentário do treino recém-concluído, redigido pelo modelo.
+ *
+ * Separado do `finish` de propósito: concluir precisa responder rápido e não
+ * pode depender de IA. Ver `session-feedback.ts`.
+ *
+ * 204 quando não há comentário (modelo fora, sem crédito, sessão sem duração):
+ * a tela não mostra o bloco, e isso é melhor que uma frase genérica fingindo
+ * que alguém leu os números da sessão.
+ */
+workoutRoutes.get(
+  '/execution/:id/feedback',
+  asyncRoute<AuthedRequest>(async (req, res) => {
+    const texto = await comentarioDaSessao(req.userId, req.params.id);
+    if (!texto) return res.status(204).end();
+    res.json(texto);
   }));
 
 workoutRoutes.delete(

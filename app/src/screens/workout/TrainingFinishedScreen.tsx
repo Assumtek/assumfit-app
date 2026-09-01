@@ -7,11 +7,11 @@ import { DetailScreen } from '../../components/DetailScreen';
 import { EscalaSlider } from '../../components/EscalaSlider';
 import { ScalePicker } from '../../components/ScalePicker';
 import { Icon } from '../../components/Icon';
-import { Body, BodyLarge, Button, Card, Data, Heading, HeroCard, Metric, RatingText, SectionTitle, Subtitle } from '../../components/ui';
+import { Body, BodyLarge, Button, Card, Data, Heading, HeroCard, Metric, RatingText, SectionTitle, Skeleton, Subtitle } from '../../components/ui';
 import { achievementsFor, type Achievement } from '../../domain/achievements';
 import { mensagemDaFalha } from '../../domain/apiErrors';
 import { formatDuration, rateCompletion, rateEffort } from '../../domain/workout';
-import { fetchExecutionHistory } from '../../services/api.service';
+import { fetchExecutionHistory, fetchSessionFeedback } from '../../services/api.service';
 import { useWorkoutStore } from '../../store/workout.store';
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -35,6 +35,20 @@ export function TrainingFinishedScreen() {
   const [effort, setEffort] = useState<number | null>(null);
   const [rating, setRating] = useState<number | null>(null);
   const [conquistas, setConquistas] = useState<Achievement[]>([]);
+  /**
+   * O comentário do modelo sobre a sessão (Leonardo, 31/08/2026).
+   *
+   * `undefined` enquanto busca, `null` quando não há: são estados diferentes.
+   * Sem modelo ou sem crédito, o bloco não aparece, e isso é melhor que uma
+   * frase genérica dando a entender que alguém leu os números do treino.
+   */
+  const [comentario, setComentario] = useState<{ headline: string; body: string } | null | undefined>(
+    undefined);
+  /*
+   O id da execução, guardado ANTES de concluir: o `finish` limpa a sessão do
+   store, e sem isto não haveria o que perguntar ao servidor depois.
+  */
+  const [execucaoConcluida, setExecucaoConcluida] = useState<string | null>(null);
   const [comment, setComment] = useState('');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{
@@ -50,6 +64,7 @@ export function TrainingFinishedScreen() {
     if (busy) return;
     setBusy(true);
     setError(null);
+    setExecucaoConcluida(execution?.id ?? null);
     try {
       setResult(await finish({ perceivedEffort: effort, rating, comment: comment || null }));
     } catch (err) {
@@ -83,6 +98,22 @@ export function TrainingFinishedScreen() {
       .then((h) => setConquistas(achievementsFor(h, Date.now())))
       .catch(() => undefined);
   }, [result]);
+
+  /*
+   O comentário vem DEPOIS da conclusão, em chamada própria: concluir não pode
+   depender do modelo, e o treino já está gravado quando esta tela abre. Falha
+   aqui é silêncio, nunca erro na tela.
+  */
+  useEffect(() => {
+    if (!result || !execucaoConcluida) return;
+    let vivo = true;
+    fetchSessionFeedback(execucaoConcluida)
+      .then((c) => vivo && setComentario(c))
+      .catch(() => vivo && setComentario(null));
+    return () => {
+      vivo = false;
+    };
+  }, [result, execucaoConcluida]);
 
   if (result) {
     const completion = rateCompletion(result.completionPct);
@@ -127,6 +158,35 @@ export function TrainingFinishedScreen() {
               <Body color="$mutedForeground">
                 {effortRating.detail}
               </Body>
+            </Card>
+          ) : null}
+
+          {/*
+            A leitura da sessão, em linguagem humana.
+
+            Fica ACIMA das conquistas porque fala do treino que acabou de
+            acontecer; conquista é histórico. Enquanto carrega, um esqueleto
+            no formato do texto: a tela não pisca com o bloco aparecendo do
+            nada depois de dois segundos.
+          */}
+          {comentario === undefined ? (
+            <Card>
+              <Skeleton lines={3} />
+            </Card>
+          ) : comentario ? (
+            <Card>
+              <Data
+                fontWeight="700"
+                letterSpacing={1.2}
+                color="$mutedForeground"
+                textTransform="uppercase"
+              >
+                sobre este treino
+              </Data>
+              <RatingText fontWeight="700" color="$foreground" marginTop="$sm">
+                {comentario.headline}
+              </RatingText>
+              <Body color="$mutedForeground">{comentario.body}</Body>
             </Card>
           ) : null}
 

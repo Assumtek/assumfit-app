@@ -696,6 +696,21 @@ export async function trocarExercicioNoPlano(
   await api.patch(`/workout/plan/exercise/${workoutExerciseId}`, { exerciseId });
 }
 
+/**
+ * O comentário do treino recém-concluído, redigido pelo modelo.
+ *
+ * `null` quando não há: modelo fora, sem crédito, sessão sem duração. A tela
+ * não mostra o bloco, e é melhor assim do que uma frase genérica dando a
+ * entender que alguém leu os números da sessão.
+ */
+export async function fetchSessionFeedback(
+  executionId: string): Promise<{ headline: string; body: string } | null> {
+  const { data, status } = await api.get<{ headline: string; body: string } | ''>(
+    `/workout/execution/${executionId}/feedback`,
+    { timeout: 30_000 });
+  return status === 204 || !data ? null : data;
+}
+
 export async function fetchSimilarExercises(exerciseId: string): Promise<SimilarExercise[]> {
   const { data } = await api.get<SimilarExercise[]>(`/workout/exercise/${exerciseId}/similar`);
   return data;

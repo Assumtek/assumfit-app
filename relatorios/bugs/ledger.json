@@ -1664,6 +1664,12 @@
       "nota": "Achado. Aquilo acontecia quando você saía da tela com o teclado aberto: o conteúdo fica dentro de um componente que reserva a altura do teclado, e ao voltar o app recalculava a área já reduzida com a reserva ainda aplicada, sobrando altura zero para o exercício. Tocar no checklist resolvia porque navegar fecha o teclado. Agora o teclado é fechado ao sair da tela ou ao mandar o app para segundo plano. Esta resposta também atrasou por um erro meu de registro, desculpe.",
       "versao": "1.0.6 (6)",
       "em": "2026-09-01T19:32:25"
+    },
+    "AF7Zzsf0fooQIHyDi0xPoa4": {
+      "commit": "f233630",
+      "nota": "Achado, e não era o agente: era o app desistindo cedo demais. O registro do servidor mostra a sua conversa cortada exatamente em 10,0 segundos pelo aplicativo, e o modelo respondendo nove segundos depois com as três alterações prontas, que ninguém chegou a receber. O limite maior já existia no código, mas estava aplicado só na hora de aplicar a mudança, não na conversa em si, que é justamente a parte demorada. Corrigido. Vale dizer que agora há um segundo problema, esse fora do app: os créditos da nossa conta de IA acabaram hoje à tarde, então o personal segue sem responder até a Silvia recarregar.",
+      "versao": "1.0.6 (6)",
+      "em": "2026-09-01T19:35:49"
     }
   }
 }
