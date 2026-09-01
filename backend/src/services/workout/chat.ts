@@ -29,7 +29,29 @@ import { classify, isReferral } from './risk-tier';
  * depender disso seria entregar a regra de segurança a quem pode alucinar.
  */
 
-export type ChatTurn = { role: 'user' | 'assistant'; content: string };
+/**
+ * O formato do nome do arquivo de foto do chat.
+ *
+ * Ele é gerado pelo APARELHO e volta para ele, que o usa para montar um
+ * caminho local. Sem esta trava, um nome com "../" viraria leitura fora da
+ * pasta do app. O formato tem que casar com `guardarFotoDoChat` no app: mudar
+ * um sem o outro faz toda foto ser recusada.
+ */
+export const FORMATO_DA_FOTO = /^chat-[a-z0-9-]{1,64}\.jpg$/;
+
+export type ChatTurn = {
+  role: 'user' | 'assistant';
+  content: string;
+  /**
+   * O nome do arquivo da foto no APARELHO, quando a mensagem teve uma.
+   *
+   * A imagem não passa por aqui: a política de fotos do app é que elas ficam
+   * no aparelho (refeição, evolução, e agora esta). O ponteiro é o que devolve
+   * a foto à bolha certa ao reabrir a conversa; em outro aparelho o arquivo
+   * não existe, e a bolha diz que houve uma foto.
+   */
+  imageRef?: string;
+};
 
 /** O que a rota devolve: a resposta do agente mais o id da proposta guardada. */
 export type ChatResult = AgentAdjustResult & {
@@ -52,11 +74,13 @@ export async function historicoDoChat(userId: string, limite = 60): Promise<Chat
     where: { userId },
     orderBy: { createdAt: 'desc' },
     take: limite,
-    select: { role: true, content: true },
+    select: { role: true, content: true, imageRef: true },
   });
-  return linhas
-    .reverse()
-    .map((l) => ({ role: l.role === 'assistant' ? 'assistant' : 'user', content: l.content }));
+  return linhas.reverse().map((l) => ({
+    role: l.role === 'assistant' ? 'assistant' : 'user',
+    content: l.content,
+    ...(l.imageRef ? { imageRef: l.imageRef } : {}),
+  }));
 }
 
 export async function chatWithAgent(
@@ -71,7 +95,12 @@ export async function chatWithAgent(
    * biblioteca de imagens de terceiros é um passivo de privacidade que este
    * recurso não precisa criar para funcionar.
    */
-  foto?: { base64: string; mediaType: 'image/jpeg' | 'image/png' | 'image/webp' },
+  foto?: {
+    base64: string;
+    mediaType: 'image/jpeg' | 'image/png' | 'image/webp';
+    /** Nome do arquivo salvo no aparelho, o ponteiro que volta no histórico. */
+    ref?: string;
+  },
 ): Promise<ChatResult> {
   const consent = await prisma.consent.findFirst({
     where: { userId, purpose: 'workout_generation', revokedAt: null },
@@ -168,7 +197,12 @@ export async function chatWithAgent(
     week_feedback: semana,
     // Os mais RECENTES, e não os primeiros: a conversa que importa é a que
     // acabou de acontecer, e mandar o histórico inteiro estoura a janela.
-    history: history.slice(-HISTORY_LIMIT),
+    /*
+     Para o modelo vai só o TEXTO. O ponteiro da foto é assunto da tela: o
+     arquivo está no aparelho, e mandar o nome dele ao modelo seria dar a ler
+     um caminho que não leva a lugar nenhum.
+    */
+    history: history.slice(-HISTORY_LIMIT).map((t) => ({ role: t.role, content: t.content })),
     current_plan: serializePlan(plan),
     profile: context.profile,
     flags: context.flags,
@@ -187,11 +221,10 @@ export async function chatWithAgent(
   await prisma.planChatMessage.createMany({
     data: [
       /*
-       A mensagem gravada diz que houve uma foto, sem guardar a foto: sem isso,
-       a conversa reaberta mostraria uma pergunta solta ("e este aqui?") e uma
-       resposta sobre um aparelho que ninguém mencionou.
+       O PONTEIRO da foto, não a foto: o arquivo fica no aparelho, e a coluna
+       guarda o nome para a imagem voltar à bolha certa ao reabrir a conversa.
       */
-      { userId, role: 'user', content: foto ? `${message}\n[foto enviada]` : message },
+      { userId, role: 'user', content: message, imageRef: foto?.ref ?? null },
       { userId, role: 'assistant', content: resultado.reply, adjustmentId },
     ],
   });

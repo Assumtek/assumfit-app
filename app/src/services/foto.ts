@@ -1,5 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
+import { File, Paths } from 'expo-file-system';
 import { Platform } from 'react-native';
 
 /**
@@ -63,5 +64,39 @@ export async function escolherFoto(
     return { foto: { uri: pronta.uri, base64: pronta.base64 } };
   } catch {
     return { falha: 'preparo' };
+  }
+}
+
+/**
+ * Guarda a foto do chat no aparelho e devolve o NOME do arquivo.
+ *
+ * A política de fotos do app é a mesma desde a refeição e a evolução: a imagem
+ * fica com quem ela mostra. O que viaja ao servidor é o nome, que volta no
+ * histórico e devolve a foto à bolha certa quando a conversa é reaberta.
+ *
+ * O nome carrega o instante para não colidir entre duas fotos do mesmo
+ * segundo; o formato é o que a rota valida, e mudar um sem o outro faz a foto
+ * ser recusada.
+ */
+export function guardarFotoDoChat(uri: string): string | null {
+  const nome = `chat-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+  try {
+    new File(uri).copy(new File(Paths.document, nome));
+    return nome;
+  } catch {
+    // Sem espaço, permissão negada, arquivo sumido: a conversa acontece do
+    // mesmo jeito, só não guarda a imagem. Perder a foto não pode custar a
+    // resposta que a pessoa foi buscar.
+    return null;
+  }
+}
+
+/** O caminho local de uma foto do chat, ou `null` se ela não está neste aparelho. */
+export function caminhoDaFotoDoChat(nome: string): string | null {
+  try {
+    const f = new File(Paths.document, nome);
+    return f.exists ? f.uri : null;
+  } catch {
+    return null;
   }
 }

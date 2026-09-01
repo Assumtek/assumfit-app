@@ -935,15 +935,17 @@ export async function fetchMorningForecast(lat: number, lon: number): Promise<Mo
 export type ChatTurn = {
   role: 'user' | 'assistant';
   content: string;
-  /**
-   * A miniatura da foto enviada, só nesta sessão de tela.
-   *
-   * O servidor guarda o TEXTO da conversa e não a imagem (ver `chat.ts`), então
-   * este campo não volta ao reabrir: a bolha antiga fica com a marca de que
-   * houve foto, e não com a foto. É a escolha certa para foto de academia, que
-   * costuma pegar o rosto de quem está em volta.
-   */
+  /** O caminho local da imagem, resolvido a partir de `imageRef`. */
   imagemUri?: string;
+  /**
+   * O NOME do arquivo da foto no aparelho, quando a mensagem teve uma.
+   *
+   * A imagem não sobe: fica no aparelho, como a da refeição e a de evolução. O
+   * servidor guarda este ponteiro, que é o que devolve a foto à bolha certa
+   * quando a conversa é reaberta. Em outro aparelho o arquivo não existe, e a
+   * bolha diz que houve uma foto.
+   */
+  imageRef?: string;
 };
 
 export type ChatReply = {
@@ -989,7 +991,11 @@ export async function applyAdjustment(adjustmentId: string): Promise<ApplyAdjust
   return data;
 }
 
-export async function chatWithAgent(message: string, imageBase64?: string): Promise<ChatReply> {
+export async function chatWithAgent(
+  message: string,
+  imageBase64?: string,
+  /** Nome do arquivo já salvo no aparelho, para o histórico reencontrá-lo. */
+  imageRef?: string): Promise<ChatReply> {
   /*
    O histórico não vai mais junto: a conversa vive no servidor desde 24/08/2026,
    e é ele que monta o contexto. Mandar daqui era pedir ao aparelho que
@@ -1010,7 +1016,7 @@ export async function chatWithAgent(message: string, imageBase64?: string): Prom
     '/workout/chat',
     // `mediaType` não vai: o preparo da foto sempre salva JPEG, e o servidor
     // assume isso na ausência do campo.
-    imageBase64 ? { message, imageBase64 } : { message },
+    imageBase64 ? { message, imageBase64, ...(imageRef ? { imageRef } : {}) } : { message },
     { timeout: TETO_DO_AGENTE_MS },
   );
   return data;

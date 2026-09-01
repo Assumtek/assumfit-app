@@ -10,7 +10,7 @@ import { Body, BodyLarge, Button, Data, Label, MetricSm } from '../../components
 import { ehConfirmacao } from '../../domain/confirmacao';
 import { useWorkoutStore } from '../../store/workout.store';
 import { applyAdjustment, chatWithAgent, fetchChatHistory, type ChatTurn } from '../../services/api.service';
-import { escolherFoto } from '../../services/foto';
+import { caminhoDaFotoDoChat, escolherFoto, guardarFotoDoChat } from '../../services/foto';
 import { darkPalette } from '../../theme/palette';
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -157,6 +157,12 @@ export function PersonalScreen() {
     // para mostrar o que ela acabou de escrever faz o app parecer travado por
     // vários segundos.
     const fotoEnviada = foto;
+    /*
+     A foto é guardada ANTES de enviar: assim a bolha já nasce apontando para o
+     arquivo definitivo, e a conversa reaberta encontra a mesma imagem. O
+     original do seletor vive numa pasta temporária que o iOS limpa.
+    */
+    const ref = fotoEnviada ? guardarFotoDoChat(fotoEnviada.uri) : null;
     const comPergunta: ChatTurn[] = [
       ...turnos,
       {
@@ -165,6 +171,7 @@ export function PersonalScreen() {
         // A miniatura fica na bolha para a conversa fazer sentido ao rolar
         // para cima. Ela vive só nesta tela: o servidor guarda o texto.
         imagemUri: fotoEnviada?.uri,
+        ...(ref ? { imageRef: ref } : {}),
       },
     ];
     setTurnos(comPergunta);
@@ -179,6 +186,7 @@ export function PersonalScreen() {
       const r = await chatWithAgent(
         pergunta || 'O que é este aparelho, e para que serve?',
         fotoEnviada?.base64,
+        ref ?? undefined,
       );
       // A resposta entra DIGITANDO, como num chat de verdade (fundadora,
       // 23/08): a bolha cresce caractere a caractere e a proposta de ajuste
@@ -402,7 +410,19 @@ export function PersonalScreen() {
  * pergunta rolando de olho, sem ler.
  */
 function Balao({ turno }: { turno: ChatTurn }) {
+  const { colors } = useTheme();
   const meu = turno.role === 'user';
+  /*
+   A conversa vem do SERVIDOR com o ponteiro; a imagem está aqui no aparelho.
+   `imagemUri` já vem preenchido na mensagem que acabou de ser enviada, e o
+   `imageRef` é o caminho de volta ao reabrir a tela.
+
+   Em outro aparelho o arquivo não existe: a bolha diz que houve uma foto, em
+   vez de mostrar um retângulo quebrado. É o preço de a imagem ficar com quem
+   ela mostra, o mesmo já aceito nas fotos de evolução.
+  */
+  const caminho = turno.imagemUri ?? (turno.imageRef ? caminhoDaFotoDoChat(turno.imageRef) : null);
+  const fotoSumiu = !!turno.imageRef && !caminho;
   return (
     <XStack justifyContent={meu ? 'flex-end' : 'flex-start'}>
       <YStack
@@ -424,9 +444,17 @@ function Balao({ turno }: { turno: ChatTurn }) {
           Só nesta sessão de tela: o servidor guarda o texto e não a imagem,
           então a conversa reaberta mostra a marca de que houve foto.
         */}
-        {turno.imagemUri ? (
+        {fotoSumiu ? (
+          <XStack alignItems="center" gap="$sm" marginBottom="$sm">
+            <Icon name="camera" size={14} color={meu ? colors.ink : colors.textMuted} />
+            <Body color={meu ? '$primaryForeground' : '$mutedForeground'}>
+              Foto enviada deste aparelho
+            </Body>
+          </XStack>
+        ) : null}
+        {caminho ? (
           <Image
-            source={{ uri: turno.imagemUri }}
+            source={{ uri: caminho }}
             style={{ width: 200, height: 200, borderRadius: 12, marginBottom: 8 }}
             resizeMode="cover"
           />

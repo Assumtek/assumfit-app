@@ -1,0 +1,12 @@
+-- A foto que acompanhou a mensagem: o NOME do arquivo, não a imagem.
+--
+-- A imagem fica no aparelho (`Paths.document`), como a da refeição e a de
+-- evolução. Aqui guardamos o ponteiro, que é o que devolve a foto à bolha
+-- certa quando a conversa é reaberta.
+--
+-- O `prisma migrate dev` gerou junto um drop/recreate das foreign keys de
+-- `plan_adjustments` e `plan_chat_messages` e um `ALTER COLUMN "id" DROP
+-- DEFAULT`: era deriva do banco de desenvolvimento desta máquina, não mudança
+-- pedida. Em produção, tirar o default do id quebraria toda inserção que
+-- depende dele. A migration foi reduzida à coluna nova, à mão.
+ALTER TABLE "plan_chat_messages" ADD COLUMN "image_ref" TEXT;

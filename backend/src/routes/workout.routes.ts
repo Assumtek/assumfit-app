@@ -18,6 +18,7 @@ import { deriveFlags, parseAnamnesis } from '../services/workout/context-builder
 import { prisma } from '../lib/prisma';
 import { similarExercises, trocarNoPlano, ultimasCargasPorExercicio } from '../services/workout/catalog';
 import { comentarioDaSessao } from '../services/workout/session-feedback';
+import { FORMATO_DA_FOTO } from '../services/workout/chat';
 import {
   activePlan,
   cancelExecution,
@@ -494,7 +495,7 @@ workoutRoutes.post(
      aparelho disser que é. Campo antigo enviado por um app desatualizado é
      simplesmente ignorado, sem quebrar a requisição.
     */
-    const { message, imageBase64, mediaType } = z
+    const { message, imageBase64, mediaType, imageRef } = z
       .object({
         message: z.string().min(1).max(1000),
         /*
@@ -505,13 +506,21 @@ workoutRoutes.post(
         */
         imageBase64: z.string().min(1).max(8_000_000).optional(),
         mediaType: z.enum(['image/jpeg', 'image/png', 'image/webp']).optional(),
+        /*
+         O NOME do arquivo no aparelho, gerado por ele. Validado para ser um
+         nome de arquivo e nada mais: ele volta ao app, que o usa para montar
+         um caminho local, e um "../" aqui viraria leitura fora da pasta.
+        */
+        imageRef: z.string().regex(FORMATO_DA_FOTO).optional(),
       })
       .parse(req.body ?? {});
 
     const result = await chatWithAgent(
       req.userId,
       message,
-      imageBase64 ? { base64: imageBase64, mediaType: mediaType ?? 'image/jpeg' } : undefined,
+      imageBase64
+        ? { base64: imageBase64, mediaType: mediaType ?? 'image/jpeg', ref: imageRef }
+        : undefined,
     );
     res.json({
       reply: result.reply,

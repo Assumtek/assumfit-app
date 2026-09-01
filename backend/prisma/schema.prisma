@@ -921,6 +921,16 @@ model PlanChatMessage {
   /// A proposta que esta resposta gerou, quando gerou: é o que permite a tela
   /// remontar a conversa com o botão de confirmar no lugar certo.
   adjustmentId String? @map("adjustment_id") @db.Uuid
+  /// O NOME do arquivo da foto que acompanhou a mensagem, não a foto.
+  ///
+  /// A imagem fica no aparelho (`Paths.document`), como a da refeição e a de
+  /// evolução: é a política de fotos do app, e imagem de academia mostra o
+  /// rosto de quem está em volta. Aqui guardamos só o ponteiro, que é o que
+  /// devolve a foto à bolha certa quando a conversa é reaberta.
+  ///
+  /// Some ao trocar de aparelho, e a bolha diz que houve uma foto. É o mesmo
+  /// preço já aceito nas fotos de evolução.
+  imageRef  String?  @map("image_ref")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
