@@ -1,7 +1,7 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput } from 'react-native';
+import { Alert, Animated, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '../../components/Icon';
@@ -10,6 +10,7 @@ import { Body, BodyLarge, Button, Data, Label, MetricSm } from '../../components
 import { ehConfirmacao } from '../../domain/confirmacao';
 import { useWorkoutStore } from '../../store/workout.store';
 import { applyAdjustment, chatWithAgent, fetchChatHistory, type ChatTurn } from '../../services/api.service';
+import { escolherFoto } from '../../services/foto';
 import { darkPalette } from '../../theme/palette';
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -69,6 +70,14 @@ export function PersonalScreen() {
   const inicial = (route.params as { mensagemInicial?: string } | undefined)?.mensagemInicial ?? '';
   const [texto, setTexto] = useState(inicial);
   const [pensando, setPensando] = useState(false);
+  /**
+   * A foto anexada, ainda não enviada (Leonardo, 31/08/2026).
+   *
+   * Ela aparece como miniatura acima do campo, com um botão de tirar: mandar
+   * imagem por engano num chat que ALTERA O PLANO é diferente de mandar por
+   * engano num chat comum, e desfazer precisa ser possível antes do envio.
+   */
+  const [foto, setFoto] = useState<{ uri: string; base64: string } | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   /*
    A proposta pendente — o que o botão de confirmar aplica.
@@ -83,9 +92,46 @@ export function PersonalScreen() {
   const [aplicando, setAplicando] = useState(false);
   const [aplicado, setAplicado] = useState<string | null>(null);
 
+  /**
+   * Anexar uma foto, da câmera ou da galeria.
+   *
+   * Câmera primeiro na lista porque é o caso real: a pessoa está DIANTE do
+   * aparelho que não conhece. A galeria existe para quem fotografou antes e
+   * foi perguntar depois, em casa.
+   */
+  const anexarFoto = () => {
+    setErro(null);
+    Alert.alert('Enviar uma foto', 'De onde vem a foto?', [
+      { text: 'Câmera', onPress: () => void pegarFoto(true) },
+      { text: 'Galeria', onPress: () => void pegarFoto(false) },
+      { text: 'Cancelar', style: 'cancel' },
+    ]);
+  };
+
+  const pegarFoto = async (deCamera: boolean) => {
+    const r = await escolherFoto(deCamera);
+    // Cancelou: nada a dizer, a pessoa mudou de ideia.
+    if (!r) return;
+    if ('falha' in r) {
+      setErro(
+        r.falha === 'sem-permissao'
+          ? 'Sem acesso à câmera. Autorize em Ajustes, ou escolha uma foto da galeria.'
+          : r.falha === 'camera-indisponivel'
+            ? 'Não deu para abrir a câmera. Tente pela galeria.'
+            : 'Não deu para preparar a foto. Tente outra.');
+      return;
+    }
+    setFoto(r.foto);
+  };
+
   const enviar = async () => {
     const pergunta = texto.trim();
-    if (!pergunta || pensando) return;
+    /*
+     Com foto, o texto deixa de ser obrigatório: apontar a câmera para um
+     aparelho JÁ é a pergunta, e obrigar a escrever "o que é isso?" ao lado da
+     imagem é atrito puro. Sem foto, mensagem vazia continua sem sentido.
+    */
+    if ((!pergunta && !foto) || pensando) return;
 
     /*
      "Sim" digitado vale como o toque em Aplicar.
@@ -110,16 +156,30 @@ export function PersonalScreen() {
     // Otimista: a fala da pessoa aparece na hora. Esperar a resposta do modelo
     // para mostrar o que ela acabou de escrever faz o app parecer travado por
     // vários segundos.
-    const comPergunta: ChatTurn[] = [...turnos, { role: 'user', content: pergunta }];
+    const fotoEnviada = foto;
+    const comPergunta: ChatTurn[] = [
+      ...turnos,
+      {
+        role: 'user',
+        content: pergunta || 'O que é este aparelho?',
+        // A miniatura fica na bolha para a conversa fazer sentido ao rolar
+        // para cima. Ela vive só nesta tela: o servidor guarda o texto.
+        imagemUri: fotoEnviada?.uri,
+      },
+    ];
     setTurnos(comPergunta);
     setTexto('');
+    setFoto(null);
     setErro(null);
     setProposta(null);
     setAplicado(null);
     setPensando(true);
 
     try {
-      const r = await chatWithAgent(pergunta);
+      const r = await chatWithAgent(
+        pergunta || 'O que é este aparelho, e para que serve?',
+        fotoEnviada?.base64,
+      );
       // A resposta entra DIGITANDO, como num chat de verdade (fundadora,
       // 23/08): a bolha cresce caractere a caractere e a proposta de ajuste
       // só aparece quando o texto terminou de chegar à tela.
@@ -275,6 +335,34 @@ export function PersonalScreen() {
             />
           </YStack>
 
+          {/*
+            A foto do aparelho: "conversar durante o treino e tirar dúvidas dos
+            exercícios, inclusive enviando foto para perguntar do aparelho"
+            (Leonardo, 31/08/2026). Na academia a dúvida é apontar para uma
+            máquina, e descrever um aparelho por escrito é justamente o que
+            ninguém consegue fazer.
+          */}
+          <Pressable
+            onPress={anexarFoto}
+            disabled={pensando}
+            accessibilityRole="button"
+            accessibilityLabel="Enviar uma foto"
+            style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
+          >
+            <YStack
+              width={44}
+              height={44}
+              borderRadius={24}
+              alignItems="center"
+              justifyContent="center"
+              borderWidth={1}
+              borderColor="$border"
+              opacity={pensando ? 0.4 : 1}
+            >
+              <Icon name="camera" size={20} color={colors.text} />
+            </YStack>
+          </Pressable>
+
           {/* Ditado: o texto transcrito ENTRA NO CAMPO, não é enviado direto —
               a pessoa revisa antes, como no MUVX. */}
           <VoiceInput
@@ -283,7 +371,7 @@ export function PersonalScreen() {
 
           <Pressable
             onPress={() => void enviar()}
-            disabled={!texto.trim() || pensando}
+            disabled={(!texto.trim() && !foto) || pensando}
             accessibilityRole="button"
             accessibilityLabel="Enviar"
             style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
@@ -295,7 +383,7 @@ export function PersonalScreen() {
               alignItems="center"
               justifyContent="center"
               backgroundColor="$primary"
-              opacity={!texto.trim() || pensando ? 0.4 : 1}
+              opacity={(!texto.trim() && !foto) || pensando ? 0.4 : 1}
             >
               <Icon name="arrowRight" size={20} color={colors.ink} />
             </YStack>
@@ -328,6 +416,21 @@ function Balao({ turno }: { turno: ChatTurn }) {
         borderWidth={meu ? 0 : 1}
         borderColor="$border"
       >
+        {/*
+          A foto vai DENTRO da bolha, acima do texto: é o que a pessoa mandou,
+          e separá-la em uma bolha própria faria a conversa parecer ter duas
+          mensagens onde houve uma.
+
+          Só nesta sessão de tela: o servidor guarda o texto e não a imagem,
+          então a conversa reaberta mostra a marca de que houve foto.
+        */}
+        {turno.imagemUri ? (
+          <Image
+            source={{ uri: turno.imagemUri }}
+            style={{ width: 200, height: 200, borderRadius: 12, marginBottom: 8 }}
+            resizeMode="cover"
+          />
+        ) : null}
         <BodyLarge lineHeight={22} color={meu ? '$primaryForeground' : '$foreground'}>
           {turno.content}
         </BodyLarge>

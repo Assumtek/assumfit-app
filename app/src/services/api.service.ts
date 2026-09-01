@@ -932,7 +932,19 @@ export async function fetchMorningForecast(lat: number, lon: number): Promise<Mo
   return data;
 }
 
-export type ChatTurn = { role: 'user' | 'assistant'; content: string };
+export type ChatTurn = {
+  role: 'user' | 'assistant';
+  content: string;
+  /**
+   * A miniatura da foto enviada, só nesta sessão de tela.
+   *
+   * O servidor guarda o TEXTO da conversa e não a imagem (ver `chat.ts`), então
+   * este campo não volta ao reabrir: a bolha antiga fica com a marca de que
+   * houve foto, e não com a foto. É a escolha certa para foto de academia, que
+   * costuma pegar o rosto de quem está em volta.
+   */
+  imagemUri?: string;
+};
 
 export type ChatReply = {
   reply: string;
@@ -977,7 +989,7 @@ export async function applyAdjustment(adjustmentId: string): Promise<ApplyAdjust
   return data;
 }
 
-export async function chatWithAgent(message: string): Promise<ChatReply> {
+export async function chatWithAgent(message: string, imageBase64?: string): Promise<ChatReply> {
   /*
    O histórico não vai mais junto: a conversa vive no servidor desde 24/08/2026,
    e é ele que monta o contexto. Mandar daqui era pedir ao aparelho que
@@ -994,9 +1006,13 @@ export async function chatWithAgent(message: string): Promise<ChatReply> {
    depois, com três operações prontas que ninguém recebeu (Leonardo,
    01/09/2026: "personal agente não funcionou").
   */
-  const { data } = await api.post<ChatReply>('/workout/chat', { message }, {
-    timeout: TETO_DO_AGENTE_MS,
-  });
+  const { data } = await api.post<ChatReply>(
+    '/workout/chat',
+    // `mediaType` não vai: o preparo da foto sempre salva JPEG, e o servidor
+    // assume isso na ausência do campo.
+    imageBase64 ? { message, imageBase64 } : { message },
+    { timeout: TETO_DO_AGENTE_MS },
+  );
   return data;
 }
 

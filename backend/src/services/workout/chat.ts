@@ -59,7 +59,20 @@ export async function historicoDoChat(userId: string, limite = 60): Promise<Chat
     .map((l) => ({ role: l.role === 'assistant' ? 'assistant' : 'user', content: l.content }));
 }
 
-export async function chatWithAgent(userId: string, message: string): Promise<ChatResult> {
+export async function chatWithAgent(
+  userId: string,
+  message: string,
+  /**
+   * A foto que a pessoa mandou junto (Leonardo, 31/08/2026: "enviando foto
+   * para perguntar do aparelho"). Base64 puro, sem o prefixo do data URI.
+   *
+   * Ela NÃO é gravada: a conversa guarda o texto, e a imagem vive só o tempo
+   * da resposta. Foto de academia mostra o rosto de quem está em volta, e uma
+   * biblioteca de imagens de terceiros é um passivo de privacidade que este
+   * recurso não precisa criar para funcionar.
+   */
+  foto?: { base64: string; mediaType: 'image/jpeg' | 'image/png' | 'image/webp' },
+): Promise<ChatResult> {
   const consent = await prisma.consent.findFirst({
     where: { userId, purpose: 'workout_generation', revokedAt: null },
   });
@@ -161,6 +174,7 @@ export async function chatWithAgent(userId: string, message: string): Promise<Ch
     flags: context.flags,
     constraints: context.constraints,
     allowed_exercises: catalog,
+    ...(foto ? { image_b64: foto.base64, media_type: foto.mediaType } : {}),
   });
 
   const adjustmentId = await guardarProposta(userId, plan.id, message, resultado);
@@ -172,7 +186,12 @@ export async function chatWithAgent(userId: string, message: string): Promise<Ch
   */
   await prisma.planChatMessage.createMany({
     data: [
-      { userId, role: 'user', content: message },
+      /*
+       A mensagem gravada diz que houve uma foto, sem guardar a foto: sem isso,
+       a conversa reaberta mostraria uma pergunta solta ("e este aqui?") e uma
+       resposta sobre um aparelho que ninguém mencionou.
+      */
+      { userId, role: 'user', content: foto ? `${message}\n[foto enviada]` : message },
       { userId, role: 'assistant', content: resultado.reply, adjustmentId },
     ],
   });

@@ -67,6 +67,12 @@ class WorkoutAdjustInput(BaseModel):
     #: nota e o comentário da pessoa. É o que permite "revise com base no que
     #: eu senti", que antes não tinha com o que ser respondido.
     week_feedback: str = Field(default="", max_length=4000)
+    #: A foto que a pessoa mandou junto da mensagem, em base64 (Leonardo,
+    #: 31/08/2026: "enviando foto para perguntar do aparelho"). A dúvida na
+    #: academia é apontar para uma máquina e perguntar o que é aquilo, e
+    #: descrever um aparelho por escrito é justamente o que ninguém consegue.
+    image_b64: str | None = None
+    media_type: Literal["image/jpeg", "image/png", "image/webp"] = "image/jpeg"
     #: `{"data": "2026-08-24", "dia_da_semana": "segunda"}`, no fuso da pessoa.
     #: O agente não tem relógio: sem isto ele PERGUNTA que dia é hoje a quem
     #: pediu um treino para hoje.
@@ -307,7 +313,22 @@ def build_adjust_user(inp: WorkoutAdjustInput, correction: str | None = None) ->
         f"{json.dumps(payload, ensure_ascii=False, indent=2)}\n\n"
         "Responda a mensagem agora, SOMENTE o JSON no formato especificado."
     )
-    blocks = [{"type": "text", "text": text}]
+    blocks: list[dict] = []
+    # A foto vem ANTES do texto: é a ordem que a nutrição já usa e a que os
+    # dois provedores recomendam, o texto pergunta sobre a imagem que veio.
+    # O cliente da OpenAI converte este bloco para `image_url` com data URI.
+    if inp.image_b64:
+        blocks.append(
+            {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": inp.media_type,
+                    "data": inp.image_b64,
+                },
+            }
+        )
+    blocks.append({"type": "text", "text": text})
     if correction:
         blocks.append({"type": "text", "text": correction})
     return blocks

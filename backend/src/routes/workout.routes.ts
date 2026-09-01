@@ -494,11 +494,25 @@ workoutRoutes.post(
      aparelho disser que é. Campo antigo enviado por um app desatualizado é
      simplesmente ignorado, sem quebrar a requisição.
     */
-    const { message } = z
-      .object({ message: z.string().min(1).max(1000) })
+    const { message, imageBase64, mediaType } = z
+      .object({
+        message: z.string().min(1).max(1000),
+        /*
+         A foto do aparelho (Leonardo, 31/08/2026). O teto de 8 MB em base64
+         são ~6 MB de imagem, e o app já reduz para 1280 px antes de mandar:
+         o limite existe para o caso de uma versão futura esquecer disso, não
+         para o uso normal.
+        */
+        imageBase64: z.string().min(1).max(8_000_000).optional(),
+        mediaType: z.enum(['image/jpeg', 'image/png', 'image/webp']).optional(),
+      })
       .parse(req.body ?? {});
 
-    const result = await chatWithAgent(req.userId, message);
+    const result = await chatWithAgent(
+      req.userId,
+      message,
+      imageBase64 ? { base64: imageBase64, mediaType: mediaType ?? 'image/jpeg' } : undefined,
+    );
     res.json({
       reply: result.reply,
       blocked: result.blocked,

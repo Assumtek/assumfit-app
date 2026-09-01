@@ -68,6 +68,7 @@ import {
   Watch,
   Waves,
   Share2,
+  Camera,
 } from 'lucide-react-native';
 import React from 'react';
 
@@ -98,6 +99,7 @@ import { useTheme } from '../theme/ThemeProvider';
  */
 
 export type IconName =
+  | 'camera'
   | 'grid'
   | 'pulse'
   | 'moon'
@@ -230,6 +232,7 @@ const GLYPH = {
   flame: Flame,
   up: ChevronUp,
   share: Share2,
+  camera: Camera,
   down: ChevronDown,
   dumbbell: Dumbbell,
   check: Check,
