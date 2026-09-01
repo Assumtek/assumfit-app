@@ -6,6 +6,7 @@ import { AuthedRequest, requireAuth } from '../middleware/auth';
 import { asyncRoute } from '../middleware/error';
 import { env } from '../lib/env';
 import { prisma } from '../lib/prisma';
+import { apagarImagens, chaveEhDoUsuario } from '../services/media.service';
 
 /**
  * Contagem de calorias por foto — o desenho do MUVX no nosso serviço de IA.
@@ -25,6 +26,14 @@ const analyzeSchema = z.object({
   imageBase64: z.string().min(1),
   mediaType: z.enum(['image/jpeg', 'image/png', 'image/webp']).default('image/jpeg'),
   description: z.string().max(500).optional(),
+  /**
+   * A CHAVE da foto no S3, já subida pelo aparelho (01/09/2026).
+   *
+   * A imagem continua vindo em base64 para a análise, que acontece uma vez e
+   * não precisa de ida ao bucket. A chave é o que faz a foto sobreviver na
+   * tela, em qualquer aparelho.
+   */
+  imageKey: z.string().max(300).optional(),
 });
 
 nutritionRoutes.post(
@@ -54,6 +63,9 @@ nutritionRoutes.post(
         kcalMax: data.kcal_total_max,
         confidence: data.confidence,
         notes: data.notes || null,
+        // Chave de outra conta não é erro: a refeição é registrada sem foto.
+        imageKey:
+          body.imageKey && chaveEhDoUsuario(body.imageKey, req.userId) ? body.imageKey : null,
       },
     });
     res.status(201).json({ record, analysis: data });
@@ -180,7 +192,17 @@ nutritionRoutes.post(
 nutritionRoutes.delete(
   '/meal/:id',
   asyncRoute<AuthedRequest>(async (req, res) => {
+    /*
+     A FOTO sai junto. Apagar a linha e deixar o objeto no bucket seria guardar
+     a imagem de uma refeição que a pessoa mandou apagar, o que é exatamente o
+     que a LGPD Art. 18 não permite.
+    */
+    const alvo = await prisma.mealRecord.findFirst({
+      where: { id: req.params.id, userId: req.userId },
+      select: { imageKey: true },
+    });
     await prisma.mealRecord.deleteMany({ where: { id: req.params.id, userId: req.userId } });
+    if (alvo?.imageKey) await apagarImagens([alvo.imageKey]);
     res.status(204).end();
   }),
 );

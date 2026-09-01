@@ -64,6 +64,10 @@ enum ConsentPurpose {
   international_transfer
   /// Comunicações de produto. Nunca obrigatório.
   marketing
+  /// Fotos de evolução guardadas na nuvem. Finalidade PRÓPRIA porque é foto de
+  /// corpo: quem aceita que a gente guarde a foto do prato não necessariamente
+  /// aceita isso, e revogar apaga as imagens.
+  progress_photos
   /// Anamnese de saúde para prescrição de treino: cardiopatia, gestação,
   /// medicação em uso, lesão. É dado de saúde pelo mesmo Art. 5º II que cobre a
   /// biometria, e por isso tem finalidade PRÓPRIA — consentir com a leitura do
@@ -135,6 +139,9 @@ model User {
   /// Exclusão de conta apaga o dado de verdade; este campo é só para auditar
   /// a solicitação, nunca para "esconder" o registro.
   deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(3)
+  /// A CHAVE da foto de perfil no S3 (01/09/2026). Antes ela existia só no
+  /// aparelho, e trocar de celular deixava a conta sem rosto.
+  avatarKey    String?   @map("avatar_key")
 
   consents               Consent[]
   devices                Device[]
@@ -154,9 +161,35 @@ model User {
   planAdjustments        PlanAdjustment[]
   anamnesisVersions      HealthAnamnesisVersion[]
   anamnesisConversations AnamnesisConversation[]
+  progressPhotos         ProgressPhoto[]
 
   @@map("users")
   planChatMessages PlanChatMessage[]
+}
+
+/// A linha do tempo do corpo: fotos de evolução, para comparar lado a lado.
+///
+/// Elas viviam SÓ no aparelho, e trocar de celular recomeçava do zero. Desde
+/// 01/09/2026 (decisão da fundadora, "todas as imagens precisam ser salvas na
+/// S3") a imagem vai para o bucket privado e aqui fica o ponteiro.
+///
+/// **É o dado mais sensível que o app guarda.** Foto de corpo descreve saúde
+/// (LGPD Art. 5º II) e identifica a pessoa por si só: por isso consentimento
+/// próprio (`progress_photos`), revogável sozinho, e revogar apaga os objetos.
+model ProgressPhoto {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  /// A chave no S3. A imagem nunca passa pelo nosso servidor.
+  imageKey  String   @map("image_key")
+  /// "frente", "lado" ou "costas". Nulo nas fotos anteriores ao campo.
+  angle     String?
+  takenAt   DateTime @map("taken_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, takenAt(sort: Desc)])
+  @@map("progress_photos")
 }
 
 /// Consentimento por finalidade, versionado. Sem isso não há base legal para
@@ -370,13 +403,19 @@ model MealRecord {
   id         String   @id @default(uuid()) @db.Uuid
   userId     String   @map("user_id") @db.Uuid
   at         DateTime @default(now()) @db.Timestamptz(3)
-  /// A FOTO não é armazenada — analisada e descartada, como os eventos de
-  /// agenda. O que fica é o resultado: alimentos, porções e faixa de calorias.
   foods      Json
   kcalMin    Int      @map("kcal_min")
   kcalMax    Int      @map("kcal_max")
   confidence Float
   notes      String?
+  /// A CHAVE da foto do prato no S3.
+  ///
+  /// A foto era analisada e descartada, e uma cópia ficava no aparelho para a
+  /// tela mostrar; trocar de celular perdia todas. Desde 01/09/2026 (decisão
+  /// da fundadora, "todas as imagens precisam ser salvas na S3") ela vive no
+  /// bucket privado, e aqui fica o ponteiro. Nulo nas refeições anteriores a
+  /// isso, e na refeição registrada à mão, sem foto.
+  imageKey   String?  @map("image_key")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -921,15 +960,11 @@ model PlanChatMessage {
   /// A proposta que esta resposta gerou, quando gerou: é o que permite a tela
   /// remontar a conversa com o botão de confirmar no lugar certo.
   adjustmentId String? @map("adjustment_id") @db.Uuid
-  /// O NOME do arquivo da foto que acompanhou a mensagem, não a foto.
+  /// A CHAVE no S3 da foto que acompanhou a mensagem, não a foto.
   ///
-  /// A imagem fica no aparelho (`Paths.document`), como a da refeição e a de
-  /// evolução: é a política de fotos do app, e imagem de academia mostra o
-  /// rosto de quem está em volta. Aqui guardamos só o ponteiro, que é o que
-  /// devolve a foto à bolha certa quando a conversa é reaberta.
-  ///
-  /// Some ao trocar de aparelho, e a bolha diz que houve uma foto. É o mesmo
-  /// preço já aceito nas fotos de evolução.
+  /// A imagem sobe do aparelho direto para o bucket privado; aqui fica o
+  /// ponteiro, que devolve a foto à bolha certa quando a conversa é reaberta,
+  /// em qualquer aparelho. Apagar a conta apaga os objetos (LGPD Art. 18).
   imageRef  String?  @map("image_ref")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 

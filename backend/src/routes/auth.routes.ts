@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { asyncRoute } from '../middleware/error';
 import { AuthedRequest, requireAuth } from '../middleware/auth';
 import * as auth from '../services/auth.service';
+import { chaveEhDoUsuario } from '../services/media.service';
 
 export const authRoutes = Router();
 
@@ -72,6 +73,8 @@ const updateSchema = z.object({
   name: z.string().min(2).max(80).optional(),
   birthDate: z.string().date().optional(),
   sex: z.enum(['f', 'm']).optional(),
+  /** A chave da foto de perfil no S3; `null` remove a foto. */
+  avatarKey: z.string().max(300).nullable().optional(),
 });
 
 /**
@@ -88,6 +91,12 @@ authRoutes.patch(
   requireAuth,
   asyncRoute<AuthedRequest>(async (req, res) => {
     const body = updateSchema.parse(req.body);
+    // Chave de outra conta é recusada aqui, e não silenciosamente ignorada: a
+    // pessoa pediu para trocar a foto, e fingir que trocou seria pior.
+    if (body.avatarKey && !chaveEhDoUsuario(body.avatarKey, req.userId)) {
+      res.status(400).json({ error: 'imagem inválida' });
+      return;
+    }
     res.json(await auth.updateProfile(req.userId, body));
   }),
 );

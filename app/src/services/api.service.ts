@@ -703,6 +703,41 @@ export async function trocarExercicioNoPlano(
  * não mostra o bloco, e é melhor assim do que uma frase genérica dando a
  * entender que alguém leu os números da sessão.
  */
+// ============================================================================
+// Imagens — todas no S3 (decisão da fundadora, 01/09/2026)
+// ============================================================================
+
+export type EscopoDeImagem = 'chat' | 'refeicao' | 'evolucao' | 'perfil';
+
+/** A URL para SUBIR uma imagem, mais a chave que a identifica daqui em diante. */
+export async function presignImagem(
+  escopo: EscopoDeImagem,
+  ext: 'jpg' | 'png' = 'jpg'): Promise<{ uploadUrl: string; key: string; contentType: string }> {
+  const { data } = await api.post('/media/presign', { escopo, ext });
+  return data;
+}
+
+/** A URL para LER uma imagem. Vale uma hora; quem exibe pede de novo quando precisa. */
+export async function urlDaImagem(key: string): Promise<string | null> {
+  try {
+    const { data } = await api.get<{ url: string }>('/media/url', { params: { key } });
+    return data.url;
+  } catch {
+    return null;
+  }
+}
+
+/** Várias de uma vez: uma lista de refeições pediria uma requisição por foto. */
+export async function urlsDasImagens(keys: string[]): Promise<Record<string, string>> {
+  if (keys.length === 0) return {};
+  try {
+    const { data } = await api.post<{ urls: Record<string, string> }>('/media/urls', { keys });
+    return data.urls;
+  } catch {
+    return {};
+  }
+}
+
 export async function fetchSessionFeedback(
   executionId: string): Promise<{ headline: string; body: string } | null> {
   const { data, status } = await api.get<{ headline: string; body: string } | ''>(

@@ -29,26 +29,15 @@ import { classify, isReferral } from './risk-tier';
  * depender disso seria entregar a regra de segurança a quem pode alucinar.
  */
 
-/**
- * O formato do nome do arquivo de foto do chat.
- *
- * Ele é gerado pelo APARELHO e volta para ele, que o usa para montar um
- * caminho local. Sem esta trava, um nome com "../" viraria leitura fora da
- * pasta do app. O formato tem que casar com `guardarFotoDoChat` no app: mudar
- * um sem o outro faz toda foto ser recusada.
- */
-export const FORMATO_DA_FOTO = /^chat-[a-z0-9-]{1,64}\.jpg$/;
-
 export type ChatTurn = {
   role: 'user' | 'assistant';
   content: string;
   /**
-   * O nome do arquivo da foto no APARELHO, quando a mensagem teve uma.
+   * A CHAVE da foto no S3, quando a mensagem teve uma.
    *
-   * A imagem não passa por aqui: a política de fotos do app é que elas ficam
-   * no aparelho (refeição, evolução, e agora esta). O ponteiro é o que devolve
-   * a foto à bolha certa ao reabrir a conversa; em outro aparelho o arquivo
-   * não existe, e a bolha diz que houve uma foto.
+   * A imagem não passa por aqui: ela sobe do aparelho direto para o bucket, e
+   * o que guardamos é o ponteiro. É ele que devolve a foto à bolha certa ao
+   * reabrir a conversa, em qualquer aparelho.
    */
   imageRef?: string;
 };
@@ -98,7 +87,7 @@ export async function chatWithAgent(
   foto?: {
     base64: string;
     mediaType: 'image/jpeg' | 'image/png' | 'image/webp';
-    /** Nome do arquivo salvo no aparelho, o ponteiro que volta no histórico. */
+    /** A chave no S3, o ponteiro que volta no histórico. */
     ref?: string;
   },
 ): Promise<ChatResult> {
@@ -221,8 +210,8 @@ export async function chatWithAgent(
   await prisma.planChatMessage.createMany({
     data: [
       /*
-       O PONTEIRO da foto, não a foto: o arquivo fica no aparelho, e a coluna
-       guarda o nome para a imagem voltar à bolha certa ao reabrir a conversa.
+       O PONTEIRO da foto, não a foto: a imagem vive no S3, e a coluna guarda a
+       chave para ela voltar à bolha certa ao reabrir a conversa.
       */
       { userId, role: 'user', content: message, imageRef: foto?.ref ?? null },
       { userId, role: 'assistant', content: resultado.reply, adjustmentId },

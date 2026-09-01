@@ -1,7 +1,9 @@
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
-import { File, Paths } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
+
+import { presignImagem, type EscopoDeImagem } from './api.service';
 
 /**
  * Escolher uma foto e prepará-la para viajar até o modelo.
@@ -68,34 +70,37 @@ export async function escolherFoto(
 }
 
 /**
- * Guarda a foto do chat no aparelho e devolve o NOME do arquivo.
+ * Sobe a imagem para o S3 e devolve a CHAVE dela.
  *
- * A política de fotos do app é a mesma desde a refeição e a evolução: a imagem
- * fica com quem ela mostra. O que viaja ao servidor é o nome, que volta no
- * histórico e devolve a foto à bolha certa quando a conversa é reaberta.
+ * Decisão da fundadora (01/09/2026): "todas as imagens precisam ser salvas na
+ * S3". Antes cada foto ficava no aparelho, e trocar de celular as perdia.
  *
- * O nome carrega o instante para não colidir entre duas fotos do mesmo
- * segundo; o formato é o que a rota valida, e mudar um sem o outro faz a foto
- * ser recusada.
+ * O arquivo vai DIRETO para o S3 por URL pré-assinada, sem passar pelo nosso
+ * servidor: é o mesmo desenho do ditado por voz, e evita dobrar o tráfego de
+ * uma imagem para nada. Quem decide onde ela pode ser gravada é o servidor,
+ * que assina a URL; o aparelho só executa.
+ *
+ * `null` quando não deu: sem rede, sem credencial no ambiente, S3 fora. Quem
+ * chama decide o que fazer, e no chat a conversa acontece do mesmo jeito.
  */
-export function guardarFotoDoChat(uri: string): string | null {
-  const nome = `chat-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+export async function subirImagem(
+  uri: string,
+  escopo: EscopoDeImagem): Promise<string | null> {
   try {
-    new File(uri).copy(new File(Paths.document, nome));
-    return nome;
-  } catch {
-    // Sem espaço, permissão negada, arquivo sumido: a conversa acontece do
-    // mesmo jeito, só não guarda a imagem. Perder a foto não pode custar a
-    // resposta que a pessoa foi buscar.
-    return null;
-  }
-}
-
-/** O caminho local de uma foto do chat, ou `null` se ela não está neste aparelho. */
-export function caminhoDaFotoDoChat(nome: string): string | null {
-  try {
-    const f = new File(Paths.document, nome);
-    return f.exists ? f.uri : null;
+    const { uploadUrl, key, contentType } = await presignImagem(escopo, 'jpg');
+    /*
+     `fetch` com o arquivo como corpo: o `expo-file-system` lê o conteúdo e o
+     RN envia sem carregar tudo em memória como string. `Content-Type` precisa
+     bater com o que foi assinado, senão o S3 recusa com 403 e a mensagem não
+     diz por quê.
+    */
+    const resposta = await FileSystem.uploadAsync(uploadUrl, uri, {
+      httpMethod: 'PUT',
+      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+      headers: { 'Content-Type': contentType },
+    });
+    // O S3 responde 200 sem corpo no PUT bem-sucedido.
+    return resposta.status >= 200 && resposta.status < 300 ? key : null;
   } catch {
     return null;
   }

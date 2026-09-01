@@ -9,8 +9,8 @@ import { VoiceInput } from '../../components/VoiceInput';
 import { Body, BodyLarge, Button, Data, Label, MetricSm } from '../../components/ui';
 import { ehConfirmacao } from '../../domain/confirmacao';
 import { useWorkoutStore } from '../../store/workout.store';
-import { applyAdjustment, chatWithAgent, fetchChatHistory, type ChatTurn } from '../../services/api.service';
-import { caminhoDaFotoDoChat, escolherFoto, guardarFotoDoChat } from '../../services/foto';
+import { applyAdjustment, chatWithAgent, fetchChatHistory, urlDaImagem, type ChatTurn } from '../../services/api.service';
+import { escolherFoto, subirImagem } from '../../services/foto';
 import { darkPalette } from '../../theme/palette';
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -158,11 +158,14 @@ export function PersonalScreen() {
     // vários segundos.
     const fotoEnviada = foto;
     /*
-     A foto é guardada ANTES de enviar: assim a bolha já nasce apontando para o
-     arquivo definitivo, e a conversa reaberta encontra a mesma imagem. O
-     original do seletor vive numa pasta temporária que o iOS limpa.
+     A foto sobe ANTES da mensagem, e o que segue com ela é a CHAVE no S3.
+
+     Se a subida falhar, a pergunta vai assim mesmo: o modelo recebe a imagem
+     em base64 no corpo da requisição de qualquer forma, então a resposta
+     acontece. O que se perde é a foto na conversa reaberta, e isso não pode
+     custar a resposta que a pessoa foi buscar.
     */
-    const ref = fotoEnviada ? guardarFotoDoChat(fotoEnviada.uri) : null;
+    const ref = fotoEnviada ? await subirImagem(fotoEnviada.uri, 'chat') : null;
     const comPergunta: ChatTurn[] = [
       ...turnos,
       {
@@ -421,7 +424,22 @@ function Balao({ turno }: { turno: ChatTurn }) {
    vez de mostrar um retângulo quebrado. É o preço de a imagem ficar com quem
    ela mostra, o mesmo já aceito nas fotos de evolução.
   */
-  const caminho = turno.imagemUri ?? (turno.imageRef ? caminhoDaFotoDoChat(turno.imageRef) : null);
+  /*
+   A imagem vem do S3 por URL assinada, que vale uma hora. A recém-enviada já
+   tem o caminho local em `imagemUri` e dispensa a ida ao servidor: mostrar o
+   arquivo que está na mão é instantâneo.
+  */
+  const [urlRemota, setUrlRemota] = useState<string | null>(null);
+  useEffect(() => {
+    if (turno.imagemUri || !turno.imageRef) return;
+    let vivo = true;
+    urlDaImagem(turno.imageRef).then((u) => vivo && setUrlRemota(u));
+    return () => {
+      vivo = false;
+    };
+  }, [turno.imagemUri, turno.imageRef]);
+
+  const caminho = turno.imagemUri ?? urlRemota;
   const fotoSumiu = !!turno.imageRef && !caminho;
   return (
     <XStack justifyContent={meu ? 'flex-end' : 'flex-start'}>
@@ -448,7 +466,7 @@ function Balao({ turno }: { turno: ChatTurn }) {
           <XStack alignItems="center" gap="$sm" marginBottom="$sm">
             <Icon name="camera" size={14} color={meu ? colors.ink : colors.textMuted} />
             <Body color={meu ? '$primaryForeground' : '$mutedForeground'}>
-              Foto enviada deste aparelho
+              Carregando a foto…
             </Body>
           </XStack>
         ) : null}

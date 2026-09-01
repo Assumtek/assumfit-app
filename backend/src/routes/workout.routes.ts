@@ -18,7 +18,7 @@ import { deriveFlags, parseAnamnesis } from '../services/workout/context-builder
 import { prisma } from '../lib/prisma';
 import { similarExercises, trocarNoPlano, ultimasCargasPorExercicio } from '../services/workout/catalog';
 import { comentarioDaSessao } from '../services/workout/session-feedback';
-import { FORMATO_DA_FOTO } from '../services/workout/chat';
+import { chaveEhDoUsuario } from '../services/media.service';
 import {
   activePlan,
   cancelExecution,
@@ -507,11 +507,11 @@ workoutRoutes.post(
         imageBase64: z.string().min(1).max(8_000_000).optional(),
         mediaType: z.enum(['image/jpeg', 'image/png', 'image/webp']).optional(),
         /*
-         O NOME do arquivo no aparelho, gerado por ele. Validado para ser um
-         nome de arquivo e nada mais: ele volta ao app, que o usa para montar
-         um caminho local, e um "../" aqui viraria leitura fora da pasta.
+         A CHAVE da imagem no S3, já subida pelo aparelho. Validada contra o
+         formato e contra o dono: ela volta ao app em pedidos de leitura, e uma
+         chave forjada apontaria para a foto de outra pessoa.
         */
-        imageRef: z.string().regex(FORMATO_DA_FOTO).optional(),
+        imageRef: z.string().max(300).optional(),
       })
       .parse(req.body ?? {});
 
@@ -519,7 +519,13 @@ workoutRoutes.post(
       req.userId,
       message,
       imageBase64
-        ? { base64: imageBase64, mediaType: mediaType ?? 'image/jpeg', ref: imageRef }
+        ? {
+            base64: imageBase64,
+            mediaType: mediaType ?? 'image/jpeg',
+            // Chave de outra conta não vira erro: a foto simplesmente não é
+            // associada à mensagem, e a conversa acontece.
+            ref: imageRef && chaveEhDoUsuario(imageRef, req.userId) ? imageRef : undefined,
+          }
         : undefined,
     );
     res.json({

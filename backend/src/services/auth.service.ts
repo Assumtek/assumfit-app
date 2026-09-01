@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import { env } from '../lib/env';
 import { conflict, unauthorized } from '../lib/errors';
 import { prisma } from '../lib/prisma';
+import { apagarImagens, listarImagensDaConta, presignImageRead } from './media.service';
 import { revokeUser } from '../lib/redis';
 
 export type TokenPair = { accessToken: string; refreshToken: string };
@@ -173,6 +174,7 @@ export async function profile(userId: string) {
       birthDate: true,
       sex: true,
       createdAt: true,
+      avatarKey: true,
       consents: {
         where: { revokedAt: null },
         select: { purpose: true, version: true, grantedAt: true },
@@ -199,17 +201,46 @@ export async function profile(userId: string) {
 
   if (!user) throw unauthorized('Conta não encontrada');
 
-  const { subscriptions, devices, ...rest } = user;
-  return { ...rest, subscription: subscriptions[0] ?? null, device: devices[0] ?? null };
+  const { subscriptions, devices, avatarKey, ...rest } = user;
+  /*
+   O perfil devolve a URL ASSINADA, não a chave: a tela quer desenhar o rosto,
+   e uma chave crua no payload é um identificador a mais circulando por nada.
+   Uma hora de validade; a tela de perfil não fica aberta mais que isso.
+  */
+  const avatarUrl = avatarKey
+    ? await presignImageRead(userId, avatarKey).catch(() => null)
+    : null;
+  return {
+    ...rest,
+    avatarUrl,
+    subscription: subscriptions[0] ?? null,
+    device: devices[0] ?? null,
+  };
 }
 
 export async function updateProfile(
   userId: string,
-  patch: { name?: string; birthDate?: string; sex?: 'f' | 'm' },
+  patch: { name?: string; birthDate?: string; sex?: 'f' | 'm'; avatarKey?: string | null },
 ) {
+  /*
+   Trocar a foto de perfil APAGA a anterior. Sem isso, cada troca deixaria um
+   rosto a mais no bucket, sem nada que o referencie: guardar imagem que
+   ninguém mais pode ver não é zelo, é passivo.
+  */
+  if (patch.avatarKey !== undefined) {
+    const atual = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { avatarKey: true },
+    });
+    if (atual?.avatarKey && atual.avatarKey !== patch.avatarKey) {
+      await apagarImagens([atual.avatarKey]).catch(() => undefined);
+    }
+  }
+
   await prisma.user.update({
     where: { id: userId },
     data: {
+      ...(patch.avatarKey !== undefined && { avatarKey: patch.avatarKey }),
       ...(patch.name !== undefined && { name: patch.name }),
       // `@db.Date` guarda só o dia, mas o Prisma exige um `Date` — a hora vai
       // zerada em UTC para o dia não escorregar para o anterior num fuso a oeste.
@@ -299,6 +330,26 @@ export async function exportData(userId: string, since: Date, until: Date) {
  * sair das tabelas.
  */
 export async function deleteAccount(userId: string): Promise<void> {
+  /*
+   As IMAGENS saem primeiro, e por LISTAGEM do bucket, não pelas linhas do
+   banco.
+
+   O cascade apaga refeições, fotos de evolução e mensagens do chat, e com elas
+   os ponteiros: depois disso não haveria mais como saber quais objetos eram
+   desta pessoa, e eles ficariam no S3 para sempre. Listar pelo prefixo da
+   conta pega inclusive o que foi subido e nunca associado a registro nenhum,
+   quando a subida deu certo e a requisição seguinte falhou.
+
+   Falha aqui NÃO impede a exclusão: o direito de eliminação (LGPD Art. 18) não
+   pode ficar refém do S3 estar de pé. O que sobra é objeto órfão sob um
+   prefixo de conta que não existe mais, e o log diz qual.
+  */
+  try {
+    await apagarImagens(await listarImagensDaConta(userId));
+  } catch (err) {
+    console.error('[conta] imagens não apagadas, prefixo órfão:', userId, err);
+  }
+
   await prisma.$transaction([
     prisma.$executeRaw`DELETE FROM biometric_readings WHERE user_id = ${userId}::uuid`,
     prisma.user.delete({ where: { id: userId } }),
