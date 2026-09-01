@@ -1,6 +1,9 @@
 import { File, Paths } from 'expo-file-system';
 import { create } from 'zustand';
 
+import { updateProfile } from '../services/api.service';
+import { subirImagem } from '../services/foto';
+
 import type { User } from '../domain/types';
 import * as api from '../services/api.service';
 
@@ -101,6 +104,13 @@ export const useUserStore = create<UserState>((set, get) => ({
       const profile = await api.fetchProfile();
       gravarPerfilLocal(profile);
       set({ profile, user: toUser(profile), loading: false });
+      /*
+       O rosto do SERVIDOR, quando este aparelho ainda não tem um.
+       É o que faz a foto de perfil sobreviver à troca de celular, que é a
+       razão de ela ter ido para o S3. Havendo cópia local, ela ganha: é a
+       mesma imagem, já no disco, e sem depender da URL assinada expirar.
+      */
+      if (!get().avatarUri && profile.avatarUrl) set({ avatarUri: profile.avatarUrl });
     } catch {
       // Sem rede a tela segue com o que já tem — o perfil local, quando houver.
       set({ loading: false });
@@ -118,6 +128,13 @@ export const useUserStore = create<UserState>((set, get) => ({
       const profile = await api.updateProfile(patch);
       gravarPerfilLocal(profile);
       set({ profile, user: toUser(profile), loading: false });
+      /*
+       O rosto do SERVIDOR, quando este aparelho ainda não tem um.
+       É o que faz a foto de perfil sobreviver à troca de celular, que é a
+       razão de ela ter ido para o S3. Havendo cópia local, ela ganha: é a
+       mesma imagem, já no disco, e sem depender da URL assinada expirar.
+      */
+      if (!get().avatarUri && profile.avatarUrl) set({ avatarUri: profile.avatarUrl });
       return true;
     } catch {
       set({ loading: false });
@@ -127,8 +144,16 @@ export const useUserStore = create<UserState>((set, get) => ({
 
   setAvatar: async (pickedUri) => {
     try {
-      // Nome com carimbo de hora: o <Image> cacheia por uri, e sobrescrever o
-      // mesmo arquivo mostraria a foto antiga até o app reiniciar.
+      /*
+       A cópia local continua, e agora é CACHE, não a fonte.
+
+       Ela é o que faz o rosto aparecer na sidebar antes de qualquer resposta
+       do servidor, inclusive sem rede. A fonte passou a ser o S3 (decisão da
+       fundadora, 01/09/2026): trocar de aparelho deixava a conta sem rosto.
+
+       Nome com carimbo de hora porque o <Image> cacheia por uri, e sobrescrever
+       o mesmo arquivo mostraria a foto antiga até o app reiniciar.
+      */
       const nome = `foto-perfil-${Date.now()}.jpg`;
       const destino = new File(Paths.document, nome);
       new File(pickedUri).copy(destino);
@@ -137,6 +162,15 @@ export const useUserStore = create<UserState>((set, get) => ({
       new File(Paths.document, AVATAR_PONTEIRO).write(JSON.stringify({ nome }));
       set({ avatarUri: destino.uri });
       if (anterior) new File(anterior).delete();
+
+      /*
+       A subida vem DEPOIS de a tela já mostrar a foto nova: trocar o rosto é
+       uma ação que precisa parecer instantânea, e o servidor guarda por baixo.
+       Falhar aqui deixa a foto valendo neste aparelho e não nos outros, que é
+       melhor que recusar a troca.
+      */
+      const chave = await subirImagem(destino.uri, 'perfil');
+      if (chave) await updateProfile({ avatarKey: chave }).catch(() => undefined);
     } catch {
       // Foto que não copiou é foto que não trocou — a atual permanece.
     }

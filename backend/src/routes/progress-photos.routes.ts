@@ -24,6 +24,62 @@ progressPhotoRoutes.use(requireAuth);
 
 const ANGULOS = ['frente', 'lado', 'costas'] as const;
 
+/** Há consentimento ativo para guardar foto de corpo na nuvem? */
+async function consentiu(userId: string): Promise<boolean> {
+  const c = await prisma.consent.findFirst({
+    where: { userId, purpose: 'progress_photos', revokedAt: null },
+    select: { id: true },
+  });
+  return !!c;
+}
+
+/**
+ * Consentimento das fotos de evolução, no mesmo desenho do registro de ciclo:
+ * separado, revogável, e **revogar apaga as imagens**.
+ *
+ * Manter foto de corpo depois do "não" transformaria o consentimento em
+ * formalidade, e este é exatamente o dado que alguém mais pode querer que suma.
+ */
+progressPhotoRoutes.put(
+  '/consent',
+  asyncRoute<AuthedRequest>(async (req, res) => {
+    const { granted, version } = z
+      .object({ granted: z.boolean(), version: z.string().min(1).max(32) })
+      .parse(req.body);
+
+    if (!granted) {
+      await prisma.consent.updateMany({
+        where: { userId: req.userId, purpose: 'progress_photos', revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+      const fotos = await prisma.progressPhoto.findMany({
+        where: { userId: req.userId },
+        select: { imageKey: true },
+      });
+      await prisma.progressPhoto.deleteMany({ where: { userId: req.userId } });
+      await apagarImagens(fotos.map((f) => f.imageKey)).catch(() => undefined);
+      return res.json({ granted: false });
+    }
+
+    const existente = await prisma.consent.findFirst({
+      where: { userId: req.userId, purpose: 'progress_photos', revokedAt: null },
+    });
+    if (!existente) {
+      await prisma.consent.create({
+        data: { userId: req.userId, purpose: 'progress_photos', version },
+      });
+    }
+    return res.json({ granted: true });
+  }),
+);
+
+progressPhotoRoutes.get(
+  '/consent',
+  asyncRoute<AuthedRequest>(async (req, res) => {
+    res.json({ granted: await consentiu(req.userId) });
+  }),
+);
+
 /**
  * A lista, já com as URLs de leitura prontas.
  *
@@ -63,6 +119,17 @@ progressPhotoRoutes.post(
 
     if (!chaveEhDoUsuario(imageKey, req.userId)) {
       res.status(400).json({ error: 'imagem inválida' });
+      return;
+    }
+
+    /*
+     Sem consentimento a foto NÃO fica. E o objeto já subiu, então ele é
+     apagado aqui: deixar no bucket a imagem de corpo de quem não consentiu é
+     precisamente o que a finalidade própria existe para evitar.
+    */
+    if (!(await consentiu(req.userId))) {
+      await apagarImagens([imageKey]).catch(() => undefined);
+      res.status(403).json({ error: 'consentimento necessário', consent: 'progress_photos' });
       return;
     }
 

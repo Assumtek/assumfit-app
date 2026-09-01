@@ -18,6 +18,9 @@ const PURPOSE_LABEL: Record<string, string> = {
   biometric_processing: 'Dado biométrico',
   international_transfer: 'Transferência internacional',
   marketing: 'Comunicações de produto',
+  // Foto de corpo tem finalidade PRÓPRIA: descreve saúde e identifica a pessoa
+  // sozinha, e quem aceita a leitura do HRV não aceitou isso junto.
+  progress_photos: 'Fotos de evolução na nuvem',
 };
 
 const SEX_LABEL = { f: 'Feminino', m: 'Masculino' } as const;

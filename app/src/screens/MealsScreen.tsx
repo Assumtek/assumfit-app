@@ -1,8 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import { XStack, YStack } from '@tamagui/stacks';
 import { File, Paths } from 'expo-file-system';
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
-import * as ImagePicker from 'expo-image-picker';
 import { useChartWidth } from '../components/charts/useChartWidth';
 import { BarChart } from '../components/charts/BarChart';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -18,6 +16,7 @@ import { Body, Button, Data, Display, HeroCard, Label, Pill } from '../component
 import { ageFromBirthDate, calorieGoal, toMeasure, type CalorieGoal } from '../domain/nutritionGoal';
 import { mensagemDaFalha } from '../domain/apiErrors';
 import * as api from '../services/api.service';
+import { escolherFoto, subirImagem } from '../services/foto';
 import { MealReminder } from '../components/MealReminder';
 import { useWorkoutStore } from '../store/workout.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -51,6 +50,13 @@ export function MealsScreen() {
   const [detalhe, setDetalhe] = useState<api.MealRecord | null>(null);
   /** Foto escolhida, aguardando confirmação — o preview + descrição do MUVX. */
   const [fotoPendente, setFotoPendente] = useState<{ uri: string; base64: string } | null>(null);
+  /**
+   * As URLs assinadas das fotos, por chave do S3.
+   *
+   * Em LOTE: a lista de sete dias pediria uma requisição por refeição, e a
+   * tela abriria com uma sequência de espaços se preenchendo um a um.
+   */
+  const [urlsDeFoto, setUrlsDeFoto] = useState<Record<string, string>>({});
   /** Multiplicador de porção por índice — o "− 1x +" de cada alimento. */
   const [passos, setPassos] = useState<
     Record<number, { base: number; baseKcalMin: number; baseKcalMax: number; mult: number }>
@@ -82,7 +88,20 @@ export function MealsScreen() {
 
   const carregar = useCallback(async () => {
     try {
-      setMeals(await api.fetchMeals(30));
+      const lista = await api.fetchMeals(30);
+      setMeals(lista);
+      /*
+       As URLs das fotos vêm todas de uma vez, e só das que não estão em cache
+       local: pedir assinatura para uma imagem que já está no disco é viagem
+       perdida.
+      */
+      const faltando = lista
+        .map((m) => m.imageKey)
+        .filter((k): k is string => !!k)
+        .filter((k, i, arr) => arr.indexOf(k) === i);
+      if (faltando.length > 0) {
+        setUrlsDeFoto(await api.urlsDasImagens(faltando));
+      }
     } catch {
       setMeals([]);
     }
@@ -127,62 +146,42 @@ export function MealsScreen() {
   const refresh = usePullRefresh(carregar);
 
   /**
-   * Passo 1 — escolher a foto. Ela já sai daqui redimensionada (lado maior
-   * 1280 px): é o que garante que caiba no corpo da requisição, e o JPEG do
-   * preview é o MESMO que a análise vê e que fica guardado.
+   * Passo 1, escolher a foto.
+   *
+   * O preparo mora em `services/foto.ts` desde que o chat do personal passou a
+   * aceitar imagem: a redução para 1280 px é o que garante que ela caiba no
+   * corpo da requisição, e é o tipo de cuidado que diverge quando se duplica.
+   * O JPEG do preview é o MESMO que a análise vê e que sobe para o S3.
    */
-  const escolherFoto = async (deCamera: boolean) => {
+  const escolher = async (deCamera: boolean) => {
     setAviso(null);
-
-    // A câmera exige pedido EXPLÍCITO — `launchCameraAsync` não pergunta
-    // sozinho e estoura MissingCameraPermissionException. A galeria não passa
-    // por aqui: o seletor do iOS 14+ roda fora do app e dispensa permissão.
-    if (deCamera) {
-      const perm = await ImagePicker.requestCameraPermissionsAsync();
-      if (!perm.granted) {
-        setAviso('Sem acesso à câmera. Conceda em Ajustes → AssumFit, ou use uma foto da galeria.');
-        return;
-      }
-    }
-
-    const opcoes: ImagePicker.ImagePickerOptions = {
-      mediaTypes: ['images'],
-      quality: 0.8,
-      allowsEditing: false,
-    };
-    let foto: ImagePicker.ImagePickerAsset | undefined;
-    try {
-      const resultado = deCamera
-        ? await ImagePicker.launchCameraAsync(opcoes)
-        : await ImagePicker.launchImageLibraryAsync(opcoes);
-      foto = resultado.assets?.[0];
-    } catch {
-      setAviso('Não deu para abrir a câmera. Tente pela galeria.');
+    const r = await escolherFoto(deCamera);
+    if (!r) return;
+    if ('falha' in r) {
+      setAviso(
+        r.falha === 'sem-permissao'
+          ? 'Sem acesso à câmera. Conceda em Ajustes, ou use uma foto da galeria.'
+          : r.falha === 'camera-indisponivel'
+            ? 'Não deu para abrir a câmera. Tente pela galeria.'
+            : 'Não deu para preparar a foto. Tente outra.');
       return;
     }
-    if (!foto?.uri) return;
-
-    try {
-      const contexto = ImageManipulator.manipulate(foto.uri);
-      if ((foto.width ?? 0) > 1280) contexto.resize({ width: 1280 });
-      const renderizada = await contexto.renderAsync();
-      const pronta = await renderizada.saveAsync({
-        compress: 0.6,
-        format: SaveFormat.JPEG,
-        base64: true,
-      });
-      if (!pronta.base64) throw new Error('sem base64');
-      setFotoPendente({ uri: pronta.uri, base64: pronta.base64 });
-    } catch {
-      setAviso('Não deu para preparar a foto. Tente outra.');
-    }
+    setFotoPendente(r.foto);
   };
+
+  /*
+   O arquivo local vem primeiro: é o cache de quem registrou neste aparelho, e
+   é a ÚNICA fonte das refeições anteriores à mudança para o S3, que não têm
+   chave no servidor.
+  */
+  const fotoDaRefeicao = (meal: api.MealRecord): string | null =>
+    fotoLocalDe(meal.id) ?? (meal.imageKey ? urlsDeFoto[meal.imageKey] ?? null : null);
 
   const novaRefeicao = () => {
     setAviso(null);
     Alert.alert('Nova refeição', 'De onde vem a foto?', [
-      { text: 'Câmera', onPress: () => void escolherFoto(true) },
-      { text: 'Galeria', onPress: () => void escolherFoto(false) },
+      { text: 'Câmera', onPress: () => void escolher(true) },
+      { text: 'Galeria', onPress: () => void escolher(false) },
       { text: 'Cancelar', style: 'cancel' },
     ]);
   };
@@ -193,9 +192,19 @@ export function MealsScreen() {
     setAviso(null);
     setAnalisando(true);
     try {
+      /*
+       A foto sobe ANTES da análise, e a chave segue com ela: assim o registro
+       nasce já apontando para a imagem, sem uma segunda requisição para
+       amarrar as duas coisas.
+
+       A subida leva um ou dois segundos contra os dez ou quinze da análise, e
+       falhar nela não impede nada: a refeição é registrada sem foto.
+      */
+      const chave = await subirImagem(fotoPendente.uri, 'refeicao');
       const { record, analysis } = await api.analyzeMeal({
         imageBase64: fotoPendente.base64,
         description: descricao.trim() || undefined,
+        ...(chave ? { imageKey: chave } : {}),
       });
       if (!analysis.is_food) {
         setAviso('Não deu para identificar comida nesta foto. Tente outro ângulo, com mais luz.');
@@ -390,7 +399,7 @@ export function MealsScreen() {
   */
   const reanalisar = async () => {
     if (!detalhe) return;
-    const uri = fotoDe(detalhe.id);
+    const uri = fotoDaRefeicao(detalhe);
     if (!uri) return;
     setAvisoDetalhe(null);
     setReanalisando(true);
@@ -416,7 +425,7 @@ export function MealsScreen() {
 
   // ——— Sub-tela: o registro aberto, com a foto grande e a conta inteira. ———
   if (detalhe) {
-    const fotoUri = fotoDe(detalhe.id);
+    const fotoUri = fotoDaRefeicao(detalhe);
     const m = macros(detalhe.foods as api.MealFood[]);
 
     // Variável JSX, NÃO componente aninhado: componente definido aqui dentro
@@ -832,7 +841,7 @@ export function MealsScreen() {
       ) : meals.length > 0 ? (
         <Section label="Últimas refeições">
           {meals.map((meal, i) => {
-            const fotoUri = fotoDe(meal.id);
+            const fotoUri = fotoDaRefeicao(meal);
             const alimentos = (meal.foods as api.MealFood[]).map((f) => f.name).join(' · ');
             const mm = macros(meal.foods as api.MealFood[]);
             return (
@@ -1027,8 +1036,15 @@ function CampoComVoz({
   );
 }
 
-/** A foto local do registro, se existir NESTE aparelho. */
-function fotoDe(id: string): string | null {
+/**
+ * A foto de uma refeição.
+ *
+ * Desde 01/09/2026 ela vive no S3, e o que se usa é a URL assinada que a tela
+ * pede em lote. O arquivo local continua sendo consultado ANTES: é o cache das
+ * refeições registradas neste aparelho, e das que existiam antes da mudança,
+ * que não têm chave no servidor e só existem aqui.
+ */
+function fotoLocalDe(id: string): string | null {
   try {
     const f = new File(Paths.document, `refeicao-${id}.jpg`);
     return f.exists ? f.uri : null;

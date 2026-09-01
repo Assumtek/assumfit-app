@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView } from 'react-native';
 
 import { formatDateBR } from '../domain/birthDate';
+import * as api from '../services/api.service';
 import { ANGULOS, useProgressPhotosStore, type AnguloDaFoto, type FotoDeEvolucao } from '../store/progress-photos.store';
 import { useTheme } from '../theme/ThemeProvider';
 import { Body, Button, Data, Label } from './ui';
@@ -33,7 +34,38 @@ export function ProgressPhotos() {
    diz nada (Bruno, 22/08). A câmera tira uma por vez; a galeria aceita até
    três, todas com o ângulo escolhido.
   */
+  /*
+   O consentimento vem ANTES da primeira foto.
+
+   Foto de corpo passou a ser guardada na nuvem (01/09/2026), e ela descreve
+   saúde e identifica a pessoa sozinha: por isso finalidade própria, separada
+   da biometria, e pedida aqui, no momento em que a pessoa entende para que
+   serve. Recusar não quebra nada, só não guarda.
+  */
+  const garantirConsentimento = async (): Promise<boolean> => {
+    if (await api.fetchProgressPhotoConsent()) return true;
+    return new Promise((resolve) => {
+      Alert.alert(
+        'Guardar suas fotos na nuvem',
+        'Suas fotos de evolução ficam na sua conta, criptografadas, e só você as vê. É o que permite trocar de celular sem perder a linha do tempo. Você pode revogar quando quiser, e revogar apaga as fotos.',
+        [
+          { text: 'Agora não', style: 'cancel', onPress: () => resolve(false) },
+          {
+            text: 'Concordo',
+            onPress: () => {
+              api
+                .setProgressPhotoConsent(true)
+                .then((ok) => resolve(ok))
+                .catch(() => resolve(false));
+            },
+          },
+        ],
+      );
+    });
+  };
+
   const pegar = async (origem: 'camera' | 'galeria', angulo: AnguloDaFoto) => {
+    if (!(await garantirConsentimento())) return;
     const perm =
       origem === 'camera'
         ? await ImagePicker.requestCameraPermissionsAsync()

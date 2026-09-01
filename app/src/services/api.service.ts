@@ -181,7 +181,12 @@ export async function logout(): Promise<void> {
   if (refreshToken) await api.post('/auth/logout', { refreshToken }).catch(() => undefined);
 }
 
-export type ConsentPurpose = 'biometric_processing' | 'international_transfer' | 'marketing';
+export type ConsentPurpose =
+  | 'biometric_processing'
+  | 'international_transfer'
+  | 'marketing'
+  /** Guardar as fotos de evolução na nuvem. Revogar apaga as imagens. */
+  | 'progress_photos';
 
 export type Profile = {
   id: string;
@@ -191,6 +196,8 @@ export type Profile = {
   birthDate: string;
   sex: 'f' | 'm';
   createdAt: string;
+  /** URL assinada da foto de perfil, válida por uma hora. */
+  avatarUrl?: string | null;
   consents: { purpose: ConsentPurpose; version: string; grantedAt: string }[];
   subscription: {
     status: string;
@@ -213,7 +220,13 @@ export async function fetchProfile(): Promise<Profile> {
   return data;
 }
 
-export type ProfilePatch = { name?: string; birthDate?: string; sex?: 'f' | 'm' };
+export type ProfilePatch = {
+  name?: string;
+  birthDate?: string;
+  sex?: 'f' | 'm';
+  /** A chave da foto de perfil no S3; `null` remove a foto. */
+  avatarKey?: string | null;
+};
 
 export async function updateProfile(patch: ProfilePatch): Promise<Profile> {
   const { data } = await api.patch<Profile>('/auth/me', patch);
@@ -738,6 +751,51 @@ export async function urlsDasImagens(keys: string[]): Promise<Record<string, str
   }
 }
 
+export type FotoDeEvolucaoRemota = {
+  id: string;
+  angle: 'frente' | 'lado' | 'costas' | null;
+  takenAt: string;
+  /** URL assinada, válida por uma hora. `null` se a imagem sumiu do bucket. */
+  url: string | null;
+};
+
+/** Se há consentimento ativo para guardar foto de corpo na nuvem. */
+export async function fetchProgressPhotoConsent(): Promise<boolean> {
+  try {
+    const { data } = await api.get<{ granted: boolean }>('/progress-photos/consent');
+    return data.granted;
+  } catch {
+    return false;
+  }
+}
+
+/** Concede ou revoga. Revogar APAGA as fotos, no servidor e no bucket. */
+export async function setProgressPhotoConsent(granted: boolean): Promise<boolean> {
+  const { data } = await api.put<{ granted: boolean }>('/progress-photos/consent', {
+    granted,
+    version: CONSENT_VERSION,
+  });
+  return data.granted;
+}
+
+export async function fetchProgressPhotos(): Promise<FotoDeEvolucaoRemota[]> {
+  const { data } = await api.get<{ fotos: FotoDeEvolucaoRemota[] }>('/progress-photos');
+  return data.fotos;
+}
+
+export async function addProgressPhoto(input: {
+  imageKey: string;
+  angle?: 'frente' | 'lado' | 'costas';
+  takenAt?: string;
+}): Promise<FotoDeEvolucaoRemota> {
+  const { data } = await api.post<FotoDeEvolucaoRemota>('/progress-photos', input);
+  return data;
+}
+
+export async function deleteProgressPhoto(id: string): Promise<void> {
+  await api.delete(`/progress-photos/${id}`);
+}
+
 export async function fetchSessionFeedback(
   executionId: string): Promise<{ headline: string; body: string } | null> {
   const { data, status } = await api.get<{ headline: string; body: string } | ''>(
@@ -1101,6 +1159,8 @@ export type MealRecord = {
   kcalMax: number;
   confidence: number;
   notes: string | null;
+  /** A chave da foto no S3. Nula nas refeições anteriores a 01/09/2026. */
+  imageKey?: string | null;
 };
 
 export type MealAnalysis = {
@@ -1116,6 +1176,8 @@ export async function analyzeMeal(input: {
   imageBase64: string;
   mediaType?: string;
   description?: string;
+  /** A chave da foto já subida ao S3, para ela sobreviver na tela. */
+  imageKey?: string;
 }): Promise<{ record: MealRecord | null; analysis: MealAnalysis }> {
   const { data } = await api.post('/nutrition/meal', input, { timeout: 90_000 });
   return data;
