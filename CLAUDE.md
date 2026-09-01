@@ -681,6 +681,36 @@ um, o de energia, e ele vem com a avaliação derivada do PRÓPRIO score
 rótulo do cálculo offline, e dava para ler "44" e "prontidão alta" na mesma
 linha.
 
+## Todas as imagens vivem no S3
+
+Decisão da fundadora (01/09/2026). São quatro: foto do prato, fotos de
+evolução, foto de perfil e a foto do aparelho no chat do personal. Todas
+ficavam no aparelho, e trocar de celular perdia tudo.
+
+O desenho é o do áudio (`services/media.service.ts`): a imagem sobe DIRETO do
+aparelho para o bucket por URL pré-assinada, e a leitura também é assinada, com
+uma hora de vida. `assumfit-images` é privado em todas as formas, com AES256
+por padrão. **A retenção é o oposto da do áudio**: áudio expira em um dia,
+porque o produto queria a transcrição; imagem é o conteúdo, e só some quando a
+pessoa apaga o registro ou a conta.
+
+- **A chave carrega o dono**, e toda leitura confere isso antes de assinar. Sem
+  isso, quem descobrisse uma chave leria a foto de qualquer pessoa.
+- **Apagar apaga o objeto**: a refeição, a foto de evolução, o avatar
+  substituído. Excluir a conta apaga por LISTAGEM do prefixo, e ANTES do
+  cascade: depois dele não haveria mais ponteiro para saber o que era de quem,
+  e os objetos ficariam lá para sempre. Pega inclusive o que subiu e nunca
+  virou registro.
+- **Foto de evolução tem consentimento PRÓPRIO** (`progress_photos`), pedido na
+  primeira foto. É foto de corpo: descreve saúde e identifica a pessoa sozinha,
+  e quem aceitou a leitura do HRV não aceitou isso junto. Revogar apaga tudo.
+- O arquivo local continua existindo como CACHE (refeição, perfil), e é a única
+  fonte do que foi registrado antes desta data, que não tem chave no servidor.
+
+O usuário IAM do backend precisa da política `assumfit-imagens` (Put/Get/Delete
+em `img/*`, List restrito ao prefixo). Sem ela o primeiro PUT volta
+`AccessDenied`, e a mensagem não diz que é do IAM e não do presign.
+
 ## Regras de dados
 
 - Dado biométrico é **dado pessoal sensível** (LGPD Art. 5º II). Toda tabela nova que armazene biometria precisa de vínculo com consentimento e política de retenção. Nunca logar valor biométrico com `user_id` junto.

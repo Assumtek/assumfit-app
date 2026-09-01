@@ -87,7 +87,7 @@
         "expo-image-picker",
         {
           "photosPermission": "O AssumFit acessa suas fotos apenas quando você escolhe uma: para analisar um prato, perguntar ao personal sobre um aparelho ou montar o card de treino. Nada é enviado sem você escolher.",
-          "cameraPermission": "O AssumFit usa a câmera para a foto do prato na contagem de calorias, para fotografar um aparelho e perguntar ao personal como usá-lo, e para a foto do card de treino. As imagens são analisadas e descartadas, não ficam guardadas."
+          "cameraPermission": "O AssumFit usa a câmera para a foto do prato na contagem de calorias, para fotografar um aparelho e perguntar ao personal como usá-lo, para as fotos de evolução e para a foto do card de treino. As fotos ficam guardadas na sua conta, criptografadas, só você as vê, e somem quando você apaga o registro ou a conta."
         }
       ],
       [

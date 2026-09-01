@@ -767,7 +767,7 @@ export function MealsScreen() {
 
         <Note
           title="A foto fica com você"
-          body="Ela é guardada só neste aparelho, junto do registro. No servidor é analisada e descartada."
+          body="Ela fica guardada na sua conta, junto do registro, e só você a vê. Apagar a refeição apaga a foto."
         />
       </DetailScreen>
     );
@@ -836,7 +836,7 @@ export function MealsScreen() {
       ) : meals.length === 0 ? (
         <Note
           title="Como funciona"
-          body="Toque em Nova refeição, fotografe o prato, e o AssumFit identifica os alimentos, estima as porções e calcula a faixa de calorias pela tabela nutricional oficial (TACO). A foto fica guardada no seu aparelho, junto do registro."
+          body="Toque em Nova refeição, fotografe o prato, e o AssumFit identifica os alimentos, estima as porções e calcula a faixa de calorias pela tabela nutricional oficial (TACO). A foto fica guardada na sua conta, junto do registro."
         />
       ) : meals.length > 0 ? (
         <Section label="Últimas refeições">

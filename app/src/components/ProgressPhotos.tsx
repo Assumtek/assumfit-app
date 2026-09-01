@@ -13,8 +13,12 @@ import { Body, Button, Data, Label } from './ui';
  * A linha do tempo de fotos, e a comparação de duas delas lado a lado.
  *
  * Toque em uma foto para escolhê-la; em duas, e elas aparecem juntas, com as
- * datas — é a comparação que o testador pediu. Segurar remove. Nada aqui sai
- * do aparelho: são arquivos locais, como a foto de perfil.
+ * datas, que é a comparação que o testador pediu. Segurar remove.
+ *
+ * As fotos ficam na CONTA desde 01/09/2026, não mais só no aparelho: é o que
+ * permite trocar de celular sem perder a linha do tempo, e não dá para refazer
+ * a foto de três meses atrás. Por serem foto de corpo, têm consentimento
+ * próprio, pedido na primeira, e revogar apaga todas.
  */
 export function ProgressPhotos() {
   const { colors } = useTheme();
