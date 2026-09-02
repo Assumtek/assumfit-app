@@ -43,7 +43,21 @@ export function Readout({
         <Title fontWeight="300">{valor}</Title>
         {unidade ? <Data>{unidade}</Data> : null}
       </XStack>
-      <Data numberOfLines={1}>
+      {/*
+        O rótulo ENCOLHE para caber, não trunca.
+
+        A célula é um terço da tela, e "sem sinal da pulsei…" foi o que o
+        testador viu no spinning (Leonardo, 01/09/2026): truncar corta
+        justamente o nome do indicador, que é o que dá sentido ao número. É a
+        regra 8 do projeto, e ela já tinha sido aplicada nas pílulas de treino;
+        o mostrador ficou de fora.
+      */}
+      <Data
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.75}
+        maxFontSizeMultiplier={1.2}
+      >
         {rotulo}
       </Data>
     </YStack>
