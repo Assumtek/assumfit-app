@@ -26,6 +26,7 @@ from agent.validate import (
     validate_plan,
 )
 from core.logging import get_logger
+from models.texto import sem_travessao_em
 from core.settings import settings
 from grader.grade import grade
 
@@ -492,6 +493,20 @@ async def run_agent(inp: WorkoutGenerationInput) -> AgentResult:
         tecnico = str(plan["rationale"])
         plan = {**plan, "rationale": await reescrever_para_pessoa(tecnico), "rationale_technical": tecnico}
 
+    # O travessão sai do plano INTEIRO, na borda de saída.
+    #
+    # O prompt proíbe e o modelo escreve mesmo assim, de vez em quando, e aqui
+    # ele aparecia onde mais se lê: no NOME do treino ("Superior A — Empurrar"),
+    # que vira título de tela, item de lista e legenda do card compartilhado.
+    # A defesa existia desde ago/2026 para o insight, o bom dia e o resumo
+    # semanal; o plano tinha ficado de fora, e é o texto mais visível dos
+    # quatro.
+    #
+    # É higiene de PONTUAÇÃO, não reescrita: troca o sinal e preserva a frase.
+    # Vale para nome, observação e fundamentação de uma vez, porque a função
+    # desce a estrutura toda.
+    if isinstance(plan, dict):
+        plan = sem_travessao_em(plan)
     return AgentResult(
         plan=plan,
         score=breakdown["score"],

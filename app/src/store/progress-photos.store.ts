@@ -58,6 +58,13 @@ type State = {
   /** Várias de uma vez: a mesma avaliação tem frente, lado e costas (pedido de testador, 22/08). */
   adicionar: (pickedUri: string, width?: number, angulo?: AnguloDaFoto) => Promise<void>;
   remover: (nome: string) => void;
+  /**
+   * Tira da tela as fotos que viviam na conta, depois de a pessoa revogar.
+   *
+   * As locais FICAM: elas nunca saíram deste aparelho, e revogar o
+   * consentimento de guardar na nuvem não é pedido para apagá-las.
+   */
+  esquecerAsDaConta: () => void;
 };
 
 /** As que ficaram no aparelho, de antes do S3. Só leitura: nada novo entra aqui. */
@@ -169,4 +176,6 @@ export const useProgressPhotosStore = create<State>((set, get) => ({
     // Remota: o servidor apaga a linha E o objeto no bucket.
     void deleteProgressPhoto(nome).catch(() => undefined);
   },
+
+  esquecerAsDaConta: () => set({ fotos: get().fotos.filter((f) => f.local) }),
 }));

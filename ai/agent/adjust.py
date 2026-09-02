@@ -23,6 +23,7 @@ from agent.models import CatalogExercise
 from agent.validate import VALID_DAYS, VALID_PHASE_TYPES, VALID_SUBTYPES
 from core.logging import get_logger
 from core.settings import settings
+from models.texto import sem_travessao, sem_travessao_em
 from llm.client import complete
 
 log = get_logger(__name__)
@@ -568,6 +569,19 @@ async def adjust_plan(inp: WorkoutAdjustInput) -> WorkoutAdjustResult:
             raise ValueError(
                 f"resposta do modelo inválida após retry: {type(exc2).__name__}: {exc2}"
             ) from exc2
+
+    # O travessão sai da resposta E das operações, na borda de saída.
+    #
+    # A conversa vira bolha na tela, e uma operação de RENAME_WORKOUT escreve o
+    # nome do treino no banco: o sinal entraria por ali e sobreviveria à
+    # conversa toda. Mesma higiene do plano gerado e do insight, e pelo mesmo
+    # motivo, o prompt proíbe e o modelo às vezes escreve assim mesmo.
+    parsed = parsed.model_copy(
+        update={
+            "reply": sem_travessao(parsed.reply),
+            "operations": sem_travessao_em(parsed.operations),
+        }
+    )
 
     # Recusa que o próprio modelo sinalizou: nunca propaga operações junto.
     if parsed.blocked:

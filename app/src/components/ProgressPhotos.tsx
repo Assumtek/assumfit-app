@@ -26,7 +26,20 @@ export function ProgressPhotos() {
   const carregar = useProgressPhotosStore((s) => s.carregar);
   const adicionar = useProgressPhotosStore((s) => s.adicionar);
   const remover = useProgressPhotosStore((s) => s.remover);
+  const esquecerAsDaConta = useProgressPhotosStore((s) => s.esquecerAsDaConta);
   const [escolhidas, setEscolhidas] = useState<string[]>([]);
+  /**
+   * Se a pessoa consentiu em guardar as fotos na conta.
+   *
+   * Governa a existência do botão de revogar: oferecer "parar de guardar" a
+   * quem nunca começou é ruído, e esconder de quem começou é descumprir a
+   * promessa feita no consentimento.
+   */
+  const [consentido, setConsentido] = useState(false);
+
+  useEffect(() => {
+    void api.fetchProgressPhotoConsent().then(setConsentido);
+  }, []);
 
   useEffect(() => {
     void carregar();
@@ -47,7 +60,10 @@ export function ProgressPhotos() {
    serve. Recusar não quebra nada, só não guarda.
   */
   const garantirConsentimento = async (): Promise<boolean> => {
-    if (await api.fetchProgressPhotoConsent()) return true;
+    if (await api.fetchProgressPhotoConsent()) {
+      setConsentido(true);
+      return true;
+    }
     return new Promise((resolve) => {
       Alert.alert(
         'Guardar suas fotos na nuvem',
@@ -59,13 +75,48 @@ export function ProgressPhotos() {
             onPress: () => {
               api
                 .setProgressPhotoConsent(true)
-                .then((ok) => resolve(ok))
+                .then((ok) => {
+                  setConsentido(ok);
+                  resolve(ok);
+                })
                 .catch(() => resolve(false));
             },
           },
         ],
       );
     });
+  };
+
+  /**
+   * Revoga o consentimento e apaga as fotos, no servidor e no bucket.
+   *
+   * A confirmação repete o custo antes do toque final: são fotos que não dá
+   * para refazer, e a linha do tempo do corpo é o conteúdo que mais dói perder.
+   */
+  const revogar = () => {
+    Alert.alert(
+      'Parar de guardar suas fotos?',
+      'Suas fotos de evolução são apagadas da sua conta, em definitivo. As que estão só neste aparelho continuam aqui. Você pode voltar a guardar depois, mas as apagadas não voltam.',
+      [
+        { text: 'Manter', style: 'cancel' },
+        {
+          text: 'Apagar minhas fotos',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              try {
+                await api.setProgressPhotoConsent(false);
+                setConsentido(false);
+                esquecerAsDaConta();
+              } catch {
+                // Sem rede, nada foi apagado: a tela continua como está, e a
+                // pessoa tenta de novo. Dizer "apagado" sem ter apagado seria
+                // a pior falha possível aqui.
+              }
+            })();
+          },
+        },
+      ]);
   };
 
   const pegar = async (origem: 'camera' | 'galeria', angulo: AnguloDaFoto) => {
@@ -162,9 +213,20 @@ export function ProgressPhotos() {
         </Body>
       )}
 
-      <YStack alignSelf="flex-start">
+      <XStack alignItems="center" gap="$md" flexWrap="wrap">
         <Button title="Adicionar foto" variant="secondary" onPress={nova} />
-      </YStack>
+        {/*
+          A revogação PROMETIDA no consentimento, executável aqui.
+
+          A LGPD é explícita (Art. 8º §5º): revogar tem que ser tão fácil
+          quanto consentir. Consentir é um toque num alerta, então revogar não
+          pode exigir escrever para o suporte. Só aparece para quem consentiu,
+          e é o mesmo desenho do registro de ciclo.
+        */}
+        {consentido ? (
+          <Button title="Parar de guardar" variant="ghost" onPress={revogar} />
+        ) : null}
+      </XStack>
       {fotos.length > 0 && par.length < 2 ? <Data>Toque em duas fotos do mesmo ângulo para comparar. Segure para remover.</Data> : null}
       {par.length === 2 && par[0].angulo && par[1].angulo && par[0].angulo !== par[1].angulo ? (
         <Data>Ângulos diferentes: a comparação vale mais entre duas fotos de {rotuloDoAngulo(par[0].angulo).toLowerCase()}.</Data>
