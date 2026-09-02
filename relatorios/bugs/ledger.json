@@ -1682,6 +1682,36 @@
       "nota": "Feito. O chat do personal agora aceita foto: há um botão de câmera ao lado do campo, e com a imagem anexada nem precisa escrever nada, apontar para o aparelho já é a pergunta. Ele diz que aparelho é, para que serve e como se posiciona, e se aquilo corresponder a um exercício do catálogo, oferece a troca ou a inclusão no seu plano, como qualquer outra proposta. Duas decisões que vale contar: a foto não fica guardada em lugar nenhum (a conversa guarda o texto e só a marca de que houve imagem), porque foto de academia costuma pegar o rosto de quem está em volta; e a miniatura tem um X antes de você enviar, já que mandar imagem por engano num chat que altera o plano é diferente de mandar num chat comum. Sobe na próxima build.",
       "versao": "1.0.6 (6)",
       "em": "2026-09-01T20:33:56"
+    },
+    "slack:1788301773.401409": {
+      "commit": "3a39396",
+      "nota": "Tudo tratado, obrigada pela cobrança.",
+      "versao": "1.0.6 (6)",
+      "em": "2026-09-01T21:56:45"
+    },
+    "slack:1788301749.948739": {
+      "commit": "3a39396",
+      "nota": "Tudo tratado.",
+      "versao": "1.0.6 (6)",
+      "em": "2026-09-01T21:56:56"
+    },
+    "ANquBKQv4tuFxb9YA_ygTxE": {
+      "commit": "3a39396",
+      "nota": "Dois achados aqui. O primeiro é bug e está corrigido: o rótulo aparecia cortado, 'sem sinal da pulsei…', porque o texto truncava em vez de encolher para caber no terço da tela. Agora ele encolhe e cabe inteiro. O segundo é sobre o batimento em si, e respondo no seu outro relato.",
+      "versao": "1.0.6 (6)",
+      "em": "2026-09-01T21:58:37"
+    },
+    "AKWdFaZXviBbOx-mgnzYUVE": {
+      "commit": "3a39396",
+      "nota": "Obrigada por avisar, e o atraso que você notou tem explicação: no começo da sessão o app desliga a leitura contínua e abre o modo esporte da pulseira, e leva alguns segundos até o primeiro valor chegar por esse caminho novo.",
+      "versao": "1.0.6 (6)",
+      "em": "2026-09-01T21:58:48"
+    },
+    "AN3wwmjJnq-VK666LnC9v0U": {
+      "commit": "3a39396",
+      "nota": "Fui ver os dados do servidor da sua sessão, e o app não está errando aqui, mas o número também não parece ser o seu: entre 23h49 e 23h52 chegaram cerca de 60 leituras por minuto, variando entre 59 e 82. Isso mostra que o modo esporte estava ativo e a pulseira mediu quase uma vez por segundo. O que houve é que ela leu baixo: 63 bpm em spinning pesado é frequência de repouso, e o sensor óptico do pulso é justamente o que mais sofre em bicicleta, porque a mão apertando o guidão cria tensão no punho. Vale um teste na próxima: use a pulseira um dedo acima do osso do pulso e um pouco mais firme. Se continuar baixo com ela bem posicionada, me avise, porque aí é limite do aparelho e precisamos dizer isso na tela em vez de mostrar um número que não é o seu.",
+      "versao": "1.0.6 (6)",
+      "em": "2026-09-01T21:58:58"
     }
   }
 }

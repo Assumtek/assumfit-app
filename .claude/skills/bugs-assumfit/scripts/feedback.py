@@ -243,8 +243,31 @@ def main() -> None:
         # para conversa e mensagens da própria fundadora, onde resposta é ruído.
         silencioso = "--silencioso" in args
         so_resposta = "--so-resposta" in args
-        args = [a for a in args if a not in ("--silencioso", "--so-resposta")]
+        forcar = "--forcar" in args
+        args = [a for a in args if a not in ("--silencioso", "--so-resposta", "--forcar")]
         _, fid, sha, *nota = args
+
+        # O id tem que EXISTIR na fila.
+        #
+        # Sem esta trava, um id levemente errado era aceito em silêncio: o
+        # ledger registrava o relato como resolvido, o canal anunciava, e o
+        # relato de verdade continuava pendente, sem resposta para quem
+        # escreveu. Aconteceu duas vezes (31/08 e 01/09/2026), as duas por
+        # reconstruir o identificador de memória em vez de copiar da fila, e as
+        # duas vezes quem percebeu foi o testador cobrando.
+        #
+        # `--forcar` existe para o caso legítimo de fechar algo que já saiu da
+        # janela da API, que devolve só os relatos recentes.
+        if not forcar and not fid.startswith("slack:"):
+            conhecidos = {x["id"] for x in feedbacks()}
+            if fid not in conhecidos:
+                parecidos = [i for i in conhecidos if i[:7] == fid[:7]]
+                print(f"id não encontrado na fila: {fid}", file=sys.stderr)
+                if parecidos:
+                    print(f"  você quis dizer: {parecidos[0]}", file=sys.stderr)
+                print("  copie o id da saída de feedback.py, ou use --forcar", file=sys.stderr)
+                sys.exit(1)
+
         l = ledger()
         versao = proxima_versao()
         l["tratados"][fid] = {"commit": sha, "nota": " ".join(nota), "versao": versao, "em": time.strftime("%Y-%m-%dT%H:%M:%S")}
