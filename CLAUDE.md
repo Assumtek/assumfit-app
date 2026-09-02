@@ -707,9 +707,13 @@ pessoa apaga o registro ou a conta.
 - O arquivo local continua existindo como CACHE (refeição, perfil), e é a única
   fonte do que foi registrado antes desta data, que não tem chave no servidor.
 
-O usuário IAM do backend precisa da política `assumfit-imagens` (Put/Get/Delete
-em `img/*`, List restrito ao prefixo). Sem ela o primeiro PUT volta
-`AccessDenied`, e a mensagem não diz que é do IAM e não do presign.
+**São DOIS usuários IAM, e os dois precisam da política `assumfit-imagens`**
+(Put/Get/Delete em `img/*`, List restrito ao prefixo). O desenvolvimento desta
+máquina usa `assumfit-backend`; **produção usa `assumfit-transcribe`**, o que
+não se descobre de outro jeito senão comparando o `AWS_ACCESS_KEY_ID` do
+servidor com as chaves de cada usuário. Sem a política, o presign é gerado
+normalmente e o S3 recusa o PUT com `AccessDenied`: o erro aparece no
+APARELHO, não no nosso log, e não diz que é de permissão e não da URL.
 
 ## Regras de dados
 
