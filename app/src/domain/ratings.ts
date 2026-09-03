@@ -200,12 +200,24 @@ export type PressureZone = {
  * pré-hipertensão 130–139 ou 85–89; hipertensão a partir de 140/90). Produto
  * brasileiro, não médico: a referência é a daqui, e a tela de Ajuda diz qual é.
  */
+/*
+ O texto da faixa diz OU, porque é assim que a conta funciona.
+
+ Ele dizia "130–139 / 85–89", com barra, que se lê como o par: quem mediu
+ 117 por 85 caía em "Elevada", procurava o próprio 117 naquele intervalo, não
+ achava, e concluía que a tela errou (Leonardo, 03/09/2026: "pressão elevada
+ nesse caso não me parece certo"). Basta UM dos dois números entrar na faixa,
+ e é o que a diretriz brasileira diz com "e/ou".
+
+ A classificação em si não mudou: continua sendo a pior das duas, que é a
+ regra da SBC e a razão de a lista ser percorrida de baixo para cima.
+*/
 export const pressureZones: PressureZone[] = [
-  { label: 'Baixa', range: '< 90/60', matches: (s, d) => s < 90 || d < 60, abnormal: true },
-  { label: 'Ótima', range: '< 120/80', matches: (s, d) => s < 120 && d < 80, abnormal: false },
-  { label: 'Normal', range: '120–129 / 80–84', matches: (s, d) => s <= 129 && d <= 84, abnormal: false },
-  { label: 'Elevada', range: '130–139 / 85–89', matches: (s, d) => s <= 139 && d <= 89, abnormal: true },
-  { label: 'Alta', range: '≥ 140/90', matches: () => true, abnormal: true },
+  { label: 'Baixa', range: '< 90 ou < 60', matches: (s, d) => s < 90 || d < 60, abnormal: true },
+  { label: 'Ótima', range: '< 120 e < 80', matches: (s, d) => s < 120 && d < 80, abnormal: false },
+  { label: 'Normal', range: 'até 129 ou 84', matches: (s, d) => s <= 129 && d <= 84, abnormal: false },
+  { label: 'Elevada', range: '130–139 ou 85–89', matches: (s, d) => s <= 139 && d <= 89, abnormal: true },
+  { label: 'Alta', range: '≥ 140 ou ≥ 90', matches: () => true, abnormal: true },
 ];
 
 export function ratePressure(sys: number | null, dia: number | null): Rating & { zone: PressureZone } {

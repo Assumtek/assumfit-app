@@ -43,7 +43,7 @@ export function HelpScreen() {
         />
         <Explica
           termo="Pressão"
-          texto="Estimada pelo sensor óptico da pulseira: serve para acompanhar TENDÊNCIA; a medição de braçadeira continua sendo a referência. As faixas seguem a Diretriz Brasileira de Hipertensão (SBC 2020): ótima abaixo de 120/80, normal até 129/84, elevada de 130/85 a 139/89. Fora da faixa esperada, meça no aparelho de verdade."
+          texto="Estimada pelo sensor óptico da pulseira: serve para acompanhar TENDÊNCIA; a medição de braçadeira continua sendo a referência. As faixas seguem a Diretriz Brasileira de Hipertensão (SBC 2020): ótima abaixo de 120/80, normal até 129/84, elevada de 130 a 139 ou de 85 a 89. Basta UM dos dois números entrar numa faixa para a leitura ser classificada nela, e é por isso que 117 por 85 aparece como elevada: quem decide ali é o 85. Fora da faixa esperada, meça no aparelho de verdade."
         />
         <Explica termo="Passos" texto="Contados pelo acelerômetro, fatiados ao longo do dia." last />
       </Section>
