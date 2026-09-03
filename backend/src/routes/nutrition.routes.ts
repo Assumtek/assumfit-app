@@ -40,17 +40,42 @@ nutritionRoutes.post(
   '/meal',
   asyncRoute<AuthedRequest>(async (req, res) => {
     const body = analyzeSchema.parse(req.body);
+    const chavePropria =
+      body.imageKey && chaveEhDoUsuario(body.imageKey, req.userId) ? body.imageKey : null;
 
-    const { data } = await client.post('/nutrition/analyze', {
-      image_b64: body.imageBase64,
-      media_type: body.mediaType,
-      description: body.description,
-      request_id: req.userId,
-    });
+    /*
+     A FOTO ÓRFÃ.
+
+     A imagem sobe ao S3 antes da análise, então uma análise que falha deixa no
+     bucket uma foto que registro nenhum referencia: ninguém a vê, nada a
+     apaga, e ela só sairia junto com a conta. É desperdício e, pior, é guardar
+     a foto de uma refeição que a pessoa não chegou a registrar.
+
+     Aconteceu de verdade em 02/09/2026: um testador fotografou um prato, a
+     foto subiu, e a análise voltou 502 porque o serviço de modelo estava sem
+     crédito. Sobrou a imagem no bucket, sozinha.
+
+     Vale para os DOIS desfechos de fracasso, o erro e a foto sem comida, que
+     também não gera registro.
+    */
+    let data;
+    try {
+      ({ data } = await client.post('/nutrition/analyze', {
+        image_b64: body.imageBase64,
+        media_type: body.mediaType,
+        description: body.description,
+        request_id: req.userId,
+      }));
+    } catch (err) {
+      if (chavePropria) await apagarImagens([chavePropria]).catch(() => undefined);
+      throw err;
+    }
 
     // Foto sem comida é resposta válida: devolve sem persistir — não existe
     // refeição de paisagem, e registrá-la sujaria o total do dia.
     if (!data.is_food) {
+      // Sem registro, sem foto: ela não tem mais a que pertencer.
+      if (chavePropria) await apagarImagens([chavePropria]).catch(() => undefined);
       res.json({ record: null, analysis: data });
       return;
     }
@@ -64,8 +89,7 @@ nutritionRoutes.post(
         confidence: data.confidence,
         notes: data.notes || null,
         // Chave de outra conta não é erro: a refeição é registrada sem foto.
-        imageKey:
-          body.imageKey && chaveEhDoUsuario(body.imageKey, req.userId) ? body.imageKey : null,
+        imageKey: chavePropria,
       },
     });
     res.status(201).json({ record, analysis: data });
@@ -168,6 +192,10 @@ nutritionRoutes.post(
 
     // Reanálise que não vê comida não apaga o registro: devolve sem tocar
     // nele, e a tela explica — o erro pode ser da foto, não do prato.
+    //
+    // A FOTO também fica: ela pertence ao registro que continua existindo, ao
+    // contrário do primeiro envio, onde uma análise sem comida não deixa nada
+    // a que a imagem possa pertencer.
     if (!data.is_food) {
       res.json({ record: null, analysis: data });
       return;

@@ -1,6 +1,7 @@
 import { PlanAdjustmentStatus, TrainingPlanStatus } from '@prisma/client';
 
 import { prisma } from '../../lib/prisma';
+import { apagarImagens } from '../media.service';
 import { badRequest, forbidden } from '../../lib/errors';
 import { adjust, type AgentAdjustResult } from './agent.client';
 import { allowedExercises } from './catalog';
@@ -180,25 +181,40 @@ export async function chatWithAgent(
   */
   const history = await historicoDoChat(userId);
 
-  const resultado = await adjust({
-    message,
-    today: hoje,
-    week_feedback: semana,
-    // Os mais RECENTES, e não os primeiros: a conversa que importa é a que
-    // acabou de acontecer, e mandar o histórico inteiro estoura a janela.
-    /*
-     Para o modelo vai só o TEXTO. O ponteiro da foto é assunto da tela: o
-     arquivo está no aparelho, e mandar o nome dele ao modelo seria dar a ler
-     um caminho que não leva a lugar nenhum.
-    */
-    history: history.slice(-HISTORY_LIMIT).map((t) => ({ role: t.role, content: t.content })),
-    current_plan: serializePlan(plan),
-    profile: context.profile,
-    flags: context.flags,
-    constraints: context.constraints,
-    allowed_exercises: catalog,
-    ...(foto ? { image_b64: foto.base64, media_type: foto.mediaType } : {}),
-  });
+  /*
+   A FOTO ÓRFÃ, o mesmo cuidado da refeição.
+
+   A imagem sobe ao S3 antes da mensagem, então uma conversa que falha deixaria
+   no bucket uma foto que mensagem nenhuma referencia. Aqui a chance é menor,
+   porque o agente responde mesmo quando recusa o pedido, mas o modelo fora do
+   ar ou sem crédito é justamente o caso que aconteceu com a refeição em
+   02/09/2026.
+  */
+  let resultado;
+  try {
+    resultado = await adjust({
+      message,
+      today: hoje,
+      week_feedback: semana,
+      /*
+       Os mais RECENTES, e não os primeiros: a conversa que importa é a que
+       acabou de acontecer, e o histórico inteiro estoura a janela.
+
+       Para o modelo vai só o TEXTO. O ponteiro da foto é assunto da tela: é
+       uma chave do S3, e dá-la a ler ao modelo é ruído com cara de dado.
+      */
+      history: history.slice(-HISTORY_LIMIT).map((t) => ({ role: t.role, content: t.content })),
+      current_plan: serializePlan(plan),
+      profile: context.profile,
+      flags: context.flags,
+      constraints: context.constraints,
+      allowed_exercises: catalog,
+      ...(foto ? { image_b64: foto.base64, media_type: foto.mediaType } : {}),
+    });
+  } catch (err) {
+    if (foto?.ref) await apagarImagens([foto.ref]).catch(() => undefined);
+    throw err;
+  }
 
   const adjustmentId = await guardarProposta(userId, plan.id, message, resultado);
 
