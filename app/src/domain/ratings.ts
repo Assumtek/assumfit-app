@@ -216,7 +216,21 @@ export const pressureZones: PressureZone[] = [
   { label: 'Baixa', range: '< 90 ou < 60', matches: (s, d) => s < 90 || d < 60, abnormal: true },
   { label: 'Ótima', range: '< 120 e < 80', matches: (s, d) => s < 120 && d < 80, abnormal: false },
   { label: 'Normal', range: 'até 129 ou 84', matches: (s, d) => s <= 129 && d <= 84, abnormal: false },
-  { label: 'Elevada', range: '130–139 ou 85–89', matches: (s, d) => s <= 139 && d <= 89, abnormal: true },
+  /*
+   Elevada NÃO é alerta (decisão da fundadora, 03/09/2026).
+
+   Pela diretriz, esta faixa é a pré-hipertensão, que não é doença: é o aviso
+   de que a pressão saiu do ideal. Pintá-la de vermelho num produto de
+   bem-estar, que não é dispositivo médico, alarma por um valor que pode estar
+   a um ponto do normal, e foi o que fez um testador achar que a tela errava
+   antes mesmo de olhar a tabela (Leonardo, 03/09/2026).
+
+   O rótulo continua dizendo "Elevada" e a tela continua dizendo qual dos dois
+   números puxou: a informação fica, o alarme sai. `$destructive` volta a ser o
+   que a regra do projeto diz, o valor fora da faixa saudável, que aqui são
+   Baixa e Alta.
+  */
+  { label: 'Elevada', range: '130–139 ou 85–89', matches: (s, d) => s <= 139 && d <= 89, abnormal: false },
   { label: 'Alta', range: '≥ 140 ou ≥ 90', matches: () => true, abnormal: true },
 ];
 

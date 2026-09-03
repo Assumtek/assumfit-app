@@ -123,7 +123,8 @@ export function PressureScreen() {
             }
             zones={[
               { label: 'ótima', xFrom: 100, xTo: 120, yFrom: 60, yTo: 80 },
-              { label: 'elevada', xFrom: 130, xTo: 140, yFrom: 80, yTo: 90, abnormal: true },
+              // Ver `pressureZones`: elevada é aviso, não alerta.
+              { label: 'elevada', xFrom: 130, xTo: 140, yFrom: 80, yTo: 90, abnormal: false },
               { label: 'alta', xFrom: 140, xTo: 150, yFrom: 90, yTo: 100, abnormal: true },
             ]}
             id="bp"

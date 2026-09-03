@@ -125,9 +125,15 @@ describe('pressão arterial', () => {
     expect(ratePressure(85, 55).zone.label).toBe('Baixa');
   });
 
-  it('marca como alerta apenas as zonas anormais', () => {
+  it('alerta é só para BAIXA e ALTA, não para elevada', () => {
+    // Decisão da fundadora (03/09/2026): a faixa elevada é a pré-hipertensão
+    // da diretriz, que não é doença, e o alarme por um valor a um ponto do
+    // normal foi o que fez um testador achar que a tela errava. O rótulo
+    // continua dizendo "Elevada"; o vermelho é que saiu.
     expect(ratePressure(118, 76).state).toBe('normal');
-    expect(ratePressure(135, 85).state).toBe('alert');
+    expect(ratePressure(135, 85).state).toBe('normal');
+    expect(ratePressure(117, 85).state).toBe('normal');
+    expect(ratePressure(150, 95).state).toBe('alert');
     expect(ratePressure(85, 55).state).toBe('alert');
   });
 

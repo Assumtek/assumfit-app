@@ -1712,6 +1712,12 @@
       "nota": "Fui ver os dados do servidor da sua sessão, e o app não está errando aqui, mas o número também não parece ser o seu: entre 23h49 e 23h52 chegaram cerca de 60 leituras por minuto, variando entre 59 e 82. Isso mostra que o modo esporte estava ativo e a pulseira mediu quase uma vez por segundo. O que houve é que ela leu baixo: 63 bpm em spinning pesado é frequência de repouso, e o sensor óptico do pulso é justamente o que mais sofre em bicicleta, porque a mão apertando o guidão cria tensão no punho. Vale um teste na próxima: use a pulseira um dedo acima do osso do pulso e um pouco mais firme. Se continuar baixo com ela bem posicionada, me avise, porque aí é limite do aparelho e precisamos dizer isso na tela em vez de mostrar um número que não é o seu.",
       "versao": "1.0.6 (6)",
       "em": "2026-09-01T21:58:58"
+    },
+    "slack:1788439347.377049": {
+      "commit": "2b8c8e7",
+      "nota": "Fui conferir e a classificação está certa, mas você achou um problema real do lado da tela. A régua é a Diretriz Brasileira de Hipertensão, e por ela a leitura fica sempre na PIOR das duas faixas: seu 117 é ótimo, mas 85 de diastólica cai na faixa elevada, que vai de 130 a 139 OU de 85 a 89. O erro estava na tabela de referência, que dizia '130–139 / 85–89' com barra, como se precisasse dos dois números juntos. Você procurou o seu 117 naquele intervalo, não achou, e concluiu que a tela errou, com razão. Agora as faixas dizem 'ou' onde basta um dos dois e 'e' na faixa ótima, que exige os dois, e a Ajuda explica a regra usando o seu caso como exemplo. Vale lembrar que a pressão da pulseira é estimativa óptica, serve para tendência, e 85 está a um ponto do normal, não é motivo para alarme.",
+      "versao": "1.0.6 (7)",
+      "em": "2026-09-03T09:49:33"
     }
   }
 }
