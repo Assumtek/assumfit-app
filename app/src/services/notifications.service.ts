@@ -1,3 +1,4 @@
+import { File, Paths } from 'expo-file-system';
 import * as Notifications from 'expo-notifications';
 import { avisoDePulseiraAusente } from '../domain/bandErrors';
 
@@ -579,4 +580,48 @@ export async function armarLembreteDePulseira(motivo?: string | null) {
 
 export async function cancelarLembreteDePulseira() {
   await Notifications.cancelScheduledNotificationAsync(PULSEIRA_LONGE).catch(() => undefined);
+}
+
+/**
+ * Já vale gastar um texto novo de bom dia para amanhã?
+ *
+ * O clima se atualiza a cada 15 minutos e rearmava a notificação em cada um
+ * deles, comprando um texto do modelo por refresh: seis por dia por pessoa,
+ * para entregar UMA notificação. Era o segundo maior gasto de IA em produção,
+ * atrás só da frase da home (medido em 03/09/2026).
+ *
+ * A razão de rearmar era legítima e continua valendo: a notificação carrega a
+ * previsão, e "bom dia com 28 graus" tocando numa manhã de 12 seria pior que
+ * não ter. Por isso o critério não é só "já tem um": é `já tem um para ESTE
+ * dia, com previsão parecida`. Três graus é onde a frase muda de sentido, de
+ * "manhã fresca" para "calor desde cedo".
+ *
+ * Falha lendo o arquivo devolve `true`: na dúvida, redigir. Perder o bom dia
+ * por causa de um índice corrompido é pior que uma chamada a mais.
+ */
+const ARQUIVO_BOM_DIA = 'bom-dia-armado.v1.json';
+const GRAUS_QUE_MUDAM_A_FRASE = 3;
+
+export async function valeRedigirOBomDia(temperaturaC: number | null): Promise<boolean> {
+  const alvo = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+  try {
+    const f = new File(Paths.document, ARQUIVO_BOM_DIA);
+    if (!f.exists) return true;
+    const { dia, tempC } = JSON.parse(f.textSync()) as { dia: string; tempC: number | null };
+    if (dia !== alvo) return true;
+    if (temperaturaC == null || tempC == null) return false;
+    return Math.abs(temperaturaC - tempC) >= GRAUS_QUE_MUDAM_A_FRASE;
+  } catch {
+    return true;
+  }
+}
+
+/** Registra o bom dia que acabou de ser armado, para não redigi-lo de novo. */
+export function registrarBomDiaArmado(temperaturaC: number | null): void {
+  const dia = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+  try {
+    new File(Paths.document, ARQUIVO_BOM_DIA).write(JSON.stringify({ dia, tempC: temperaturaC }));
+  } catch {
+    // Sem o registro, o pior caso é redigir de novo no próximo refresh.
+  }
 }

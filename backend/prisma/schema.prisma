@@ -306,6 +306,13 @@ model EnergyScore {
   /// A hora sozinha não serve como chave: dentro da mesma hora a pulseira pode
   /// mandar leitura nova, e aí o score muda e a frase precisa mudar junto.
   inputsHash  String?  @map("inputs_hash") @db.VarChar(64)
+  /// Quando a frase foi REDIGIDA, para não recomprá-la a cada leitura nova.
+  ///
+  /// A pulseira emite a cada poucos segundos, e durante um treino o batimento
+  /// varia legitimamente de 60 a 160: sem este piso, uma corrida de meia hora
+  /// comprava dez textos que ninguém leu, porque quem corre não está olhando a
+  /// home. Ver `INSIGHT_PISO_MS` em `scoring.service.ts`.
+  insightAt   DateTime? @map("insight_at") @db.Timestamptz(3)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

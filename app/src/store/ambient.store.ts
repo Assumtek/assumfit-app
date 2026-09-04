@@ -2,7 +2,11 @@ import { requireOptionalNativeModule } from 'expo-modules-core';
 import { create } from 'zustand';
 
 import { api, fetchMorningForecast, fetchMorningGreeting, isAuthenticated } from '../services/api.service';
-import { scheduleMorningGreeting } from '../services/notifications.service';
+import {
+  registrarBomDiaArmado,
+  scheduleMorningGreeting,
+  valeRedigirOBomDia,
+} from '../services/notifications.service';
 import { useAlertsStore } from './alerts.store';
 import { useBiometricStore } from './biometric.store';
 import { horaHabitualDeAcordar } from '../domain/sleep';
@@ -165,6 +169,20 @@ export const useAmbientStore = create<AmbientState>((set, get) => ({
            Sem rede, a notificação de ontem segue valendo: apagá-la para não
            errar o texto deixaria a manhã em silêncio, que é pior.
           */
+          /*
+           O bom dia é redigido UMA VEZ por manhã, não a cada refresh.
+
+           O clima se atualiza a cada 15 minutos, e rearmar aqui comprava um
+           texto novo do modelo em cada um deles: seis por dia por pessoa, para
+           entregar uma notificação. Em produção foi o segundo maior gasto de
+           IA, atrás só da frase da home.
+
+           A previsão continua fresca onde importa: se ela mudou o bastante
+           para trocar o sentido da frase (três graus), vale outro texto. Foi
+           essa a razão de rearmar, e ela sobrevive; o que sai é o resto.
+          */
+          if (!(await valeRedigirOBomDia(previsao.temperatureC))) return;
+
           const texto = await fetchMorningGreeting({
             temperature: previsao.temperatureC,
             humidity: previsao.humidityPct,
@@ -181,7 +199,10 @@ export const useAmbientStore = create<AmbientState>((set, get) => ({
           // fundadora, 22/08/2026): sem resposta, a manhã fica em silêncio.
           const noites = useBiometricStore.getState().sleepNights;
           const acordar = horaHabitualDeAcordar(noites) ?? 7 * 60 + 30;
-          if (texto.source === 'llm') await scheduleMorningGreeting(texto, acordar);
+          if (texto.source === 'llm') {
+            await scheduleMorningGreeting(texto, acordar);
+            registrarBomDiaArmado(previsao.temperatureC);
+          }
         } catch {
           // sem previsão ou sem servidor, nada é agendado
         }

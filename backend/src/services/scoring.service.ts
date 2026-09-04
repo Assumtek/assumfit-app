@@ -88,6 +88,14 @@ export function startOfLocalDay(offsetMinutes = DEFAULT_TZ_OFFSET_MIN, now = new
 }
 
 /** Início da hora corrente em UTC — a granularidade de `EnergyScore`. */
+/**
+ * Piso entre duas redações da frase da home.
+ *
+ * Metade da granularidade da própria frase, que é por hora. Ver o bloco que o
+ * usa, logo abaixo do cálculo do hash.
+ */
+export const INSIGHT_PISO_MS = 15 * 60 * 1000;
+
 function hourStart(now = new Date()): Date {
   const start = new Date(now);
   start.setUTCMinutes(0, 0, 0);
@@ -232,8 +240,23 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
   const inputsHash = createHash('sha256')
     .update(
       JSON.stringify([
-        reading.hrvMs,
-        reading.heartRate,
+        /*
+         O BATIMENTO e o HRV entram GROSSOS, pelo mesmo motivo da água e dos
+         passos, e essa lição custou caro por ter sido aplicada só a eles.
+
+         A pulseira emite uma leitura a cada poucos segundos, e cada bpm
+         diferente invalidava o cache e comprava um texto novo do modelo. Em
+         72h de produção foram 1007 chamadas para 143 horas-usuário de
+         conteúdo: sete vezes o necessário, num cache que é POR HORA.
+
+         A largura saiu da MEDIÇÃO, não do palpite: sobre 22 mil leituras reais
+         de 72h, balde de 5 corta 48% das chamadas, de 10 corta 63% e de 15
+         corta 70%. Dez é onde a curva ainda paga bem sem apagar diferença que
+         importa, porque dez bpm é da ordem do passo entre faixas de avaliação,
+         e a frase é por HORA: variação dentro da hora é ruído para ela.
+        */
+        reading.hrvMs == null ? null : Math.round(reading.hrvMs / 10),
+        reading.heartRate == null ? null : Math.round(reading.heartRate / 10),
         reading.spo2Pct,
         sleep,
         /*
@@ -247,7 +270,9 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
         */
         water == null ? null : Math.round(water / 250),
         hour,
-        baseline,
+        // A linha de base se move a cada leitura nova que entra na janela, e
+        // um milissegundo dela não muda frase nenhuma.
+        baseline == null ? null : Math.round(baseline / 10),
         lifestyle?.updatedAt ?? null,
         // O dia entra GROSSO no hash: passos em baldes de 500 para o cache não
         // virar uma chamada de modelo por passo dado; o resto muda pouco.
@@ -260,7 +285,7 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
 
   const cached = await prisma.energyScore.findUnique({
     where: { userId_hourStart: { userId, hourStart: hourStart() } },
-    select: { insight: true, inputsHash: true },
+    select: { insight: true, inputsHash: true, insightAt: true },
   });
   // `force` é o botão Atualizar da home: ignora o cache e rediz a frase com o
   // dia relido — é o que faz o toque ter efeito visível.
@@ -273,6 +298,28 @@ export async function energyNow(userId: string, options: EnergyOptions = {}): Pr
   */
   const fonteEmCache = (cached?.insight as { insight?: { source?: string } } | null)?.insight?.source;
   if (!options.force && cached?.inputsHash === inputsHash && cached.insight && fonteEmCache === 'llm') {
+    return cached.insight as unknown as EnergyResponse;
+  }
+
+  /*
+   O PISO: entrada diferente não basta para recomprar o texto.
+
+   Os baldes do hash resolvem o ruído (um bpm a mais), mas não o movimento
+   legítimo: durante um treino o batimento vai de 60 a 160 e cruza balde após
+   balde, e cada travessia comprava um texto que ninguém leu, porque quem está
+   correndo não está olhando a home. Medido em 72h de produção: 11,4 chamadas
+   por hora-usuário, para uma frase que é POR HORA.
+
+   Quinze minutos é metade da granularidade da própria frase, então ela nunca
+   fica velha de um jeito que a pessoa perceba, e o teto de gasto passa a ser
+   previsível: no máximo quatro por hora, e na prática 3,5. Sobre os mesmos
+   dados, isso derruba a conta de US$ 21 para US$ 5 por mês.
+
+   O botão Atualizar da home (`force`) continua furando o piso: quando a
+   pessoa PEDE, ela recebe.
+  */
+  const redigidoHa = cached?.insightAt ? Date.now() - cached.insightAt.getTime() : Infinity;
+  if (!options.force && cached?.insight && fonteEmCache === 'llm' && redigidoHa < INSIGHT_PISO_MS) {
     return cached.insight as unknown as EnergyResponse;
   }
 
@@ -362,6 +409,12 @@ async function persistEnergy(
         calibrating: result.calibrating,
         insight: result as unknown as object,
         inputsHash,
+        /*
+         O carimbo é o da REDAÇÃO, e por isso só avança quando o texto veio do
+         modelo. Marcar a hora ao gravar um molde faria o piso segurar
+         justamente o texto que a gente quer trocar assim que o modelo voltar.
+        */
+        insightAt: result.insight?.source === 'llm' ? new Date() : null,
       },
       update: {
         score: result.score,
@@ -370,6 +423,7 @@ async function persistEnergy(
         calibrating: result.calibrating,
         insight: result as unknown as object,
         inputsHash,
+        ...(result.insight?.source === 'llm' ? { insightAt: new Date() } : {}),
       },
     })
     // Persistir é efeito colateral do cálculo, não a razão dele. Uma falha de
