@@ -1718,6 +1718,48 @@
       "nota": "Fui conferir e a classificação está certa, mas você achou um problema real do lado da tela. A régua é a Diretriz Brasileira de Hipertensão, e por ela a leitura fica sempre na PIOR das duas faixas: seu 117 é ótimo, mas 85 de diastólica cai na faixa elevada, que vai de 130 a 139 OU de 85 a 89. O erro estava na tabela de referência, que dizia '130–139 / 85–89' com barra, como se precisasse dos dois números juntos. Você procurou o seu 117 naquele intervalo, não achou, e concluiu que a tela errou, com razão. Agora as faixas dizem 'ou' onde basta um dos dois e 'e' na faixa ótima, que exige os dois, e a Ajuda explica a regra usando o seu caso como exemplo. Vale lembrar que a pressão da pulseira é estimativa óptica, serve para tendência, e 85 está a um ponto do normal, não é motivo para alarme.",
       "versao": "1.0.6 (7)",
       "em": "2026-09-03T09:49:33"
+    },
+    "AIHg2na-vrCQYgEwiVziinY": {
+      "commit": "a56ecc3",
+      "nota": "Você estava certo, e o servidor confirma: no dia 08 o seu total real foi 5.528 passos, não 19.999. O erro era da tela. O contador da pulseira zera à meia-noite, e a memória entrega fatias que atravessam essa virada; o app usava a queda como sinal de que a série era de passos por hora e então somava tudo, o que dá exatamente a ordem do número que você viu (43 mil na nossa conta). Aquela barra de 78 mil numa hora vinha do mesmo lugar. Corrigido: agora a série é cortada na virada e cada trecho é lido por si.",
+      "versao": "1.0.6 (7)",
+      "em": "2026-09-14T10:55:24"
+    },
+    "AIAO_k3hL_M77kJZ0akFiEc": {
+      "commit": "a56ecc3",
+      "nota": "A pulseira gravou só o trecho das 00h05 às 00h54 e o app apresentou isso como se fosse a sua noite, com score 40 e 'pode melhorar'. Ou seja, avaliou como sono ruim o que foi falha de captura, e não havia como você distinguir as duas coisas olhando a tela. Agora, quando a noite registrada tem menos de três horas, a tela diz que é registro parcial e oferece buscar de novo, porque a pulseira costuma fechar a noite algumas horas depois. Vale checar também se ela está firme no pulso ao dormir: frouxa, o sensor perde o começo do sono.",
+      "versao": "1.0.6 (7)",
+      "em": "2026-09-14T10:55:41"
+    },
+    "AL1kcG4Di_CFBESVNnVhCaE": {
+      "commit": "a56ecc3",
+      "nota": "Você apontou o ponto certo: a tela não dizia se a pulseira está calibrada, só como terminou a última tentativa, e por isso não havia como saber se valia repetir. Duas mudanças: o motivo que o aparelho devolve quando falha agora aparece na tela, em vez de ser trocado por uma frase genérica, e a data da última calibração bem-sucedida fica guardada, então a linha passa a dizer 'calibrada hoje' ou 'há 3 dias'. Se depois disso ela continuar sem concluir com a pulseira firme e você parado, me mande a mensagem que aparecer: aí é o firmware recusando por um motivo específico, e com o texto dá para saber qual.",
+      "versao": "1.0.6 (7)",
+      "em": "2026-09-14T10:56:29"
+    },
+    "AFHa9y8SWxFbhL60nw9v-Ts": {
+      "commit": "a56ecc3",
+      "nota": "Aquele gráfico mostra uma barra por hora, ficando com a última medição de cada, então medir três vezes seguidas dá uma barra só. Fui ver seus dados e há um agravante: a pulseira reemite o último valor a cada evento, e o mesmo 34 apareceu 267 vezes ao longo de seis horas, o que faz o gráfico parecer ainda mais vazio do que o seu uso foi. Agora a tela tem uma lista 'Medições de hoje', com a hora e o valor de cada medição de verdade, separadas das repetições do firmware. O gráfico continua ali para ler o dia de relance.",
+      "versao": "1.0.6 (7)",
+      "em": "2026-09-14T10:57:28"
+    },
+    "ADorKcuTZzdM5Trk-mW7sEc": {
+      "commit": "a56ecc3",
+      "nota": "Feito. 'Nova refeição' agora oferece três caminhos: fotografar, escolher da galeria ou buscar o alimento direto na tabela, sem foto nenhuma. Você escolhe o alimento, informa os gramas, e o registro abre já com ele dentro, onde dá para acrescentar o resto do prato pelo mesmo caminho de sempre. A busca é a mesma tabela oficial (TACO) que já era usada, então a caloria sai do mesmo lugar.",
+      "versao": "1.0.6 (7)",
+      "em": "2026-09-14T10:57:39"
+    },
+    "slack:1788440625.332439": {
+      "commit": "a56ecc3",
+      "nota": "Salve! Tudo tratado por aqui.",
+      "versao": "1.0.6 (7)",
+      "em": "2026-09-14T10:57:55"
+    },
+    "slack:1788439599.278819": {
+      "commit": "a56ecc3",
+      "nota": "Recebida, obrigada.",
+      "versao": "1.0.6 (7)",
+      "em": "2026-09-14T10:58:22"
     }
   }
 }
