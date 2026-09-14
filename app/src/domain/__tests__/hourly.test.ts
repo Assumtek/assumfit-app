@@ -276,3 +276,37 @@ describe('caloriaSaneada', () => {
     expect(f[8].kcal).toBe(13);
   });
 });
+
+describe('a virada da meia-noite na série da memória', () => {
+  /*
+   O caso real: o contador do aparelho zera à meia-noite local, e a memória
+   devolve fatias que atravessam essa virada. A queda quebrava o teste de "não
+   decrescente", a série acumulada era lida como delta e SOMADA: 19.999 passos
+   na tela de quem tinha dado 5.528, com uma barra de 78 mil numa hora
+   (Henrique, 08/09/2026).
+  */
+  const am = (v: number[]) => v.map((steps, i) => ({ at: new Date(2026, 8, 8, i).getTime(), steps }));
+  const comReset = [4148, 4195, 4240, 26, 208, 777, 1464, 1669, 1972, 1989, 2738, 3028, 3478, 3651, 4114, 5528];
+  const semReset = [208, 777, 1464, 1669, 1972, 1989, 2738, 3028, 3478, 3651, 4114, 5528];
+
+  it('reconhece acumulado mesmo com o contador zerando no meio', () => {
+    expect(modoDaSerie(am(semReset))).toBe('acumulado');
+    expect(modoDaSerie(am(comReset))).toBe('acumulado');
+  });
+
+  it('o total para de inflar', () => {
+    const total = totalDoDia(comFatiasDaMemoria(fatiasVazias(), comoDeltas(am(comReset)))).passos;
+    // 5528 do dia mais os 4240 que vieram do fim do dia anterior, e não 43.225.
+    expect(total).toBeLessThan(10_000);
+    expect(total).toBeGreaterThan(5_000);
+  });
+
+  it('queda SUAVE continua sendo delta: é gente andando e parando', () => {
+    expect(modoDaSerie(am([300, 450, 380, 520, 410]))).toBe('delta');
+  });
+
+  it('no reset, a fatia vale ela mesma em vez de virar zero', () => {
+    const deltas = comoDeltas(am([1000, 1500, 40, 300]));
+    expect(deltas.map((d) => d.steps)).toEqual([1000, 500, 40, 260]);
+  });
+});

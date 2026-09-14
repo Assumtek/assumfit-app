@@ -82,6 +82,23 @@ function Root() {
       void buscarNoiteSeVencida().catch(() => undefined);
 
       /*
+       A memória da pulseira entra SOZINHA ao abrir o app.
+
+       Pedido da fundadora (14/09/2026): "sempre que abrir o app já sincronizar
+       com a pulseira, sem necessariamente precisar apertar o botão". Antes
+       isso só acontecia ao entrar na tela de Saúde, e quem abria na home, via
+       o número velho e saía nunca disparava a leitura: o botão existia, mas
+       pedir ao app que busque o que ele já sabe buscar é trabalho nosso, não
+       da pessoa.
+
+       Sem `force`: o intervalo mínimo de dois minutos continua valendo, então
+       alternar entre apps não vira uma varredura atrás da outra no canal
+       serial da pulseira, que não aceita leitura simultânea.
+      */
+      const { connection: estadoDaPulseira, syncHistory } = useBiometricStore.getState();
+      if (estadoDaPulseira === 'connected') void syncHistory().catch(() => undefined);
+
+      /*
        O clima é o único dado do app preso à POSIÇÃO, e a sessão pode durar
        dias: buscado só na montagem da home, ele mostra a cidade de onde a
        pessoa saiu. A própria loja corta por idade — foco rápido não refaz

@@ -241,3 +241,31 @@ export function porHoraCronologico(amostras: Ponto[], limite = 12): BarraDeHora[
     .slice(-limite)
     .map((p) => ({ hour: `${p.hora}h`, value: p.value }));
 }
+
+
+/**
+ * As MEDIÇÕES de fato, separadas das repetições.
+ *
+ * A pulseira reemite o último valor conhecido a cada evento do fluxo contínuo,
+ * então o histórico de estresse tem centenas de entradas idênticas entre duas
+ * medições de verdade: em produção, o mesmo 34 apareceu 267 vezes ao longo de
+ * seis horas. O gráfico por hora esconde isso, e com ele some a resposta à
+ * pergunta que o testador fez: "sempre vejo somente a última que foi feita e
+ * não consigo ver as outras" (Henrique, 06/09/2026).
+ *
+ * Uma medição é onde o VALOR muda. Não é heurística: valor idêntico reemitido
+ * é a mesma medição sendo repetida pelo firmware, e valor novo só aparece
+ * quando o sensor mediu de novo.
+ *
+ * A primeira amostra conta como medição, porque antes dela não havia nada.
+ */
+export function medicoesDistintas(serie: Ponto[], limite = 12): Ponto[] {
+  const ordenada = [...serie].sort((a, b) => a.at - b.at);
+  const medicoes: Ponto[] = [];
+  for (const p of ordenada) {
+    if (!Number.isFinite(p.value) || !Number.isFinite(p.at) || p.at <= 0) continue;
+    const anterior = medicoes[medicoes.length - 1];
+    if (!anterior || anterior.value !== p.value) medicoes.push(p);
+  }
+  return medicoes.slice(-limite);
+}

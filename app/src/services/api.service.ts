@@ -1183,6 +1183,20 @@ export async function analyzeMeal(input: {
   return data;
 }
 
+/**
+ * Refeição registrada À MÃO, sem foto (Henrique, 08/09/2026).
+ *
+ * A busca na TACO já existia dentro de um registro criado pela foto; isto é o
+ * caminho para quem comeu sem fotografar.
+ */
+export async function criarRefeicaoManual(input: {
+  foods: MealFood[];
+  at?: string;
+}): Promise<MealRecord> {
+  const { data } = await api.post<{ record: MealRecord }>('/nutrition/meal/manual', input);
+  return data.record;
+}
+
 export async function fetchMeals(days = 7): Promise<MealRecord[]> {
   const { data } = await api.get<MealRecord[]>('/nutrition/meals', { params: { days } });
   return data;

@@ -3,7 +3,7 @@ import { useChartWidth } from '../components/charts/useChartWidth';
 import React, { useState } from 'react';
 
 import { EmptyMetric } from '../components/BandStatus';
-import { Section } from '../components/List';
+import { Section, Row } from '../components/List';
 import { DetailScreen } from '../components/DetailScreen';
 import { LinkParaAjuda } from '../components/LinkParaAjuda';
 import { MeasuredAt } from '../components/MeasuredAt';
@@ -13,6 +13,8 @@ import { MeasureButton } from '../components/MeasureButton';
 import { BarChart } from '../components/charts/BarChart';
 import { Body, Data, Display, RatingText } from '../components/ui';
 import { rateStress, shown, stateColor } from '../domain/ratings';
+import { medicoesDistintas } from '../domain/series';
+import { horaLocal } from '../domain/sleep';
 import { useBiometricStore } from '../store/biometric.store';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -22,6 +24,8 @@ export function StressScreen() {
   const byHour = useBiometricStore((s) => s.stressByHour);
   const stressHistory = useBiometricStore((s) => s.stressHistory);
   const historico = useHistoricoDoDia((p) => p.stress_score, stressHistory);
+  /* Só o que é medição de verdade: o firmware reemite o último valor sem parar. */
+  const medicoes = React.useMemo(() => medicoesDistintas(stressHistory), [stressHistory]);
   const [chartWidth, onLayoutChartWidth] = useChartWidth();
   if (!latest)
     return (
@@ -97,6 +101,35 @@ export function StressScreen() {
         <LinkParaAjuda />
       </Section>
       )}
+
+      {/*
+        As MEDIÇÕES, uma a uma.
+
+        O gráfico agrega por hora e fica com a última de cada, e quem mede três
+        vezes seguidas vê uma barra só: "sempre vejo somente a última que foi
+        feita e não consigo ver as outras" (Henrique, 06/09/2026). A lista
+        responde a isso sem desfazer o gráfico, que continua servindo para ler
+        o dia inteiro de relance.
+
+        Repetição do firmware não entra: a pulseira reemite o último valor a
+        cada evento do fluxo contínuo, e listar isso encheria a tela com a
+        mesma medição centenas de vezes.
+      */}
+      {historico.ehHoje && medicoes.length > 1 ? (
+        <Section label="Medições de hoje">
+          {medicoes.map((m, i) => (
+            <Row key={m.at} last={i === medicoes.length - 1}>
+              <Body flex={1}>{horaLocal(m.at)}</Body>
+              <Body color="$foreground" fontWeight="600" fontVariant={['tabular-nums']}>
+                {Math.round(m.value)}
+              </Body>
+              <Body color="$mutedForeground" marginLeft="$sm">
+                {rateStress(m.value).label.toLowerCase()}
+              </Body>
+            </Row>
+          ))}
+        </Section>
+      ) : null}
 
       <MeasureButton kind="stress" />
     </DetailScreen>

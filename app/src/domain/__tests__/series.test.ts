@@ -1,5 +1,4 @@
-import {
-  comAmostraDeHrv,
+import { comAmostraDeHrv,
   medidoEm,
   ultimoInstante,
   faixaInicial,
@@ -8,7 +7,7 @@ import {
   rotulosDoPeriodo,
   type Ponto,
   batimentoAoVivo,
-  batimentoMedidoEm, mesclarSeries } from '../series';
+  batimentoMedidoEm, mesclarSeries, medicoesDistintas } from '../series';
 
 const AGORA = new Date('2026-08-17T12:00:00Z').getTime();
 const H = 3600_000;
@@ -268,5 +267,35 @@ describe('mesclarSeries', () => {
   it('respeita o teto', () => {
     const memoria = Array.from({ length: 100 }, (_, i) => p(i, 60));
     expect(mesclarSeries(memoria, [p(200, 90)], 90)).toHaveLength(90);
+  });
+});
+
+describe('medições distintas, separadas das repetições do firmware', () => {
+  /*
+   A pulseira reemite o último valor conhecido a cada evento do fluxo contínuo:
+   em produção, o mesmo 34 apareceu 267 vezes ao longo de seis horas. Listar
+   isso encheria a tela com a mesma medição, e foi o que fez o gráfico por hora
+   esconder as medições que o testador tinha feito (Henrique, 06/09/2026).
+  */
+  const p = (at: number, value: number) => ({ at, value });
+
+  it('valor repetido pelo firmware não vira medição nova', () => {
+    const serie = [p(1000, 34), p(2000, 34), p(3000, 34), p(4000, 40), p(5000, 40)];
+    expect(medicoesDistintas(serie).map((m) => m.value)).toEqual([34, 40]);
+  });
+
+  it('a primeira amostra conta, porque antes dela não havia nada', () => {
+    expect(medicoesDistintas([p(1000, 34)]).map((m) => m.value)).toEqual([34]);
+  });
+
+  it('valor que volta ao anterior é medição nova, não repetição', () => {
+    // 34 → 40 → 34 são três medições: a terceira mediu de novo e deu 34.
+    const serie = [p(1000, 34), p(2000, 40), p(3000, 34)];
+    expect(medicoesDistintas(serie)).toHaveLength(3);
+  });
+
+  it('ordena por instante antes de comparar', () => {
+    const serie = [p(3000, 40), p(1000, 34), p(2000, 34)];
+    expect(medicoesDistintas(serie).map((m) => m.at)).toEqual([1000, 3000]);
   });
 });

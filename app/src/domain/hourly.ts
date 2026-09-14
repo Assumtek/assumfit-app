@@ -244,14 +244,58 @@ export function rotulosDoAcumulado(horaAtual: number, quantos = 4): string[] {
  */
 export type ModoDaSerie = 'delta' | 'acumulado';
 
+/**
+ * Queda para um valor MUITO menor é o contador zerando, não passo negativo.
+ *
+ * O aparelho reinicia a contagem à meia-noite local, e a memória devolve
+ * fatias que atravessam essa virada. Um quarto do valor anterior é folga
+ * larga: ninguém acumula passos e de repente aparece com um quarto deles, e
+ * deltas reais de pessoa andando não despencam assim de uma fatia para a
+ * seguinte sem antes terem subido do zero.
+ */
+function ehReset(anterior: number, agora: number): boolean {
+  return agora < anterior * 0.25;
+}
+
 export function modoDaSerie(amostras: { steps: number }[]): ModoDaSerie {
   const passos = amostras.map((a) => a.steps).filter((v) => Number.isFinite(v));
   if (passos.length < 2) return 'delta';
-  const naoDecrescente = passos.every((v, i) => i === 0 || v >= passos[i - 1]);
-  if (!naoDecrescente) return 'delta';
+
+  /*
+   A série acumulada é não decrescente POR TRECHO, não do começo ao fim.
+
+   O teste anterior era do começo ao fim, e a virada da meia-noite o quebrava:
+   a série do dia voltava a zero no meio, deixava de ser não decrescente, era
+   classificada como delta e então SOMADA. Foi o que pôs 19.999 passos na tela
+   de quem tinha dado 5.528 (Henrique, 08/09/2026), com uma barra de 78 mil
+   numa hora só.
+
+   Agora a série é cortada nos resets e cada trecho é julgado por si. Queda
+   SUAVE continua significando delta na hora: é gente andando e parando.
+  */
+  const trechos: number[][] = [];
+  let trecho: number[] = [passos[0]];
+  for (let i = 1; i < passos.length; i += 1) {
+    const anterior = passos[i - 1];
+    const agora = passos[i];
+    if (agora < anterior) {
+      if (!ehReset(anterior, agora)) return 'delta';
+      trechos.push(trecho);
+      trecho = [agora];
+      continue;
+    }
+    trecho.push(agora);
+  }
+  trechos.push(trecho);
+
+  /*
+   Com resets, o acumulado do dia é a soma do ÚLTIMO valor de cada trecho, não
+   do último valor da série: cada trecho é um dia (ou um pedaço dele) que
+   começou do zero de novo.
+  */
   const soma = passos.reduce((s, v) => s + v, 0);
-  const ultimo = passos[passos.length - 1];
-  return soma > ultimo * 1.25 ? 'acumulado' : 'delta';
+  const totalDosTrechos = trechos.reduce((s, t) => s + t[t.length - 1], 0);
+  return soma > totalDosTrechos * 1.25 ? 'acumulado' : 'delta';
 }
 
 /**
@@ -266,8 +310,16 @@ export function comoDeltas<T extends { steps: number; kcal?: number }>(amostras:
   let anteriorPassos = 0;
   let anteriorKcal = 0;
   return amostras.map((a) => {
-    const passos = Math.max(0, a.steps - anteriorPassos);
-    const kcal = Math.max(0, (a.kcal ?? 0) - anteriorKcal);
+    /*
+     No RESET, a fatia vale ela mesma: o contador zerou e aquele número é o que
+     foi andado desde então. Subtrair o anterior daria zero e jogaria fora os
+     passos do começo do dia, que é erro pequeno mas é erro.
+    */
+    const zerou = ehReset(anteriorPassos, a.steps);
+    const passos = zerou ? Math.max(0, a.steps) : Math.max(0, a.steps - anteriorPassos);
+    const kcal = zerou
+      ? Math.max(0, a.kcal ?? 0)
+      : Math.max(0, (a.kcal ?? 0) - anteriorKcal);
     anteriorPassos = a.steps;
     anteriorKcal = a.kcal ?? anteriorKcal;
     return { ...a, steps: passos, kcal };

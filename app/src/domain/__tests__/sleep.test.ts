@@ -1,5 +1,5 @@
-import { dataDaNoite, deepSleepContinuity, ehNoite, horaHabitualDeAcordar, melhorCandidataDeNoite, montarNoites, nightFrom, sleepScore, spo2DaNoite } from '../sleep';
-import type { SleepSegment } from '../types';
+import { dataDaNoite, deepSleepContinuity, ehNoite, horaHabitualDeAcordar, melhorCandidataDeNoite, montarNoites, nightFrom, sleepScore, spo2DaNoite, registroParcial } from '../sleep';
+import type { SleepNight, SleepSegment } from '../types';
 
 /**
  * O score de sono passou a existir porque o HealthKit entrega estágios e não
@@ -254,5 +254,35 @@ describe('qual bloco é a noite', () => {
 
   it('sem bloco nenhum não inventa noite', () => {
     expect(melhorCandidataDeNoite([])).toBeNull();
+  });
+});
+
+describe('registro parcial de noite', () => {
+  const noite = (totalMin: number): SleepNight => ({
+    date: '2026-09-03',
+    score: 40,
+    totalMin,
+    deepContinuity: null,
+    phases: { deep: 14, light: 35, rem: 0, awake: 0 },
+    segments: [],
+    spo2Night: [],
+  });
+
+  it('49 minutos é pedaço de noite, não noite ruim', () => {
+    // O caso: 00h05 às 00h54, numa noite em que a pessoa dormiu das 23h30 às
+    // 6h40 (Henrique, 03/09/2026). A tela mostrava score 40 e "pode melhorar".
+    expect(registroParcial(noite(49))).toBe(true);
+  });
+
+  it('noite curta de verdade, mas plausível, não é marcada', () => {
+    expect(registroParcial(noite(200))).toBe(false);
+    expect(registroParcial(noite(430))).toBe(false);
+  });
+
+  it('noite sem nenhum minuto não é registro parcial, é ausência', () => {
+    // Zero tem tratamento próprio na tela (estado vazio), e marcar as duas
+    // coisas igual faria o aviso de parcial aparecer onde não há o que buscar.
+    expect(registroParcial(noite(0))).toBe(false);
+    expect(registroParcial(null)).toBe(false);
   });
 });

@@ -138,6 +138,49 @@ const foodSchema = z.object({
  * serviço de IA, sem chamada de modelo — nome e gramas novos passam de novo
  * pela tabela, e item sem casamento fica com o que o cliente mandou.
  */
+/**
+ * Refeição registrada À MÃO, sem foto.
+ *
+ * Pedido de testador (Henrique, 08/09/2026): "poderia ter uma opção de
+ * adicionar o alimento sem depender da foto". A busca na TACO já existia, mas
+ * só DENTRO de um registro que a foto tinha criado, então quem comeu sem
+ * fotografar não tinha por onde começar. Refeição repetida, prato já conhecido
+ * e jantar fora sem graça para fotografar são todos o mesmo caso.
+ *
+ * Passa pelo mesmo `recompute` da edição: quem soma gramas e devolve calorias
+ * é a tabela oficial, aqui e ali, e duas contas para o mesmo número acabam
+ * divergindo. Sem `imageKey`, e sem chamada ao modelo: não há foto para
+ * analisar, e é justamente esse o ponto.
+ */
+nutritionRoutes.post(
+  '/meal/manual',
+  asyncRoute<AuthedRequest>(async (req, res) => {
+    const body = z
+      .object({
+        foods: z.array(foodSchema).min(1).max(30),
+        /** Quando a pessoa comeu, se não foi agora: almoço lançado à noite. */
+        at: z.coerce.date().optional(),
+      })
+      .parse(req.body);
+
+    const { data } = await client.post('/nutrition/recompute', { foods: body.foods });
+    const record = await prisma.mealRecord.create({
+      data: {
+        userId: req.userId,
+        foods: data.foods,
+        kcalMin: data.kcal_total_min,
+        kcalMax: data.kcal_total_max,
+        // Registro à mão não tem incerteza de visão: os alimentos são os que a
+        // pessoa escolheu, na quantidade que ela informou.
+        confidence: 1,
+        notes: null,
+        ...(body.at ? { at: body.at } : {}),
+      },
+    });
+    res.status(201).json({ record });
+  }),
+);
+
 nutritionRoutes.patch(
   '/meal/:id',
   asyncRoute<AuthedRequest>(async (req, res) => {

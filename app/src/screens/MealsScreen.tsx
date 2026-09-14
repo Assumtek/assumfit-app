@@ -17,6 +17,7 @@ import { ageFromBirthDate, calorieGoal, toMeasure, type CalorieGoal } from '../d
 import { mensagemDaFalha } from '../domain/apiErrors';
 import * as api from '../services/api.service';
 import { escolherFoto, subirImagem } from '../services/foto';
+import { SeletorDeAlimento, type AlimentoEscolhido } from '../components/SeletorDeAlimento';
 import { MealReminder } from '../components/MealReminder';
 import { useWorkoutStore } from '../store/workout.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -50,6 +51,9 @@ export function MealsScreen() {
   const [detalhe, setDetalhe] = useState<api.MealRecord | null>(null);
   /** Foto escolhida, aguardando confirmação — o preview + descrição do MUVX. */
   const [fotoPendente, setFotoPendente] = useState<{ uri: string; base64: string } | null>(null);
+  /** Registro À MÃO, sem foto: a busca na TACO abre direto (Henrique, 08/09/2026). */
+  const [registrandoAMao, setRegistrandoAMao] = useState(false);
+  const [salvandoAMao, setSalvandoAMao] = useState(false);
   /**
    * As URLs assinadas das fotos, por chave do S3.
    *
@@ -62,18 +66,17 @@ export function MealsScreen() {
     Record<number, { base: number; baseKcalMin: number; baseKcalMax: number; mult: number }>
   >({});
   /** O "adicionar alimento" em dois passos: busca na TACO → porção. */
-  const [adicionando, setAdicionando] = useState<{
-    q: string;
-    resultados: api.TacoFood[];
-    escolhido: api.TacoFood | null;
-    gramas: string;
-  } | null>(null);
-  const buscaTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  /*
+   Só o INTERRUPTOR do painel: a busca, o alimento escolhido e os gramas moram
+   no `SeletorDeAlimento`, que é o mesmo componente do registro sem foto. Eram
+   quatro campos aqui, e o formulário inteiro repetido na tela.
+  */
+  const [adicionando, setAdicionando] = useState(false);
 
   // Porções e painéis são POR registro: trocar de refeição zera os dois.
   useEffect(() => {
     setPassos({});
-    setAdicionando(null);
+    setAdicionando(false);
   }, [detalhe?.id]);
   /** O que a pessoa diz que tem no prato — entra na análise com precedência. */
   const [descricao, setDescricao] = useState('');
@@ -177,13 +180,68 @@ export function MealsScreen() {
   const fotoDaRefeicao = (meal: api.MealRecord): string | null =>
     fotoLocalDe(meal.id) ?? (meal.imageKey ? urlsDeFoto[meal.imageKey] ?? null : null);
 
+  /*
+   Sem foto também é caminho.
+
+   "Poderia ter uma opção de adicionar o alimento sem depender da foto"
+   (Henrique, 08/09/2026). A busca na TACO já existia DENTRO de um registro que
+   a foto tinha criado, então quem comeu sem fotografar não tinha por onde
+   começar: prato repetido, comida já conhecida, jantar sem graça de
+   fotografar. A foto continua sendo o caminho rápido; deixa de ser o único.
+  */
   const novaRefeicao = () => {
     setAviso(null);
-    Alert.alert('Nova refeição', 'De onde vem a foto?', [
-      { text: 'Câmera', onPress: () => void escolher(true) },
-      { text: 'Galeria', onPress: () => void escolher(false) },
+    Alert.alert('Nova refeição', 'Como você quer registrar?', [
+      { text: 'Fotografar', onPress: () => void escolher(true) },
+      { text: 'Escolher da galeria', onPress: () => void escolher(false) },
+      { text: 'Buscar o alimento', onPress: () => setRegistrandoAMao(true) },
       { text: 'Cancelar', style: 'cancel' },
     ]);
+  };
+
+  /**
+   * Cria a refeição a partir de UM alimento escolhido na tabela.
+   *
+   * Um só de propósito: o registro nasce e abre no detalhe, onde a pessoa
+   * acrescenta os outros pelo caminho que já existe. Montar a refeição inteira
+   * antes de salvar exigiria um segundo editor, com as mesmas regras, para
+   * fazer o que a tela de detalhe já faz.
+   */
+  const registrarAMao = async (escolha: AlimentoEscolhido) => {
+    setAviso(null);
+    setSalvandoAMao(true);
+    try {
+      const record = await api.criarRefeicaoManual({
+        foods: [
+          {
+            name: escolha.food.description,
+            // A porção em texto é o que a tela mostra ao lado do nome; aqui ela
+            // é exata, porque a pessoa digitou os gramas em vez de o modelo
+            // estimar olhando a foto.
+            portion: `${escolha.gramas} g`,
+            grams: escolha.gramas,
+            // Zero porque quem calcula é o `recompute` do servidor, pela TACO,
+            // sobre os gramas: mandar conta do aparelho criaria um segundo
+            // lugar onde a caloria nasce.
+            kcal_min: 0,
+            kcal_max: 0,
+            protein_g: null,
+            carbs_g: null,
+            fat_g: null,
+            uncertain: false,
+            matched: escolha.food.description,
+          },
+        ],
+      });
+      setMeals((atual) => [record, ...(atual ?? [])]);
+      setRegistrandoAMao(false);
+      // Abre o detalhe: é lá que se acrescenta o resto do prato.
+      setDetalhe(record);
+    } catch (err) {
+      setAviso(mensagemDaFalha(err, 'O registro'));
+    } finally {
+      setSalvandoAMao(false);
+    }
   };
 
   /** Passo 2 — confirmada a foto (e a descrição), analisar. */
@@ -356,35 +414,32 @@ export function MealsScreen() {
   };
 
   /** Busca na TACO com um respiro de 300 ms — autocompletar, não metralhadora. */
-  const buscarTaco = (texto: string) => {
-    setAdicionando((a) => (a ? { ...a, q: texto } : a));
-    if (buscaTimer.current) clearTimeout(buscaTimer.current);
-    if (texto.trim().length < 2) {
-      setAdicionando((a) => (a ? { ...a, resultados: [] } : a));
-      return;
-    }
-    buscaTimer.current = setTimeout(() => {
-      void api
-        .searchFoods(texto.trim())
-        .then((foods) => setAdicionando((a) => (a && a.q === texto ? { ...a, resultados: foods } : a)))
-        .catch(() => {});
-    }, 300);
-  };
 
   /** O alimento escolhido entra com o NOME OFICIAL da tabela — casamento certo. */
-  const adicionarDaTaco = async () => {
-    if (!detalhe || !adicionando?.escolhido) return;
-    const g = Number(adicionando.gramas.replace(',', '.'));
+  const adicionarDaTaco = async (escolha: AlimentoEscolhido) => {
+    if (!detalhe) return;
+    const g = escolha.gramas;
     if (!Number.isFinite(g) || g <= 0) return;
     const foods = [
       ...(detalhe.foods as api.MealFood[]),
-      { name: adicionando.escolhido.description, grams: g, kcal_min: 0, kcal_max: 0, uncertain: false },
+      {
+        name: escolha.food.description,
+        portion: `${g} g`,
+        grams: g,
+        kcal_min: 0,
+        kcal_max: 0,
+        protein_g: null,
+        carbs_g: null,
+        fat_g: null,
+        uncertain: false,
+        matched: escolha.food.description,
+      },
     ];
     setAvisoDetalhe(null);
     setSalvandoEdicao(true);
     try {
       aplicarRegistro(await api.updateMealFoods(detalhe.id, foods));
-      setAdicionando(null);
+      setAdicionando(false);
     } catch (err) {
       setAvisoDetalhe(mensagemDaFalha(err, 'A inclusão'));
     } finally {
@@ -579,90 +634,13 @@ export function MealsScreen() {
         </Section>
 
         {adicionando ? (
-          <YStack
-            marginTop="$md"
-            padding="$md"
-            gap="$sm"
-            borderWidth={1}
-            borderColor="$borderStrong"
-            borderRadius={12}
-          >
-            {!adicionando.escolhido ? (
-              <>
-                <Label>Adicionar alimento</Label>
-                <TextInput
-                  value={adicionando.q}
-                  onChangeText={buscarTaco}
-                  placeholder="Busque na tabela (ex.: frango)"
-                  placeholderTextColor={colors.textFaint}
-                  selectionColor={colors.accent}
-                  autoFocus
-                  style={{ fontSize: 16, color: colors.text, paddingVertical: 8 }}
-                />
-                {adicionando.resultados.map((f) => (
-                  <Pressable
-                    key={f.description}
-                    onPress={() =>
-                      setAdicionando((a) => (a ? { ...a, escolhido: f, gramas: '' } : a))
-                    }
-                    accessibilityRole="button"
-                    style={({ pressed }) => [
-                      { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
-                      pressed && { opacity: 0.6 },
-                    ]}
-                  >
-                    <Body color="$foreground" flex={1} numberOfLines={1}>
-                      {f.description}
-                    </Body>
-                    <Data flexShrink={0}>{f.kcal_per_100g} kcal/100g</Data>
-                  </Pressable>
-                ))}
-                {adicionando.q.trim().length >= 2 && adicionando.resultados.length === 0 ? (
-                  <Data color="$mutedForeground">nada na tabela com esse nome</Data>
-                ) : null}
-                <Button title="Cancelar" variant="ghost" onPress={() => setAdicionando(null)} />
-              </>
-            ) : (
-              <>
-                <Label>Definir a porção</Label>
-                <Body color="$foreground">{adicionando.escolhido.description}</Body>
-                <Data color="$mutedForeground">
-                  {adicionando.escolhido.kcal_per_100g} kcal por 100 g (tabela TACO)
-                </Data>
-                <TextInput
-                  value={adicionando.gramas}
-                  onChangeText={(t) => setAdicionando((a) => (a ? { ...a, gramas: t } : a))}
-                  placeholder="Quantidade (gramas)"
-                  placeholderTextColor={colors.textFaint}
-                  selectionColor={colors.accent}
-                  keyboardType="number-pad"
-                  autoFocus
-                  style={{ fontSize: 16, color: colors.text, paddingVertical: 8 }}
-                />
-                <XStack gap="$md" marginTop="$xs">
-                  <YStack flex={1}>
-                    <Button
-                      title={salvandoEdicao ? 'Adicionando…' : 'Adicionar'}
-                      onPress={() => void adicionarDaTaco()}
-                      disabled={
-                        salvandoEdicao ||
-                        !(Number(adicionando.gramas.replace(',', '.')) > 0)
-                      }
-                    />
-                  </YStack>
-                  <YStack flex={1}>
-                    <Button
-                      title="Trocar alimento"
-                      variant="ghost"
-                      onPress={() =>
-                        setAdicionando((a) => (a ? { ...a, escolhido: null, gramas: '' } : a))
-                      }
-                    />
-                  </YStack>
-                </XStack>
-              </>
-            )}
-          </YStack>
+          <SeletorDeAlimento
+            titulo="Adicionar alimento"
+            rotuloDaAcao={salvandoEdicao ? 'Adicionando' : 'Adicionar'}
+            ocupado={salvandoEdicao}
+            onEscolher={(e) => void adicionarDaTaco(e)}
+            onCancelar={() => setAdicionando(false)}
+          />
         ) : !editando ? (
           <YStack alignSelf="flex-start" marginTop="$md">
             <Button
@@ -671,7 +649,7 @@ export function MealsScreen() {
               onPress={() => {
                 setAvisoDetalhe(null);
                 setEditando(null);
-                setAdicionando({ q: '', resultados: [], escolhido: null, gramas: '' });
+                setAdicionando(true);
               }}
             />
           </YStack>
@@ -783,6 +761,20 @@ export function MealsScreen() {
     <DetailScreen title="Refeições" refreshControl={refresh}>
       {/* A ação principal vem antes do resumo: registrar é o gesto repetido
           do dia; o resumo é consequência. À direita, a pedido — polegar. */}
+      {/*
+        A busca da TACO aberta direto, para quem escolheu registrar sem foto.
+        Fica ACIMA do resumo porque é o que a pessoa acabou de pedir.
+      */}
+      {registrandoAMao ? (
+        <SeletorDeAlimento
+          titulo="Registrar sem foto"
+          rotuloDaAcao="Registrar"
+          ocupado={salvandoAMao}
+          onEscolher={(e) => void registrarAMao(e)}
+          onCancelar={() => setRegistrandoAMao(false)}
+        />
+      ) : null}
+
       <YStack alignSelf="flex-end" marginTop="$md" marginBottom="$lg">
         <Button title="Nova refeição" onPress={novaRefeicao} />
       </YStack>

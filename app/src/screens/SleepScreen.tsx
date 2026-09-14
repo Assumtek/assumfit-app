@@ -11,6 +11,7 @@ import { SleepPlanner } from '../components/SleepPlanner';
 import { DetailScreen, usePullRefresh } from '../components/DetailScreen';
 import { formatDateBR } from '../domain/birthDate';
 import { noiteSustentaODia } from '../domain/bodyBattery';
+import { registroParcial } from '../domain/sleep';
 import { isoHoje } from '../domain/water';
 import { Body, Data, Display, MetricSm, RatingText } from '../components/ui';
 import { useBiometricStore } from '../store/biometric.store';
@@ -74,6 +75,11 @@ export function SleepScreen() {
    tela diz que a noite não é de hoje e oferece a busca.
   */
   const desatualizada = !noiteSustentaODia(sleep, isoHoje());
+  /*
+   Noite curta demais para ser noite: o aparelho pegou um pedaço, e mostrar
+   score sobre o pedaço avalia como sono ruim o que foi falha de captura.
+  */
+  const parcial = registroParcial(sleep);
 
   return (
     <DetailScreen title="Sono" refreshControl={puxar}>
@@ -82,6 +88,21 @@ export function SleepScreen() {
           <Note
             title="Esta não é a noite de hoje"
             body="É a última que a pulseira entregou. Se você dormiu com ela desde então, busque de novo: o aparelho leva algumas horas para fechar o registro de uma noite."
+          />
+          <SyncSleepButton />
+        </>
+      ) : null}
+
+      {/*
+        O registro parcial vem ANTES do detalhe, porque muda como se lê tudo o
+        que vem depois: sem este aviso, o score de uma noite de 49 minutos se
+        apresenta como avaliação do sono da pessoa (Henrique, 03/09/2026).
+      */}
+      {parcial && !desatualizada ? (
+        <>
+          <Note
+            title="Registro parcial desta noite"
+            body="A pulseira gravou menos de três horas, o que costuma ser pedaço de noite e não noite curta: ela pode ter saído do pulso, ficado sem bateria ou perdido o começo do sono. Buscar de novo costuma trazer a noite inteira, porque o aparelho fecha o registro algumas horas depois."
           />
           <SyncSleepButton />
         </>

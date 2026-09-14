@@ -18,6 +18,7 @@
  finish review, the verdict, and DESIGN.md.
 */
 import { useNavigation } from '@react-navigation/native';
+import { File, Paths } from 'expo-file-system';
 import React from 'react';
 import { ActivityIndicator, Pressable } from 'react-native';
 
@@ -38,6 +39,51 @@ import { horaLocal } from '../domain/sleep';
 import { ble } from '../services/ble';
 import { useBiometricStore } from '../store/biometric.store';
 import { useTheme } from '../theme/ThemeProvider';
+
+/**
+ * A calibração de uso, lembrada entre aberturas do app.
+ *
+ * É estado do APARELHO, não do app, e o aparelho não tem como ser perguntado:
+ * o SDK expõe o comando de calibrar e nenhuma consulta de "está calibrada?".
+ * Guardar aqui a última vez que ela deu certo é o mais honesto que dá para
+ * fazer, e é o que faltava para a tela responder à pergunta que o testador
+ * fez: "não sei se o dispositivo está calibrado de fato".
+ *
+ * Arquivo, e não estado de memória, porque a pergunta volta na próxima
+ * abertura do app, não na próxima renderização.
+ */
+const ARQUIVO_CALIBRACAO = 'calibracao-da-pulseira.v1.json';
+
+const FALHA_DA_CALIBRACAO =
+  'A calibração não concluiu. Vista a pulseira firme, fique parado e tente de novo.';
+
+function lerCalibracao(): number | null {
+  try {
+    const f = new File(Paths.document, ARQUIVO_CALIBRACAO);
+    if (!f.exists) return null;
+    const { em } = JSON.parse(f.textSync()) as { em?: number };
+    return typeof em === 'number' && em > 0 ? em : null;
+  } catch {
+    return null;
+  }
+}
+
+function gravarCalibracao(em: number): void {
+  try {
+    new File(Paths.document, ARQUIVO_CALIBRACAO).write(JSON.stringify({ em }));
+  } catch {
+    // Sem o registro, a tela volta a não saber dizer, que é o estado anterior.
+  }
+}
+
+/** "hoje", "ontem" ou a data: a pessoa quer saber se é recente, não o minuto. */
+function quandoFoi(em: number): string {
+  const dias = Math.floor((Date.now() - em) / 86_400_000);
+  if (dias <= 0) return 'hoje';
+  if (dias === 1) return 'ontem';
+  if (dias < 7) return `há ${dias} dias`;
+  return `em ${new Date(em).toLocaleDateString('pt-BR')}`;
+}
 
 export function DeviceScreen() {
   const navigation = useNavigation();
@@ -120,17 +166,40 @@ export function DeviceScreen() {
   */
   const [calibrando, setCalibrando] = React.useState(false);
   const [calibracao, setCalibracao] = React.useState<string | null>(null);
+  /*
+   QUANDO calibrou pela última vez, guardado entre aberturas.
+
+   Sem isto a tela só sabia dizer como terminou a ÚLTIMA tentativa, e quem
+   tentava de novo via a frase de falha de novo, sem nunca saber se o aparelho
+   está calibrado ou não: "não sei se o dispositivo está calibrado de fato,
+   mesmo ficando parado o tempo solicitado" (Henrique, 06/09/2026).
+  */
+  const [calibradaEm, setCalibradaEm] = React.useState<number | null>(() => lerCalibracao());
+
   const calibrar = async () => {
     setCalibrando(true);
     setCalibracao(null);
     try {
       const ok = await ble.wearCalibration?.();
-      setCalibracao(
-        ok
-          ? 'Calibração concluída. As medições sob demanda devem voltar a devolver valor.'
-          : 'A calibração não concluiu. Vista a pulseira firme, fique parado e tente de novo.');
-    } catch {
-      setCalibracao('A calibração não concluiu. Vista a pulseira firme, fique parado e tente de novo.');
+      if (ok) {
+        const agora = Date.now();
+        gravarCalibracao(agora);
+        setCalibradaEm(agora);
+        setCalibracao('Calibração concluída. As medições sob demanda devem voltar a devolver valor.');
+      } else {
+        setCalibracao(FALHA_DA_CALIBRACAO);
+      }
+    } catch (err) {
+      /*
+       O MOTIVO do firmware, quando ele manda um.
+
+       A ponte já o extrai de `userInfo["message"]` e o rejeita junto, e a tela
+       o jogava fora para mostrar sempre a mesma frase. "Não concluiu" sem
+       motivo é o que faz a pessoa repetir a mesma tentativa várias vezes, que
+       foi exatamente o relato.
+      */
+      const motivo = err instanceof Error ? err.message.trim() : '';
+      setCalibracao(motivo ? `${FALHA_DA_CALIBRACAO} O aparelho respondeu: ${motivo}.` : FALHA_DA_CALIBRACAO);
     } finally {
       setCalibrando(false);
     }
@@ -352,7 +421,10 @@ export function DeviceScreen() {
             subtitle={
               calibrando
                 ? 'Calibrando… fique parado, com a pulseira vestida (até 2 min).'
-                : (calibracao ?? 'Se a medição sob demanda volta vazia, a pulseira pede isto.')
+                : (calibracao ??
+                  (calibradaEm
+                    ? `Calibrada ${quandoFoi(calibradaEm)}. Refaça se a medição voltar vazia.`
+                    : 'Se a medição sob demanda volta vazia, a pulseira pede isto.'))
             }
             busy={calibrando}
             onPress={() => void calibrar()}
@@ -376,8 +448,25 @@ export function DeviceScreen() {
           <Body color="$foreground">AssumFit Watch</Body>
         </Row>
         <Row>
-          <Body flex={1}>Identificador</Body>
-          <Body color="$foreground">{pairedDeviceId ?? '–'}</Body>
+          {/*
+            Quem encolhe é o VALOR, não o rótulo.
+
+            Com `flex={1}` no rótulo e um UUID inteiro ao lado, "Identificador"
+            quebrava em três linhas ("Identi / ficado / r"), que é a regra 8 do
+            avesso: o nome do campo é o que dá sentido ao valor, e foi ele que
+            se perdeu. O identificador é consultado, não lido, e as reticências
+            ficam no MEIO porque a conferência se faz pelas pontas.
+          */}
+          <Body>Identificador</Body>
+          <Body
+            flex={1}
+            textAlign="right"
+            numberOfLines={1}
+            ellipsizeMode="middle"
+            color="$foreground"
+          >
+            {pairedDeviceId ?? '–'}
+          </Body>
         </Row>
         <Row>
           <Body flex={1}>Estado</Body>

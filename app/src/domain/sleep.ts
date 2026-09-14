@@ -329,3 +329,34 @@ export function melhorCandidataDeNoite<T extends { minutos: number; inicio: numb
     return melhor;
   });
 }
+
+
+/**
+ * Piso abaixo do qual uma "noite" é registro PARCIAL, não noite curta.
+ *
+ * Três horas. Quem dorme menos que isso de verdade tem uma noite ruim de
+ * verdade, e o produto deve dizer; o que acontece muito mais é a pulseira
+ * pegar um pedaço e o app apresentar o pedaço como se fosse a noite inteira.
+ */
+export const PISO_DE_NOITE_MIN = 180;
+
+/**
+ * Esta noite parece um registro parcial?
+ *
+ * O caso que a criou: 49 minutos entre 00h05 e 00h54, numa noite em que a
+ * pessoa dormiu das 23h30 às 6h40 (Henrique, 03/09/2026). O app mostrou score
+ * 40 e "pode melhorar", isto é, avaliou como sono ruim o que foi falha de
+ * captura, e quem lê não tem como distinguir as duas coisas olhando a tela.
+ *
+ * O sinal é a DURAÇÃO, não a hora: uma noite que começa tarde pode ser
+ * legítima (turno noturno, viagem), mas quase ninguém dorme menos de três
+ * horas por escolha, e quando dorme, o aparelho costuma registrar acordado em
+ * volta, não silêncio.
+ *
+ * Uma noite assim não deixa de existir: ela só para de ser apresentada como
+ * avaliação do sono da pessoa.
+ */
+export function registroParcial(night: SleepNight | null | undefined): boolean {
+  if (!night) return false;
+  return night.totalMin > 0 && night.totalMin < PISO_DE_NOITE_MIN;
+}
