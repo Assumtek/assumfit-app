@@ -1772,6 +1772,24 @@
       "nota": "Anotada, e é um pedido grande, então vou ser honesta sobre o tamanho em vez de prometer para já. Montar a ficha à mão (escolher os exercícios do catálogo, definir séries, repetições e descanso, distribuir nos dias da semana) é uma tela nova de edição no app e rotas de escrita no servidor, alguns dias de trabalho. Também tem uma decisão de produto no meio, que a Silvia vai avaliar: hoje toda prescrição nasce classificada por risco antes de qualquer coisa ser gerada, por causa de quem tem condição clínica. Num plano que a pessoa monta sozinha, isso vira aviso em vez de barreira. É como os avisos do gerador já funcionam, mas é escolha dela, não minha. Diz para o Henrique que o ponto foi bem colocado: ele separou o que gosta (o plano da anamnese e a forma como é apresentado) do que falta (autonomia para montar o dele), e é isso que torna o pedido fácil de atender sem desmontar o que já existe.",
       "versao": "1.0.6 (8)",
       "em": "2026-09-14T15:40:20"
+    },
+    "ACmE0RKipzjMUOGaEE81s1o": {
+      "commit": "fb9be06",
+      "nota": "Achado, e você estava certo em esperar que fosse salvo: os dados JÁ estavam no servidor. Cada série que você marca é enviada na hora, mas o app guardava o progresso só na memória, e quando o iOS mata o aplicativo essa memória vai junto. Ao voltar, ele reconhecia a sessão (essa vem do servidor) e remontava a ficha do zero, sem nunca perguntar as séries de volta. Agora pergunta, e a ficha volta preenchida. Detalhe que cuidei: se você preencheu algo e a rede caiu antes de enviar, o que está na tela vence o que veio do servidor, para não apagar o que você acabou de digitar.",
+      "versao": "1.0.6 (8)",
+      "em": "2026-09-21T09:51:12"
+    },
+    "AKD8qanjHvAMZDVnfzXa5KQ": {
+      "commit": "fb9be06",
+      "nota": "Eram duas falhas encadeadas, e a sua captura mostrou as duas. O treino de musculação nunca pedia à pulseira para entrar em modo esporte, que é o que a faz medir continuamente; sem isso ela fica na cadência agendada, medindo de poucos em poucos minutos e repetindo o mesmo valor no intervalo. A tela de esporte já fazia isso desde agosto, pelo mesmo sintoma, e a de treino tinha ficado de fora. A caloria em zero era consequência: ela só somava quando o batimento MUDAVA, então com o número parado em 84 ela nunca saía do lugar. Agora acumula pelo tempo, a cada 30 segundos, usando o último batimento conhecido.",
+      "versao": "1.0.6 (8)",
+      "em": "2026-09-21T09:51:23"
+    },
+    "slack:1789412018.714809": {
+      "commit": "fb9be06",
+      "nota": "Corrigido, e você descreveu exatamente o que faltava. Agora os alimentos entram numa lista: você busca arroz e acrescenta, busca frango e acrescenta, salada e acrescenta, conferindo a gramagem de cada um, e só então toca em 'Salvar refeição', que computa o prato inteiro de uma vez. Dá para tirar um item da lista antes de salvar, se errar. A tabela TACO continua sendo a fonte, como você pediu.",
+      "versao": "1.0.6 (8)",
+      "em": "2026-09-21T09:51:28"
     }
   }
 }

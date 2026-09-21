@@ -386,5 +386,36 @@ Qualquer visão agregada entre usuários, dashboard para terceiros, SSO corporat
   (22/08/2026): o plano tem um treino por dia; dois cards exigem dois treinos
   por dia no modelo, e isso atravessa plano, check-in e a semana.
 
+- **Montar a própria ficha semanal**, pedido do Henrique pelo Bruno
+  (14/09/2026): escolher os exercícios, as séries e o tempo de descanso à mão,
+  sem passar pela anamnese. Ele deixou claro que gosta do plano gerado e da
+  forma como é apresentado, e quer o caminho manual TAMBÉM, não no lugar. É uma
+  tela de edição nova no app mais rotas de escrita no servidor, alguns dias de
+  trabalho, e traz uma decisão de produto junto: hoje toda prescrição nasce
+  classificada por risco antes de o modelo ser chamado, e num plano montado à
+  mão isso vira aviso em vez de barreira (é como os avisos do gerador já
+  funcionam). Três perguntas precisam de resposta antes do código: o plano
+  manual convive com o gerado ou substitui o da semana; o catálogo inteiro de
+  370 exercícios fica disponível ou só o que a anamnese liberaria; e a
+  classificação de risco avisa ou impede.
+- **Escolher o que o app mostra**, pedido do Leo (21/09/2026): "só quero ver o
+  sono e o treino, não quero alimentação", com a interface ocultando o resto e
+  as notificações seguindo a mesma escolha. Metade disso já existe e serve de
+  base: a home é uma lista de blocos com liga-desliga e ordem
+  (`domain/homeLayout.ts` + `store/home.store.ts`). O que falta é estender a
+  escolha para ALÉM da home, para a navegação e para os avisos, e decidir o que
+  acontece com o dado de um módulo desligado: some da tela e continua sendo
+  coletado, ou para de ser coletado? A segunda leitura é a que casa com a
+  procedência que a tela `assumfit://dados` promete, e é decisão de produto.
+- **Usar melhor o histórico: resumos e leituras mais inteligentes**, pedido do
+  Leo (21/09/2026). É o pedido mais vago dos três e precisa de recorte antes de
+  virar trabalho, porque o produto já tem várias camadas disso (insight da
+  home, bom dia, resumo semanal, tendências de 28 contra 84 dias, assinatura do
+  dia) e o que ele pede não é mais texto, é leitura que atravessa semanas. Duas
+  direções possíveis, e elas custam coisas diferentes: correlações entre
+  grandezas que a pessoa não veria sozinha (sono curto na véspera contra carga
+  levantada, por exemplo), ou um retrospecto mensal com o que mudou de fato.
+  Vale escolher UMA e fazer bem.
+
 Saiu desta lista em 22/08/2026: **vídeos de exercício do MUVX**, liberados pela
 fundadora e já no produto (ver CLAUDE.md, § Vídeos dos exercícios vêm do MUVX).
