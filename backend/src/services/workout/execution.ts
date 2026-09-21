@@ -144,7 +144,29 @@ export async function currentExecution(userId: string) {
   return prisma.workoutExecution.findFirst({
     where: { userId, status: WorkoutExecutionStatus.IN_PROGRESS },
     orderBy: { startedAt: 'desc' },
-    include: { workout: { select: { id: true, name: true, estimatedDuration: true } } },
+    include: {
+      workout: { select: { id: true, name: true, estimatedDuration: true } },
+      /*
+       As SÉRIES já registradas vêm junto.
+
+       O progresso da sessão vivia só na memória do app, e o servidor recebia
+       cada série mas nunca era perguntado de volta. Quem fechava o app no meio
+       do treino (ou o iOS o matava por memória) voltava, via a sessão ser
+       reconhecida, e encontrava a ficha em branco: "todos os exercícios que já
+       preenchi ele não salva" (Bruno, 19/09/2026). Os dados estavam aqui o
+       tempo todo.
+      */
+      exercises: {
+        orderBy: { setOrder: 'asc' },
+        select: {
+          workoutExerciseId: true,
+          setOrder: true,
+          load: true,
+          repetitions: true,
+          completed: true,
+        },
+      },
+    },
   });
 }
 

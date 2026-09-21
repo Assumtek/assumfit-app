@@ -54,6 +54,16 @@ export function MealsScreen() {
   /** Registro À MÃO, sem foto: a busca na TACO abre direto (Henrique, 08/09/2026). */
   const [registrandoAMao, setRegistrandoAMao] = useState(false);
   const [salvandoAMao, setSalvandoAMao] = useState(false);
+  /*
+   A refeição sendo montada, antes de salvar.
+
+   A primeira versão salvava no primeiro alimento e abria o detalhe para
+   acrescentar o resto, o que obriga a registrar um por vez: "coloquei arroz e
+   já ficou salvo, mas eu comi arroz, frango e salada" (Bruno, 19/09/2026). O
+   que ele espera é montar o prato inteiro e computar no fim, que é como se
+   pensa numa refeição.
+  */
+  const [cesta, setCesta] = useState<AlimentoEscolhido[]>([]);
   /**
    * As URLs assinadas das fotos, por chave do S3.
    *
@@ -207,36 +217,34 @@ export function MealsScreen() {
    * antes de salvar exigiria um segundo editor, com as mesmas regras, para
    * fazer o que a tela de detalhe já faz.
    */
-  const registrarAMao = async (escolha: AlimentoEscolhido) => {
+  const salvarRefeicaoDaCesta = async () => {
+    if (cesta.length === 0) return;
     setAviso(null);
     setSalvandoAMao(true);
     try {
       const record = await api.criarRefeicaoManual({
-        foods: [
-          {
-            name: escolha.food.description,
-            // A porção em texto é o que a tela mostra ao lado do nome; aqui ela
-            // é exata, porque a pessoa digitou os gramas em vez de o modelo
-            // estimar olhando a foto.
-            portion: `${escolha.gramas} g`,
-            grams: escolha.gramas,
-            // Zero porque quem calcula é o `recompute` do servidor, pela TACO,
-            // sobre os gramas: mandar conta do aparelho criaria um segundo
-            // lugar onde a caloria nasce.
-            kcal_min: 0,
-            kcal_max: 0,
-            protein_g: null,
-            carbs_g: null,
-            fat_g: null,
-            uncertain: false,
-            matched: escolha.food.description,
-          },
-        ],
+        foods: cesta.map((item) => ({
+          name: item.food.description,
+          // A porção em texto é o que a tela mostra ao lado do nome; aqui ela é
+          // exata, porque a pessoa digitou os gramas em vez de o modelo
+          // estimar olhando a foto.
+          portion: `${item.gramas} g`,
+          grams: item.gramas,
+          // Zero porque quem calcula é o `recompute` do servidor, pela TACO,
+          // sobre os gramas: mandar conta do aparelho criaria um segundo lugar
+          // onde a caloria nasce.
+          kcal_min: 0,
+          kcal_max: 0,
+          protein_g: null,
+          carbs_g: null,
+          fat_g: null,
+          uncertain: false,
+          matched: item.food.description,
+        })),
       });
       setMeals((atual) => [record, ...(atual ?? [])]);
       setRegistrandoAMao(false);
-      // Abre o detalhe: é lá que se acrescenta o resto do prato.
-      setDetalhe(record);
+      setCesta([]);
     } catch (err) {
       setAviso(mensagemDaFalha(err, 'O registro'));
     } finally {
@@ -766,13 +774,61 @@ export function MealsScreen() {
         Fica ACIMA do resumo porque é o que a pessoa acabou de pedir.
       */}
       {registrandoAMao ? (
-        <SeletorDeAlimento
-          titulo="Registrar sem foto"
-          rotuloDaAcao="Registrar"
-          ocupado={salvandoAMao}
-          onEscolher={(e) => void registrarAMao(e)}
-          onCancelar={() => setRegistrandoAMao(false)}
-        />
+        <YStack gap="$sm">
+          {/*
+            O prato sendo montado, item a item. A lista vem ANTES do seletor
+            porque é o que a pessoa acabou de fazer, e é o que ela confere
+            antes de salvar.
+          */}
+          {cesta.length > 0 ? (
+            <Section label={`Nesta refeição (${cesta.length})`}>
+              {cesta.map((item, i) => (
+                <Row key={`${item.food.description}-${i}`} last={i === cesta.length - 1}>
+                  <YStack flex={1}>
+                    <Body color="$foreground" numberOfLines={1}>
+                      {item.food.description}
+                    </Body>
+                    <Data>{item.gramas} g</Data>
+                  </YStack>
+                  <Pressable
+                    onPress={() => setCesta((c) => c.filter((_, j) => j !== i))}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Tirar ${item.food.description}`}
+                    hitSlop={12}
+                    style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
+                  >
+                    <Icon name="trash" size={16} color={colors.textMuted} strokeWidth={1.5} />
+                  </Pressable>
+                </Row>
+              ))}
+            </Section>
+          ) : null}
+
+          <SeletorDeAlimento
+            titulo={cesta.length === 0 ? 'Registrar sem foto' : 'Acrescentar outro alimento'}
+            rotuloDaAcao="Acrescentar"
+            onEscolher={(e) => setCesta((c) => [...c, e])}
+            onCancelar={() => {
+              setRegistrandoAMao(false);
+              setCesta([]);
+            }}
+          />
+
+          {/*
+            Salvar fica FORA do seletor: ele acrescenta um item, e a refeição
+            só é computada quando o prato inteiro está montado.
+          */}
+          {cesta.length > 0 ? (
+            <YStack alignSelf="flex-end">
+              <Button
+                title={salvandoAMao ? 'Salvando…' : `Salvar refeição (${cesta.length})`}
+                onPress={() => void salvarRefeicaoDaCesta()}
+                disabled={salvandoAMao}
+                loading={salvandoAMao}
+              />
+            </YStack>
+          ) : null}
+        </YStack>
       ) : null}
 
       <YStack alignSelf="flex-end" marginTop="$md" marginBottom="$lg">

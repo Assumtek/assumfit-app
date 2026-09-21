@@ -815,6 +815,21 @@ export type Execution = {
   workoutName: string;
   estimatedDuration?: number | null;
   startedAt: string;
+  /**
+   * As séries JÁ registradas nesta sessão.
+   *
+   * Vem só de `/execution/current`: é o que permite remontar a ficha depois de
+   * o app ter sido fechado no meio do treino. O progresso vivia apenas na
+   * memória, e quem fechava o app encontrava tudo em branco ao voltar, com os
+   * dados intactos no servidor.
+   */
+  sets?: {
+    workoutExerciseId: string;
+    setOrder: number;
+    load: number | null;
+    repetitions: number | null;
+    completed: boolean;
+  }[];
 };
 
 /**

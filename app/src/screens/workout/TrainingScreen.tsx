@@ -19,6 +19,7 @@ import { Sheet } from '../../components/ui/Dialog';
 import { ExerciseVideo } from '../../components/ExerciseVideo';
 import { acumularKcal, type PerfilParaEnergia } from '../../domain/workoutEnergy';
 import { fetchAnamnesis, trocarExercicioNoPlano } from '../../services/api.service';
+import { ble } from '../../services/ble';
 import { useBiometricStore } from '../../store/biometric.store';
 import { useUserStore } from '../../store/user.store';
 import { devePosicionarNoPedido, formatSessionClock, segundosDoExercicio } from '../../domain/workout';
@@ -146,16 +147,65 @@ export function TrainingScreen() {
     };
   }, []);
 
+  /*
+   A caloria acumula com o TEMPO, não com a mudança do batimento.
+
+   Este efeito dependia de `bpmAoVivo`, então só rodava quando o número mudava.
+   A pulseira reemite o mesmo valor por minutos a fio, e em musculação ela
+   passa longos trechos sem medir de novo: com o batimento parado em 84, o
+   efeito nunca rodava e a caloria ficava em zero. "Batimento segue o mesmo
+   desde o início do treino, não está atualizando, nem calorias" (Leonardo,
+   19/09/2026), e o zero depois de 14 minutos era consequência do primeiro.
+
+   Um tique de 30 segundos acumula sobre o último batimento conhecido, que é o
+   que a fórmula de Keytel pede: gasto por intervalo, não por evento. O teto
+   por intervalo continua em `acumularKcal`, para o app suspenso não cobrar
+   uma hora de uma vez.
+  */
   useEffect(() => {
-    if (!execution || bpmAoVivo == null || pesoKg == null) return;
-    const agora = Date.now();
-    const anterior = ultimaAmostra.current;
-    ultimaAmostra.current = agora;
-    if (anterior == null) return;
-    const perfil: PerfilParaEnergia = { sex: sexo, age: idade, weightKg: pesoKg };
-    setKcal((acc) => acumularKcal(acc, bpmAoVivo, agora - anterior, perfil));
+    if (!execution || pesoKg == null) return;
+    ultimaAmostra.current = Date.now();
+    const tique = setInterval(() => {
+      const bpm = useBiometricStore.getState().latest?.heartRate;
+      if (bpm == null) return;
+      const agora = Date.now();
+      const anterior = ultimaAmostra.current;
+      ultimaAmostra.current = agora;
+      if (anterior == null) return;
+      const perfil: PerfilParaEnergia = { sex: sexo, age: idade, weightKg: pesoKg };
+      setKcal((acc) => acumularKcal(acc, bpm, agora - anterior, perfil));
+    }, 30_000);
+    return () => clearInterval(tique);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bpmAoVivo, execution?.id, pesoKg]);
+  }, [execution?.id, pesoKg, sexo, idade]);
+
+  /*
+   O MODO ESPORTE da pulseira, durante o treino de musculação.
+
+   Sem ele o firmware fica na cadência agendada, que mede de poucos em poucos
+   minutos, e entre uma medição e outra reemite o mesmo valor: "batimento
+   segue o mesmo desde o início do treino, não está atualizando" (Leonardo,
+   19/09/2026). É o mesmo caminho que a tela de esporte já usava desde agosto,
+   quando uma sessão de 36 minutos saiu com média e máximo iguais, de uma
+   amostra só.
+
+   O ciclo acompanha o cronômetro: pausar o treino pausa a sessão da pulseira,
+   retomar continua, e sair da tela com a sessão encerrada fecha. Deixar
+   aberto gastaria bateria medindo sem parar depois do treino.
+  */
+  useEffect(() => {
+    if (!execution) return;
+    void ble.setSportState?.('musculacao', 'start');
+    return () => {
+      void ble.setSportState?.('musculacao', 'stop');
+    };
+  }, [execution?.id]);
+
+  useEffect(() => {
+    if (!execution) return;
+    void ble.setSportState?.('musculacao', timerRunSince === null ? 'pause' : 'continue');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timerRunSince === null, execution?.id]);
 
   useEffect(() => {
     if (!execution || !workout) void refresh();

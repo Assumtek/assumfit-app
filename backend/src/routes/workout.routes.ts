@@ -338,6 +338,15 @@ workoutRoutes.get(
             workoutName: execution.workout.name,
             estimatedDuration: execution.workout.estimatedDuration,
             startedAt: execution.startedAt,
+            // O que já foi preenchido: é o que permite ao app remontar a ficha
+            // depois de ter sido fechado no meio do treino.
+            sets: execution.exercises.map((e) => ({
+              workoutExerciseId: e.workoutExerciseId,
+              setOrder: e.setOrder,
+              load: e.load,
+              repetitions: e.repetitions,
+              completed: e.completed,
+            })),
           }
         : null);
   }));

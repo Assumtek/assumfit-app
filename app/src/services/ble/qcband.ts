@@ -1297,6 +1297,15 @@ const TIPO_DE_ESPORTE_DO_FIRMWARE: Partial<Record<SportKind, number>> = {
   escalada: 34,
   skate: 36,
   spinning: 24,
+  /*
+   Musculação é `StrengthTraining` (88) no cabeçalho do SDK.
+
+   Faltava no mapa, e sem ela a sessão caía em "outro exercício". Isso abria o
+   sensor do mesmo jeito, mas o registro da pulseira não batia com o do app, e
+   o treino de musculação é o mais frequente do produto.
+  */
+  musculacao: 88,
+  funcional: 87,
   esteira: 40,
   eliptico: 26,
   remo: 27,

@@ -186,6 +186,41 @@ function initialSets(exercise: WorkoutDetail['phases'][number]['exercises'][numb
   }));
 }
 
+/**
+ * Traz para o progresso as séries que o servidor guardou.
+ *
+ * O que está na memória VENCE: pode ser série preenchida e ainda não enviada,
+ * e é justamente o envio que falha quando a rede cai. O servidor preenche o
+ * que a memória não tem, que é o caso de quem voltou com o app do zero.
+ *
+ * Série sem carga nem repetição não sobrescreve: o servidor guarda a marca de
+ * concluída mesmo quando a pessoa não digitou número nenhum, e devolver isso
+ * por cima apagaria o que ela digitou e não chegou a enviar.
+ */
+export function comSeriesDoServidor(
+  memoria: SessionProgress,
+  doServidor: Execution['sets'],
+): SessionProgress {
+  if (!doServidor?.length) return memoria;
+  const mesclado: SessionProgress = { ...memoria };
+  for (const s of doServidor) {
+    const atual = mesclado[s.workoutExerciseId] ?? [];
+    const i = s.setOrder - 1;
+    if (i < 0) continue;
+    const existente = atual[i];
+    if (existente && (existente.load !== '' || existente.reps !== '')) continue;
+    const proximo = [...atual];
+    while (proximo.length <= i) proximo.push({ load: '', reps: '', completed: false });
+    proximo[i] = {
+      load: s.load != null ? String(s.load) : (existente?.load ?? ''),
+      reps: s.repetitions != null ? String(s.repetitions) : (existente?.reps ?? ''),
+      completed: s.completed,
+    };
+    mesclado[s.workoutExerciseId] = proximo;
+  }
+  return mesclado;
+}
+
 function seedProgress(workout: WorkoutDetail, existing: SessionProgress): SessionProgress {
   const seeded: SessionProgress = {};
   for (const phase of workout.phases) {
@@ -270,7 +305,22 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
       // para a tela de execução ter o que renderizar sem passar pelo check-in.
       if (execution && get().workout?.id !== execution.workoutId) {
         const workout = await fetchWorkout(execution.workoutId);
-        set({ workout, progress: seedProgress(workout, get().progress) });
+        /*
+         O que o SERVIDOR já sabe entra por baixo do que está na memória.
+
+         Fechar o app no meio do treino (ou o iOS matá-lo por memória) zerava o
+         progresso, e voltar mostrava a sessão reconhecida com a ficha em
+         branco: "todos os exercícios que já preenchi ele não salva" (Bruno,
+         19/09/2026). Cada série completada já era enviada ao servidor; faltava
+         perguntar de volta.
+
+         A memória tem precedência porque pode conter série preenchida e ainda
+         não enviada, e o envio é o que falha quando a rede cai.
+        */
+        set({
+          workout,
+          progress: seedProgress(workout, comSeriesDoServidor(get().progress, execution.sets)),
+        });
       }
       if (!execution) set({ progress: {}, restEndsAt: null, timerBase: 0, timerRunSince: null });
     } catch {

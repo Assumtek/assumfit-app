@@ -1760,6 +1760,18 @@
       "nota": "Recebida, obrigada.",
       "versao": "1.0.6 (7)",
       "em": "2026-09-14T10:58:22"
+    },
+    "slack:1789411023.692889": {
+      "commit": "a56ecc3",
+      "nota": "Essa acabou de subir, Bruno. Está na 1.0.6 (7), que ficou disponível no TestFlight hoje: em 'Nova refeição' agora há três caminhos, fotografar, escolher da galeria ou buscar o alimento direto, sem foto nenhuma. Ele escolhe o alimento, informa os gramas, e o registro abre pronto para acrescentar o resto do prato. Uma diferença do que ele pediu, que vale conferir com ele: o que entregamos é BUSCA na tabela oficial (TACO), não descrição em texto livre. Para 'arroz, feijão e frango grelhado' funciona bem, porque cada item está na tabela; para algo como 'marmita da esquina' não há o que buscar. Se a busca não der conta do jeito que ele come, me diga, porque aí o caminho é outro: deixar ele descrever e o modelo interpretar, sem foto.",
+      "versao": "1.0.6 (8)",
+      "em": "2026-09-14T15:39:57"
+    },
+    "slack:1789411025.918389": {
+      "commit": "a56ecc3",
+      "nota": "Anotada, e é um pedido grande, então vou ser honesta sobre o tamanho em vez de prometer para já. Montar a ficha à mão (escolher os exercícios do catálogo, definir séries, repetições e descanso, distribuir nos dias da semana) é uma tela nova de edição no app e rotas de escrita no servidor, alguns dias de trabalho. Também tem uma decisão de produto no meio, que a Silvia vai avaliar: hoje toda prescrição nasce classificada por risco antes de qualquer coisa ser gerada, por causa de quem tem condição clínica. Num plano que a pessoa monta sozinha, isso vira aviso em vez de barreira. É como os avisos do gerador já funcionam, mas é escolha dela, não minha. Diz para o Henrique que o ponto foi bem colocado: ele separou o que gosta (o plano da anamnese e a forma como é apresentado) do que falta (autonomia para montar o dele), e é isso que torna o pedido fácil de atender sem desmontar o que já existe.",
+      "versao": "1.0.6 (8)",
+      "em": "2026-09-14T15:40:20"
     }
   }
 }
