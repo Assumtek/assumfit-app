@@ -397,6 +397,18 @@ independentes (medir, sincronizar, buscar a noite) antes de virar regra. `comTet
 é obrigatório; o teto por consulta e o teto da sincronização inteira são duas
 redes distintas e as duas precisam existir.
 
+**Batimento de ESFORÇO só existe com o modo esporte ligado.** Medido em
+produção (22/09/2026): num único dia com sessão de esporte aberta houve 2.295
+leituras acima de 120 bpm e pico de 176; em todos os outros dias, de todas as
+pessoas, o pico não passou de 120. Sem o modo esporte a pulseira fica na
+cadência agendada, que mede de cinco em cinco minutos e em repouso, e o número
+na tela não acompanha o esforço por mais intenso que ele seja.
+
+A consequência é de produto, não de código: quem faz spinning sem registrar a
+sessão no app não vai ter frequência de treino, e o relato chega como "o app
+não capturou o BPM". Abrir o modo esporte é o que `setSportState` faz, e desde
+22/09/2026 a tela de TREINO também o abre, não só a de esporte.
+
 **Espera longa se conta por etapa.** A leitura da memória são seis consultas em
 série e leva perto de um minuto. Uma pessoa em teste (ago/2026) tocou em
 sincronizar, viu um indicador mudo, concluiu que o app estava quebrado e o
