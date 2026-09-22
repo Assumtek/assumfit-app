@@ -761,6 +761,24 @@ Duas armadilhas: `projectId` na criação de versão precisa ser o NÚMERO (1066
 não a chave, e as transições de status têm ids próprios do projeto (11 para To
 Do, 21 para In Progress, 31 para Done), que não são os ids dos status.
 
+## Os vídeos do catálogo são NOSSOS desde 22/09/2026
+
+Eles apontavam para `cdn-homol.muvx.app`, o CDN de HOMOLOGAÇÃO de outro
+produto: um app em produção dependendo do ambiente de teste alheio, que pode
+ser limpo ou derrubado sem aviso. Os 116 vídeos e as 116 miniaturas (4 GB) estão
+em `assumfit-videos`, sob `exercicios/`.
+
+O banco guarda a CHAVE (`video_key`, `thumb_key`) e quem assina a URL é o
+servidor, na entrega do treino, todas de uma vez. As colunas antigas
+(`video_url`, `thumbnail_url`) continuam preenchidas por um ciclo e servem de
+queda: o app de quem ainda não atualizou continua tendo vídeo.
+
+Bucket PRIVADO com URL assinada de seis horas, e não leitura pública como o CDN
+de origem. Uma hora, como nas imagens, cortaria um vídeo começado perto do fim
+da janela. Regerar o arquivo com `scripts/exportar-videos-muvx.py` traz só as
+URLs do MUVX: a migração para o nosso bucket é um passo à parte, e enquanto
+`videoKey` não estiver no JSON o seed grava chave nula.
+
 ## Regras de dados
 
 - Dado biométrico é **dado pessoal sensível** (LGPD Art. 5º II). Toda tabela nova que armazene biometria precisa de vínculo com consentimento e política de retenção. Nunca logar valor biométrico com `user_id` junto.

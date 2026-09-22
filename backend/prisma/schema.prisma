@@ -608,7 +608,6 @@ enum RiskTier {
 /// validador determinístico do serviço de modelo e na FK desta tabela.
 ///
 /// Semeado por `prisma/seed-exercises.ts` a partir de `prisma/data/exercises.json`.
-/// Não tem `videoUrl`: a mídia da origem não é nossa para servir.
 model Exercise {
   id          String          @id @db.Uuid
   name        String
@@ -621,10 +620,21 @@ model Exercise {
   level       ExperienceLevel @default(INICIANTE)
   type        ExerciseType
   active      Boolean         @default(true)
-  /// Vídeo demonstrativo e thumbnail — trazidos do catálogo do MUVX por id
+  /// Vídeo demonstrativo e miniatura, trazidos do catálogo do MUVX por id
   /// (decisão da fundadora, 22/08/2026). Nulo para exercício sem vídeo.
+  ///
+  /// As URLs apontavam para `cdn-homol.muvx.app`, o CDN de HOMOLOGAÇÃO de
+  /// outro produto: um app em produção dependendo do ambiente de teste alheio,
+  /// que pode ser limpo sem aviso. Desde 22/09/2026 os arquivos são nossos, e
+  /// o que fica aqui é a CHAVE no bucket; quem assina a URL é o servidor, na
+  /// hora de entregar.
+  ///
+  /// As colunas antigas continuam por um ciclo, para o app de quem ainda não
+  /// atualizou não ficar sem vídeo nenhum.
   videoUrl     String? @map("video_url")
   thumbnailUrl String? @map("thumbnail_url")
+  videoKey     String? @map("video_key")
+  thumbKey     String? @map("thumb_key")
 
   workoutExercises WorkoutExercise[]
 

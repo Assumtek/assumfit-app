@@ -109,6 +109,10 @@ services:
       # As imagens do app (01/09/2026). Bucket próprio, e não o do áudio: os
       # dois têm retenção oposta, o áudio expira em um dia e a imagem fica.
       IMAGE_BUCKET: ${IMAGE_BUCKET:-assumfit-images}
+      # Os vídeos do catálogo (22/09/2026). Bucket próprio: são conteúdo
+      # igual para todo mundo, sem dono a conferir, e de outra ordem de
+      # tamanho (4 GB contra alguns megabytes por foto).
+      VIDEO_BUCKET: ${VIDEO_BUCKET:-assumfit-videos}
       CORS_ORIGINS: ${CORS_ORIGINS:-}
     # A migration do Timescale é SQL escrito à mão e não está no histórico do
     # Prisma; `migrate deploy` aplica o resto. Falhar aqui impede o servidor de

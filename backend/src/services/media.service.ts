@@ -120,3 +120,39 @@ export async function listarImagensDaConta(userId: string): Promise<string[]> {
   } while (token);
   return keys;
 }
+
+
+/**
+ * Os VÍDEOS do catálogo, que é outro bucket e outra natureza de conteúdo.
+ *
+ * Eles apontavam para `cdn-homol.muvx.app`, o CDN de HOMOLOGAÇÃO de outro
+ * produto: um app em produção dependendo do ambiente de teste alheio, que pode
+ * ser limpo ou derrubado sem aviso. Desde 22/09/2026 os arquivos são nossos.
+ *
+ * A diferença para as imagens é quem pode ver: foto de prato é de uma pessoa,
+ * e a chave carrega o dono; vídeo de exercício é catálogo, igual para todo
+ * mundo, e não há dono a conferir. O que se mantém é o bucket privado com URL
+ * assinada, porque leitura pública foi barrada e, francamente, não é
+ * necessária: a tela só baixa o vídeo quando alguém toca nele.
+ *
+ * Seis horas de validade, e não uma: um vídeo começado perto do fim da janela
+ * não pode parar no meio, e o catálogo não é segredo que uma URL vazada
+ * comprometa.
+ */
+const BUCKET_VIDEOS = process.env.VIDEO_BUCKET ?? 'assumfit-videos';
+
+export const FORMATO_DA_CHAVE_DE_VIDEO = /^exercicios\/[0-9a-f-]{36}(-thumb)?\.(mov|mp4|jpg|jpeg|png|webp)$/;
+
+export async function presignVideoRead(key: string): Promise<string | null> {
+  if (!FORMATO_DA_CHAVE_DE_VIDEO.test(key)) return null;
+  try {
+    return await getSignedUrl(
+      s3,
+      new GetObjectCommand({ Bucket: BUCKET_VIDEOS, Key: key }),
+      { expiresIn: 6 * 3600 },
+    );
+  } catch {
+    // Sem assinatura, a tela cai na URL antiga enquanto ela existir.
+    return null;
+  }
+}

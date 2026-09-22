@@ -19,6 +19,7 @@ import { prisma } from '../lib/prisma';
 import { similarExercises, trocarNoPlano, ultimasCargasPorExercicio } from '../services/workout/catalog';
 import { comentarioDaSessao } from '../services/workout/session-feedback';
 import { aprovarRascunho, descartarRascunho } from '../services/workout/plan-persistence';
+import { presignVideoRead } from '../services/media.service';
 import { chaveEhDoUsuario } from '../services/media.service';
 import {
   activePlan,
@@ -868,6 +869,27 @@ workoutRoutes.get(
     const workout = await workoutDetail(req.userId, req.params.workoutId);
     const loads = await lastLoads(req.userId, workout.id);
 
+    /*
+     As URLs do vídeo são ASSINADAS aqui, na entrega.
+
+     O banco guarda a chave no nosso bucket; a URL tem validade e não pode ser
+     guardada. Assinar tudo de uma vez, e não um pedido por vídeo, porque a
+     tela do treino mostra a lista inteira e a miniatura de cada exercício.
+
+     Falha na assinatura cai na URL antiga (`videoUrl`), que ainda existe: pior
+     que o vídeo vir do CDN de homologação é ele não vir.
+    */
+    const chaves = workout.phases.flatMap((f) =>
+      f.exercises.flatMap((i) => [i.exercise.videoKey, i.exercise.thumbKey]))
+      .filter((k): k is string => !!k);
+    const assinadas = new Map<string, string>();
+    await Promise.all(
+      [...new Set(chaves)].map(async (k) => {
+        const url = await presignVideoRead(k);
+        if (url) assinadas.set(k, url);
+      }),
+    );
+
     res.json({
       id: workout.id,
       name: workout.name,
@@ -884,8 +906,14 @@ workoutRoutes.get(
           description: item.exercise.description,
           muscleGroup: item.exercise.muscleGroup,
           equipment: item.exercise.equipment,
-          videoUrl: item.exercise.videoUrl ?? null,
-          thumbnailUrl: item.exercise.thumbnailUrl ?? null,
+          videoUrl:
+            (item.exercise.videoKey ? assinadas.get(item.exercise.videoKey) : null) ??
+            item.exercise.videoUrl ??
+            null,
+          thumbnailUrl:
+            (item.exercise.thumbKey ? assinadas.get(item.exercise.thumbKey) : null) ??
+            item.exercise.thumbnailUrl ??
+            null,
           subtype: item.subtype,
           notes: item.notes,
           duration: item.duration,

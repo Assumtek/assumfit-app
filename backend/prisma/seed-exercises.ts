@@ -41,12 +41,27 @@ async function main() {
  Vídeos demonstrativos — `prisma/data/exercise-videos.json`, gerado a partir do
  catálogo do MUVX (mesmos ids). Arquivo ausente não é erro: é catálogo sem vídeo.
  */
-const videos = new Map<string, { videoUrl: string; thumbnailUrl: string | null }>();
+type VideoDoCatalogo = {
+  videoUrl: string;
+  thumbnailUrl: string | null;
+  /** Chave no nosso bucket. Ausente enquanto a migração não rodou. */
+  videoKey?: string;
+  thumbKey?: string;
+};
+
+const videos = new Map<string, VideoDoCatalogo>();
 try {
   const lido = JSON.parse(readFileSync(join(__dirname, 'data', 'exercise-videos.json'), 'utf8')) as {
-    videos: { id: string; videoUrl: string; thumbnailUrl: string | null }[];
+    videos: (VideoDoCatalogo & { id: string })[];
   };
-  for (const v of lido.videos) videos.set(v.id, { videoUrl: v.videoUrl, thumbnailUrl: v.thumbnailUrl });
+  for (const v of lido.videos) {
+    videos.set(v.id, {
+      videoUrl: v.videoUrl,
+      thumbnailUrl: v.thumbnailUrl,
+      videoKey: v.videoKey,
+      thumbKey: v.thumbKey,
+    });
+  }
 } catch {
   // sem arquivo, sem vídeo
 }
@@ -68,7 +83,15 @@ try {
     // Vídeo do MUVX, quando há. `null` explícito no update: exercício que
     // perdeu o vídeo no catálogo de origem perde aqui também.
     const video = videos.get(row.id) ?? null;
-    const comVideo = { ...data, videoUrl: video?.videoUrl ?? null, thumbnailUrl: video?.thumbnailUrl ?? null };
+    const comVideo = {
+      ...data,
+      videoUrl: video?.videoUrl ?? null,
+      thumbnailUrl: video?.thumbnailUrl ?? null,
+      // A chave é o que o servidor assina para entregar. A URL antiga fica por
+      // um ciclo, para o app de quem não atualizou não perder o vídeo.
+      videoKey: video?.videoKey ?? null,
+      thumbKey: video?.thumbKey ?? null,
+    };
     await prisma.exercise.upsert({
       where: { id: row.id },
       create: { id: row.id, ...comVideo },
