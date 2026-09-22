@@ -1790,6 +1790,12 @@
       "nota": "Corrigido, e você descreveu exatamente o que faltava. Agora os alimentos entram numa lista: você busca arroz e acrescenta, busca frango e acrescenta, salada e acrescenta, conferindo a gramagem de cada um, e só então toca em 'Salvar refeição', que computa o prato inteiro de uma vez. Dá para tirar um item da lista antes de salvar, se errar. A tabela TACO continua sendo a fonte, como você pediu.",
       "versao": "1.0.6 (8)",
       "em": "2026-09-21T09:51:28"
+    },
+    "slack:1790086552.830199": {
+      "commit": "6307e7a",
+      "nota": "Você está certo, e os dados confirmam: sua pulseira estava medindo sem falha a manhã inteira, doze leituras por hora. O aviso estava errado em duas frases. Ele dizia 'a pulseira está longe', e o app não sabe isso: ele sabe apenas que não está conectado, e no seu caso o que houve foi o app estar fechado, com a pulseira no pulso. E dizia que o dia de hoje não entraria, o que é falso: a pulseira guarda até sete dias na memória dela e o app recupera tudo na próxima sincronização. Corrigi os dois textos. A repetição também tinha causa: a trava que impede o mesmo aviso duas vezes no dia vivia só na memória do app, e fechar o app (que é justamente o que desconecta a pulseira) apagava a trava. Agora ela é gravada. Sobe na próxima build.",
+      "versao": "1.0.6 (8)",
+      "em": "2026-09-22T11:19:34"
     }
   }
 }

@@ -18,6 +18,20 @@ APP="$RAIZ/app"
 VERSAO=$(python3 -c "import json;print(json.load(open('$APP/app.json'))['expo']['version'])")
 BUILD=$(python3 -c "import json;print(json.load(open('$APP/app.json'))['expo']['ios']['buildNumber'])")
 ARCHIVE="/tmp/assumfit-$VERSAO-b$BUILD.xcarchive"
+
+# Os archives das builds ANTERIORES saem agora.
+#
+# Cada um passa de dois gigabytes e o script nunca os removia: sete builds
+# depois o disco da máquina encheu no meio de uma geração (21/09/2026), e o
+# erro não aponta para cá, aparece como falha em qualquer comando seguinte.
+# São artefatos intermediários, refeitos a cada build; o que se guarda é o
+# .ipa, que tem quinze megabytes e mora em build/.
+for velho in /tmp/assumfit-*.xcarchive; do
+  [ -e "$velho" ] || continue
+  [ "$velho" = "$ARCHIVE" ] && continue
+  echo "== removendo archive anterior: $(basename "$velho")"
+  rm -rf "$velho"
+done
 SAIDA="${SAIDA:-$RAIZ/build}"
 PERFIS="$HOME/.credenciais/assumfit/perfis"
 IDENT="Apple Distribution: ASSUMFIT TECNOLOGIA EM SAUDE LTDA (5695J86AVD)"
