@@ -1,5 +1,5 @@
 import { activityLevel, calcBioAge, deepSleepAge, estimateVo2max, fitnessAge, formatYears, hrvAge, explicacaoDaIdade, acoesParaMelhorar, explicacaoSimples } from '../bioAge';
-import type { BioAge } from '../bioAge';
+import type { BioAge } from '../types';
 
 /**
  * O espelho da conta que mora em `ai/models/bio_age.py`.
