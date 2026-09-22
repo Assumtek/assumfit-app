@@ -537,6 +537,13 @@ enum ExerciseSubtype {
 }
 
 enum TrainingPlanStatus {
+  /// Gerado e ainda NÃO aprovado por quem vai treinar.
+  ///
+  /// O plano nascia ativo, e a pessoa descobria o que tinha sido prescrito já
+  /// valendo: "antes de aprovar o treino, o usuário deve poder revisar e
+  /// editar o plano" (22/09/2026). Em rascunho, o plano anterior continua
+  /// valendo, que é o comportamento certo enquanto ninguém aprovou nada.
+  DRAFT
   ACTIVE
   EXPIRED
   REPLACED

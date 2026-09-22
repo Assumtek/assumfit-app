@@ -633,6 +633,27 @@ export async function fetchActivePlan(): Promise<TrainingPlan | null> {
   return data;
 }
 
+/**
+ * O plano gerado esperando aprovação, no MESMO formato do ativo.
+ *
+ * O plano passou a nascer em rascunho (22/09/2026): quem gera revisa antes de
+ * ele valer, e até lá o plano anterior continua em vigor.
+ */
+export async function fetchDraftPlan(): Promise<TrainingPlan | null> {
+  const { data } = await api.get<TrainingPlan | null>('/workout/plan/draft');
+  return data;
+}
+
+/** Aprovar o rascunho. `false` quando não havia o que aprovar. */
+export async function approvePlan(): Promise<boolean> {
+  const { data } = await api.post<{ approved: boolean }>('/workout/plan/approve');
+  return data.approved;
+}
+
+export async function discardPlan(): Promise<void> {
+  await api.post('/workout/plan/discard');
+}
+
 export type PrescribedSet = {
   order: number;
   repetitions: string;

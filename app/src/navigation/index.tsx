@@ -42,6 +42,7 @@ import { StressScreen } from '../screens/StressScreen';
 import { AnamnesisScreen } from '../screens/workout/AnamnesisScreen';
 import { CheckinScreen } from '../screens/workout/CheckinScreen';
 import { GeneratingScreen } from '../screens/workout/GeneratingScreen';
+import { PlanReviewScreen } from '../screens/workout/PlanReviewScreen';
 import { ChecklistScreen } from '../screens/workout/ChecklistScreen';
 import { ExecutionDetailScreen } from '../screens/workout/ExecutionDetailScreen';
 import { AnamnesisConversationScreen } from '../screens/workout/AnamnesisConversationScreen';
@@ -137,6 +138,7 @@ const linking = {
       Anamnesis: 'anamnese',
       AnamnesisForm: 'anamnese-formulario',
       Generating: 'gerando',
+      PlanReview: 'revisar-plano',
     },
   },
 };
@@ -270,6 +272,7 @@ export function Navigation() {
         */}
         <Stack.Screen name="AnamnesisForm" component={AnamnesisScreen} />
         <Stack.Screen name="Generating" component={GeneratingScreen} />
+        <Stack.Screen name="PlanReview" component={PlanReviewScreen} />
           </>
         )}
       </Stack.Navigator>

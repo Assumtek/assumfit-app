@@ -82,7 +82,34 @@ export function PlanScreen() {
     void carregar();
   }, [carregar]);
 
+  /*
+   Rascunho esperando decisão não pode ficar esquecido.
+
+   Quem gera e sai da revisão sem aprovar nem descartar deixa uma proposta
+   pendurada, e a tela do plano continuaria mostrando o treino antigo sem dizer
+   por quê.
+  */
+  const [temRascunho, setTemRascunho] = useState(false);
+  useEffect(() => {
+    let vivo = true;
+    void api.fetchDraftPlan().then((d) => vivo && setTemRascunho(!!d)).catch(() => undefined);
+    return () => {
+      vivo = false;
+    };
+  }, [plan?.id]);
+
   const puxar = usePullRefresh(carregar);
+  const avisoDeRascunho = temRascunho ? (
+    <YStack gap="$sm" marginTop="$md">
+      <Note
+        title="Há um plano novo esperando você"
+        body="Ele foi gerado e ainda não está valendo. Enquanto isso, o treino abaixo continua o seu."
+      />
+      <YStack alignSelf="flex-start">
+        <Button title="Revisar agora" onPress={() => navigation.navigate('PlanReview')} />
+      </YStack>
+    </YStack>
+  ) : null;
 
   const semana = useMemo(
     () => montarSemanaDeTreino(plan, minutos, new Date(), feitos),
@@ -127,6 +154,7 @@ export function PlanScreen() {
 
   return (
     <DetailScreen title="Treino" refreshControl={puxar}>
+      {avisoDeRascunho}
       <YStack gap="$xl" paddingTop="$lg">
         {/*
           O que foi CONTIDO neste plano, e por quê.

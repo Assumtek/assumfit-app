@@ -1,4 +1,4 @@
-import { ConsentPurpose, GenerationStatus, Prisma } from '@prisma/client';
+import { ConsentPurpose, GenerationStatus, Prisma, TrainingPlanStatus } from '@prisma/client';
 import { Router } from 'express';
 import { z } from 'zod';
 
@@ -18,9 +18,11 @@ import { deriveFlags, parseAnamnesis } from '../services/workout/context-builder
 import { prisma } from '../lib/prisma';
 import { similarExercises, trocarNoPlano, ultimasCargasPorExercicio } from '../services/workout/catalog';
 import { comentarioDaSessao } from '../services/workout/session-feedback';
+import { aprovarRascunho, descartarRascunho } from '../services/workout/plan-persistence';
 import { chaveEhDoUsuario } from '../services/media.service';
 import {
   activePlan,
+  planoPorStatus,
   cancelExecution,
   currentExecution,
   finishExecution,
@@ -751,6 +753,74 @@ workoutRoutes.get(
 // ==========================================================================
 // PLANO E TREINOS
 // ==========================================================================
+
+/**
+ * O RASCUNHO esperando aprovação, no mesmo formato do plano ativo.
+ *
+ * Mesma consulta e mesma serialização de `/plan/active`, de propósito: montar
+ * uma segunda leitura para a revisão abriria espaço para a pessoa aprovar uma
+ * coisa e receber outra.
+ */
+workoutRoutes.get(
+  '/plan/draft',
+  asyncRoute<AuthedRequest>(async (req, res) => {
+    const [plan, user] = await Promise.all([
+      planoPorStatus(req.userId, TrainingPlanStatus.DRAFT),
+      prisma.user.findUniqueOrThrow({
+        where: { id: req.userId },
+        select: { tzOffsetMin: true },
+      }),
+    ]);
+    if (!plan) return res.json(null);
+    const today = localDayOfWeek(user.tzOffsetMin);
+    res.json({
+      id: plan.id,
+      name: plan.name,
+      goal: plan.goal,
+      level: plan.level,
+      rationale: plan.rationale,
+      startDate: plan.startDate,
+      endDate: plan.endDate,
+      today,
+      days: plan.days.map((day) => ({
+        id: day.id,
+        dayOfWeek: day.dayOfWeek,
+        dayType: day.dayType,
+        workout: day.workout
+          ? {
+              id: day.workout.id,
+              name: day.workout.name,
+              modality: day.workout.modality,
+              muscleGroups: day.workout.muscleGroups,
+              estimatedDuration: day.workout.estimatedDuration,
+              exerciseCount: day.workout.exercises.length,
+            }
+          : null,
+      })),
+    });
+  }));
+
+/** Aprovar: é aqui que o plano passa a valer, e o anterior é aposentado. */
+workoutRoutes.post(
+  '/plan/approve',
+  asyncRoute<AuthedRequest>(async (req, res) => {
+    const id = await aprovarRascunho(req.userId);
+    if (!id) {
+      // Sem rascunho não há o que aprovar. Não é erro: quem tocou duas vezes
+      // no botão já tem o plano valendo.
+      res.status(200).json({ approved: false });
+      return;
+    }
+    res.json({ approved: true, planId: id });
+  }));
+
+/** Descartar a proposta: quem não quis volta a ter só o que já tinha. */
+workoutRoutes.post(
+  '/plan/discard',
+  asyncRoute<AuthedRequest>(async (req, res) => {
+    await descartarRascunho(req.userId);
+    res.status(204).end();
+  }));
 
 workoutRoutes.get(
   '/plan/active',

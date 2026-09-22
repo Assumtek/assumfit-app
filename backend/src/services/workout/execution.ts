@@ -48,9 +48,17 @@ const workoutInclude = {
   },
 } as const;
 
-export async function activePlan(userId: string) {
+/**
+ * O plano que está VALENDO, ou o rascunho esperando aprovação.
+ *
+ * O parâmetro existe porque a tela de revisão precisa mostrar exatamente o
+ * mesmo plano que a tela do plano mostra, com a mesma consulta e o mesmo
+ * formato: montar uma segunda leitura para a revisão seria abrir espaço para
+ * a pessoa aprovar uma coisa e receber outra.
+ */
+export async function planoPorStatus(userId: string, status: TrainingPlanStatus) {
   return prisma.trainingPlan.findFirst({
-    where: { userId, status: TrainingPlanStatus.ACTIVE },
+    where: { userId, status },
     orderBy: { createdAt: 'desc' },
     include: {
       days: {
@@ -64,6 +72,11 @@ export async function activePlan(userId: string) {
       },
     },
   });
+}
+
+/** O plano em vigor. Quem chama a maior parte do produto. */
+export async function activePlan(userId: string) {
+  return planoPorStatus(userId, TrainingPlanStatus.ACTIVE);
 }
 
 export async function workoutDetail(userId: string, workoutId: string) {

@@ -132,14 +132,28 @@ export async function persistPlan(params: PersistParams): Promise<string> {
   const endDate = new Date(startDate.getTime() + PLAN_VALIDITY_DAYS * 86_400_000);
 
   return prisma.$transaction(async (tx) => {
-    await tx.trainingPlan.updateMany({
-      where: { userId, status: TrainingPlanStatus.ACTIVE },
-      data: { status: TrainingPlanStatus.REPLACED },
+    /*
+     O plano nasce em RASCUNHO, e o anterior continua valendo.
+
+     Antes ele nascia ativo e aposentava o anterior na mesma transação: a
+     pessoa descobria o que tinha sido prescrito com o plano já em vigor, sem
+     chance de olhar antes. "Antes de aprovar o treino, o usuário deve poder
+     revisar e editar o plano" (22/09/2026).
+
+     Quem aposenta o anterior agora é a APROVAÇÃO. Enquanto ninguém aprovou,
+     trocar o plano que está valendo seria decidir por quem não decidiu.
+
+     Rascunho anterior não aprovado sai: gerar de novo substitui a proposta,
+     não empilha duas esperando resposta.
+    */
+    await tx.trainingPlan.deleteMany({
+      where: { userId, status: TrainingPlanStatus.DRAFT },
     });
 
     const created = await tx.trainingPlan.create({
       data: {
         userId,
+        status: TrainingPlanStatus.DRAFT,
         name: planName(params.goal ?? null),
         goal: params.goal,
         level: params.level,
@@ -224,5 +238,44 @@ export async function persistPlan(params: PersistParams): Promise<string> {
     }
 
     return created.id;
+  });
+}
+
+
+/**
+ * Aprovar o rascunho: é aqui que o plano passa a valer.
+ *
+ * A troca acontece numa transação só, porque o meio do caminho (dois planos
+ * ativos, ou nenhum) é estado que a home e o check-in leem e não sabem
+ * interpretar.
+ *
+ * Idempotente por natureza: sem rascunho, não há o que aprovar, e quem tocou
+ * duas vezes no botão recebe o mesmo plano já ativo em vez de um erro.
+ */
+export async function aprovarRascunho(userId: string): Promise<string | null> {
+  return prisma.$transaction(async (tx) => {
+    const rascunho = await tx.trainingPlan.findFirst({
+      where: { userId, status: TrainingPlanStatus.DRAFT },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true },
+    });
+    if (!rascunho) return null;
+
+    await tx.trainingPlan.updateMany({
+      where: { userId, status: TrainingPlanStatus.ACTIVE },
+      data: { status: TrainingPlanStatus.REPLACED },
+    });
+    await tx.trainingPlan.update({
+      where: { id: rascunho.id },
+      data: { status: TrainingPlanStatus.ACTIVE },
+    });
+    return rascunho.id;
+  });
+}
+
+/** Descartar a proposta: quem não quis o plano volta a ter só o que tinha. */
+export async function descartarRascunho(userId: string): Promise<void> {
+  await prisma.trainingPlan.deleteMany({
+    where: { userId, status: TrainingPlanStatus.DRAFT },
   });
 }

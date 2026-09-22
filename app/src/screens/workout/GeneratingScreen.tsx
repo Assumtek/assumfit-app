@@ -136,7 +136,14 @@ export function GeneratingScreen() {
             await refresh();
             // Meio segundo para o anel FECHAR na tela antes de trocar: o
             // desfecho visível é parte do progresso, não um luxo.
-            setTimeout(() => alive && navigation.replace('Plan'), 600);
+            /*
+             Para a REVISÃO, não para o plano.
+
+             O plano nasce em rascunho desde 22/09/2026: ele não está valendo
+             ainda, e mandar para a tela do plano mostraria o treino anterior,
+             que é o que continua em vigor até alguém aprovar.
+            */
+            setTimeout(() => alive && navigation.replace('PlanReview'), 600);
           }
           return;
         }
