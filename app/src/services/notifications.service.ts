@@ -544,7 +544,35 @@ function registrarNoFeed(id: string, titulo: string, corpo: string, rota: string
 
 
 const PULSEIRA_LONGE = 'pulseira-longe';
-let lembreteDePulseiraEm: string | null = null;
+/**
+ * O dia em que o lembrete de pulseira já foi armado.
+ *
+ * Era variável de módulo, em memória: o app encerrado zerava a trava e o
+ * lembrete voltava a ser armado no mesmo dia, o que produziu o mesmo aviso
+ * duas vezes (Leonardo, 22/09/2026). Encerrar o app é justamente o que
+ * desconecta a pulseira, então o caminho que arma o lembrete era o mesmo que
+ * apagava a trava contra repeti-lo.
+ */
+const ARQUIVO_LEMBRETE_PULSEIRA = 'lembrete-pulseira.v1.json';
+
+function diaDoUltimoLembrete(): string | null {
+  try {
+    const f = new File(Paths.document, ARQUIVO_LEMBRETE_PULSEIRA);
+    if (!f.exists) return null;
+    const { dia } = JSON.parse(f.textSync()) as { dia?: string };
+    return typeof dia === 'string' ? dia : null;
+  } catch {
+    return null;
+  }
+}
+
+function registrarLembrete(dia: string): void {
+  try {
+    new File(Paths.document, ARQUIVO_LEMBRETE_PULSEIRA).write(JSON.stringify({ dia }));
+  } catch {
+    // Sem o registro, o pior caso é o aviso repetir, que é o defeito antigo.
+  }
+}
 
 /**
  * Lembrar de usar a pulseira, sem ser chato (sugestão de testador, 23/08):
@@ -553,7 +581,7 @@ let lembreteDePulseiraEm: string | null = null;
  */
 export async function armarLembreteDePulseira(motivo?: string | null) {
   const hoje = new Date().toDateString();
-  if (lembreteDePulseiraEm === hoje) return;
+  if (diaDoUltimoLembrete() === hoje) return;
   const quando = new Date(Date.now() + 2 * 3_600_000);
   const h = quando.getHours();
   if (h < 8 || h >= 21) return;
@@ -575,7 +603,7 @@ export async function armarLembreteDePulseira(motivo?: string | null) {
     },
     trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 2 * 3600 },
   });
-  lembreteDePulseiraEm = hoje;
+  registrarLembrete(hoje);
 }
 
 export async function cancelarLembreteDePulseira() {

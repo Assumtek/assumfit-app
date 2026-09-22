@@ -176,11 +176,25 @@ export function avisoDePulseiraAusente(motivo?: string | null): AvisoDeAusencia 
   if (bluetoothFora) {
     return {
       titulo: 'O Bluetooth está desligado',
-      corpo: 'Sem ele o app não lê a pulseira, e o dia de hoje não entra. Ligue nos ajustes do iPhone.',
+      corpo: 'Sem ele o app não lê a pulseira. Ela continua medindo e guarda o que registrou; ligue nos ajustes do iPhone para recuperar o período.',
     };
   }
+  /*
+   O aviso diz o que o app SABE, e não o que ele supõe.
+
+   Ele dizia "a pulseira está longe" e "sem ela, o dia de hoje não entra", e as
+   duas afirmações estavam erradas no caso que as revelou: a pulseira estava no
+   pulso, medindo, com doze leituras por hora chegando sem falha, e o que havia
+   acontecido é que o app estava fechado (Leonardo, 22/09/2026, duas vezes).
+
+   O app sabe que não está CONECTADO. Não sabe onde a pulseira está, e o dia
+   NÃO se perde: a memória do aparelho guarda até sete dias e é recuperada na
+   sincronização seguinte, que é justamente o que `recoverBandMemory` existe
+   para fazer. Assustar com perda de dado que não acontece gasta a confiança
+   que o aviso precisa ter quando a pulseira estiver mesmo na gaveta.
+  */
   return {
-    titulo: 'A pulseira está longe',
-    corpo: 'Faz duas horas que o app não lê a pulseira. Sem ela, o dia de hoje não entra.',
+    titulo: 'O app não está lendo a pulseira',
+    corpo: 'Faz duas horas sem sincronizar. Ela guarda o que mediu, e abrir o app recupera o período. Se estiver fora do pulso, vale colocá-la.',
   };
 }

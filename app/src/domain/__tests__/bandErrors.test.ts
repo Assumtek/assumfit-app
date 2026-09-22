@@ -104,9 +104,26 @@ describe('aviso de pulseira ausente', () => {
     expect(avisoDePulseiraAusente('Bluetooth is powered off').titulo).toMatch(/bluetooth/i);
   });
 
-  it('sem motivo conhecido, mantém o texto genérico', () => {
+  it('sem motivo conhecido, diz o que o app SABE', () => {
     // Afirmar Bluetooth desligado sem saber é o mesmo erro na direção oposta.
-    expect(avisoDePulseiraAusente(null).titulo).toBe('A pulseira está longe');
-    expect(avisoDePulseiraAusente('conexão perdida').titulo).toBe('A pulseira está longe');
+    //
+    // E o texto genérico não pode afirmar onde a pulseira está: ele dizia "a
+    // pulseira está longe" para quem a tinha no pulso, medindo, com o app
+    // apenas fechado (Leonardo, 22/09/2026).
+    for (const motivo of [null, 'conexão perdida']) {
+      const a = avisoDePulseiraAusente(motivo);
+      expect(a.titulo).toBe('O app não está lendo a pulseira');
+      expect(a.titulo).not.toMatch(/longe/i);
+    }
+  });
+
+  it('nunca diz que o dia se perde, porque ele não se perde', () => {
+    // A memória do aparelho guarda até sete dias e é recuperada na
+    // sincronização seguinte (`recoverBandMemory`). Assustar com perda que não
+    // acontece gasta a confiança que o aviso precisa ter quando a pulseira
+    // estiver mesmo na gaveta.
+    for (const motivo of [null, 'Bluetooth desligado', 'conexão perdida']) {
+      expect(avisoDePulseiraAusente(motivo).corpo).not.toMatch(/não entra/i);
+    }
   });
 });
