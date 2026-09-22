@@ -18,6 +18,7 @@ import { mensagemDaFalha } from '../domain/apiErrors';
 import * as api from '../services/api.service';
 import { escolherFoto, subirImagem } from '../services/foto';
 import { SeletorDeAlimento, type AlimentoEscolhido } from '../components/SeletorDeAlimento';
+import { GuiaDeEnquadramento, jaViuOGuia, marcarGuiaVisto } from '../components/GuiaDeEnquadramento';
 import { MealReminder } from '../components/MealReminder';
 import { useWorkoutStore } from '../store/workout.store';
 import { useTheme } from '../theme/ThemeProvider';
@@ -53,6 +54,14 @@ export function MealsScreen() {
   const [fotoPendente, setFotoPendente] = useState<{ uri: string; base64: string } | null>(null);
   /** Registro À MÃO, sem foto: a busca na TACO abre direto (Henrique, 08/09/2026). */
   const [registrandoAMao, setRegistrandoAMao] = useState(false);
+  /*
+   O guia de enquadramento aparece UMA vez, na primeira foto.
+
+   Um passo a mais antes de cada refeição é atrito diário para ensinar o que já
+   foi aprendido. Depois disso ele fica atrás do link "Como enquadrar", para
+   quem quiser rever.
+  */
+  const [guiaAberto, setGuiaAberto] = useState(false);
   const [salvandoAMao, setSalvandoAMao] = useState(false);
   /*
    A refeição sendo montada, antes de salvar.
@@ -202,7 +211,18 @@ export function MealsScreen() {
   const novaRefeicao = () => {
     setAviso(null);
     Alert.alert('Nova refeição', 'Como você quer registrar?', [
-      { text: 'Fotografar', onPress: () => void escolher(true) },
+      {
+        text: 'Fotografar',
+        onPress: () => {
+          if (jaViuOGuia()) {
+            void escolher(true);
+            return;
+          }
+          // Primeira foto: ensina, e a câmera abre quando ela fechar o guia.
+          marcarGuiaVisto();
+          setGuiaAberto(true);
+        },
+      },
       { text: 'Escolher da galeria', onPress: () => void escolher(false) },
       { text: 'Buscar o alimento', onPress: () => setRegistrandoAMao(true) },
       { text: 'Cancelar', style: 'cancel' },
@@ -831,9 +851,18 @@ export function MealsScreen() {
         </YStack>
       ) : null}
 
-      <YStack alignSelf="flex-end" marginTop="$md" marginBottom="$lg">
+      <GuiaDeEnquadramento
+        aberto={guiaAberto}
+        onFechar={() => {
+          setGuiaAberto(false);
+          if (!fotoPendente) void escolher(true);
+        }}
+      />
+
+      <XStack alignItems="center" justifyContent="flex-end" gap="$md" marginTop="$md" marginBottom="$lg">
+        <Button title="Como enquadrar" variant="ghost" onPress={() => setGuiaAberto(true)} />
         <Button title="Nova refeição" onPress={novaRefeicao} />
-      </YStack>
+      </XStack>
 
       {aviso ? <Note title="Não deu desta vez" body={aviso} /> : null}
 
