@@ -335,3 +335,111 @@ export function explicacaoDaIdade(bio: BioAge, minutosAtivos: number | null): st
     : '';
   return `O que mais ${direcao} aqui é ${maior.label.toLowerCase()} (${anos}): ${origem}.${semHrv}`;
 }
+
+
+/**
+ * O que dá para FAZER a respeito, em linguagem de gente.
+ *
+ * Pedido de testador: a tela dizia o que puxa a idade e não dizia o que fazer,
+ * e dizia em vocabulário de laboratório ("VO₂máx estimado 38,4, calculado pelo
+ * batimento em repouso e pelos minutos ativos").
+ *
+ * Cada ação sai da CONTA, não de conselho genérico: a aptidão pesa 60% e sobe
+ * por faixas de minutos aeróbios na semana, então o app diz quantos minutos
+ * faltam para a próxima faixa, que é um número que a pessoa pode perseguir. O
+ * HRV e o sono profundo não têm alavanca direta, e ali a honestidade é dizer o
+ * que os move, sem prometer resultado.
+ *
+ * Nada aqui é conselho clínico: são hábitos de treino e descanso, que é o
+ * assunto do produto.
+ */
+export type AcaoDaIdade = { titulo: string; porque: string };
+
+export function acoesParaMelhorar(
+  bio: BioAge,
+  minutosAtivos: number | null): AcaoDaIdade[] {
+  const acoes: AcaoDaIdade[] = [];
+  const min = minutosAtivos ?? 0;
+
+  /*
+   A aptidão é 60% da conta e a única com degrau visível: o nível sobe em 1,
+   20, 60 e 180 minutos semanais. Dizer "mova-se mais" é vago; dizer quantos
+   minutos faltam para o próximo degrau é uma meta.
+  */
+  const proxima = ATIVIDADE.find((f) => f.minSemanais > min);
+  if (proxima) {
+    const faltam = proxima.minSemanais - min;
+    acoes.push({
+      titulo:
+        min === 0
+          ? 'Registre treino ou esporte nesta semana'
+          : `Mais ${faltam} min de treino ou esporte nesta semana`,
+      porque:
+        'A aptidão responde por 60% do cálculo, e ela sobe por faixas de minutos ' +
+        `aeróbios na semana. Você tem ${min} min; a próxima faixa começa em ` +
+        `${proxima.minSemanais}. Passos do dia a dia não entram nessa conta.`,
+    });
+  } else {
+    acoes.push({
+      titulo: 'Manter o volume da semana',
+      porque:
+        'Você já está na faixa mais alta de atividade do cálculo, que é o que mais ' +
+        'pesa aqui. Daqui em diante o ganho vem de constância, não de volume.',
+    });
+  }
+
+  const hrv = bio.factors.find((f) => f.key === 'hrv');
+  if (hrv && hrv.weight === 0) {
+    acoes.push({
+      titulo: 'Durma com a pulseira algumas noites',
+      porque:
+        'A variabilidade cardíaca vale 25% da conta e ainda não entrou na sua, ' +
+        'porque não há medidas suficientes. Ela é medida durante o sono.',
+    });
+  } else if (hrv && hrv.contribution > 0.5) {
+    acoes.push({
+      titulo: 'Dar espaço entre os treinos pesados',
+      porque:
+        'A variabilidade cardíaca costuma cair quando a carga sobe sem descanso ' +
+        'suficiente, e ela pesa 25% aqui. Não é um botão: acompanhe pela semana.',
+    });
+  }
+
+  const sono = bio.factors.find((f) => f.key === 'sleep');
+  if (sono && sono.contribution > 0.5) {
+    acoes.push({
+      titulo: 'Horário de dormir mais parecido todo dia',
+      porque:
+        'O que entra na conta é a fração de sono PROFUNDO, não quanto tempo você ' +
+        'ficou na cama, e ela responde mais à regularidade do horário que à duração.',
+    });
+  }
+
+  return acoes.slice(0, 3);
+}
+
+/**
+ * A mesma explicação, sem vocabulário de laboratório.
+ *
+ * A versão longa continua existindo para quem quiser o detalhe; esta é a que
+ * abre a tela, porque "o que mais envelhece aqui é aptidão cardiorrespiratória
+ * (+3,2): vem do VO₂máx estimado (38,4)" é verdade e não comunica.
+ */
+export function explicacaoSimples(bio: BioAge): string {
+  if (bio.delta === 0) return 'Seus marcadores dão exatamente a sua idade real.';
+  const maior = [...bio.factors].sort(
+    (a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))[0];
+  if (!maior || Math.abs(maior.contribution) < 0.5) {
+    return 'Nenhum marcador pesa muito: a diferença vem de somas pequenas.';
+  }
+  const nome =
+    maior.key === 'fitness'
+      ? 'o seu preparo físico'
+      : maior.key === 'hrv'
+        ? 'a sua recuperação, medida pela variação dos batimentos'
+        : 'o seu sono profundo';
+  const anos = formatYears(Math.abs(maior.contribution)).replace(/^[+−-]/, '');
+  return maior.contribution > 0
+    ? `Quem mais puxa a sua idade para cima é ${nome}, em ${anos}.`
+    : `Quem mais puxa a sua idade para baixo é ${nome}, em ${anos}.`;
+}

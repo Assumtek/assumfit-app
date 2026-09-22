@@ -11,7 +11,7 @@ import { Icon } from '../components/Icon';
 import { MeasureButton } from '../components/MeasureButton';
 import { DivergingBar } from '../components/charts/DivergingBar';
 import { Body, BodyLarge, Button, Data, Display, MetricSm, RatingText } from '../components/ui';
-import { explicacaoDaIdade, formatYears } from '../domain/bioAge';
+import { acoesParaMelhorar, explicacaoDaIdade, explicacaoSimples, formatYears } from '../domain/bioAge';
 import { useBioAge } from '../hooks/useBioAge';
 import * as api from '../services/api.service';
 import { deepSleepPct, useBiometricStore } from '../store/biometric.store';
@@ -58,6 +58,7 @@ export function BioAgeScreen() {
     );
 
   const bio = bioCalculada!;
+  const acoes = acoesParaMelhorar(bio, minutosAtivos);
 
   const deltaText =
     bio.delta > 0
@@ -73,7 +74,16 @@ export function BioAgeScreen() {
         <Data marginTop="$sm">anos · idade real {bio.realAge}</Data>
         <RatingText marginTop="$lg">{deltaText}</RatingText>
         {/* Uma frase de abertura, nos dados da pessoa — o método fica na Ajuda. */}
-        <Body marginTop="$md">{explicacaoDaIdade(bio, minutosAtivos)}</Body>
+        {/*
+          A frase SIMPLES abre a tela; o detalhe técnico vem logo abaixo, em
+          tipo de dado. Quem quer saber o que fazer lê a primeira linha e a
+          seção de ações; quem quer saber de onde sai o número continua tendo
+          a conta inteira (pedido de testador, 22/09/2026).
+        */}
+        <Body marginTop="$md">{explicacaoSimples(bio)}</Body>
+        <Data marginTop="$xs" lineHeight={18}>
+          {explicacaoDaIdade(bio, minutosAtivos)}
+        </Data>
       </YStack>
 
       {/* O VO₂máx é o eixo do cálculo, e por isso aparece como número próprio:
@@ -118,6 +128,24 @@ export function BioAgeScreen() {
           somam o desvio do título; para a esquerda, mais jovem.
         </Data>
       </Section>
+
+      {/*
+        O que FAZER a respeito, que é a pergunta que a tela não respondia.
+        Cada ação sai da própria conta, e não de conselho genérico: ver
+        `acoesParaMelhorar`.
+      */}
+      {acoes.length > 0 ? (
+        <Section label="O que muda esse número">
+          {acoes.map((a, i) => (
+            <Row key={a.titulo} last={i === acoes.length - 1}>
+              <YStack flex={1} gap={4}>
+                <Body color="$foreground">{a.titulo}</Body>
+                <Data lineHeight={18}>{a.porque}</Data>
+              </YStack>
+            </Row>
+          ))}
+        </Section>
+      ) : null}
 
       <Section label="Suas medidas">
         {bio.factors.map((f, i) => (

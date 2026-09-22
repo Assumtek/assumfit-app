@@ -1,11 +1,5 @@
-import {
-  activityLevel,
-  calcBioAge,
-  deepSleepAge,
-  estimateVo2max,
-  fitnessAge,
-  formatYears,
-  hrvAge, explicacaoDaIdade } from '../bioAge';
+import { activityLevel, calcBioAge, deepSleepAge, estimateVo2max, fitnessAge, formatYears, hrvAge, explicacaoDaIdade, acoesParaMelhorar, explicacaoSimples } from '../bioAge';
+import type { BioAge } from '../bioAge';
 
 /**
  * O espelho da conta que mora em `ai/models/bio_age.py`.
@@ -219,5 +213,57 @@ describe('explicacaoDaIdade', () => {
   });
   it('igual à idade real não inventa culpado', () => {
     expect(explicacaoDaIdade({ ...base, delta: 0, factors: [] } as never, 0)).toContain('somam zero');
+  });
+});
+
+describe('o que muda esse número', () => {
+  /*
+   A tela dizia o que puxa a idade e não dizia o que fazer, em vocabulário de
+   laboratório (pedido de testador, 22/09/2026). Cada ação tem que sair da
+   CONTA, senão vira conselho genérico com cara de personalizado.
+  */
+  const comFatores = (fs: { key: string; contribution: number; weight: number }[]): BioAge =>
+    ({ realAge: 40, bioAge: 42, delta: -2, vo2max: 38, factors: fs } as unknown as BioAge);
+
+  it('diz quantos minutos faltam para a próxima faixa, que é meta perseguível', () => {
+    const acoes = acoesParaMelhorar(comFatores([{ key: 'fitness', contribution: 2, weight: 0.6 }]), 45);
+    expect(acoes[0].titulo).toContain('15 min');
+    expect(acoes[0].porque).toContain('60');
+  });
+
+  it('quem não registrou nada é convidado a registrar, não cobrado por minutos', () => {
+    const acoes = acoesParaMelhorar(comFatores([{ key: 'fitness', contribution: 2, weight: 0.6 }]), 0);
+    expect(acoes[0].titulo).toMatch(/Registre/);
+  });
+
+  it('na faixa mais alta, fala de constância em vez de inventar degrau', () => {
+    const acoes = acoesParaMelhorar(comFatores([{ key: 'fitness', contribution: 2, weight: 0.6 }]), 300);
+    expect(acoes[0].titulo).toMatch(/Manter/);
+    expect(acoes[0].porque).toContain('constância');
+  });
+
+  it('HRV sem peso vira convite a dormir com a pulseira, não cobrança', () => {
+    const acoes = acoesParaMelhorar(
+      comFatores([
+        { key: 'fitness', contribution: 1, weight: 0.6 },
+        { key: 'hrv', contribution: 0, weight: 0 },
+      ]), 100);
+    expect(acoes.some((a) => a.titulo.includes('pulseira'))).toBe(true);
+  });
+
+  it('no máximo três ações: lista longa não é plano, é ruído', () => {
+    const acoes = acoesParaMelhorar(
+      comFatores([
+        { key: 'fitness', contribution: 2, weight: 0.6 },
+        { key: 'hrv', contribution: 2, weight: 0.25 },
+        { key: 'sleep', contribution: 2, weight: 0.15 },
+      ]), 10);
+    expect(acoes.length).toBeLessThanOrEqual(3);
+  });
+
+  it('a frase simples não carrega jargão', () => {
+    const f = explicacaoSimples(comFatores([{ key: 'fitness', contribution: 3, weight: 0.6 }]));
+    expect(f).not.toMatch(/VO₂|RMSSD|percentil/i);
+    expect(f).toContain('preparo físico');
   });
 });
