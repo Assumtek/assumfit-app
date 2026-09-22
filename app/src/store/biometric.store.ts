@@ -1268,6 +1268,22 @@ export const useBiometricStore = create<BiometricState>((set, get) => ({
     });
     const offReading = ble.subscribe((reading) => {
       vigiarLeitura(reading);
+      /*
+       A noite fechada é buscada quando a PULSEIRA fala, não quando o app abre.
+
+       O despertar só era detectado na abertura do app: quem acordou às 7h e
+       abriu o app às 8h04 via o app reconhecer o despertar uma hora depois de
+       ele ter acontecido (relato de 22/09/2026). A busca existia, mas vivia no
+       ciclo de quatro minutos, e o iOS congela `setInterval` em segundo plano.
+
+       Isto roda aqui porque o app declara `bluetooth-central`: o sistema o
+       acorda quando a pulseira emite, mesmo com o app fechado, e é o único
+       momento em que dá para perguntar sem depender de alguém abrir a tela.
+
+       Sem `await`: a leitura que acordou o app não pode esperar seis consultas
+       ao canal serial, e o portão de meia hora lá dentro evita insistir.
+      */
+      void buscarNoiteSeVencida().catch(() => undefined);
       // Toda leitura entra na fila de envio. Ela só sai de lá com confirmação
       // do servidor, e o ingest é idempotente — reenvio não duplica.
       syncQueue.enqueue(reading);
@@ -1544,6 +1560,15 @@ export async function buscarNoiteSeVencida(): Promise<void> {
   if (st.connection !== 'connected' || !ble.fetchSleep) return;
   const atual = st.sleep;
   if (atual && noiteSustentaODia(atual, hojeLocal())) return;
+  /*
+   Meia hora entre tentativas, o mesmo portão do caminho da sincronização.
+
+   Sem ele, passar a chamar isto a cada LEITURA (que é o que permite detectar o
+   despertar com o app fechado) marteleria o canal serial: a pulseira emite a
+   cada poucos segundos, e de madrugada a resposta é sempre a mesma, porque a
+   noite ainda não fechou.
+  */
+  if (Date.now() - ultimaBuscaDeSono < 30 * 60_000) return;
   ultimaBuscaDeSono = Date.now();
   const nova = await comTeto(ble.fetchSleep(), TETO_SONO_MS, 'sono da pulseira').catch(() => null);
   if (nova && (!atual || nova.date > atual.date)) {
