@@ -264,10 +264,20 @@ export class QCBandService implements BleService {
     ];
     let religou = false;
     for (const [chave, recurso] of agendar) {
-      // Frequência cardíaca não costuma vir declarada em `getFeatures`, ela
-      // é o básico do aparelho. Ausente vale como presente só para ela.
-      const suportado =
-        chave === 'heartRate' ? features[recurso] !== false : features[recurso] === true;
+      /*
+       Recurso NÃO DECLARADO não é recurso ausente.
+
+       A regra era ligar só o que `getFeatures` declarasse com `true`, e um
+       testador passou 48 horas sem nenhuma medição de estresse enquanto
+       oxigênio e batimento chegavam normalmente (Henrique, 22/09/2026). O
+       firmware dele simplesmente não declara a flag, e como o app nunca
+       tentava ligar, ele nunca ia ter o dado, em silêncio e para sempre.
+
+       Tentar custa um comando no canal serial, que o aparelho aceita ou
+       recusa; não tentar custa a grandeza inteira. Só `false` explícito
+       continua sendo respeitado, porque aí o aparelho DISSE que não mede.
+      */
+      const suportado = features[recurso] !== false;
       if (suportado && !estado[chave]) {
         await QCBand.setMonitoring(chave, true).catch(() => undefined);
         religou = true;

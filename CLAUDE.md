@@ -722,9 +722,14 @@ por decisão da fundadora (21/09/2026): **sem épicos**, com as VERSÕES como
 espinha e rótulos marcando a área (`treino`, `sono`, `alimentacao`,
 `pulseira`, `plataforma`, `dados`, `marca`).
 
-**Cada sprint é uma versão do app** (22/09/2026). A sprint se chama pela versão
-que vai entregar (`1.0.7`), e as builds dentro dela são as versões do Jira
-(`1.0.7 (1)`, `1.0.7 (2)`). Quando a versão muda, o nome da sprint muda junto.
+**Cada sprint é uma versão do app** (22/09/2026): a sprint se chama pela versão
+que vai entregar, com a build junto (`1.0.6 (9)`), e essa é também a
+`fixVersion` dos itens. Quando a versão muda, o nome da sprint muda junto.
+
+**A versão só sobe quando a anterior foi para revisão da App Store.** Estar no
+TestFlight não conta: a 1.0.6 acumulou nove builds sem nunca ir para revisão, e
+partir para 1.0.7 ali teria sido inventar uma entrega que não houve. É a mesma
+regra que o `buildNumber` já segue (ver § Numeração de build).
 
 O ciclo de cada item:
 
