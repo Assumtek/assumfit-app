@@ -1,4 +1,4 @@
-import { GRANDEZAS, desligadas, linhasDoAgendamento, resumoDoAgendamento } from '../agendamento';
+import { GRANDEZAS, desligadas, linhasDoAgendamento, resumoDoAgendamento, porQueSemMedicao } from '../agendamento';
 
 const tudo = (ligado: boolean) =>
   Object.fromEntries(GRANDEZAS.map((g) => [g.chave, ligado])) as Record<string, boolean>;
@@ -46,5 +46,32 @@ describe('agendamento da pulseira', () => {
   it('o batimento carrega a consequência do sono, que não tem interruptor próprio', () => {
     const batimento = GRANDEZAS.find((g) => g.chave === 'heartRate')!;
     expect(batimento.consequencia).toMatch(/sono/i);
+  });
+});
+
+describe('por que não há medição', () => {
+  /*
+   Um testador ficou 48 horas sem nenhum dado de estresse, com oxigênio e
+   batimento chegando normalmente, e reportou como defeito do app (Henrique,
+   22/09/2026). Era a grandeza desligada no firmware, e a tela dizia apenas
+   "nenhuma medição", que é verdade e não ajuda.
+  */
+  it('explica a grandeza desligada, e diz onde religar', () => {
+    const motivo = porQueSemMedicao('stress', { stress: false, heartRate: true });
+    expect(motivo).toContain('Estresse');
+    expect(motivo).toContain('desligado');
+    expect(motivo).toContain('Dispositivo');
+  });
+
+  it('cala quando a grandeza está LIGADA: aí a ausência já é a informação', () => {
+    expect(porQueSemMedicao('stress', { stress: true })).toBeNull();
+  });
+
+  it('cala sem conferência feita, em vez de afirmar o que não sabe', () => {
+    expect(porQueSemMedicao('stress', null)).toBeNull();
+  });
+
+  it('cala para grandeza que não está na lista', () => {
+    expect(porQueSemMedicao('inventada', { inventada: false })).toBeNull();
   });
 });

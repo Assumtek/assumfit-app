@@ -12,11 +12,15 @@ import { DayPickerRow, useHistoricoDoDia } from '../components/DayPicker';
 import { BodyLarge, Data, Display, RatingText, SectionTitle } from '../components/ui';
 import { rateSpo2, shown, stateColor } from '../domain/ratings';
 import { useBiometricStore } from '../store/biometric.store';
+import { porQueSemMedicao } from '../domain/agendamento';
+import { ble } from '../services/ble';
 import { useTheme } from '../theme/ThemeProvider';
 
 export function OxygenScreen() {
   const { colors } = useTheme();
   const latest = useBiometricStore((s) => s.latest);
+  /* Ver `porQueSemMedicao`: ausência com causa conhecida é dita, não escondida. */
+  const motivoDaAusencia = porQueSemMedicao('spo2', ble.agendamentoAtual?.() ?? null);
   const spo2History = useBiometricStore((s) => s.spo2History);
   const historico = useHistoricoDoDia((p) => p.spo2_pct, spo2History);
   if (!latest)
@@ -77,7 +81,10 @@ export function OxygenScreen() {
           dia={historico.dia}
           id="spo2-dia"
           band={{ from: 95, to: 100 }}
-          vazio="A pulseira mede oxigenação nas janelas agendadas e quando você pede aqui. A curva do dia aparece a partir da segunda medição."
+          vazio={
+            motivoDaAusencia ??
+            'A pulseira mede oxigenação nas janelas agendadas e quando você pede aqui. A curva do dia aparece a partir da segunda medição.'
+          }
         />
       </YStack>
 

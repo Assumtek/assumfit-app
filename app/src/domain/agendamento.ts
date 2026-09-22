@@ -62,3 +62,31 @@ export function resumoDoAgendamento(estado: Record<string, boolean> | null): str
   const lista = nomes.length === 1 ? nomes[0] : `${nomes.slice(0, -1).join(', ')} e ${nomes[nomes.length - 1]}`;
   return `A pulseira parou de registrar ${lista}. Enquanto estiver assim, esses dados não entram no app.`;
 }
+
+
+/**
+ * Por que esta grandeza não tem medição hoje?
+ *
+ * A tela mostrava "nenhuma medição" e parava aí, e quem lê não tem como saber
+ * se o aparelho não mediu, se a grandeza está desligada no firmware ou se o
+ * app está quebrado: um testador ficou 48 horas sem nenhum dado de estresse,
+ * com oxigênio e batimento chegando normalmente, e reportou como defeito
+ * (Henrique, 22/09/2026). Era desligamento no aparelho, e nada dizia isso.
+ *
+ * `null` quando não há o que explicar: a conferência ainda não aconteceu, ou a
+ * grandeza está ligada e simplesmente não houve medição no período, que é
+ * informação que a própria ausência já dá.
+ */
+export function porQueSemMedicao(
+  chave: string,
+  estado: Record<string, boolean> | null): string | null {
+  if (!estado) return null;
+  if (estado[chave] === true) return null;
+  const g = GRANDEZAS.find((x) => x.chave === chave);
+  if (!g) return null;
+  return (
+    `${g.rotulo} está desligado na pulseira, e desligado ela não registra: ` +
+    `${g.consequencia}. Abra o menu, vá em Dispositivo e toque em "Conferir agora" ` +
+    `para religar.`
+  );
+}

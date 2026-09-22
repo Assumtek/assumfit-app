@@ -13,6 +13,8 @@ import { MeasureButton } from '../components/MeasureButton';
 import { BarChart } from '../components/charts/BarChart';
 import { Body, Data, Display, RatingText } from '../components/ui';
 import { rateStress, shown, stateColor } from '../domain/ratings';
+import { porQueSemMedicao } from '../domain/agendamento';
+import { ble } from '../services/ble';
 import { medicoesDistintas } from '../domain/series';
 import { horaLocal } from '../domain/sleep';
 import { useBiometricStore } from '../store/biometric.store';
@@ -26,6 +28,14 @@ export function StressScreen() {
   const historico = useHistoricoDoDia((p) => p.stress_score, stressHistory);
   /* Só o que é medição de verdade: o firmware reemite o último valor sem parar. */
   const medicoes = React.useMemo(() => medicoesDistintas(stressHistory), [stressHistory]);
+  /*
+   Quando não há medição, dizer POR QUE quando se sabe.
+
+   "Nenhuma medição" é verdade e não ajuda: quem lê não distingue aparelho que
+   não mediu de grandeza desligada no firmware, e o segundo caso tem solução
+   (Henrique, 22/09/2026, 48 horas sem nenhum dado de estresse).
+  */
+  const motivoDaAusencia = porQueSemMedicao('stress', ble.agendamentoAtual?.() ?? null);
   const [chartWidth, onLayoutChartWidth] = useChartWidth();
   if (!latest)
     return (
@@ -75,7 +85,7 @@ export function StressScreen() {
             dia={historico.dia}
             id="stress-dia"
             thresholds={[{ value: 40, label: 'recuperação' }]}
-            vazio="Nenhuma medição de estresse neste dia."
+            vazio={motivoDaAusencia ?? 'Nenhuma medição de estresse neste dia.'}
           />
         </YStack>
       ) : (
