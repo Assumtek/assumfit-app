@@ -212,6 +212,93 @@ def slack_responder(fid: str, texto: str) -> None:
         raise RuntimeError(f"slack chat.postMessage: {resp.get('error')}")
 
 
+JIRA = "https://assumtek.atlassian.net/rest/api/3"
+PROJETO = "AA"
+
+
+def jira_cabecalho() -> dict | None:
+    """As credenciais vêm do ambiente; sem elas, o registro no Jira é pulado."""
+    email, token = os.environ.get("ATLASSIAN_USER_EMAIL"), os.environ.get("ATLASSIAN_API_TOKEN")
+    if not email or not token:
+        return None
+    auth = base64.b64encode(f"{email}:{token}".encode()).decode()
+    return {"Authorization": f"Basic {auth}", "Content-Type": "application/json",
+            "Accept": "application/json"}
+
+
+def jira_criar_tarefa(feedback: dict) -> str | None:
+    """Todo relato vira tarefa no Jira (decisão da fundadora, 22/09/2026).
+
+    A resposta na thread continua sendo o que o testador vê; a issue é o
+    registro que sobrevive à sessão. Sem ela, um relato tratado num dia e uma
+    pergunta sobre ele duas semanas depois não se encontram.
+
+    Falha aqui NÃO interrompe o fluxo: responder a quem escreveu vale mais que
+    o registro interno, e o print diz o que não foi criado.
+    """
+    h = jira_cabecalho()
+    if not h:
+        return None
+    texto = (feedback.get("comentario") or "").strip()
+    if not texto:
+        return None
+    quem = feedback.get("testador") or "testador"
+    build = feedback.get("build")
+    resumo = texto.splitlines()[0][:120]
+    corpo = [
+        {"type": "paragraph", "content": [{"type": "text", "text": texto[:2000]}]},
+        {"type": "heading", "attrs": {"level": 3},
+         "content": [{"type": "text", "text": "Origem"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text":
+            f"{quem}, {'TestFlight' if not feedback['id'].startswith('slack:') else 'Slack'}"
+            f"{f', build {build}' if build else ''}, em {(feedback.get('em') or '')[:10]}."}]},
+    ]
+    campos = {
+        "project": {"key": PROJETO},
+        "issuetype": {"name": "Task"},
+        "summary": resumo,
+        "labels": ["relato-de-testador"],
+        "description": {"type": "doc", "version": 1, "content": corpo},
+    }
+    req = urllib.request.Request(f"{JIRA}/issue",
+                                 data=json.dumps({"fields": campos}).encode(),
+                                 headers=h, method="POST")
+    try:
+        return json.load(urllib.request.urlopen(req))["key"]
+    except Exception as e:  # noqa: BLE001
+        print(f"  sem tarefa no Jira: {e}", file=sys.stderr)
+        return None
+
+
+def jira_comentar_e_fechar(chave: str, nota: str, versao: str) -> None:
+    """Fecha a tarefa dizendo EM QUE BUILD ela sobe.
+
+    A versão é o que separa "o código está pronto" de "chegou a alguém", e as
+    duas coisas acontecem em dias diferentes.
+    """
+    h = jira_cabecalho()
+    if not h:
+        return
+    texto = f"Resolvido. Sobe na {versao}.\n\n{nota}".strip()
+    try:
+        urllib.request.urlopen(urllib.request.Request(
+            f"{JIRA}/issue/{chave}/comment",
+            data=json.dumps({"body": {"type": "doc", "version": 1, "content": [
+                {"type": "paragraph", "content": [{"type": "text", "text": texto[:2000]}]}]}}).encode(),
+            headers=h, method="POST"))
+        urllib.request.urlopen(urllib.request.Request(
+            f"{JIRA}/issue/{chave}",
+            data=json.dumps({"fields": {"fixVersions": [{"name": versao}]}}).encode(),
+            headers=h, method="PUT"))
+        urllib.request.urlopen(urllib.request.Request(
+            f"{JIRA}/issue/{chave}/transitions",
+            data=json.dumps({"transition": {"id": "31"}}).encode(),
+            headers=h, method="POST"))
+        print(f"  {chave} fechada, sobe na {versao}")
+    except Exception as e:  # noqa: BLE001
+        print(f"  Jira não atualizado ({chave}): {e}", file=sys.stderr)
+
+
 def slack_anunciar(texto: str) -> None:
     """Mensagem nova no canal — para itens do TestFlight, que não têm thread."""
     env = slack_env()
@@ -270,7 +357,22 @@ def main() -> None:
 
         l = ledger()
         versao = proxima_versao()
-        l["tratados"][fid] = {"commit": sha, "nota": " ".join(nota), "versao": versao, "em": time.strftime("%Y-%m-%dT%H:%M:%S")}
+        entrada = {"commit": sha, "nota": " ".join(nota), "versao": versao,
+                   "em": time.strftime("%Y-%m-%dT%H:%M:%S")}
+        # A tarefa no Jira: criada agora se ainda não existir, e fechada já
+        # dizendo em que build o item sobe.
+        f_atual = next((x for x in feedbacks() if x["id"] == fid), None)
+        if f_atual is None and fid.startswith("slack:"):
+            try:
+                f_atual = next((x for x in slack_feedbacks() if x["id"] == fid), None)
+            except Exception:  # noqa: BLE001
+                f_atual = None
+        chave = l["tratados"].get(fid, {}).get("jira") or (
+            jira_criar_tarefa(f_atual) if f_atual else None)
+        if chave:
+            entrada["jira"] = chave
+            jira_comentar_e_fechar(chave, " ".join(nota), versao)
+        l["tratados"][fid] = entrada
         LEDGER.write_text(json.dumps(l, ensure_ascii=False, indent=2) + "\n")
         print(f"registrado {fid} → {sha} · sobe na {versao}")
         # Regra da fundadora (ago/2026): resolveu, avisa NA MENSAGEM, com a versão.

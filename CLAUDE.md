@@ -715,6 +715,35 @@ servidor com as chaves de cada usuário. Sem a política, o presign é gerado
 normalmente e o S3 recusa o PUT com `AccessDenied`: o erro aparece no
 APARELHO, não no nosso log, e não diz que é de permissão e não da URL.
 
+## O projeto no Jira: sprint é versão
+
+O projeto é **AA** (`assumfit-app`), e a organização é a mais simples possível,
+por decisão da fundadora (21/09/2026): **sem épicos**, com as VERSÕES como
+espinha e rótulos marcando a área (`treino`, `sono`, `alimentacao`,
+`pulseira`, `plataforma`, `dados`, `marca`).
+
+**Cada sprint é uma versão do app** (22/09/2026). A sprint se chama pela versão
+que vai entregar (`1.0.7`), e as builds dentro dela são as versões do Jira
+(`1.0.7 (1)`, `1.0.7 (2)`). Quando a versão muda, o nome da sprint muda junto.
+
+O ciclo de cada item:
+
+1. **Todo relato de testador vira tarefa**, além de ser respondido na thread. O
+   `feedback.py --done` já responde e registra no ledger; a issue no Jira é o
+   registro que sobrevive à sessão.
+2. Concluído o trabalho, o item vai a **Done** e recebe um **comentário
+   dizendo em qual build ele sobe**. É o que separa "o código está pronto" de
+   "chegou a alguém", e as duas coisas acontecem em dias diferentes.
+3. A **`fixVersion`** do item é a build em que ele sobe.
+4. Quando a build fica VALID no TestFlight, a versão é marcada como
+   **lançada**, o que fecha de uma vez tudo o que estava nela.
+
+A API REST (`ATLASSIAN_API_TOKEN` e `ATLASSIAN_USER_EMAIL` no ambiente) funciona
+quando o conector MCP está fora do ar, que já aconteceu no meio de uma sessão.
+Duas armadilhas: `projectId` na criação de versão precisa ser o NÚMERO (10667),
+não a chave, e as transições de status têm ids próprios do projeto (11 para To
+Do, 21 para In Progress, 31 para Done), que não são os ids dos status.
+
 ## Regras de dados
 
 - Dado biométrico é **dado pessoal sensível** (LGPD Art. 5º II). Toda tabela nova que armazene biometria precisa de vínculo com consentimento e política de retenção. Nunca logar valor biométrico com `user_id` junto.
