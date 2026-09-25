@@ -209,10 +209,17 @@ export type LinhaDeTendencia = {
   rotulo: string;
   /** A média recente, já com unidade: é o número que a linha mostra. */
   valor: string;
-  /** "300 passos a mais por dia", ou o que falta para haver comparação. */
+  /** "5.000 antes, 6.200 agora, sobre 21 dias medidos", ou o que falta. */
   frase: string;
   estado: EstadoTendencia;
   bom: boolean | null;
+  /**
+   * O tamanho da mudança, em fração absoluta.
+   *
+   * Existe para a tela ORDENAR: a home mostra três de seis, e mostrava as três
+   * primeiras da lista fixa, mesmo quando o que mudou de verdade foi outra.
+   */
+  magnitude: number;
 };
 
 /** Calcula e descreve de uma vez, que é como as telas usam. */
@@ -229,20 +236,49 @@ export function linhaDeTendencia(
   });
   const valor = t.recente != null ? regua.formatar(t.recente) : '–';
 
+  /*
+   A frase diz DE QUANTO PARA QUANTO, e sobre quantos dias.
+
+   Ela dizia só a diferença ("1.200 a mais por dia que nos três meses
+   anteriores"), e isso não distingue ir de 5.000 para 6.200 de ir de 200 para
+   1.400: a mesma frase, mudanças de significados opostos. E não dizia quantos
+   dias sustentam a conclusão, então uma tendência de 14 dias medidos se lia
+   igual a uma de 28.
+
+   É o que o Resumo da Semana já fazia e a tendência não: número concreto e o
+   tamanho da amostra junto (pedido da fundadora, 22/09/2026).
+  */
   let frase: string;
   if (t.estado === 'acumulando') {
     frase =
       t.diasRecentes === 0 && t.diasAnteriores === 0
         ? 'Ainda não há medições para comparar.'
         : `Ainda acumulando, faltam ${t.faltam} ${t.faltam === 1 ? 'dia' : 'dias'} com medição.`;
-  } else if (t.estado === 'estavel') {
-    frase = 'Sem mudança em relação aos três meses anteriores.';
   } else {
-    const quanto = regua.formatar(t.delta as number);
-    frase = `${quanto} ${t.estado === 'sobe' ? 'a mais' : 'a menos'} por dia que nos três meses anteriores.`;
+    const antes = regua.formatar(t.anterior as number);
+    const agora = regua.formatar(t.recente as number);
+    const base = `${antes} antes, ${agora} agora`;
+    const amostra = `sobre ${t.diasRecentes} ${t.diasRecentes === 1 ? 'dia medido' : 'dias medidos'}`;
+    frase =
+      t.estado === 'estavel'
+        ? `Sem mudança: ${base}, ${amostra}.`
+        : `${base}, ${amostra}.`;
   }
 
-  return { chave, rotulo: regua.rotulo, valor, frase, estado: t.estado, bom: t.bom };
+  return {
+    chave,
+    rotulo: regua.rotulo,
+    valor,
+    frase,
+    estado: t.estado,
+    bom: t.bom,
+    /*
+     O tamanho da mudança, para a tela ordenar por relevância em vez de por
+     ordem fixa: a home mostra três de seis, e mostrava as três primeiras da
+     lista, não as três que mais mudaram.
+    */
+    magnitude: t.fracao != null ? Math.abs(t.fracao) : 0,
+  };
 }
 
 /**
@@ -289,5 +325,21 @@ export function linhasDeTendencia(
 
 /** As que já têm o que dizer, para a home não mostrar seis "acumulando". */
 export function tendenciasProntas(linhas: LinhaDeTendencia[]): LinhaDeTendencia[] {
-  return linhas.filter((l) => l.estado !== 'acumulando');
+  /*
+   Ordenadas pelo TAMANHO da mudança, e não pela ordem fixa da lista.
+
+   A home mostra três de seis, e mostrava as três primeiras: passos, sono e
+   HRV, sempre, mesmo quando o que mudou de verdade foi o estresse. Uma
+   variação de 30% diz mais que uma de 6%, qualquer que seja a métrica.
+
+   Estável fica depois de quem se moveu: "sem mudança" é informação, mas não
+   é a notícia.
+  */
+  return linhas
+    .filter((l) => l.estado !== 'acumulando')
+    .sort((a, b) => {
+      const mexeu = (l: LinhaDeTendencia) => (l.estado === 'estavel' ? 0 : 1);
+      if (mexeu(a) !== mexeu(b)) return mexeu(b) - mexeu(a);
+      return (b.magnitude ?? 0) - (a.magnitude ?? 0);
+    });
 }

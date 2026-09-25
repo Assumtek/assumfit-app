@@ -112,14 +112,16 @@ describe('linhaDeTendencia', () => {
     const l = linhaDeTendencia('passos', serie(0, 111, (i) => (i < JANELA_RECENTE ? 9000 : 6000)), HOJE);
     expect(l.rotulo).toBe('Passos');
     expect(l.valor).toBe('9.000 passos');
-    expect(l.frase).toBe('3.000 passos a mais por dia que nos três meses anteriores.');
+    // A frase diz DE QUANTO PARA QUANTO e sobre quantos dias: "3.000 a mais"
+    // não distingue ir de 6.000 para 9.000 de ir de 200 para 3.200.
+    expect(l.frase).toBe('6.000 passos antes, 9.000 passos agora, sobre 28 dias medidos.');
     expect(l.bom).toBe(true);
   });
 
   it('sono sai em horas e minutos', () => {
     const l = linhaDeTendencia('sono', serie(0, 111, (i) => (i < JANELA_RECENTE ? 400 : 340)), HOJE);
     expect(l.valor).toBe('6 h 40 min');
-    expect(l.frase).toBe('1 h 00 min a mais por dia que nos três meses anteriores.');
+    expect(l.frase).toBe('5 h 40 min antes, 6 h 40 min agora, sobre 28 dias medidos.');
   });
 
   it('estresse que sobe é tendência ruim', () => {
@@ -176,5 +178,44 @@ describe('linhasDeTendencia', () => {
     const agua = linhasDeTendencia([], habitos, HOJE).find((l) => l.chave === 'agua');
     expect(agua?.valor).toBe('2.200 ml');
     expect(agua?.estado).toBe('estavel');
+  });
+});
+
+describe('leitura mais acurada da tendência', () => {
+  /*
+   Pedido da fundadora (22/09/2026): usar o Resumo da Semana como referência de
+   acurácia. Ele dá número concreto e contexto; a tendência dava só a diferença
+   e uma ordem fixa.
+  */
+  const serie = (dias: number, valor: number, ate: string) =>
+    Array.from({ length: dias }, (_, i) => ({
+      dia: new Date(Date.parse(`${ate}T00:00:00Z`) - i * 86_400_000).toISOString().slice(0, 10),
+      valor,
+    }));
+
+  it('a frase diz de quanto para quanto, e sobre quantos dias', () => {
+    const pontos = [...serie(28, 9000, '2026-09-25'), ...serie(84, 6000, '2026-08-27')];
+    const l = linhaDeTendencia('passos', pontos, '2026-09-25');
+    expect(l.frase).toContain('antes');
+    expect(l.frase).toContain('agora');
+    expect(l.frase).toMatch(/\d+ dias medidos/);
+  });
+
+  it('as prontas vêm ordenadas por quanto mudaram', () => {
+    // Uma que mudou 50% e outra que mudou 6%: a maior vem primeiro, mesmo
+    // estando depois na ordem fixa da lista.
+    const linhas = [
+      { chave: 'passos', rotulo: 'Passos', valor: '', frase: '', estado: 'sobe', bom: true, magnitude: 0.06 },
+      { chave: 'stress', rotulo: 'Estresse', valor: '', frase: '', estado: 'sobe', bom: false, magnitude: 0.5 },
+    ] as never;
+    expect(tendenciasProntas(linhas).map((l) => l.chave)).toEqual(['stress', 'passos']);
+  });
+
+  it('o que não mudou fica depois de quem mudou', () => {
+    const linhas = [
+      { chave: 'passos', rotulo: '', valor: '', frase: '', estado: 'estavel', bom: null, magnitude: 0.01 },
+      { chave: 'hrv', rotulo: '', valor: '', frase: '', estado: 'desce', bom: false, magnitude: 0.2 },
+    ] as never;
+    expect(tendenciasProntas(linhas).map((l) => l.chave)).toEqual(['hrv', 'passos']);
   });
 });
