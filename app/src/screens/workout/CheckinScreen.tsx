@@ -8,7 +8,9 @@ import { Icon } from '../../components/Icon';
 import { Body, Button, Card, Data, Heading, HeroCard, MetricSm, Pill, PillText, SectionTitle, Subtitle } from '../../components/ui';
 import { sportForModality } from '../../domain/sport';
 import { DAY_LABEL, workoutMeta } from '../../domain/workout';
+import * as api from '../../services/api.service';
 import { fetchWorkout, type PlanDay } from '../../services/api.service';
+import { adaptarAoTempo, minutosDoTreino } from '../../domain/tempoDoTreino';
 import { useWorkoutStore } from '../../store/workout.store';
 import { darkPalette } from '../../theme/palette';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -106,6 +108,110 @@ export function CheckinScreen() {
 
   const goToTraining = () => navigation.navigate('Training');
 
+
+  /*
+   Quanto tempo a pessoa tem HOJE.
+
+   "Tenho 30 min hoje para treinar" (pedido de testador). Já existia o caminho
+   pelo personal, que resolve pelo modelo e custa uma ida à rede; este resolve
+   no aparelho, na hora, e é determinístico: corta séries antes de cortar
+   exercícios, nunca toca no preparo e nunca muda carga.
+
+   `null` é o padrão, e significa o treino como foi prescrito.
+  */
+  const [minutosHoje, setMinutosHoje] = useState<number | null>(null);
+  const adaptarAoTempoDisponivel = useWorkoutStore((s) => s.adaptarAoTempoDisponivel);
+  /*
+   O detalhe do treino selecionado, que é o que permite dizer o que sai.
+
+   Sem ele dava para mostrar só a duração estimada, e a frase "30 min" viraria
+   promessa vaga: com ele, a tela diz quantas séries e quantos exercícios
+   ficam para outro dia ANTES de a pessoa começar.
+  */
+  const [detalheDoTreino, setDetalheDoTreino] = useState<api.WorkoutDetail | null>(null);
+  useEffect(() => {
+    const id = selected?.workout?.id;
+    if (!id) {
+      setDetalheDoTreino(null);
+      return;
+    }
+    let vivo = true;
+    void api.fetchWorkout(id).then((d) => vivo && setDetalheDoTreino(d)).catch(() => undefined);
+    return () => {
+      vivo = false;
+    };
+  }, [selected?.workout?.id]);
+
+  /*
+   O que muda no treino com o tempo escolhido, dito antes de começar.
+
+   Sem isso, a pessoa escolhe "30 min" e descobre o que perdeu no meio do
+   treino. A frase diz o que sai, e nunca promete que o treino continua o
+   mesmo: ele não continua, e é por isso que ela escolheu.
+  */
+  const previaDoTempo = (() => {
+    const treino = selected?.workout;
+    if (!treino) return null;
+    const detalhe = detalheDoTreino;
+    const completo = detalhe ? minutosDoTreino(detalhe) : (treino.estimatedDuration ?? null);
+    const opcoes = [20, 30, 45];
+    const adaptado =
+      detalhe && minutosHoje != null ? adaptarAoTempo(detalhe, minutosHoje) : null;
+
+    return (
+      <YStack gap="$sm" marginTop="$md">
+        <Data>
+          {completo ? `Hoje o treino leva cerca de ${completo} min.` : 'Quanto tempo você tem hoje?'}
+        </Data>
+        <XStack gap="$sm" flexWrap="wrap">
+          {[...opcoes, null].map((m) => {
+            const ativo = minutosHoje === m;
+            return (
+              <Pressable
+                key={m ?? 'completo'}
+                onPress={() => setMinutosHoje(m)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: ativo }}
+                accessibilityLabel={m ? `${m} minutos hoje` : 'treino completo'}
+              >
+                <YStack
+                  paddingHorizontal="$md"
+                  paddingVertical="$sm"
+                  borderRadius={999}
+                  borderWidth={1}
+                  // O acento marca a SELEÇÃO, que é dado da tela.
+                  borderColor={ativo ? '$primary' : '$border'}
+                  backgroundColor={ativo ? '$primary' : 'transparent'}
+                >
+                  <Data color={ativo ? '$background' : '$mutedForeground'}>
+                    {m ? `${m} min` : 'completo'}
+                  </Data>
+                </YStack>
+              </Pressable>
+            );
+          })}
+        </XStack>
+        {adaptado ? (
+          <Data color="$mutedForeground">
+            {adaptado.exerciciosCortados === 0 && adaptado.seriesCortadas === 0
+              ? 'Cabe inteiro nesse tempo.'
+              : [
+                  adaptado.seriesCortadas > 0
+                    ? `${adaptado.seriesCortadas} ${adaptado.seriesCortadas === 1 ? 'série sai' : 'séries saem'}`
+                    : null,
+                  adaptado.exerciciosCortados > 0
+                    ? `${adaptado.exerciciosCortados} ${adaptado.exerciciosCortados === 1 ? 'exercício fica' : 'exercícios ficam'} para outro dia`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(', ') + '. O alongamento fica.'}
+          </Data>
+        ) : null}
+      </YStack>
+    );
+  })();
+
+
   const handleStart = async () => {
     if (!selected?.workout || busy) return;
     setBusy(true);
@@ -114,6 +220,9 @@ export function CheckinScreen() {
       await refresh();
       if (useWorkoutStore.getState().execution) return goToTraining();
       await start(selected.workout.id, selected.id);
+      // Depois do start: é ele que carrega o treino no store, e a adaptação
+      // precisa dele para saber o que cortar.
+      adaptarAoTempoDisponivel(minutosHoje);
       goToTraining();
     } catch {
       setError('Não foi possível iniciar o treino. Tente de novo.');
@@ -273,6 +382,16 @@ export function CheckinScreen() {
               ação principal, o guiado desce a secundário. Nos demais dias nada
               muda — o guiado é quem mede.
             */}
+            {/*
+              O tempo de hoje, ANTES do botão de começar.
+
+              Fica aqui porque é uma decisão sobre a sessão que está prestes a
+              começar, e não uma configuração: amanhã o treino volta a ser o
+              prescrito. As opções são poucas de propósito; um campo livre
+              faria escolher o minuto, e a conta não tem essa precisão.
+            */}
+            {previaDoTempo}
+
             {(() => {
               const esporte = sportForModality(selected.workout.modality);
               const guiado = (

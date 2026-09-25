@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { create } from 'zustand';
 
+import { adaptarAoTempo } from '../domain/tempoDoTreino';
+
 import { publicarTreinoDeHoje, type TreinoDoWidget } from '../../modules/widgetbridge';
 import { resumoDoVolume, workoutMeta } from '../domain/workout';
 import { avisoNoPulsoLigado } from './avisosNoPulso.store';
@@ -117,6 +119,14 @@ type WorkoutState = {
   /** Progresso local por exercício. Sobrevive a fechar a tela. */
   progress: SessionProgress;
   /**
+   * O treino de HOJE encurtado para o tempo que a pessoa disse ter.
+   *
+   * Mapa de exercício para número de séries; zero significa fora de hoje. Vale
+   * só para a sessão: o plano no servidor não muda, porque encurtar um dia não
+   * é represcrever a semana.
+   */
+  adaptacaoDeHoje: Record<string, number> | null;
+  /**
    * Instante-alvo do descanso, em epoch.
    *
    * Guardado como INSTANTE e não como contador restante: um contador para de
@@ -146,6 +156,8 @@ type WorkoutState = {
   loadWorkout: (workoutId: string) => Promise<WorkoutDetail>;
   start: (workoutId: string, planDayId?: string) => Promise<Execution>;
   setProgress: (exerciseId: string, index: number, patch: Partial<SetState>) => void;
+  /** Encurta o treino de hoje para caber em `minutos`. `null` desfaz. */
+  adaptarAoTempoDisponivel: (minutos: number | null) => void;
   completeSet: (exerciseId: string, index: number) => Promise<void>;
   startRest: (seconds: number) => void;
   clearRest: () => void;
@@ -308,6 +320,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   },
   loading: false,
   progress: {},
+  adaptacaoDeHoje: null,
   restEndsAt: null,
   timerBase: 0,
   timerRunSince: null,
@@ -388,6 +401,18 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
       timerRunSince: Date.now(),
     });
     return execution;
+  },
+
+  adaptarAoTempoDisponivel: (minutos) => {
+    const workout = get().workout;
+    if (!workout || minutos == null) {
+      set({ adaptacaoDeHoje: null });
+      return;
+    }
+    const { exercicios } = adaptarAoTempo(workout, minutos);
+    set({
+      adaptacaoDeHoje: Object.fromEntries(exercicios.map((e) => [e.id, e.series])),
+    });
   },
 
   setProgress: (exerciseId, index, patch) => {
@@ -485,7 +510,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
     */
     const volume = resumoDoVolume(get().progress);
     const result = await apiFinish(execution.id, params);
-    set({ execution: null, progress: {}, restEndsAt: null, timerBase: 0, timerRunSince: null });
+    set({ execution: null, progress: {}, adaptacaoDeHoje: null, restEndsAt: null, timerBase: 0, timerRunSince: null });
     // Treinou: a cobrança das 15h de HOJE morre e renasce para amanhã. É o que
     // impede o app de cobrar à tarde um treino feito de manhã.
     void armTrainingNudge(true);
@@ -515,7 +540,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
       const status = axios.isAxiosError(erro) ? erro.response?.status : undefined;
       if (status !== 409 && status !== 404) throw erro;
     }
-    set({ execution: null, progress: {}, restEndsAt: null, timerBase: 0, timerRunSince: null });
+    set({ execution: null, progress: {}, adaptacaoDeHoje: null, restEndsAt: null, timerBase: 0, timerRunSince: null });
   },
 }));
 

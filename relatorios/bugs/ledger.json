@@ -1796,6 +1796,13 @@
       "nota": "Você está certo, e os dados confirmam: sua pulseira estava medindo sem falha a manhã inteira, doze leituras por hora. O aviso estava errado em duas frases. Ele dizia 'a pulseira está longe', e o app não sabe isso: ele sabe apenas que não está conectado, e no seu caso o que houve foi o app estar fechado, com a pulseira no pulso. E dizia que o dia de hoje não entraria, o que é falso: a pulseira guarda até sete dias na memória dela e o app recupera tudo na próxima sincronização. Corrigi os dois textos. A repetição também tinha causa: a trava que impede o mesmo aviso duas vezes no dia vivia só na memória do app, e fechar o app (que é justamente o que desconecta a pulseira) apagava a trava. Agora ela é gravada. Sobe na próxima build.",
       "versao": "1.0.6 (8)",
       "em": "2026-09-22T11:19:34"
+    },
+    "ACqPGGxJaJjdr9cxijwloVc": {
+      "commit": "a16e2f5",
+      "nota": "Você achou um defeito que eu mesma criei na correção anterior, e a descrição foi exata. Quando trouxe as séries de volta do servidor, o código passou a ESCOLHER entre o que veio de lá e a ficha prescrita, em vez de juntar os dois: com uma série feita, o exercício voltava com uma série só e as outras sumiam, daí o 'Séries (1/1)' num exercício de três. Agora a prescrição dita quantas séries existem e o que você fez dita o conteúdo de cada uma, que é exatamente o que você esperava. Se você tiver acrescentado uma série a mais que o prescrito, ela também não se perde.",
+      "versao": "1.0.6 (9)",
+      "em": "2026-09-25T16:41:39",
+      "jira": "AA-30"
     }
   }
 }

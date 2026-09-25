@@ -268,11 +268,22 @@ export function TrainingScreen() {
   }, [timerRunSince]);
 
   /** A lista achatada, guardando a fase de cada exercício. */
+  /*
+   O treino de hoje, já encurtado se a pessoa disse ter menos tempo.
+
+   O exercício cortado simplesmente não entra na lista: deixá-lo visível e
+   desabilitado transformaria o encurtamento numa lista de faltas, quando ele é
+   a forma de treinar no tempo que existe. A adaptação vale só para esta
+   sessão; o plano no servidor continua o mesmo.
+  */
+  const adaptacao = useWorkoutStore((s) => s.adaptacaoDeHoje);
   const flat = useMemo(
     () =>
       (workout?.phases ?? []).flatMap((phase) =>
-        phase.exercises.map((exercise) => ({ exercise, phase: phase.type as PhaseType }))),
-    [workout]);
+        phase.exercises
+          .filter((exercise) => !adaptacao || (adaptacao[exercise.id] ?? 1) > 0)
+          .map((exercise) => ({ exercise, phase: phase.type as PhaseType }))),
+    [workout, adaptacao]);
 
   const current = flat[index];
 
@@ -396,7 +407,17 @@ export function TrainingScreen() {
   }
 
   const { exercise, phase } = current;
-  const sets = progress[exercise.id] ?? [];
+  /*
+   As séries de HOJE, que podem ser menos que as prescritas.
+
+   O corte é por tempo, não por decisão de prescrição: o que sai são as
+   últimas séries de cada exercício, e o que fica é exatamente o que foi
+   prescrito, na carga prescrita. Sem adaptação, tudo como veio.
+  */
+  const seriesDeHoje = adaptacao?.[exercise.id];
+  const sets = (progress[exercise.id] ?? []).slice(
+    0,
+    seriesDeHoje && seriesDeHoje > 0 ? seriesDeHoje : undefined);
   const doneCount = sets.filter((s) => s.completed).length;
   const isSimple = exercise.subtype !== 'STRENGTH';
 
