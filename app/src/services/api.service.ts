@@ -817,6 +817,27 @@ export async function deleteProgressPhoto(id: string): Promise<void> {
   await api.delete(`/progress-photos/${id}`);
 }
 
+/**
+ * O que um número significa PARA ESTA PESSOA, sob toque.
+ *
+ * `null` quando não há: sem histórico para comparar, sem modelo ou sem
+ * crédito. A tela não mostra o bloco, que é melhor que um texto genérico com
+ * cara de leitura pessoal.
+ */
+export async function explicarMetrica(entrada: {
+  metrica: 'sono' | 'energia' | 'hrv' | 'estresse' | 'repouso';
+  valor: number;
+  avaliacao: string;
+  componentes?: string[];
+}): Promise<{ de_onde_vem: string; onde_voce_esta: string; o_que_mexe: string } | null> {
+  try {
+    const { data, status } = await api.post('/insights/explicar', entrada, { timeout: 30_000 });
+    return status === 204 || !data ? null : data;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchSessionFeedback(
   executionId: string): Promise<{ headline: string; body: string } | null> {
   const { data, status } = await api.get<{ headline: string; body: string } | ''>(

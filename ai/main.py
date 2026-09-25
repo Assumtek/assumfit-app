@@ -22,6 +22,7 @@ from models.insight_llm import Facts, write as write_insight
 from models.lifestyle import Lifestyle, chronotype_from, circadian_shift
 from models.morning import MorningFacts, write_morning
 from models.workout_feedback import WorkoutFeedbackFacts, write_workout_feedback
+from models.explicar import FatosDaMetrica, explicar_metrica
 from models.weekly import WeeklyFacts, write_weekly
 
 app = FastAPI(title="AssumFit AI", version="1.0.0")
@@ -295,6 +296,50 @@ def workout_feedback(data: WorkoutFeedbackInput) -> dict:
             exercises=data.exercises,
             previous_volume_kg=data.previous_volume_kg,
             avg_bpm=data.avg_bpm,
+        )
+    )
+    if texto is None:
+        raise HTTPException(status_code=503, detail="modelo indisponível")
+    return texto
+
+
+class ExplicarInput(BaseModel):
+    """O número tocado, e o histórico da própria pessoa para comparar."""
+
+    metrica: str
+    rotulo: str
+    valor: float
+    unidade: str
+    avaliacao: str
+    componentes: list[str] = []
+    media_pessoal: float | None = None
+    dias_de_historico: int = 0
+    melhor: str | None = None
+    pior: str | None = None
+    relacao: str | None = None
+
+
+@app.post("/insights/explicar")
+def explicar(data: ExplicarInput) -> dict:
+    """O que este número significa PARA ESTA PESSOA (pedido de testador).
+
+    Responde a um TOQUE, e não sozinho: nada roda aqui sem alguém perguntar.
+    Sem modelo ou sem crédito, 503, e a tela não mostra o bloco: um texto
+    genérico com cara de personalizado é pior que não explicar.
+    """
+    texto = explicar_metrica(
+        FatosDaMetrica(
+            metrica=data.metrica,
+            rotulo=data.rotulo,
+            valor=data.valor,
+            unidade=data.unidade,
+            avaliacao=data.avaliacao,
+            componentes=data.componentes,
+            media_pessoal=data.media_pessoal,
+            dias_de_historico=data.dias_de_historico,
+            melhor=data.melhor,
+            pior=data.pior,
+            relacao=data.relacao,
         )
     )
     if texto is None:

@@ -1,14 +1,18 @@
-import { YStack } from '@tamagui/stacks';
-import React from 'react';
+import { XStack, YStack } from '@tamagui/stacks';
+import React, { useState } from 'react';
+import { Pressable } from 'react-native';
 
+import { Icon } from './Icon';
 import { Row, Section } from './List';
 import { Hypnogram } from './charts/Hypnogram';
 import { useChartWidth } from './charts/useChartWidth';
 import { Body, Data, Display, RatingText } from './ui';
 import { formatDateBR } from '../domain/birthDate';
 import { rateSleep } from '../domain/ratings';
+import { ExplicarMetrica } from './ExplicarMetrica';
 import { horaLocal, trechosAcordado } from '../domain/sleep';
 import type { SleepNight, SleepPhase } from '../domain/types';
+import { useTheme } from '../theme/ThemeProvider';
 
 /**
  * O detalhe de UMA noite: score, ponta a ponta com relógio, avaliação,
@@ -41,12 +45,52 @@ export function SleepNightDetail({ sleep }: { sleep: SleepNight }) {
   };
   const pct = (min: number) => Math.round((min / sleep.totalMin) * 100);
   const acordadas = trechosAcordado(sleep);
+  const [explicando, setExplicando] = useState(false);
+  const { colors } = useTheme();
 
   return (
     <>
       <YStack marginBottom="$xxl">
-        <Display>{sleep.score}</Display>
-        <Data marginTop="$sm">score · {duration(sleep.totalMin)} de sono</Data>
+        {/*
+          O número EXPLICA-SE ao toque.
+
+          "Tive um sono 92% ótimo, mas o que isso significa?" (pedido de
+          testador). A tela mostrava o valor e a avaliação, e quem não sabe o
+          que é um score de sono ficava com um número bonito e nenhuma leitura.
+
+          Os componentes vão prontos daqui: a tela já sabe de que a noite é
+          feita, e recalcular isso no servidor seria uma segunda conta para o
+          mesmo número.
+        */}
+        <Pressable
+          onPress={() => setExplicando(true)}
+          accessibilityRole="button"
+          accessibilityLabel={`Score ${sleep.score}, entender o que significa`}
+          style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
+        >
+          <Display>{sleep.score}</Display>
+          <XStack alignItems="center" gap="$xs" marginTop="$sm">
+            <Data>score · {duration(sleep.totalMin)} de sono</Data>
+            <Icon name="help" size={14} color={colors.textMuted} />
+          </XStack>
+        </Pressable>
+
+        <ExplicarMetrica
+          aberto={explicando}
+          onFechar={() => setExplicando(false)}
+          metrica="sono"
+          rotulo="Sono"
+          valor={sleep.score}
+          avaliacao={rating.label}
+          componentes={[
+            `${duration(sleep.totalMin)} dormidas`,
+            `${pct(sleep.phases.deep)}% de sono profundo`,
+            `${pct(sleep.phases.rem)}% de REM`,
+            acordadas.length > 0
+              ? `${acordadas.length} ${acordadas.length === 1 ? 'vez acordado' : 'vezes acordado'}`
+              : 'noite sem despertares registrados',
+          ]}
+        />
         {/*
           A DATA da noite, não uma hora.
 

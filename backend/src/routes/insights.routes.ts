@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { AuthedRequest, requireAuth } from '../middleware/auth';
 import { asyncRoute } from '../middleware/error';
 import { prisma } from '../lib/prisma';
+import { explicarMetrica } from '../services/explicar.service';
 import { hrvBaseline } from '../services/biometric.service';
 import { energyNow } from '../services/scoring.service';
 import { dailySummary } from '../services/biometric.service';
@@ -29,6 +30,34 @@ insightsRoutes.use(requireAuth);
  * UTC. Sem o parâmetro, todo assinante brasileiro receberia um insight três
  * horas adiantado.
  */
+/**
+ * O que este número significa para quem acabou de tocar nele.
+ *
+ * POST porque carrega os componentes já apurados na tela (as partes que
+ * formaram o número), e não um identificador: a tela sabe que o score de sono
+ * veio de 7h10 com 22% de profundo, e repetir essa conta aqui seria uma
+ * segunda implementação da mesma coisa.
+ *
+ * 204 quando não há explicação: a tela não mostra o bloco, que é melhor que um
+ * texto genérico com cara de leitura pessoal.
+ */
+insightsRoutes.post(
+  '/explicar',
+  asyncRoute<AuthedRequest>(async (req, res) => {
+    const body = z
+      .object({
+        metrica: z.enum(['sono', 'energia', 'hrv', 'estresse', 'repouso']),
+        valor: z.number(),
+        avaliacao: z.string().max(60),
+        componentes: z.array(z.string().max(80)).max(6).optional(),
+      })
+      .parse(req.body ?? {});
+
+    const texto = await explicarMetrica(req.userId, body);
+    if (!texto) return res.status(204).end();
+    res.json(texto);
+  }));
+
 insightsRoutes.get(
   '/energy',
   asyncRoute<AuthedRequest>(async (req, res) => {
