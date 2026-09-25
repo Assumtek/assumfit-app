@@ -221,13 +221,40 @@ export function comSeriesDoServidor(
   return mesclado;
 }
 
-function seedProgress(workout: WorkoutDetail, existing: SessionProgress): SessionProgress {
+export function seedProgress(workout: WorkoutDetail, existing: SessionProgress): SessionProgress {
   const seeded: SessionProgress = {};
   for (const phase of workout.phases) {
     for (const exercise of phase.exercises) {
-      // O que já foi preenchido nesta sessão vence o pré-preenchimento: voltar
-      // para a tela não pode apagar a série que a pessoa acabou de registrar.
-      seeded[exercise.id] = existing[exercise.id] ?? initialSets(exercise);
+      /*
+       O que existe SOBREPÕE o pré-preenchido, sem substituí-lo por inteiro.
+
+       Era `existing[id] ?? initialSets(exercise)`, e o `??` escolhia um dos
+       dois: com uma série vinda do servidor, o exercício voltava com UMA
+       série, a feita, e as outras prescritas sumiam. "Fiz apenas uma série e
+       fechei o app sem querer, esperava que ele salvasse a série que eu fiz
+       mas ficasse disponível para salvar as demais" (Bruno, 23/09/2026), com
+       a tela mostrando "Séries (1/1)" num exercício de três.
+
+       O defeito nasceu da correção de 21/09, que trouxe as séries do servidor
+       de volta: antes dela o progresso vinha vazio e caía no pré-preenchido
+       inteiro, então o erro não tinha como aparecer.
+
+       A prescrição dita quantas séries existem; o que foi feito dita o
+       conteúdo de cada uma. Série feita além do prescrito (a pessoa
+       acrescentou) não se perde: o comprimento é o maior dos dois.
+      */
+      const prescritas = initialSets(exercise);
+      const feitas = existing[exercise.id];
+      if (!feitas?.length) {
+        seeded[exercise.id] = prescritas;
+        continue;
+      }
+      const total = Math.max(prescritas.length, feitas.length);
+      seeded[exercise.id] = Array.from({ length: total }, (_, i) => {
+        const feita = feitas[i];
+        if (feita && (feita.load !== '' || feita.reps !== '' || feita.completed)) return feita;
+        return prescritas[i] ?? { load: '', reps: '', completed: false };
+      });
     }
   }
   return seeded;
