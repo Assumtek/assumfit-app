@@ -2,6 +2,8 @@ import axios from 'axios';
 import { create } from 'zustand';
 
 import { adaptarAoTempo } from '../domain/tempoDoTreino';
+import { frasedaValidade, validadeDoPlano } from '../domain/validadeDoPlano';
+import { useAlertsStore } from './alerts.store';
 
 import { publicarTreinoDeHoje, type TreinoDoWidget } from '../../modules/widgetbridge';
 import { resumoDoVolume, workoutMeta } from '../domain/workout';
@@ -340,6 +342,28 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
        não sabe de nada.
       */
       publicarTreinoDeHoje(paraWidget(plan));
+
+      /*
+       O plano que está acabando vira AVISO, e não só um texto na tela dele.
+
+       "O projeto de treino venceu e morreu por falta de acompanhamento"
+       (pedido de testador): quem deixou o plano morrer é justamente quem não
+       voltou à tela do plano, então dizer lá é falar com quem já sabe.
+
+       O id carrega o plano e o dia, e o feed deduplica por id: o aviso aparece
+       uma vez por dia enquanto a validade estiver acabando, e não a cada
+       abertura do app.
+      */
+      const validade = validadeDoPlano(plan?.endDate);
+      if (plan && validade && validade.estado !== 'vigente') {
+        const dia = new Date().toISOString().slice(0, 10);
+        useAlertsStore.getState().registrar({
+          id: `plano-validade-${plan.id}-${dia}`,
+          titulo: validade.estado === 'vencido' ? 'Seu plano venceu' : 'Seu plano está terminando',
+          corpo: frasedaValidade(validade),
+          rota: 'Plan',
+        });
+      }
 
       // Sessão aberta de uma abertura anterior do app: recarrega o treino dela
       // para a tela de execução ter o que renderizar sem passar pelo check-in.

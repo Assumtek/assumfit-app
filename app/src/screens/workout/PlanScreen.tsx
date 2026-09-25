@@ -18,6 +18,7 @@ import {
   workoutMetaSemRepetir,
 } from '../../domain/workout';
 import * as api from '../../services/api.service';
+import { frasedaValidade, validadeDoPlano } from '../../domain/validadeDoPlano';
 import { useWorkoutStore } from '../../store/workout.store';
 import { darkPalette } from '../../theme/palette';
 
@@ -99,6 +100,30 @@ export function PlanScreen() {
   }, [plan?.id]);
 
   const puxar = usePullRefresh(carregar);
+  /*
+   A validade do plano, que ninguém acompanhava.
+
+   "O projeto de treino venceu e morreu por falta de acompanhamento" (pedido de
+   testador). O plano vence em 30 dias e nada dizia isso: a pessoa seguia com
+   um plano velho ou parava sem saber por quê.
+
+   O aviso do RASCUNHO tem precedência: se já existe um plano novo esperando
+   aprovação, dizer que o atual venceu é empurrar para gerar outro.
+  */
+  const validade = validadeDoPlano(plan?.endDate);
+  const avisoDeValidade =
+    !temRascunho && validade && validade.estado !== 'vigente' ? (
+      <YStack gap="$sm" marginTop="$md">
+        <Note
+          title={validade.estado === 'vencido' ? 'Seu plano venceu' : 'Seu plano está terminando'}
+          body={frasedaValidade(validade)}
+        />
+        <YStack alignSelf="flex-start">
+          <Button title="Gerar o próximo plano" onPress={() => navigation.navigate('Generating')} />
+        </YStack>
+      </YStack>
+    ) : null;
+
   const avisoDeRascunho = temRascunho ? (
     <YStack gap="$sm" marginTop="$md">
       <Note
@@ -155,6 +180,7 @@ export function PlanScreen() {
   return (
     <DetailScreen title="Treino" refreshControl={puxar}>
       {avisoDeRascunho}
+      {avisoDeValidade}
       <YStack gap="$xl" paddingTop="$lg">
         {/*
           O que foi CONTIDO neste plano, e por quê.
